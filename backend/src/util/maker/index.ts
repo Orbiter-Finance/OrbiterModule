@@ -16,6 +16,7 @@ import send from './send'
 
 const web3List: AlchemyWeb3[] = []
 const zkTokenInfo: any[] = []
+const matchHashList: any[] = [] // Intercept multiple receive
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -227,6 +228,13 @@ function watchTransfers(pool, state) {
         ) {
           // donothing
         } else {
+          let matchHash = event.transactionHash
+          if (matchHashList.indexOf(matchHash) > -1) {
+            accessLogger.info('event.transactionHash exist: ' + matchHash)
+            return
+          }
+          matchHashList.push(matchHash)
+
           // Initiate transaction confirmation
           accessLogger.info('match one transaction')
           confirmFromTransaction(pool, state, event.transactionHash)
