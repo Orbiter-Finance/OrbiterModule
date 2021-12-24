@@ -5,6 +5,25 @@
         <img src="./assets/logo.png" alt="logo" />
         <div>Orbiter's Dashboard</div>
       </div>
+      <div class="maker-selected" v-if="makerAddressSelected">
+        maker:
+        <el-dropdown trigger="click">
+          <span class="maker-selected__text">
+            {{ makerAddressSelected }}
+          </span>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                v-for="(item, index) in makerAddresses"
+                :key="index"
+                @click="onClickMakerAddressItem(item)"
+              >
+                {{ item }}
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
+      </div>
     </el-header>
     <el-container>
       <el-aside>
@@ -16,9 +35,6 @@
             @click="onClickMenu(item.name)"
           >
             {{ item.name }}
-            <div>ddddd</div>
-            <div>ddddd</div>
-            <div>ddddd</div>
           </li>
         </ul>
       </el-aside>
@@ -33,31 +49,45 @@
 </template>
 
 <script lang="ts">
-import { defineComponent, reactive, toRefs } from 'vue'
+import { defineComponent, provide, reactive, toRefs } from 'vue'
+import { $axios } from './plugins/axios'
 
 export default defineComponent({
   setup() {
     const state = reactive({
-      menuActive: '',
+      menuActive: 'Home',
+      makerAddresses: [] as string[],
+      makerAddressSelected: '',
     })
+
+    provide('makerAddressSelected', toRefs(state).makerAddressSelected)
 
     const menus = [
       {
-        name: 'Dashboard',
+        name: 'Home',
         link: '',
       },
-      {
-        name: 'Compare',
-        link: '',
-      },
-      {
-        name: 'Graph',
-        link: '',
-      },
+      // {
+      //   name: 'Compare',
+      //   link: '',
+      // },
+      // {
+      //   name: 'Graph',
+      //   link: '',
+      // },
     ]
-
     const onClickMenu = (menuName: string) => {
       state.menuActive = menuName
+    }
+
+    const getGlobalInfo = async () => {
+      const resp = await $axios.get<{ makerAddresses: string[] }>('global')
+      state.makerAddresses = resp.data.makerAddresses
+      state.makerAddressSelected = state.makerAddresses?.[0] || ''
+    }
+    getGlobalInfo()
+    const onClickMakerAddressItem = (makerAddress: string) => {
+      state.makerAddressSelected = makerAddress
     }
 
     return {
@@ -65,6 +95,7 @@ export default defineComponent({
 
       menus,
       onClickMenu,
+      onClickMakerAddressItem,
     }
   },
 })
@@ -79,6 +110,9 @@ $aside-width: 200px;
   top: 0;
   left: 0;
   right: 0;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
   height: $header-height;
   background: white;
   border-bottom: 1px solid #{var(--el-border-color-base)};
@@ -92,10 +126,27 @@ $aside-width: 200px;
     margin: 12px 0;
     font-size: 22px;
     font-weight: bold;
+    flex: 1;
 
     img {
       width: 40px;
       margin-right: 12px;
+    }
+  }
+
+  .maker-selected {
+    font-size: 13px;
+    color: #888888;
+
+    .maker-selected__text {
+      border-radius: 28px;
+      border: 1px solid #e8e8e8;
+      padding: 8px;
+      cursor: pointer;
+
+      &:hover {
+        background-color: #f8f8f8;
+      }
     }
   }
 }
@@ -120,6 +171,8 @@ $aside-width: 200px;
       border-radius: 5px;
       cursor: pointer;
       transition: #{var(--el-transition-all)};
+      font-weight: bold;
+      color: #000000aa;
 
       &.is-active,
       &:hover {
@@ -127,7 +180,7 @@ $aside-width: 200px;
       }
 
       &.is-active {
-        box-shadow: 0 2px 4px rgba($color: #000000, $alpha: 0.1);
+        box-shadow: 0 2px 6px rgba($color: #000000, $alpha: 0.15);
       }
     }
   }

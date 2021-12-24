@@ -41,6 +41,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     // parse query
     const params = plainToInstance(
       class {
+        makerAddress: string
         fromChain?: number
         startTime?: number
         endTime?: number
@@ -49,6 +50,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     )
 
     const list = await serviceMaker.getMakerNodes(
+      params.makerAddress,
       params.fromChain,
       Number(params.startTime),
       Number(params.endTime)

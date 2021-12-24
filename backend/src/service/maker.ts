@@ -3,6 +3,7 @@ import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
 import { makerConfig } from '../config'
+import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
 import { dateFormatNormal, equalsIgnoreCase } from '../util'
@@ -32,6 +33,24 @@ export function getAmountFlag(amount: string | number): string {
   }
   str = String(amount).slice(-SIZE_OP.P_NUMBER)
   return (Number(str) % 9000) + ''
+}
+
+/**
+ * Get maker's addresses
+ * @returns
+ */
+export async function getMakerAddresses() {
+  const makerList = await getMakerList()
+
+  const makerAddresses: string[] = []
+  for (const item of makerList) {
+    if (makerAddresses.indexOf(item.makerAddress) > -1) {
+      continue
+    }
+    makerAddresses.push(item.makerAddress)
+  }
+
+  return makerAddresses
 }
 
 /**
@@ -91,22 +110,31 @@ export function makeTransactionID(
 
 /**
  * Get maker nodes
+ * @param makerAddress
  * @param fromChain 0: All
  * @param startTime start time
  * @param endTime end time
  * @returns
  */
 export async function getMakerNodes(
+  makerAddress: string,
   fromChain: number = 0,
   startTime?: number,
   endTime?: number
 ): Promise<MakerNode[]> {
+  if (!makerAddress) {
+    throw new ServiceError(
+      'Sorry, params makerAddress miss',
+      ServiceErrorCodes['arguments invalid']
+    )
+  }
+
   // QueryBuilder
   const queryBuilder = repositoryMakerNode().createQueryBuilder()
 
   // where
   queryBuilder.where('makerAddress = :makerAddress', {
-    makerAddress: makerConfig.makerAddress,
+    makerAddress,
   })
   if (fromChain > 0) {
     console.log({ fromChain })

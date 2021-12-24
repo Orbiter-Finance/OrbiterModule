@@ -72,7 +72,7 @@
             start-placeholder="Start date"
             end-placeholder="End date"
             :clearable="false"
-            offset="-110"
+            :offset="-110"
             :show-arrow="false"
           >
           </el-date-picker>
@@ -117,15 +117,28 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="From ·· To" width="160">
+          <el-table-column width="90">
+            <template #header>
+              From <br />
+              To
+            </template>
             <template #default="scope">
-              <el-tag effect="light" size="mini">{{
-                scope.row.fromChainName
-              }}</el-tag>
-              ··
-              <el-tag effect="light" size="mini">{{
-                scope.row.toChainName
-              }}</el-tag>
+              <el-tag
+                class="maker__chain-tag"
+                type="success"
+                effect="light"
+                size="mini"
+              >
+                + {{ scope.row.fromChainName }}
+              </el-tag>
+              <el-tag
+                class="maker__chain-tag"
+                type="danger"
+                effect="light"
+                size="mini"
+              >
+                - {{ scope.row.toChainName }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column style="min-width: 120px">
@@ -228,7 +241,7 @@
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
 import { BigNumber } from 'bignumber.js'
-import { defineComponent, reactive, toRefs } from 'vue'
+import { defineComponent, inject, reactive, ToRef, toRefs } from 'vue'
 import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
 export default defineComponent({
@@ -241,6 +254,8 @@ export default defineComponent({
       chainId: '',
     })
 
+    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
+
     const stateTags = {
       0: { label: 'From: check', type: 'info' },
       1: { label: 'From: okay', type: 'warning' },
@@ -251,7 +266,10 @@ export default defineComponent({
 
     makerInfo.get()
 
-    makerWealth.get()
+    const getMakerWealth = () => {
+      makerWealth.get(makerAddressSelected.value)
+    }
+    getMakerWealth()
 
     const reset = () => {
       const endTime = new Date()
@@ -262,11 +280,16 @@ export default defineComponent({
     reset()
 
     const getMakerNodes = () => {
-      makerNodes.get(Number(state.chainId), state.rangeDate)
+      makerNodes.get(
+        makerAddressSelected.value,
+        Number(state.chainId),
+        state.rangeDate
+      )
     }
     getMakerNodes()
 
     return {
+      makerAddressSelected,
       ...toRefs(state),
       stateTags,
       reset,
@@ -275,6 +298,7 @@ export default defineComponent({
 
       loadingWealths: toRefs(makerWealth).loading,
       wealths: toRefs(makerWealth).list,
+      getMakerWealth,
 
       loadingNodes: toRefs(makerNodes).loading,
       list: toRefs(makerNodes).list,
@@ -306,6 +330,12 @@ export default defineComponent({
     },
     diffAmountTotal() {
       return new BigNumber(this.fromAmountTotal).minus(this.toAmountTotal)
+    },
+  },
+  watch: {
+    makerAddressSelected() {
+      this.getMakerWealth()
+      this.getMakerNodes()
     },
   },
 })
@@ -392,5 +422,17 @@ export default defineComponent({
 .table-timestamp {
   font-size: 12px;
   color: #888888;
+}
+
+.maker__chain-tag {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 5px;
+  text-align: center;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 </style>
