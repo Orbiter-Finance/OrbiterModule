@@ -49,7 +49,7 @@
 - When you only maker service, set `ORBITER_SCENE=maker`
 - When you only dashboard service, set `ORBITER_SCENE=dashboard`
 - When you only all service, set `ORBITER_SCENE=all` (default)
-- <strong style="color: yellow">Warnning: </strong>if you run maker service, please do not expose your ip or port on the public network
+- <font color="yellow"><b>Warnning:</b></font> if you run maker service, please do not expose your ip or port on the public network
 
 ```
 # When you need run at daemon, add -d
