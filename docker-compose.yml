@@ -1,0 +1,61 @@
+version: '3.8'
+
+networks:
+  # Specify the network for bridging
+  app-network:
+    driver: bridge
+
+services:
+  backend:
+    build: ./backend
+    command: yarn run start
+    environment:
+      NODE_ENV: 'development'
+      ORBITER_SCENE: all # dashboard: only dashboard | maker: only maker service | all
+      ORBITER_MAKER_PRIVATEKEY: ''
+      DB_HOST: db
+      DB_PORT: '${DB_PORT}'
+      DB_USER: '${DB_USER}'
+      DB_PASSWORD: '${DB_PASS}'
+      DB_NAME: '${DB_NAME}'
+    volumes:
+      - './backend/logs:/app/logs'
+    #   - './backend:/app'
+    ports:
+      - '3002:3002'
+    # restart: always
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    # command: yarn run dev
+    # environment:
+    #   BACKEND_API: 'http://ec2-18-177-135-205.ap-northeast-1.compute.amazonaws.com:3002/'
+    # volumes:
+    # - './frontend:/app'
+    ports:
+      - '80:80'
+    # restart: always
+    networks:
+      - app-network
+
+  db:
+    image: mysql:5.7.16
+    # Set mysqld charset
+    command:
+      - '--character-set-server=utf8mb4'
+      - '--collation-server=utf8mb4_unicode_ci'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASS}'
+      MYSQL_USER: '${DB_USER}'
+      MYSQL_PASSWORD: '${DB_PASS}'
+      MYSQL_DATABASE: '${DB_NAME}'
+    volumes:
+      - './mysql/data:/var/lib/mysql'
+      - './mysql/conf.d:/etc/mysql/conf.d'
+    ports:
+      - '3306'
+    # restart: always
+    networks:
+      - app-network
