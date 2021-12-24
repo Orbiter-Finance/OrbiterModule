@@ -61,7 +61,7 @@ export default {
     },
     gasPrice: 2,
   },
-  makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+  makerAddress: '0xB859fE929f9f74CE96dD3F1F616fa3fF49D489A6',
   privatekey: '',
   ABI: [
     {
