@@ -1,5 +1,7 @@
 import BigNumber from 'bignumber.js'
 import { plainToInstance } from 'class-transformer'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
@@ -8,6 +10,9 @@ import { equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
 import { expanPool, getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+
+// extend relativeTime
+dayjs.extend(relativeTime)
 
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker', async ({ restful }) => {
@@ -86,6 +91,13 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         )
       }
 
+      // time ago
+      item['fromTimeStampAgo'] = dayjs().from(dayjs(item.fromTimeStamp))
+      item['toTimeStampAgo'] = '-'
+      if (item.toTimeStamp && item.toTimeStamp != '0') {
+        item['toTimeStampAgo'] = dayjs().from(dayjs(item.toTimeStamp))
+      }
+
       let needTo = {
         chainId: 0,
         amount: 0,
@@ -142,11 +154,14 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json(list)
   })
 
-  router.get('maker/wealths', async ({ restful }) => {
-    let rst = Core.memoryCache.get(serviceMaker.CACHE_KEY_GET_WEALTHS)
+  router.get('maker/wealths', async ({ request, restful }) => {
+    const makerAddress = String(request.query.makerAddress || '')
 
+    let rst = Core.memoryCache.get(
+      `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
+    )
     if (!rst) {
-      rst = await serviceMaker.getWealths()
+      rst = await serviceMaker.getWealths(makerAddress)
     }
 
     restful.json(rst)

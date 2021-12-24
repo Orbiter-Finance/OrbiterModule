@@ -4,7 +4,7 @@ import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
 import { dateFormatNormal, equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
-import { accessLogger, errorLogger } from '../util/logger'
+import { errorLogger } from '../util/logger'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, makeTransactionID } from './maker'
 
@@ -56,19 +56,14 @@ const FINALIZED_CONFIRMATIONS = 3
 /**
  * last MakerPull and pull count
  */
+class MakerPullLastData {
+  makerPull: MakerPull | undefined = undefined
+  pullCount: 0
+}
 const LAST_PULL_COUNT_MAX = 3
-const ETHERSCAN_LAST = {
-  makerPull: <MakerPull | undefined>undefined,
-  pullCount: 0, // last pull count
-}
-const ARBITRUM_LAST = {
-  makerPull: <MakerPull | undefined>undefined,
-  pullCount: 0,
-}
-const ZKSYNC_LAST = {
-  makerPull: <MakerPull | undefined>undefined,
-  pullCount: 0,
-}
+const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
+const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
+const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 
 export class ServiceMakerPull {
   private chainId: number
@@ -90,15 +85,13 @@ export class ServiceMakerPull {
    * get last maker_pull
    * @param last ETHERSCAN_LAST || ARBITRUM_LAST || ZKSYNC_LAST
    */
-  private getLastMakerPull(last: {
-    makerPull: MakerPull | undefined
-    pullCount: number
-  }) {
+  private getLastMakerPull(last: MakerPullLastData) {
     // if last's pullCount < max pullCount, the last makerPull valid
     let lastMakePull: MakerPull | undefined
     if (last.pullCount < LAST_PULL_COUNT_MAX) {
       lastMakePull = last.makerPull
     } else {
+      // update last data
       last.makerPull = undefined
       last.pullCount = 0
     }
@@ -212,7 +205,11 @@ export class ServiceMakerPull {
    * @param api
    */
   async etherscan(api: { endPoint: string; key: string }) {
-    let lastMakePull = this.getLastMakerPull(ETHERSCAN_LAST)
+    let makerPullLastData = ETHERSCAN_LAST[this.makerAddress]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -277,10 +274,11 @@ export class ServiceMakerPull {
     }
 
     // set ETHERSCAN_LAST
-    if (lastMakePull?.txBlock == ETHERSCAN_LAST.makerPull?.txBlock) {
-      ETHERSCAN_LAST.pullCount++
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
     }
-    ETHERSCAN_LAST.makerPull = lastMakePull
+    makerPullLastData.makerPull = lastMakePull
+    ETHERSCAN_LAST[this.makerAddress] = makerPullLastData
   }
 
   /**
@@ -288,7 +286,11 @@ export class ServiceMakerPull {
    * @param api
    */
   async arbitrum(api: { endPoint: string; key: string }) {
-    let lastMakePull = this.getLastMakerPull(ARBITRUM_LAST)
+    let makerPullLastData = ARBITRUM_LAST[this.makerAddress]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -353,10 +355,11 @@ export class ServiceMakerPull {
     }
 
     // set ARBITRUM_LAST
-    if (lastMakePull?.txBlock == ARBITRUM_LAST.makerPull?.txBlock) {
-      ARBITRUM_LAST.pullCount++
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
     }
-    ARBITRUM_LAST.makerPull = lastMakePull
+    makerPullLastData.makerPull = lastMakePull
+    ARBITRUM_LAST[this.makerAddress] = makerPullLastData
   }
 
   /**
@@ -376,7 +379,11 @@ export class ServiceMakerPull {
       }
     }
 
-    let lastMakePull = this.getLastMakerPull(ZKSYNC_LAST)
+    let makerPullLastData = ZKSYNC_LAST[this.makerAddress]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = this.getLastMakerPull(makerPullLastData)
 
     const resp = await axios.get(
       `${api.endPoint}/accounts/${this.makerAddress}/transactions`,
@@ -450,9 +457,10 @@ export class ServiceMakerPull {
     }
 
     // set ZKSYNC_LAST
-    if (lastMakePull?.txHash == ZKSYNC_LAST.makerPull?.txHash) {
-      ZKSYNC_LAST.pullCount++
+    if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
+      makerPullLastData.pullCount++
     }
-    ZKSYNC_LAST.makerPull = lastMakePull
+    makerPullLastData.makerPull = lastMakePull
+    ZKSYNC_LAST[this.makerAddress] = makerPullLastData
   }
 }

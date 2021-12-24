@@ -137,7 +137,6 @@ export async function getMakerNodes(
     makerAddress,
   })
   if (fromChain > 0) {
-    console.log({ fromChain })
     queryBuilder.andWhere('fromChain = :fromChain', { fromChain })
   }
   if (startTime) {
@@ -171,7 +170,16 @@ type WealthsChain = {
     value: string
   }[]
 }
-export async function getWealths(): Promise<WealthsChain[]> {
+export async function getWealths(
+  makerAddress: string
+): Promise<WealthsChain[]> {
+  if (!makerAddress) {
+    throw new ServiceError(
+      'Sorry, params makerAddress miss',
+      ServiceErrorCodes['arguments invalid']
+    )
+  }
+
   const makerList = await getMakerList()
 
   const wealthsChains: WealthsChain[] = []
@@ -264,8 +272,7 @@ export async function getWealths(): Promise<WealthsChain[]> {
     return item
   }
   for (const item of makerList) {
-    // Now, only makerConfig.makerAddress
-    if (item.makerAddress != makerConfig.makerAddress) {
+    if (item.makerAddress != makerAddress) {
       continue
     }
 

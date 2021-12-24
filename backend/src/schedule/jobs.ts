@@ -76,8 +76,15 @@ class MJobPessimism extends MJob {
 
 export function jobGetWealths() {
   const callback = async () => {
-    const wealths = await serviceMaker.getWealths()
-    Core.memoryCache.set(serviceMaker.CACHE_KEY_GET_WEALTHS, wealths, 100000)
+    const makerAddresses = await serviceMaker.getMakerAddresses()
+    for (const item of makerAddresses) {
+      const wealths = await serviceMaker.getWealths(item)
+      Core.memoryCache.set(
+        `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${item}`,
+        wealths,
+        100000
+      )
+    }
   }
 
   new MJobPessimism('* */1 * * * *', callback).schedule()

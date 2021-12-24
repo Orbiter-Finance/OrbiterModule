@@ -40,7 +40,9 @@ type MakerNodes = {
   toTx: string
   toTxHref: string
   fromTimeStamp: string
+  fromTimeStampAgo: string
   toTimeStamp: string
+  toTimeStampAgo: string
   state: number
   txTokenName: string
   needTo: any

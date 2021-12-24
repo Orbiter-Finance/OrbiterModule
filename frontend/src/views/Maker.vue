@@ -170,7 +170,11 @@
                   scope.row.formTx
                 }}</TextLong>
               </a>
-              <div class="table-timestamp">{{ scope.row.fromTimeStamp }}</div>
+              <div class="table-timestamp">
+                <TextLong :content="scope.row.fromTimeStamp">{{
+                  scope.row.fromTimeStampAgo
+                }}</TextLong>
+              </div>
             </template>
           </el-table-column>
           <el-table-column width="145">
@@ -191,7 +195,15 @@
               <TextLong v-else :content="scope.row.toTx">{{
                 scope.row.toTx
               }}</TextLong>
-              <div class="table-timestamp">{{ scope.row.toTimeStamp }}</div>
+              <div class="table-timestamp">
+                <TextLong
+                  v-if="scope.row.toTimeStamp && scope.row.toTimeStamp != '0'"
+                  :content="scope.row.toTimeStamp"
+                >
+                  {{ scope.row.toTimeStampAgo }}
+                </TextLong>
+                <span v-else>{{ scope.row.toTimeStampAgo }}</span>
+              </div>
             </template>
           </el-table-column>
           <el-table-column width="120">
