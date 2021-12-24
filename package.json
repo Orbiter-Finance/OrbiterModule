@@ -1,7 +1,7 @@
 {
   "name": "bufeifpv-cms",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.2.0",
   "scripts": {
     "dev:backend": "yarn --cwd backend dev",
     "dev:frontend": "wait-on http://localhost:3002 && yarn --cwd frontend dev",

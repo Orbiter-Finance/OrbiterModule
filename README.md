@@ -1,5 +1,12 @@
 # Orbiter Module
 
+## Statement
+- Orbiter Module is quick developmenting, If you find a problem, please send a [new issue](https://github.com/OrbiterCross/OrbitalModule/issues/new)
+- The risk of using this software will be entirely borne by him, and the author of the software (Orbiter Module) does not bear any responsibility.
+- The author of the software (Orbiter Module) does not bear any responsibility for service interruption or other defects caused by force majeure or uncontrollable reasons such as hacker attacks, communication line interruption, etc., which cause users to be unable to use normally, but will try to reduce the resulting damage to users(Loss or impact).
+- For issues not covered by this statement, please refer to the relevant national laws and regulations. When this statement conflicts with the relevant national laws and regulations, the national laws and regulations shall prevail.
+
+
 ## Project
 
 - OrbitalModule has been deployed and will be open-source soon.
@@ -35,13 +42,14 @@
 - [Install docker](https://docs.docker.com/get-docker/)
 - [Install docker-compose](https://docs.docker.com/compose/install/)
 
-### Build dokcer image and run docker
+### Build docker image and run docker
 
 #### Set backend's ORBITER_SCENE
 
 - When you only maker service, set `ORBITER_SCENE=maker`
 - When you only dashboard service, set `ORBITER_SCENE=dashboard`
 - When you only all service, set `ORBITER_SCENE=all` (default)
+- <strong style="color: yellow">Warnning: </strong>if you run maker service, please do not expose your ip or port on the public network
 
 ```
 # When you need run at daemon, add -d
