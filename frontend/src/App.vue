@@ -6,11 +6,11 @@
         <div>Orbiter's Dashboard</div>
       </div>
       <div class="maker-selected" v-if="makerAddressSelected">
-        maker:
         <el-dropdown trigger="click">
-          <span class="maker-selected__text">
+          <div class="maker-selected__text">
             {{ makerAddressSelected }}
-          </span>
+            <el-icon class="el-icon--right"><arrow-down /></el-icon>
+          </div>
           <template #dropdown>
             <el-dropdown-menu>
               <el-dropdown-item
@@ -49,10 +49,14 @@
 </template>
 
 <script lang="ts">
+import { ArrowDown } from '@element-plus/icons'
 import { defineComponent, provide, reactive, toRefs } from 'vue'
 import { $axios } from './plugins/axios'
 
 export default defineComponent({
+  components: {
+    ArrowDown,
+  },
   setup() {
     const state = reactive({
       menuActive: 'Home',
@@ -142,6 +146,8 @@ $aside-width: 200px;
       border-radius: 28px;
       border: 1px solid #e8e8e8;
       padding: 8px;
+      display: flex;
+      flex-direction: row;
       cursor: pointer;
 
       &:hover {

@@ -92,10 +92,10 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       }
 
       // time ago
-      item['fromTimeStampAgo'] = dayjs().from(dayjs(item.fromTimeStamp))
+      item['fromTimeStampAgo'] = dayjs().to(dayjs(item.fromTimeStamp))
       item['toTimeStampAgo'] = '-'
       if (item.toTimeStamp && item.toTimeStamp != '0') {
-        item['toTimeStampAgo'] = dayjs().from(dayjs(item.toTimeStamp))
+        item['toTimeStampAgo'] = dayjs().to(dayjs(item.toTimeStamp))
       }
 
       let needTo = {

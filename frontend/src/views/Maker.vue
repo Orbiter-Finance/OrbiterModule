@@ -324,11 +324,6 @@ export default defineComponent({
     fromAmountTotal() {
       let num = new BigNumber(0)
       for (const item of this.list) {
-        // filter item when toAmount <= 0
-        if (item.toAmount <= 0) {
-          continue
-        }
-
         num = num.plus(item.fromAmountFormat)
       }
       return num

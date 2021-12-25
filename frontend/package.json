@@ -8,6 +8,7 @@
     "dev": "vue-cli-service serve"
   },
   "dependencies": {
+    "@element-plus/icons": "^0.0.11",
     "axios": "^0.24.0",
     "bignumber.js": "^9.0.2",
     "core-js": "^3.6.5",

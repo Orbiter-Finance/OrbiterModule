@@ -52,6 +52,10 @@ export const makerNodes = reactive({
   list: [] as MakerNodes,
 
   async get(makerAddress: string, fromChain: number = 0, rangeDate: Date[]) {
+    if (!makerAddress) {
+      return
+    }
+
     this.loading = true
     try {
       const params = { makerAddress, fromChain }
@@ -105,6 +109,10 @@ export const makerWealth = reactive({
   list: [] as MakerWealths,
 
   async get(makerAddress: string) {
+    if (!makerAddress) {
+      return
+    }
+    
     this.loading = true
     try {
       const resp = await $axios.get<MakerWealths>('maker/wealths', {
