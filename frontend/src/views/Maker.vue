@@ -89,6 +89,20 @@
       v-if="list.length > 0"
     >
       <span>TransactionTotal: {{ transactionTotal }}</span>
+      <span>
+        <el-popover placement="bottom" width="max-content" trigger="hover">
+          <template #default>
+            <div class="user-addresses">
+              <div v-for="(item, index) in userAddressList" :key="index">
+                {{ item.address }}<span>&nbsp;({{ item.count }})</span>
+              </div>
+            </div>
+          </template>
+          <template #reference>
+            <span>UserAddressTotal:{{ userAddressList.length }}</span>
+          </template>
+        </el-popover>
+      </span>
       <span>FromAmountTotal: {{ fromAmountTotal }}</span>
       <span>ToAmountTotal: {{ toAmountTotal }}</span>
       <span style="color: #67c23a">+{{ diffAmountTotal }}</span>
@@ -253,7 +267,7 @@
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
 import { BigNumber } from 'bignumber.js'
-import { defineComponent, inject, reactive, ToRef, toRefs } from 'vue'
+import { defineComponent, inject, reactive, ToRef, toRefs, watch } from 'vue'
 import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
 export default defineComponent({
@@ -261,12 +275,12 @@ export default defineComponent({
     TextLong,
   },
   setup() {
+    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
+
     const state = reactive({
       rangeDate: [] as Date[],
       chainId: '',
     })
-
-    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
 
     const stateTags = {
       0: { label: 'From: check', type: 'info' },
@@ -300,8 +314,16 @@ export default defineComponent({
     }
     getMakerNodes()
 
+    // When makerAddressSelected changed, get maker's data
+    watch(
+      () => makerAddressSelected.value,
+      () => {
+        getMakerWealth()
+        getMakerNodes()
+      }
+    )
+
     return {
-      makerAddressSelected,
       ...toRefs(state),
       stateTags,
       reset,
@@ -321,6 +343,29 @@ export default defineComponent({
     transactionTotal() {
       return this.list.length
     },
+    userAddressList() {
+      const userAddressList: { address: string; count: number }[] = []
+      for (const item of this.list) {
+        if (!item.userAddress) {
+          continue
+        }
+
+        const userAddress = userAddressList.find(
+          (item1) => item.userAddress == item1.address
+        )
+        if (userAddress) {
+          userAddress.count++
+          continue
+        }
+
+        userAddressList.push({ address: item.userAddress, count: 1 })
+      }
+
+      // Sort by count desc
+      userAddressList.sort((a, b) => b.count - a.count)
+
+      return userAddressList
+    },
     fromAmountTotal() {
       let num = new BigNumber(0)
       for (const item of this.list) {
@@ -337,12 +382,6 @@ export default defineComponent({
     },
     diffAmountTotal() {
       return new BigNumber(this.fromAmountTotal).minus(this.toAmountTotal)
-    },
-  },
-  watch: {
-    makerAddressSelected() {
-      this.getMakerWealth()
-      this.getMakerNodes()
     },
   },
 })
@@ -426,6 +465,27 @@ export default defineComponent({
     margin-right: 16px;
   }
 }
+
+.user-addresses {
+  max-height: 300px;
+  overflow-y: scroll;
+
+  > * {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    span {
+      font-size: 13px;
+      color: #{var(--el-color-primary)};
+    }
+  }
+}
+
 .table-timestamp {
   font-size: 12px;
   color: #888888;

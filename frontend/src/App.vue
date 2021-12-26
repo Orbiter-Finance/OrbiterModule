@@ -1,43 +1,49 @@
 <template>
   <el-container>
     <el-header>
-      <div class="header-logo">
-        <img src="./assets/logo.png" alt="logo" />
-        <div>Orbiter's Dashboard</div>
-      </div>
-      <div class="maker-selected" v-if="makerAddressSelected">
-        <el-dropdown trigger="click">
-          <div class="maker-selected__text">
-            {{ makerAddressSelected }}
-            <el-icon class="el-icon--right"><arrow-down /></el-icon>
-          </div>
-          <template #dropdown>
-            <el-dropdown-menu>
-              <el-dropdown-item
-                v-for="(item, index) in makerAddresses"
-                :key="index"
-                @click="onClickMakerAddressItem(item)"
-              >
-                {{ item }}
-              </el-dropdown-item>
-            </el-dropdown-menu>
-          </template>
-        </el-dropdown>
+      <div class="el-header__container">
+        <div class="header-logo">
+          <img src="./assets/logo.png" alt="logo" />
+          <div>Orbiter Dashboard</div>
+        </div>
+        <el-menu
+          :default-active="navActive"
+          class="header-navs"
+          mode="horizontal"
+          :router="true"
+        >
+          <el-menu-item
+            v-for="(item, index) in navs"
+            :key="index"
+            :index="item.path"
+          >
+            {{ item.name }}
+          </el-menu-item>
+        </el-menu>
+        <div class="header-maker" v-if="makerAddressSelected">
+          <el-dropdown trigger="click">
+            <div class="header-maker__text">
+              {{ makerAddressSelected }}
+              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+            </div>
+            <template #dropdown>
+              <el-dropdown-menu>
+                <el-dropdown-item
+                  v-for="(item, index) in makerAddresses"
+                  :key="index"
+                  @click="onClickMakerAddressItem(item)"
+                >
+                  {{ item }}
+                </el-dropdown-item>
+              </el-dropdown-menu>
+            </template>
+          </el-dropdown>
+        </div>
       </div>
     </el-header>
     <el-container>
-      <el-aside>
-        <ul class="aside-menu">
-          <li
-            v-for="(item, index) in menus"
-            :key="index"
-            :class="{ 'is-active': item.name == menuActive }"
-            @click="onClickMenu(item.name)"
-          >
-            {{ item.name }}
-          </li>
-        </ul>
-      </el-aside>
+      <!-- <el-aside>
+      </el-aside> -->
       <el-container>
         <el-main>
           <router-view />
@@ -50,39 +56,27 @@
 
 <script lang="ts">
 import { ArrowDown } from '@element-plus/icons'
-import { defineComponent, provide, reactive, toRefs } from 'vue'
+import { defineComponent, provide, reactive, toRefs, watch } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 
 export default defineComponent({
   components: {
     ArrowDown,
   },
+
   setup() {
+    const route = useRoute()
+    const router = useRouter()
+
     const state = reactive({
-      menuActive: 'Home',
+      navs: router.getRoutes(),
+      navActive: '/',
       makerAddresses: [] as string[],
       makerAddressSelected: '',
     })
 
     provide('makerAddressSelected', toRefs(state).makerAddressSelected)
-
-    const menus = [
-      {
-        name: 'Home',
-        link: '',
-      },
-      // {
-      //   name: 'Compare',
-      //   link: '',
-      // },
-      // {
-      //   name: 'Graph',
-      //   link: '',
-      // },
-    ]
-    const onClickMenu = (menuName: string) => {
-      state.menuActive = menuName
-    }
 
     const getGlobalInfo = async () => {
       const resp = await $axios.get<{ makerAddresses: string[] }>('global')
@@ -94,33 +88,49 @@ export default defineComponent({
       state.makerAddressSelected = makerAddress
     }
 
+    watch(
+      () => route.path,
+      (nv) => {
+        state.navActive = nv
+      }
+    )
+
     return {
       ...toRefs(state),
 
-      menus,
-      onClickMenu,
       onClickMakerAddressItem,
     }
   },
 })
 </script>
 
-<style lang="scss">
+<style lang="scss" scoped>
 $header-height: 60px;
 $aside-width: 200px;
+$max-width: 1600px;
 
 .el-header {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
-  display: flex;
-  flex-direction: row;
-  align-items: center;
   height: $header-height;
   background: white;
   border-bottom: 1px solid #{var(--el-border-color-base)};
+  padding: 0;
   z-index: 99999;
+
+  .el-header__container {
+    max-width: $max-width;
+    display: flex;
+    flex-direction: row;
+    align-items: center;
+    height: $header-height;
+    width: 100%;
+    margin: 0 auto;
+    padding: 0 20px;
+    box-sizing: border-box;
+  }
 
   .header-logo {
     display: flex;
@@ -130,7 +140,6 @@ $aside-width: 200px;
     margin: 12px 0;
     font-size: 22px;
     font-weight: bold;
-    flex: 1;
 
     img {
       width: 40px;
@@ -138,11 +147,17 @@ $aside-width: 200px;
     }
   }
 
-  .maker-selected {
+  .header-navs {
+    flex: 1;
+    margin-left: 36px;
+    background-color: transparent;
+  }
+
+  .header-maker {
     font-size: 13px;
     color: #888888;
 
-    .maker-selected__text {
+    .header-maker__text {
       border-radius: 28px;
       border: 1px solid #e8e8e8;
       padding: 8px;
@@ -151,7 +166,7 @@ $aside-width: 200px;
       cursor: pointer;
 
       &:hover {
-        background-color: #f8f8f8;
+        background: #f8f8f8;
       }
     }
   }
@@ -194,6 +209,8 @@ $aside-width: 200px;
 
 .el-main {
   margin-top: $header-height;
-  margin-left: $aside-width;
+  // margin-left: $aside-width; // hide aside
+  margin: $header-height auto 0 auto;
+  max-width: $max-width;
 }
 </style>
