@@ -12,13 +12,15 @@
           mode="horizontal"
           :router="true"
         >
-          <el-menu-item
-            v-for="(item, index) in navs"
-            :key="index"
-            :index="item.path"
-          >
-            {{ item.name }}
-          </el-menu-item>
+          <template v-for="(item, index) in navs" :key="index">
+            <!-- If route.meta.navHide is undefined or navHide == false, display -->
+            <el-menu-item
+              v-if="!item.meta.navHide"
+              :index="item.path"
+            >
+              {{ item.name }}
+            </el-menu-item>
+          </template>
         </el-menu>
         <div class="header-maker" v-if="makerAddressSelected">
           <el-dropdown trigger="click">

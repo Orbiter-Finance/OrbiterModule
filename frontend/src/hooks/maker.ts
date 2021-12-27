@@ -37,6 +37,8 @@ type MakerNodes = {
   toChainName: string
   formTx: string
   fromTxHref: string
+  fromAmountFormat: string
+  toAmountFormat: string
   toTx: string
   toTxHref: string
   fromTimeStamp: string
@@ -51,14 +53,19 @@ export const makerNodes = reactive({
   loading: false,
   list: [] as MakerNodes,
 
-  async get(makerAddress: string, fromChain: number = 0, rangeDate: Date[]) {
+  async get(
+    makerAddress: string,
+    fromChain: number = 0,
+    rangeDate: Date[] = [],
+    userAddress = ''
+  ) {
     if (!makerAddress) {
       return
     }
 
     this.loading = true
     try {
-      const params = { makerAddress, fromChain }
+      const params = { makerAddress, fromChain, userAddress }
       if (rangeDate?.[0]) {
         params['startTime'] = rangeDate?.[0].getTime()
       }
@@ -112,7 +119,7 @@ export const makerWealth = reactive({
     if (!makerAddress) {
       return
     }
-    
+
     this.loading = true
     try {
       const resp = await $axios.get<MakerWealths>('maker/wealths', {

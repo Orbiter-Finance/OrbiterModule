@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { Repository } from 'typeorm'
+import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
 import { dateFormatNormal, equalsIgnoreCase } from '../util'
@@ -40,6 +41,55 @@ async function savePull(
   }
 
   return true
+}
+
+/**
+ * @param makerAddress
+ * @param startTime
+ * @param endTime
+ * @param fromOrToMaker false: maker <<< to, true: maker >>> from
+ */
+export async function getMakerPulls(
+  makerAddress: string,
+  startTime = 0,
+  endTime = 0,
+  fromOrToMaker = false
+): Promise<MakerPull[]> {
+  if (!makerAddress) {
+    throw new ServiceError(
+      'Sorry, params makerAddress miss',
+      ServiceErrorCodes['arguments invalid']
+    )
+  }
+
+  // QueryBuilder
+  const queryBuilder = repositoryMakerPull().createQueryBuilder()
+
+  // where
+  queryBuilder.where('makerAddress = :makerAddress', {
+    makerAddress,
+  })
+  queryBuilder.andWhere(
+    `${fromOrToMaker ? 'fromAddress' : 'toAddress'} = :makerAddress`,
+    { makerAddress }
+  )
+  if (startTime) {
+    queryBuilder.andWhere('txTime >= :startTime', {
+      startTime: dateFormatNormal(startTime),
+    })
+  }
+  if (endTime) {
+    queryBuilder.andWhere('txTime <= :endTime', {
+      endTime: dateFormatNormal(endTime),
+    })
+  }
+
+  // order by
+  queryBuilder.addOrderBy('txTime', 'DESC')
+
+  const list = await queryBuilder.getMany()
+
+  return list
 }
 
 /**

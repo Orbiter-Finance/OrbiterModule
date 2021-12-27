@@ -44,7 +44,10 @@
       </template>
       <el-empty v-else description="Empty balances"></el-empty>
     </div>
-    <div class="maker-block maker-header" v-loading="loadingNodes">
+    <div
+      class="maker-block maker-header maker-header--search"
+      v-loading="loadingNodes"
+    >
       <el-row :gutter="20">
         <el-col :span="6" class="maker-search__item">
           <div class="title">From chain</div>
@@ -83,17 +86,26 @@
           <el-button type="primary" @click="getMakerNodes">Apply</el-button>
         </el-col>
       </el-row>
+      <el-row v-if="userAddressSelected">
+        <el-tag closable @close="userAddressSelected = ''">
+          UserAddress: {{ userAddressSelected }}
+        </el-tag>
+      </el-row>
     </div>
     <div
       class="maker-block maker-header maker-header__statistics"
       v-if="list.length > 0"
     >
-      <span>TransactionTotal: {{ transactionTotal }}</span>
+      <span>TransactionTotal: {{ list.length }}</span>
       <span>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
             <div class="user-addresses">
-              <div v-for="(item, index) in userAddressList" :key="index">
+              <div
+                v-for="(item, index) in userAddressList"
+                :key="index"
+                @click="userAddressSelected = item.address"
+              >
                 {{ item.address }}<span>&nbsp;({{ item.count }})</span>
               </div>
             </div>
@@ -267,7 +279,16 @@
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
 import { BigNumber } from 'bignumber.js'
-import { defineComponent, inject, reactive, ToRef, toRefs, watch } from 'vue'
+import {
+  computed,
+  defineComponent,
+  inject,
+  reactive,
+  toRef,
+  ToRef,
+  toRefs,
+  watch,
+} from 'vue'
 import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
 export default defineComponent({
@@ -280,6 +301,7 @@ export default defineComponent({
     const state = reactive({
       rangeDate: [] as Date[],
       chainId: '',
+      userAddressSelected: '',
     })
 
     const stateTags = {
@@ -302,6 +324,7 @@ export default defineComponent({
       const startTime = new Date(endTime.getTime() - 86400000)
       state.rangeDate = [startTime, endTime]
       state.chainId = ''
+      state.userAddressSelected = ''
     }
     reset()
 
@@ -314,38 +337,18 @@ export default defineComponent({
     }
     getMakerNodes()
 
-    // When makerAddressSelected changed, get maker's data
-    watch(
-      () => makerAddressSelected.value,
-      () => {
-        getMakerWealth()
-        getMakerNodes()
-      }
-    )
-
-    return {
-      ...toRefs(state),
-      stateTags,
-      reset,
-
-      chains: toRefs(makerInfo).chains,
-
-      loadingWealths: toRefs(makerWealth).loading,
-      wealths: toRefs(makerWealth).list,
-      getMakerWealth,
-
-      loadingNodes: toRefs(makerNodes).loading,
-      list: toRefs(makerNodes).list,
-      getMakerNodes,
-    }
-  },
-  computed: {
-    transactionTotal() {
-      return this.list.length
-    },
-    userAddressList() {
+    // computeds
+    const list = computed(() => {
+      return makerNodes.list.filter((item) => {
+        if (!state.userAddressSelected) {
+          return true
+        }
+        return item.userAddress == state.userAddressSelected
+      })
+    })
+    const userAddressList = computed(() => {
       const userAddressList: { address: string; count: number }[] = []
-      for (const item of this.list) {
+      for (const item of makerNodes.list) {
         if (!item.userAddress) {
           continue
         }
@@ -365,24 +368,53 @@ export default defineComponent({
       userAddressList.sort((a, b) => b.count - a.count)
 
       return userAddressList
-    },
-    fromAmountTotal() {
+    })
+    const fromAmountTotal = computed(() => {
       let num = new BigNumber(0)
-      for (const item of this.list) {
+      for (const item of list.value) {
         num = num.plus(item.fromAmountFormat)
       }
       return num
-    },
-    toAmountTotal() {
+    })
+    const toAmountTotal = computed(() => {
       let num = new BigNumber(0)
-      for (const item of this.list) {
+      for (const item of list.value) {
         num = num.plus(item.toAmountFormat)
       }
       return num
-    },
-    diffAmountTotal() {
-      return new BigNumber(this.fromAmountTotal).minus(this.toAmountTotal)
-    },
+    })
+    const diffAmountTotal = computed(() => {
+      return new BigNumber(fromAmountTotal.value).minus(toAmountTotal.value)
+    })
+
+    // When makerAddressSelected changed, get maker's data
+    watch(
+      () => makerAddressSelected.value,
+      () => {
+        getMakerWealth()
+        getMakerNodes()
+      }
+    )
+
+    return {
+      ...toRefs(state),
+      stateTags,
+      reset,
+
+      chains: toRef(makerInfo, 'chains'),
+
+      loadingWealths: toRef(makerWealth, 'loading'),
+      wealths: toRef(makerWealth, 'list'),
+
+      loadingNodes: toRef(makerNodes, 'loading'),
+      list,
+      getMakerNodes,
+
+      userAddressList,
+      fromAmountTotal,
+      toAmountTotal,
+      diffAmountTotal,
+    }
   },
 })
 </script>
@@ -457,6 +489,15 @@ export default defineComponent({
     margin-bottom: 4px;
   }
 }
+.maker-header--search {
+  .el-row {
+    margin-top: 10px;
+
+    &:first-child {
+      margin-top: 0;
+    }
+  }
+}
 .maker-header__statistics {
   font-size: 14px;
   color: #555555;
@@ -474,6 +515,11 @@ export default defineComponent({
     padding: 8px 0;
     border-bottom: 1px solid #f0f0f0;
     text-align: center;
+
+    &:hover {
+      background-color: #f8f8f8;
+      cursor: pointer;
+    }
 
     &:last-child {
       border-bottom: none;

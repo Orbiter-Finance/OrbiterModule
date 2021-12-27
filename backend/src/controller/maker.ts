@@ -6,6 +6,7 @@ import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
+import { getMakerPulls } from '../service/maker_pull'
 import { equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
 import { expanPool, getAmountToSend, getMakerList } from '../util/maker'
@@ -50,6 +51,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         fromChain?: number
         startTime?: number
         endTime?: number
+        userAddress?: string
       },
       request.query
     )
@@ -58,7 +60,8 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       params.makerAddress,
       params.fromChain,
       Number(params.startTime),
-      Number(params.endTime)
+      Number(params.endTime),
+      params.userAddress
     )
 
     // fill data
@@ -176,5 +179,49 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
 
     restful.json()
+  })
+
+  router.get('maker/pulls', async ({ request, restful }) => {
+    // parse query
+    const params = plainToInstance(
+      class {
+        makerAddress: string
+        startTime?: number
+        endTime?: number
+        fromOrToMaker?: number
+      },
+      request.query
+    )
+
+    const list = await getMakerPulls(
+      params.makerAddress,
+      params.startTime,
+      params.endTime,
+      params.fromOrToMaker == 1
+    )
+
+    for (const item of list) {
+      item['chainName'] = CHAIN_INDEX[item.chainId] || ''
+
+      // amount format
+      const chainTokenInfo = await serviceMaker.getTokenInfo(
+        Number(item.chainId),
+        item.tokenAddress
+      )
+      item['amountFormat'] = 0
+      if (chainTokenInfo.decimals > -1) {
+        item['amountFormat'] = new BigNumber(item.amount).dividedBy(
+          10 ** chainTokenInfo.decimals
+        )
+      }
+
+      // time ago
+      item['txTimeAgo'] = '-'
+      if (item.txTime.getTime() > 0) {
+        item['txTimeAgo'] = dayjs().to(dayjs(item.txTime))
+      }
+    }
+
+    restful.json(list)
   })
 }

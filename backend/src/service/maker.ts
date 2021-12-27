@@ -114,13 +114,15 @@ export function makeTransactionID(
  * @param fromChain 0: All
  * @param startTime start time
  * @param endTime end time
+ * @param userAddress user's address
  * @returns
  */
 export async function getMakerNodes(
   makerAddress: string,
   fromChain: number = 0,
-  startTime?: number,
-  endTime?: number
+  startTime = 0,
+  endTime = 0,
+  userAddress = ''
 ): Promise<MakerNode[]> {
   if (!makerAddress) {
     throw new ServiceError(
@@ -148,6 +150,9 @@ export async function getMakerNodes(
     queryBuilder.andWhere('fromTimeStamp <= :endTime', {
       endTime: dateFormatNormal(endTime),
     })
+  }
+  if (userAddress) {
+    queryBuilder.andWhere('userAddress = :userAddress', { userAddress })
   }
 
   // order by
