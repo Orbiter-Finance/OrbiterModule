@@ -1,13 +1,14 @@
 import axios from 'axios'
-import { Repository } from 'typeorm'
+import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
 import { dateFormatNormal, equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
+import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { getAmountFlag, makeTransactionID } from './maker'
+import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -62,34 +63,72 @@ export async function getMakerPulls(
     )
   }
 
+  const ALIAS_MP = 'mp'
+  const ALIAS_MN = 'mn'
+
   // QueryBuilder
-  const queryBuilder = repositoryMakerPull().createQueryBuilder()
+  const queryBuilder = repositoryMakerPull().createQueryBuilder(ALIAS_MP)
+
+  // select subQuery
+  const selectSubSelect = repositoryMakerNode()
+    .createQueryBuilder(ALIAS_MN)
+    .select('toTx')
+    .where(`${ALIAS_MN}.makerAddress = :makerAddress`, { makerAddress })
+    .limit(1)
+  if (fromOrToMaker) {
+    selectSubSelect.andWhere(`${ALIAS_MN}.toTx=${ALIAS_MP}.txHash`)
+  } else {
+    selectSubSelect.andWhere(`${ALIAS_MN}.formTx=${ALIAS_MP}.txHash`)
+  }
+  queryBuilder.addSelect('(' + selectSubSelect.getQuery() + ')', 'target_tx')
 
   // where
-  queryBuilder.where('makerAddress = :makerAddress', {
+  queryBuilder.where(`${ALIAS_MP}.makerAddress = :makerAddress`, {
     makerAddress,
   })
+  queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
-    `${fromOrToMaker ? 'fromAddress' : 'toAddress'} = :makerAddress`,
+    `${ALIAS_MP}.${
+      fromOrToMaker ? 'fromAddress' : 'toAddress'
+    } = :makerAddress`,
     { makerAddress }
   )
   if (startTime) {
-    queryBuilder.andWhere('txTime >= :startTime', {
+    queryBuilder.andWhere(`${ALIAS_MP}.txTime >= :startTime`, {
       startTime: dateFormatNormal(startTime),
     })
   }
   if (endTime) {
-    queryBuilder.andWhere('txTime <= :endTime', {
+    queryBuilder.andWhere(`${ALIAS_MP}.txTime <= :endTime`, {
       endTime: dateFormatNormal(endTime),
     })
   }
 
   // order by
-  queryBuilder.addOrderBy('txTime', 'DESC')
+  queryBuilder.addOrderBy(`${ALIAS_MP}.txTime`, 'DESC')
 
-  const list = await queryBuilder.getMany()
+  const list = await queryBuilder.getRawMany()
 
-  return list
+  // clear
+  const newList: any[] = []
+  for (const item of list) {
+    newList.push({
+      chainId: item.mp_chainId,
+      makerAddress: item.mp_makerAddress,
+      tokenAddress: item.mp_tokenAddress,
+      amount: item.mp_amount,
+      amount_flag: item.mp_amount_flag,
+      nonce: item.mp_nonce,
+      fromAddress: item.mp_fromAddress,
+      toAddress: item.mp_toAddress,
+      txHash: item.mp_txHash,
+      txTime: item.mp_txTime,
+      tx_status: item.mp_tx_status,
+      target_tx: item.target_tx,
+    })
+  }
+
+  return newList
 }
 
 /**
@@ -170,6 +209,7 @@ export class ServiceMakerPull {
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
         nonce: makerPull.amount_flag,
+        tx_status: Not('rejected'),
       })
 
       if (targetMP) {
@@ -181,6 +221,7 @@ export class ServiceMakerPull {
         await repositoryMakerNode().update(
           {
             transactionID,
+            needToAmount: targetMP.amount,
           },
           {
             toTx: makerPull.txHash,
@@ -205,13 +246,34 @@ export class ServiceMakerPull {
         makerPull.nonce
       )
 
+      // find pool and calculate needToAmount
+      const targetMakerPool = await getTargetMakerPool(
+        this.makerAddress,
+        this.tokenAddress,
+        makerPull.chainId,
+        Number(makerPull.amount_flag)
+      )
+      let needToAmount = '0'
+      if (targetMakerPool) {
+        needToAmount =
+          getAmountToSend(
+            makerPull.chainId,
+            Number(makerPull.amount_flag),
+            makerPull.amount,
+            targetMakerPool,
+            makerPull.nonce
+          )?.tAmount || '0'
+      }
+
       // match data from maker_pull
       const _mp = await repositoryMakerPull().findOne({
         chainId: Number(makerPull.amount_flag),
         makerAddress: this.makerAddress,
         fromAddress: makerPull.makerAddress,
         toAddress: fromAddress,
+        amount: needToAmount,
         amount_flag: makerPull.nonce,
+        tx_status: Not('rejected'),
       })
       const otherData = {}
       if (_mp) {
@@ -237,6 +299,7 @@ export class ServiceMakerPull {
             formTx: hash,
             fromAmount: makerPull.amount,
             formNonce: makerPull.nonce,
+            needToAmount,
             fromTimeStamp: dateFormatNormal(makerPull.txTime),
             state: makerPull.tx_status == 'finalized' ? 1 : 0,
             txToken: makerPull.tokenAddress,
@@ -283,10 +346,8 @@ export class ServiceMakerPull {
 
     // check data
     const { data } = resp
-    if (data.status != '1' || !data.result) {
-      return
-    }
-    if (data.result.length <= 0) {
+    if (data.status != '1' || !data.result || data.result.length <= 0) {
+      accessLogger.warn('Get etherscan tokentx faild: ' + JSON.stringify(data))
       return
     }
 
@@ -364,10 +425,8 @@ export class ServiceMakerPull {
 
     // check data
     const { data } = resp
-    if (data.status != '1' || !data.result) {
-      return
-    }
-    if (data.result.length <= 0) {
+    if (data.status != '1' || !data.result || data.result.length <= 0) {
+      accessLogger.warn('Get arbitrum tokentx faild: ' + JSON.stringify(data))
       return
     }
 
@@ -462,8 +521,8 @@ export class ServiceMakerPull {
         continue
       }
 
-      // filter _op.type!=Transfer or failReason!=null
-      if (_op.type != 'Transfer' || item.failReason != null) {
+      // filter _op.type!=Transfer
+      if (_op.type != 'Transfer') {
         continue
       }
 
@@ -473,10 +532,6 @@ export class ServiceMakerPull {
       }
 
       let tx_status = item.status
-      if (tx_status == 'rejected') {
-        // skip status='Rejected'
-        continue
-      }
       if (tx_status == 'committed') {
         // zksync finalized's status so slow, when status=committed, set tx_status = 'finalized'
         tx_status = 'finalized'
@@ -501,6 +556,11 @@ export class ServiceMakerPull {
         tx_status,
       })
       await savePull(makerPull)
+
+      // skip compare if failReason != null or status == 'Rejected'
+      if (item.failReason != null || tx_status == 'rejected') {
+        continue
+      }
 
       // compare
       await this.compareData(makerPull, item.txHash)

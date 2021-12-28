@@ -718,11 +718,11 @@ function getTime() {
  * @returns
  */
 export function getAmountToSend(
-  fromChainID,
-  toChainID,
-  amountStr,
-  pool,
-  nonce
+  fromChainID: number,
+  toChainID: number,
+  amountStr: string,
+  pool: { precision: number; tradingFee: number; gasFee: number },
+  nonce: string | number
 ) {
   const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amountStr)
   if (!realAmount.state) {

@@ -37,6 +37,9 @@ export class MakerNode extends CommonEntity {
   toAmount: string
 
   @Column('varchar', { length: 40, default: '0' })
+  needToAmount: string
+
+  @Column('varchar', { length: 40, default: '0' })
   fromTimeStamp: string
 
   @Column('varchar', { length: 40, default: '0' })

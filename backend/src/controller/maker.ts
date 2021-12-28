@@ -111,33 +111,18 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         needTo.chainId = Number(serviceMaker.getAmountFlag(item.fromAmount))
 
         // find pool
-        let pool
-        for (const maker of await getMakerList()) {
-          const { pool1, pool2 } = expanPool(maker)
-          if (
-            pool1.makerAddress == item.makerAddress &&
-            equalsIgnoreCase(pool1.t1Address, item.txToken) &&
-            pool1.c1ID == item.fromChain &&
-            pool1.c2ID == needTo.chainId
-          ) {
-            pool = pool1
-            needTo.tokenAddress = pool1.t2Address
-            break
-          }
-          if (
-            pool2.makerAddress == item.makerAddress &&
-            equalsIgnoreCase(pool2.t2Address, item.txToken) &&
-            pool2.c1ID == needTo.chainId &&
-            pool2.c2ID == item.fromChain
-          ) {
-            pool = pool2
-            needTo.tokenAddress = pool2.t1Address
-            break
-          }
-        }
+        const pool = await serviceMaker.getTargetMakerPool(
+          item.makerAddress,
+          item.txToken,
+          Number(item.fromChain),
+          needTo.chainId
+        )
 
         // if not find pool, don't do it
         if (pool) {
+          needTo.tokenAddress =
+            needTo.chainId == pool.c1ID ? pool.t1Address : pool.t2Address
+
           needTo.amount =
             getAmountToSend(
               Number(item.fromChain),

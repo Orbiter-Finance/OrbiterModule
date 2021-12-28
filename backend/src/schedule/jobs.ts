@@ -4,7 +4,7 @@ import * as serviceMaker from '../service/maker'
 import { ServiceMakerPull } from '../service/maker_pull'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
-import { getMakerList } from '../util/maker'
+import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
 class MJob {
@@ -137,8 +137,10 @@ export function jobMakerPull() {
   const callback = async () => {
     const makerList = await getMakerList()
     for (const item of makerList) {
-      await startPull(item.c1ID, item.makerAddress, item.t1Address)
-      await startPull(item.c2ID, item.makerAddress, item.t2Address)
+      const { pool1, pool2 } = expanPool(item)
+
+      await startPull(pool1.c1ID, pool1.makerAddress, pool1.t1Address)
+      await startPull(pool2.c2ID, pool2.makerAddress, pool2.t2Address)
     }
   }
 

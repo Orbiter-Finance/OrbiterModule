@@ -9,7 +9,7 @@ import { MakerNodeTodo } from '../model/maker_node_todo'
 import { dateFormatNormal, equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerList, sendTransaction } from '../util/maker'
+import { expanPool, getMakerList, sendTransaction } from '../util/maker'
 import { CHAIN_INDEX, SIZE_OP } from '../util/maker/core'
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -314,6 +314,43 @@ export async function getWealths(
   }
 
   return wealthsChains
+}
+
+/**
+ * Get target maker pool
+ * @param makerAddress 
+ * @param tokenAddress 
+ * @param fromChainId 
+ * @param toChainId
+ * @returns 
+ */
+export async function getTargetMakerPool(
+  makerAddress: string,
+  tokenAddress: string,
+  fromChainId: number,
+  toChainId: number
+) {
+  for (const maker of await getMakerList()) {
+    const { pool1, pool2 } = expanPool(maker)
+    if (
+      pool1.makerAddress == makerAddress &&
+      equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
+      pool1.c1ID == fromChainId &&
+      pool1.c2ID == toChainId
+    ) {
+      return pool1
+    }
+
+    if (
+      pool2.makerAddress == makerAddress &&
+      equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
+      pool2.c1ID == toChainId &&
+      pool2.c2ID == fromChainId
+    ) {
+      return pool2
+    }
+  }
+  return undefined
 }
 
 export async function runTodo() {

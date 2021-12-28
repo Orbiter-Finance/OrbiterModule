@@ -12,6 +12,7 @@ type MakerPulls = {
   txHashHref: string
   txTimeAgo: string
   tx_status: string
+  target_tx: boolean
 }[]
 export function makerPulls() {
   const state = reactive({
@@ -20,7 +21,7 @@ export function makerPulls() {
   })
 
   return {
-    ...toRefs(state),
+    state: toRefs(state),
 
     // fromOrToMaker 0: maker <<< to, 1: maker >>> from
     async get(makerAddress: string, fromOrToMaker = 0, rangeDate: Date[] = []) {

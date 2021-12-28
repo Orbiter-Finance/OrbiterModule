@@ -91,17 +91,17 @@ function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
     new BigNumber(selectMakerInfo.tradingFee)
   )
-  accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
+  // accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
   let gasFee = toAmount_tradingFee
     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
     .dividedBy(new BigNumber(1000))
-  accessLogger.info('gasFee =', gasFee.toString())
+  // accessLogger.info('gasFee =', gasFee.toString())
   let digit = selectMakerInfo.precision === 18 ? 5 : 2
-  accessLogger.info('digit =', digit)
+  // accessLogger.info('digit =', digit)
   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP)
-  accessLogger.info('gasFee_fix =', gasFee_fix.toString())
+  // accessLogger.info('gasFee_fix =', gasFee_fix.toString())
   let toAmount_fee = toAmount_tradingFee.minus(gasFee_fix)
-  accessLogger.info('toAmount_fee =', toAmount_fee.toString())
+  // accessLogger.info('toAmount_fee =', toAmount_fee.toString())
   if (!toAmount_fee || isNaN(Number(toAmount_fee))) {
     return 0
   }
