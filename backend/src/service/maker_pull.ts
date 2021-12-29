@@ -341,7 +341,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 6000,
+      timeout: 16000,
     })
 
     // check data
@@ -420,7 +420,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 6000,
+      timeout: 16000,
     })
 
     // check data
@@ -480,7 +480,7 @@ export class ServiceMakerPull {
     if (!ZKSYNC_TOKEN_MAP[this.tokenAddress]) {
       const respData = (
         await axios.get(`${api.endPoint}\/tokens\/${this.tokenAddress}`, {
-          timeout: 6000,
+          timeout: 16000,
         })
       ).data
       if (respData.result?.address == this.tokenAddress) {
