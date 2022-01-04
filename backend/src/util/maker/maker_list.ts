@@ -1,4 +1,105 @@
 export const makerList = [
+  // eth
+  {
+    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    c1ID: 5,
+    c2ID: 22,
+    c1Name: 'rinkeby',
+    c2Name: 'arbitrum_test',
+    t1Address: '0x0000000000000000000000000000000000000000',
+    t2Address: '0x0000000000000000000000000000000000000000',
+    tName: 'ETH',
+    c1MinPrice: 0.00001,
+    c1MaxPrice: 0.2,
+    c2MinPrice: 0.00001,
+    c2MaxPrice: 0.2,
+    precision: 18,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 0.0001,
+    c2TradingFee: 0.0002,
+    c1GasFee: 3,
+    c2GasFee: 4,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    c1ID: 5,
+    c2ID: 33,
+    c1Name: 'rinkeby',
+    c2Name: 'zksync_test',
+    t1Address: '0x0000000000000000000000000000000000000000',
+    t2Address: '0x0000000000000000000000000000000000000000',
+    tName: 'ETH',
+    c1MinPrice: 0.00001,
+    c1MaxPrice: 0.2,
+    c2MinPrice: 0.00001,
+    c2MaxPrice: 0.2,
+    precision: 18,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 0.0001,
+    c2TradingFee: 0.0002,
+    c1GasFee: 3,
+    c2GasFee: 4,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    c1ID: 22,
+    c2ID: 33,
+    c1Name: 'arbitrum_test',
+    c2Name: 'zksync_test',
+    t1Address: '0x0000000000000000000000000000000000000000',
+    t2Address: '0x0000000000000000000000000000000000000000',
+    tName: 'ETH',
+    c1MinPrice: 0.00001,
+    c1MaxPrice: 0.2,
+    c2MinPrice: 0.00001,
+    c2MaxPrice: 0.2,
+    precision: 18,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 0.0001,
+    c2TradingFee: 0.0002,
+    c1GasFee: 3,
+    c2GasFee: 4,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+
   // usdc
   {
     makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
