@@ -3,7 +3,7 @@ import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
-import { dateFormatNormal, equalsIgnoreCase } from '../util'
+import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
@@ -318,7 +318,8 @@ export class ServiceMakerPull {
    * @param api
    */
   async etherscan(api: { endPoint: string; key: string }) {
-    let makerPullLastData = ETHERSCAN_LAST[this.makerAddress]
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ETHERSCAN_LAST[makerPullLastKey]
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
@@ -333,7 +334,7 @@ export class ServiceMakerPull {
       params: {
         apiKey: api.key,
         module: 'account',
-        action: 'tokentx',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
         address: this.makerAddress,
         page: 1,
         offset: 100,
@@ -352,12 +353,17 @@ export class ServiceMakerPull {
     }
 
     for (const item of data.result) {
+      // contractAddress = 0x0...0
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        item.contractAddress = this.tokenAddress
+      }
+
       // checks
       if (!equalsIgnoreCase(item.contractAddress, this.tokenAddress)) {
         continue
       }
 
-      const amount_flag = getAmountFlag(item.value)
+      const amount_flag = getAmountFlag(this.chainId, item.value)
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -389,7 +395,7 @@ export class ServiceMakerPull {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    ETHERSCAN_LAST[this.makerAddress] = makerPullLastData
+    ETHERSCAN_LAST[makerPullLastKey] = makerPullLastData
   }
 
   /**
@@ -397,7 +403,8 @@ export class ServiceMakerPull {
    * @param api
    */
   async arbitrum(api: { endPoint: string; key: string }) {
-    let makerPullLastData = ARBITRUM_LAST[this.makerAddress]
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ARBITRUM_LAST[makerPullLastKey]
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
@@ -431,12 +438,17 @@ export class ServiceMakerPull {
     }
 
     for (const item of data.result) {
+      // contractAddress = 0x0...0
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        item.contractAddress = this.tokenAddress
+      }
+
       // checks
       if (!equalsIgnoreCase(item.contractAddress, this.tokenAddress)) {
         continue
       }
 
-      const amount_flag = getAmountFlag(item.value)
+      const amount_flag = getAmountFlag(this.chainId, item.value)
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -468,7 +480,7 @@ export class ServiceMakerPull {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    ARBITRUM_LAST[this.makerAddress] = makerPullLastData
+    ARBITRUM_LAST[makerPullLastKey] = makerPullLastData
   }
 
   /**
@@ -488,7 +500,8 @@ export class ServiceMakerPull {
       }
     }
 
-    let makerPullLastData = ZKSYNC_LAST[this.makerAddress]
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ZKSYNC_LAST[makerPullLastKey]
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
@@ -537,7 +550,7 @@ export class ServiceMakerPull {
         tx_status = 'finalized'
       }
 
-      const amount_flag = getAmountFlag(_op.amount)
+      const amount_flag = getAmountFlag(this.chainId, _op.amount)
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -571,6 +584,6 @@ export class ServiceMakerPull {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    ZKSYNC_LAST[this.makerAddress] = makerPullLastData
+    ZKSYNC_LAST[makerPullLastKey] = makerPullLastData
   }
 }

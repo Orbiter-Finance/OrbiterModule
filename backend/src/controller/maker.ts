@@ -108,7 +108,9 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         tokenAddress: '',
       }
       if (item.state == 1 || item.state == 20) {
-        needTo.chainId = Number(serviceMaker.getAmountFlag(item.fromAmount))
+        needTo.chainId = Number(
+          serviceMaker.getAmountFlag(item.fromChain, item.fromAmount)
+        )
 
         // find pool
         const pool = await serviceMaker.getTargetMakerPool(

@@ -21,7 +21,7 @@ export const SIZE_OP = {
   P_NUMBER: 4,
 }
 
-function isZKChain(chain) {
+function isZKChain(chain: string | number) {
   if (chain === 3 || chain === 33 || chain === 'zksync') {
     return true
   }

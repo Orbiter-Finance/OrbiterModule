@@ -169,12 +169,8 @@ function watchTransfers(pool, state) {
 
   // Instantiate token contract object with JSON ABI and address
   const tokenContract = new web3.eth.Contract(
-    // @ts-ignore
-    makerConfig.ABI,
+    <any>makerConfig.ABI,
     tokenAddress
-    // (error, result) => {
-    //   if (error) console.log(error)
-    // }
   )
 
   // Generate filter options

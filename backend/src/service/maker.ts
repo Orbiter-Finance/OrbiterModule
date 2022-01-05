@@ -6,11 +6,11 @@ import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
-import { dateFormatNormal, equalsIgnoreCase } from '../util'
+import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList, sendTransaction } from '../util/maker'
-import { CHAIN_INDEX, SIZE_OP } from '../util/maker/core'
+import { CHAIN_INDEX, getPTextFromTAmount, SIZE_OP } from '../util/maker/core'
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
@@ -22,17 +22,19 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 
 /**
- * amount % 10**P_NUMBER % 9000
+ * @param chainId
  * @param amount
  * @returns
  */
-export function getAmountFlag(amount: string | number): string {
-  let str = String(amount)
-  if (str.length < SIZE_OP.P_NUMBER) {
+export function getAmountFlag(
+  chainId: string | number,
+  amount: string | number
+): string {
+  const rst = getPTextFromTAmount(chainId, amount)
+  if (!rst.state) {
     return '0'
   }
-  str = String(amount).slice(-SIZE_OP.P_NUMBER)
-  return (Number(str) % 9000) + ''
+  return (Number(rst.pText) % 9000) + ''
 }
 
 /**
@@ -165,19 +167,91 @@ export async function getMakerNodes(
   return list
 }
 
+/**
+ *
+ * @param makerAddress
+ * @param chainId
+ * @param chainName
+ * @param tokenAddress
+ * @param tokenName for match zksync result
+ */
+async function getTokenBalance(
+  makerAddress: string,
+  chainId: number,
+  chainName: string,
+  tokenAddress: string,
+  tokenName: string
+): Promise<string> {
+  let value = '0'
+  try {
+    switch (CHAIN_INDEX[chainId]) {
+      case 'eth':
+      case 'arbitrum':
+        const alchemyUrl = makerConfig[chainName]?.httpEndPoint
+        if (!alchemyUrl) {
+          break
+        }
+
+        // when empty tokenAddress or 0x00...000, get eth balances
+        if (!tokenAddress || isEthTokenAddress(tokenAddress)) {
+          value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
+            makerAddress
+          )
+        } else {
+          const resp = await createAlchemyWeb3(
+            alchemyUrl
+          ).alchemy.getTokenBalances(makerAddress, [tokenAddress])
+
+          for (const item of resp.tokenBalances) {
+            if (item.error) {
+              continue
+            }
+
+            value = String(item.tokenBalance)
+
+            // Now only one
+            break
+          }
+        }
+        break
+      case 'zksync':
+        let api = makerConfig.zksync.api
+        if (chainId == 33) {
+          api = makerConfig.zksync_test.api
+        }
+
+        const respData = (
+          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
+        ).data
+
+        if (respData.status == 'success' && respData?.result?.balances) {
+          value = respData?.result?.balances[tokenName.toUpperCase()]
+        }
+
+        break
+    }
+  } catch (error) {
+    errorLogger.error(error)
+  }
+
+  return value
+}
+
 type WealthsChain = {
   chainId: number
   chainName: string
+  makerAddress: string
   balances: {
-    makerAddress: string
     tokenAddress: string
     tokenName: string
     value: string
+    decimals: number // for format
   }[]
 }
 export async function getWealths(
   makerAddress: string
 ): Promise<WealthsChain[]> {
+  // check
   if (!makerAddress) {
     throw new ServiceError(
       'Sorry, params makerAddress miss',
@@ -186,92 +260,35 @@ export async function getWealths(
   }
 
   const makerList = await getMakerList()
-
   const wealthsChains: WealthsChain[] = []
+
   const pushToChainBalances = async (
     wChain: WealthsChain,
-    makerAddress: string,
     tokenAddress: string,
     tokenName: string,
     decimals: number
   ) => {
     const find = wChain.balances.find(
-      (item) =>
-        item.makerAddress == makerAddress && item.tokenAddress == tokenAddress
+      (item) => item.tokenAddress == tokenAddress
     )
     if (find) {
       return
     }
 
-    let value = '0'
-    try {
-      switch (CHAIN_INDEX[wChain.chainId]) {
-        case 'eth':
-        case 'arbitrum':
-          const alchemyUrl = makerConfig[wChain.chainName]?.httpEndPoint
-          if (!alchemyUrl) {
-            break
-          }
-
-          // when empty tokenAddress, get eth balances
-          if (tokenAddress) {
-            const resp = await createAlchemyWeb3(
-              alchemyUrl
-            ).alchemy.getTokenBalances(makerAddress, [tokenAddress])
-
-            for (const item of resp.tokenBalances) {
-              if (item.error) {
-                continue
-              }
-
-              value = String(item.tokenBalance)
-
-              // Now only one
-              break
-            }
-          } else {
-            value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
-              makerAddress
-            )
-          }
-          break
-        case 'zksync':
-          let api = makerConfig.zksync.api
-          if (wChain.chainId == 33) {
-            api = makerConfig.zksync_test.api
-          }
-
-          const respData = (
-            await axios.get(
-              `${api.endPoint}/accounts/${makerAddress}/committed`
-            )
-          ).data
-
-          if (respData.status == 'success' && respData?.result?.balances) {
-            value = respData?.result?.balances[tokenName.toUpperCase()]
-          }
-
-          break
-      }
-
-      // When value!='' && > 0, format it
-      if (value) {
-        value = new BigNumber(value).dividedBy(10 ** decimals).toString()
-      }
-    } catch (error) {
-      errorLogger.error(error)
-    }
-
-    wChain.balances.push({ makerAddress, tokenAddress, tokenName, value })
+    wChain.balances.push({ tokenAddress, tokenName, decimals, value: '' })
   }
-  const pushToChains = (chainId: number, chainName: string): WealthsChain => {
+  const pushToChains = (
+    makerAddress: string,
+    chainId: number,
+    chainName: string
+  ): WealthsChain => {
     const find = wealthsChains.find((item) => item.chainId === chainId)
     if (find) {
       return find
     }
 
     // push chain where no exist, default add eth
-    const item = { chainId, chainName, balances: [] }
+    const item = { makerAddress, chainId, chainName, balances: [] }
     wealthsChains.push(item)
 
     return item
@@ -281,36 +298,55 @@ export async function getWealths(
       continue
     }
 
-    // add eth
     await pushToChainBalances(
-      pushToChains(item.c1ID, item.c1Name),
-      item.makerAddress,
-      '',
-      'ETH',
-      18
-    )
-    await pushToChainBalances(
-      pushToChains(item.c2ID, item.c2Name),
-      item.makerAddress,
-      '',
-      'ETH',
-      18
-    )
-
-    await pushToChainBalances(
-      pushToChains(item.c1ID, item.c1Name),
-      item.makerAddress,
+      pushToChains(item.makerAddress, item.c1ID, item.c1Name),
       item.t1Address,
       item.tName,
       item.precision
     )
     await pushToChainBalances(
-      pushToChains(item.c2ID, item.c2Name),
-      item.makerAddress,
+      pushToChains(item.makerAddress, item.c2ID, item.c2Name),
       item.t2Address,
       item.tName,
       item.precision
     )
+  }
+
+  // get tokan balance
+  for (const item of wealthsChains) {
+    // add eth
+    const ethBalancesItem = item.balances.find((item2) => {
+      return !item2.tokenAddress || isEthTokenAddress(item2.tokenAddress)
+    })
+    if (ethBalancesItem) {
+      // clear eth's tokenAddress
+      ethBalancesItem.tokenAddress = ''
+    } else {
+      // add eth balances item
+      item.balances.unshift({
+        tokenAddress: '',
+        tokenName: 'ETH',
+        decimals: 18,
+        value: '',
+      })
+    }
+
+    for (const item2 of item.balances) {
+      let value = await getTokenBalance(
+        item.makerAddress,
+        item.chainId,
+        item.chainName,
+        item2.tokenAddress,
+        item2.tokenName
+      )
+
+      // When value!='' && > 0, format it
+      if (value) {
+        value = new BigNumber(value).dividedBy(10 ** item2.decimals).toString()
+      }
+
+      item2.value = value
+    }
   }
 
   return wealthsChains
@@ -318,11 +354,11 @@ export async function getWealths(
 
 /**
  * Get target maker pool
- * @param makerAddress 
- * @param tokenAddress 
- * @param fromChainId 
+ * @param makerAddress
+ * @param tokenAddress
+ * @param fromChainId
  * @param toChainId
- * @returns 
+ * @returns
  */
 export async function getTargetMakerPool(
   makerAddress: string,

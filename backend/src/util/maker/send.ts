@@ -4,12 +4,16 @@ import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
+import { isEthTokenAddress } from '..'
 import { makerConfig } from '../../config'
 import { accessLogger, errorLogger } from '../logger'
 
 let nonceDic = {}
 
-const getCurrentGasPrices = async (toChain) => {
+const getCurrentGasPrices = async (
+  toChain: string,
+  ethgasAPITarget = 'low'
+) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       let response = await axios.get(
@@ -20,7 +24,9 @@ const getCurrentGasPrices = async (toChain) => {
         medium: response.data.average / 10,
         high: response.data.fast / 10,
       }
-      return Web3.utils.toHex(Web3.utils.toWei(prices.low.toString(), 'gwei'))
+      return Web3.utils.toHex(
+        Web3.utils.toWei(prices[ethgasAPITarget].toString(), 'gwei')
+      )
     } catch (error) {
       return Web3.utils.toHex(Web3.utils.toWei('500', 'gwei')) // 50
     }
@@ -64,11 +70,11 @@ async function send(
       let ethProvider
       let syncProvider
       if (chainID === 3) {
-        ethProvider = await ethers.providers.getDefaultProvider('mainnet')
+        ethProvider = ethers.providers.getDefaultProvider('mainnet')
         syncProvider = await zksync.getDefaultProvider('mainnet')
       }
       if (chainID === 33) {
-        ethProvider = await ethers.providers.getDefaultProvider('rinkeby')
+        ethProvider = ethers.providers.getDefaultProvider('rinkeby')
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
       const ethWallet = new ethers.Wallet(makerConfig.privatekey).connect(
@@ -153,29 +159,25 @@ async function send(
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerConfig.makerAddress
 
-  const tokenContract = new web3.eth.Contract(
-    // @ts-ignore
-    makerConfig.ABI,
-    tokenAddress
-    // (error, result) => {
-    //   if (error) accessLogger.info(error)
-    // }
-  )
+  let tokenContract: any
 
   let tokenBalanceWei = 0
-
-  await tokenContract.methods.balanceOf(web3.eth.defaultAccount).call(
-    {
-      from: web3.eth.defaultAccount,
-    },
-    function (error, result) {
-      if (!error) {
-        tokenBalanceWei = result
-      } else {
-        errorLogger.error('tokenBalanceWeiError =', error)
-      }
+  try {
+    if (isEthTokenAddress(tokenAddress)) {
+      tokenBalanceWei =
+        Number(await web3.eth.getBalance(web3.eth.defaultAccount)) || 0
+    } else {
+      tokenContract = new web3.eth.Contract(<any>makerConfig.ABI, tokenAddress)
+      tokenBalanceWei = await tokenContract.methods
+        .balanceOf(web3.eth.defaultAccount)
+        .call({
+          from: web3.eth.defaultAccount,
+        })
     }
-  )
+  } catch (error) {
+    errorLogger.error('tokenBalanceWeiError =', error)
+  }
+
   if (!tokenBalanceWei) {
     errorLogger.error('Insufficient balance')
     return {
@@ -220,7 +222,10 @@ async function send(
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let gasPrices = await getCurrentGasPrices(toChain)
+  let gasPrices = await getCurrentGasPrices(
+    toChain,
+    isEthTokenAddress(tokenAddress) ? 'medium' : 'low'
+  )
 
   let gasLimit = 100000
   if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
@@ -230,16 +235,21 @@ async function send(
   /**
    * Build a new transaction object and sign it locally.
    */
-  let details = {
-    to: tokenAddress,
-    value: '0x0',
-    data: tokenContract.methods
-      .transfer(toAddress, web3.utils.toHex(amountToSend))
-      .encodeABI(),
+  const details = {
     gas: web3.utils.toHex(gasLimit),
     gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
     chainId: chainID, // mainnet: 1, rinkeby: 4
+  }
+  if (isEthTokenAddress(tokenAddress)) {
+    details['to'] = toAddress
+    details['value'] = web3.utils.toHex(amountToSend)
+  } else {
+    details['to'] = tokenAddress
+    details['value'] = 0x0
+    details['data'] = tokenContract.methods
+      .transfer(toAddress, web3.utils.toHex(amountToSend))
+      .encodeABI()
   }
 
   let result_chain = toChain
