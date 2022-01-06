@@ -8,16 +8,35 @@ type Web3OrbiterFilter = {
 type TransferListenCallbacks = {
   onConfirmation?: (transaction: Transaction, subscriptionId: string) => any
   onReceived?: (transaction: Transaction, subscriptionId: string) => any
-  onConnected?: (subscriptionId: string) => any
 }
 
 const TRANSFERLISTEN_INTERVAL_DURATION = 2 * 1000
 
 export class Web3Orbiter {
   private web3: Web3
+  private transferListenDatas: any[] = []
+  private transferListenSubscriptionId: string
+  private transferListenOnData: (data: any) => void
 
-  constructor(web3: Web3) {
+  constructor(web3: Web3, onConnected?: (subscriptionId: string) => any) {
     this.web3 = web3
+
+    const subscription = this.web3.eth.subscribe('newBlockHeaders', (error) => {
+      if (error) {
+        console.error(error)
+      }
+    })
+    subscription.on('connected', (subscriptionId: string) => {
+      this.transferListenSubscriptionId = subscriptionId
+      onConnected && onConnected(subscriptionId)
+    })
+    subscription.on('data', (blockHeader) => {
+      if (this.transferListenOnData) {
+        this.transferListenOnData(blockHeader)
+      } else {
+        this.transferListenDatas.push(blockHeader)
+      }
+    })
   }
 
   transferListen(
@@ -25,19 +44,7 @@ export class Web3Orbiter {
     callbacks?: TransferListenCallbacks,
     confirmationsTotal = 3
   ) {
-    const subscription = this.web3.eth.subscribe('newBlockHeaders', (error) => {
-      if (error) {
-        console.error(error)
-      }
-    })
-
-    subscription.on('connected', (subscriptionId) => {
-      callbacks &&
-        callbacks.onConnected &&
-        callbacks.onConnected(subscriptionId)
-    })
-
-    subscription.on('data', async (blockHeader) => {
+    const onData = async (blockHeader: any) => {
       const transactionCount = await this.web3.eth.getBlockTransactionCount(
         blockHeader.number
       )
@@ -72,7 +79,10 @@ export class Web3Orbiter {
 
           callbacks &&
             callbacks.onReceived &&
-            callbacks.onReceived(<any>transaction, subscription.id)
+            callbacks.onReceived(
+              <any>transaction,
+              this.transferListenSubscriptionId
+            )
           if (confirmationsTotal <= 0) {
             return
           }
@@ -85,7 +95,10 @@ export class Web3Orbiter {
             ) {
               callbacks &&
                 callbacks.onConfirmation &&
-                callbacks.onConfirmation(<any>transaction, subscription.id)
+                callbacks.onConfirmation(
+                  <any>transaction,
+                  this.transferListenSubscriptionId
+                )
               return
             }
           }
@@ -109,6 +122,12 @@ export class Web3Orbiter {
           watchTransaction(transaction?.hash)
         }
       }
-    })
+    }
+    this.transferListenOnData = onData
+
+    // do datas
+    for (const item of this.transferListenDatas) {
+      onData(item)
+    }
   }
 }

@@ -209,7 +209,14 @@ function watchTransfers(pool, state) {
   }
 
   if (isEthTokenAddress(tokenAddress)) {
-    new Web3Orbiter(<any>web3).transferListen(
+    new Web3Orbiter(<any>web3, (subscriptionId) => {
+      accessLogger.info(
+        'eth subscriptionId =',
+        subscriptionId,
+        ' time =',
+        getTime()
+      )
+    }).transferListen(
       { to: makerConfig.makerAddress },
       {
         onConfirmation: (transaction) => {
@@ -218,14 +225,6 @@ function watchTransfers(pool, state) {
           }
 
           checkData(transaction.value + '', transaction.hash)
-        },
-        onConnected: (subscriptionId) => {
-          accessLogger.info(
-            'eth subscriptionId =',
-            subscriptionId,
-            ' time =',
-            getTime()
-          )
         },
       }
     )
