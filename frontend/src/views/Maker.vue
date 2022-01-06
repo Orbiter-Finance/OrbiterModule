@@ -248,14 +248,24 @@
               >
             </template>
           </el-table-column>
-          <el-table-column prop="state" label="State" width="120">
+          <el-table-column label="Profit" width="150">
+            <template #default="{ row }">
+              <div v-if="row.profitUSD > 0" class="amount-operator--plus">
+                +{{ row.profitUSD }} USD
+              </div>
+              <div v-else class="amount-operator--minus">
+                {{ row.profitUSD }} USD
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="state" label="State" width="140">
             <template #default="scope">
               <el-tag :type="stateTags[scope.row.state]?.type" effect="dark">
                 {{ stateTags[scope.row.state]?.label }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="Others"
+          <!-- <el-table-column label="Others"
             ><template #default="scope">
               <el-button
                 v-if="scope.row.needTo?.amount > 0"
@@ -267,7 +277,7 @@
                 -{{ scope.row.needTo?.amountFormat }}
               </el-button>
             </template>
-          </el-table-column>
+          </el-table-column> -->
         </el-table>
       </template>
 
@@ -384,7 +394,15 @@ export default defineComponent({
       return num
     })
     const diffAmountTotal = computed(() => {
-      return new BigNumber(fromAmountTotal.value).minus(toAmountTotal.value)
+      let num = new BigNumber(0)
+      for (const item of list.value) {
+        if (!item.profitUSD) {
+          continue
+        }
+
+        num = num.plus(item.profitUSD)
+      }
+      return num.toString() + ' USD'
     })
 
     // When makerAddressSelected changed, get maker's data

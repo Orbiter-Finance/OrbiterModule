@@ -1,6 +1,7 @@
 import schedule from 'node-schedule'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
+import * as coinbase from '../service/coinbase'
 import { ServiceMakerPull } from '../service/maker_pull'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
@@ -94,13 +95,15 @@ export function jobMakerPull() {
   const startPull = async (
     toChain: number,
     makerAddress: string,
-    tokenAddress: string
+    tokenAddress: string,
+    tokenSymbol: string
   ) => {
     try {
       const serviceMakerPull = new ServiceMakerPull(
         toChain,
         makerAddress,
-        tokenAddress
+        tokenAddress,
+        tokenSymbol
       )
 
       switch (CHAIN_INDEX[toChain]) {
@@ -139,8 +142,18 @@ export function jobMakerPull() {
     for (const item of makerList) {
       const { pool1, pool2 } = expanPool(item)
 
-      await startPull(pool1.c1ID, pool1.makerAddress, pool1.t1Address)
-      await startPull(pool2.c2ID, pool2.makerAddress, pool2.t2Address)
+      await startPull(
+        pool1.c1ID,
+        pool1.makerAddress,
+        pool1.t1Address,
+        pool1.tName
+      )
+      await startPull(
+        pool2.c2ID,
+        pool2.makerAddress,
+        pool2.t2Address,
+        pool2.tName
+      )
     }
   }
 
@@ -150,6 +163,14 @@ export function jobMakerPull() {
 export function jobMakerNodeTodo() {
   const callback = async () => {
     await serviceMaker.runTodo()
+  }
+
+  new MJobPessimism('*/10 * * * * *', callback).schedule()
+}
+
+export function jobCacheCoinbase() {
+  const callback = async () => {
+    await coinbase.cacheExchangeRates()
   }
 
   new MJobPessimism('*/10 * * * * *', callback).schedule()

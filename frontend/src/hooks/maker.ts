@@ -47,7 +47,8 @@ type MakerNodes = {
   toTimeStampAgo: string
   state: number
   txTokenName: string
-  needTo: any
+  needTo: any,
+  profitUSD: string
 }[]
 export const makerNodes = reactive({
   loading: false,

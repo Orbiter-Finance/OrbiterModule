@@ -10,7 +10,8 @@ import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList, sendTransaction } from '../util/maker'
-import { CHAIN_INDEX, getPTextFromTAmount, SIZE_OP } from '../util/maker/core'
+import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
+import { exchangeToUsd } from './coinbase'
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
@@ -53,6 +54,50 @@ export async function getMakerAddresses() {
   }
 
   return makerAddresses
+}
+
+export async function statisticsProfit(
+  makerNode: MakerNode
+): Promise<BigNumber> {
+  let fromToCurrency = ''
+  let fromToPrecision = 0
+  let gasPrecision = 0
+
+  const makerList = await getMakerList()
+  for (const item of makerList) {
+    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
+      continue
+    }
+
+    if (
+      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
+      equalsIgnoreCase(item.t2Address, makerNode.txToken)
+    ) {
+      fromToCurrency = item.tName
+      fromToPrecision = item.precision
+    }
+
+    if (equalsIgnoreCase(item.tName, makerNode.gasCurrency)) {
+      gasPrecision = item.precision
+    }
+  }
+
+  if (fromToCurrency) {
+    const fromMinusToUsd = await exchangeToUsd(
+      new BigNumber(makerNode.fromAmount)
+        .minus(makerNode.toAmount)
+        .dividedBy(10 ** fromToPrecision),
+      fromToCurrency
+    )
+    const gasAmountUsd = await exchangeToUsd(
+      new BigNumber(makerNode.gasAmount).dividedBy(10 ** gasPrecision),
+      makerNode.gasCurrency
+    )
+
+    return fromMinusToUsd.minus(gasAmountUsd || 0)
+  } else {
+    return new BigNumber(0)
+  }
 }
 
 /**

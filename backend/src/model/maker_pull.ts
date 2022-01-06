@@ -42,6 +42,12 @@ export class MakerPull extends CommonEntity {
   @Column('timestamp', { default: null })
   txTime: Date
 
+  @Column('varchar', { length: 40, default: '' })
+  gasCurrency: string // ex: USDC、ETH
+
+  @Column('varchar', { length: 40, default: '0' })
+  gasAmount: string // gas's ether
+
   @Column('varchar', { length: 11, default: null })
   tx_status: string // committed, finalized, rejected
 }

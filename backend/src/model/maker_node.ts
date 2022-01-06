@@ -48,11 +48,11 @@ export class MakerNode extends CommonEntity {
   @Column('varchar', { length: 60, default: '' })
   txToken: string // ex: USDC‘s tokenAddress
 
-  @Column('varchar', { length: 60, default: '' })
-  gasToken: string // ex: USDC’s tokenAddress
+  @Column('varchar', { length: 40, default: '' })
+  gasCurrency: string // ex: USDC、ETH
 
   @Column('varchar', { length: 40, default: '0' })
-  gasAmount: string
+  gasAmount: string // gas's ether
 
   @Column('int', { width: 11, default: 0 })
   state: number

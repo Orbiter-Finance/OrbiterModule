@@ -7,9 +7,8 @@ import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
 import { getMakerPulls } from '../service/maker_pull'
-import { equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
-import { expanPool, getAmountToSend, getMakerList } from '../util/maker'
+import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
 // extend relativeTime
@@ -139,6 +138,10 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         }
       }
       item['needTo'] = needTo
+
+      // Profit statistics
+      // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
+      item['profitUSD'] = (await serviceMaker.statisticsProfit(item)).toFixed(3)
     }
 
     restful.json(list)

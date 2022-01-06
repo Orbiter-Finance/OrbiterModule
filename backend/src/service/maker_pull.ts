@@ -1,4 +1,5 @@
 import axios from 'axios'
+import BigNumber from 'bignumber.js'
 import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
@@ -158,16 +159,23 @@ export class ServiceMakerPull {
   private chainId: number
   private makerAddress: string
   private tokenAddress: string
+  private tokenSymbol: string // for makerList[x].tName
 
   /**
    * @param api
    * @param makerAddress
    * @param tokenAddress
    */
-  constructor(chainId: number, makerAddress: string, tokenAddress: string) {
+  constructor(
+    chainId: number,
+    makerAddress: string,
+    tokenAddress: string,
+    tokenSymbol: string
+  ) {
     this.chainId = chainId
     this.makerAddress = makerAddress
     this.tokenAddress = tokenAddress
+    this.tokenSymbol = tokenSymbol
   }
 
   /**
@@ -227,6 +235,8 @@ export class ServiceMakerPull {
             toTx: makerPull.txHash,
             toAmount: makerPull.amount,
             toTimeStamp: dateFormatNormal(makerPull.txTime),
+            gasCurrency: makerPull.gasCurrency,
+            gasAmount: makerPull.gasAmount,
             state: targetMP.tx_status == 'finalized' ? 3 : 2,
           }
         )
@@ -280,6 +290,8 @@ export class ServiceMakerPull {
         otherData['toTx'] = _mp.txHash
         otherData['toAmount'] = _mp.amount
         otherData['toTimeStamp'] = dateFormatNormal(_mp.txTime)
+        otherData['gasCurrency'] = _mp.gasCurrency
+        otherData['gasAmount'] = _mp.gasAmount
         otherData['state'] = _mp.tx_status == 'finalized' ? 3 : 2
       }
 
@@ -354,12 +366,13 @@ export class ServiceMakerPull {
 
     for (const item of data.result) {
       // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
       if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
-        item.contractAddress = this.tokenAddress
+        contractAddress = this.tokenAddress
       }
 
       // checks
-      if (!equalsIgnoreCase(item.contractAddress, this.tokenAddress)) {
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
         continue
       }
 
@@ -369,7 +382,7 @@ export class ServiceMakerPull {
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
         makerAddress: this.makerAddress,
-        tokenAddress: item.contractAddress,
+        tokenAddress: contractAddress,
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
@@ -379,6 +392,11 @@ export class ServiceMakerPull {
         txBlock: item.blockNumber,
         txHash: item.hash,
         txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'ETH',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .dividedBy(10 ** 18)
+          .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS
             ? 'finalized'
@@ -439,12 +457,13 @@ export class ServiceMakerPull {
 
     for (const item of data.result) {
       // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
       if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
-        item.contractAddress = this.tokenAddress
+        contractAddress = this.tokenAddress
       }
 
       // checks
-      if (!equalsIgnoreCase(item.contractAddress, this.tokenAddress)) {
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
         continue
       }
 
@@ -454,7 +473,7 @@ export class ServiceMakerPull {
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
         makerAddress: this.makerAddress,
-        tokenAddress: item.contractAddress,
+        tokenAddress: contractAddress,
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
@@ -464,6 +483,11 @@ export class ServiceMakerPull {
         txBlock: item.blockNumber,
         txHash: item.hash,
         txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'ETH',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .dividedBy(10 ** 18)
+          .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS
             ? 'finalized'
@@ -566,6 +590,8 @@ export class ServiceMakerPull {
         txBlock: item.blockNumber,
         txHash: item.txHash,
         txTime: new Date(item.createdAt),
+        gasCurrency: this.tokenSymbol,
+        gasAmount: _op.fee || '',
         tx_status,
       })
       await savePull(makerPull)
