@@ -1,13 +1,18 @@
 import BigNumber from 'bignumber.js'
 import { plainToInstance } from 'class-transformer'
+import dayjs from 'dayjs'
+import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
-import { equalsIgnoreCase } from '../util'
+import { getMakerPulls } from '../service/maker_pull'
 import { Core } from '../util/core'
-import { expanPool, getAmountToSend, getMakerList } from '../util/maker'
+import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+
+// extend relativeTime
+dayjs.extend(relativeTime)
 
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker', async ({ restful }) => {
@@ -41,17 +46,21 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     // parse query
     const params = plainToInstance(
       class {
+        makerAddress: string
         fromChain?: number
         startTime?: number
         endTime?: number
+        userAddress?: string
       },
       request.query
     )
 
     const list = await serviceMaker.getMakerNodes(
+      params.makerAddress,
       params.fromChain,
       Number(params.startTime),
-      Number(params.endTime)
+      Number(params.endTime),
+      params.userAddress
     )
 
     // fill data
@@ -84,6 +93,13 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         )
       }
 
+      // time ago
+      item['fromTimeStampAgo'] = dayjs().to(dayjs(item.fromTimeStamp))
+      item['toTimeStampAgo'] = '-'
+      if (item.toTimeStamp && item.toTimeStamp != '0') {
+        item['toTimeStampAgo'] = dayjs().to(dayjs(item.toTimeStamp))
+      }
+
       let needTo = {
         chainId: 0,
         amount: 0,
@@ -91,36 +107,23 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         tokenAddress: '',
       }
       if (item.state == 1 || item.state == 20) {
-        needTo.chainId = Number(serviceMaker.getAmountFlag(item.fromAmount))
+        needTo.chainId = Number(
+          serviceMaker.getAmountFlag(item.fromChain, item.fromAmount)
+        )
 
         // find pool
-        let pool
-        for (const maker of await getMakerList()) {
-          const { pool1, pool2 } = expanPool(maker)
-          if (
-            pool1.makerAddress == item.makerAddress &&
-            equalsIgnoreCase(pool1.t1Address, item.txToken) &&
-            pool1.c1ID == item.fromChain &&
-            pool1.c2ID == needTo.chainId
-          ) {
-            pool = pool1
-            needTo.tokenAddress = pool1.t2Address
-            break
-          }
-          if (
-            pool2.makerAddress == item.makerAddress &&
-            equalsIgnoreCase(pool2.t2Address, item.txToken) &&
-            pool2.c1ID == needTo.chainId &&
-            pool2.c2ID == item.fromChain
-          ) {
-            pool = pool2
-            needTo.tokenAddress = pool2.t1Address
-            break
-          }
-        }
+        const pool = await serviceMaker.getTargetMakerPool(
+          item.makerAddress,
+          item.txToken,
+          Number(item.fromChain),
+          needTo.chainId
+        )
 
         // if not find pool, don't do it
         if (pool) {
+          needTo.tokenAddress =
+            needTo.chainId == pool.c1ID ? pool.t1Address : pool.t2Address
+
           needTo.amount =
             getAmountToSend(
               Number(item.fromChain),
@@ -135,16 +138,23 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         }
       }
       item['needTo'] = needTo
+
+      // Profit statistics
+      // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
+      item['profitUSD'] = (await serviceMaker.statisticsProfit(item)).toFixed(3)
     }
 
     restful.json(list)
   })
 
-  router.get('maker/wealths', async ({ restful }) => {
-    let rst = Core.memoryCache.get(serviceMaker.CACHE_KEY_GET_WEALTHS)
+  router.get('maker/wealths', async ({ request, restful }) => {
+    const makerAddress = String(request.query.makerAddress || '')
 
+    let rst = Core.memoryCache.get(
+      `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
+    )
     if (!rst) {
-      rst = await serviceMaker.getWealths()
+      rst = await serviceMaker.getWealths(makerAddress)
     }
 
     restful.json(rst)
@@ -159,5 +169,49 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
 
     restful.json()
+  })
+
+  router.get('maker/pulls', async ({ request, restful }) => {
+    // parse query
+    const params = plainToInstance(
+      class {
+        makerAddress: string
+        startTime?: number
+        endTime?: number
+        fromOrToMaker?: number
+      },
+      request.query
+    )
+
+    const list = await getMakerPulls(
+      params.makerAddress,
+      params.startTime,
+      params.endTime,
+      params.fromOrToMaker == 1
+    )
+
+    for (const item of list) {
+      item['chainName'] = CHAIN_INDEX[item.chainId] || ''
+
+      // amount format
+      const chainTokenInfo = await serviceMaker.getTokenInfo(
+        Number(item.chainId),
+        item.tokenAddress
+      )
+      item['amountFormat'] = 0
+      if (chainTokenInfo.decimals > -1) {
+        item['amountFormat'] = new BigNumber(item.amount).dividedBy(
+          10 ** chainTokenInfo.decimals
+        )
+      }
+
+      // time ago
+      item['txTimeAgo'] = '-'
+      if (item.txTime.getTime() > 0) {
+        item['txTimeAgo'] = dayjs().to(dayjs(item.txTime))
+      }
+    }
+
+    restful.json(list)
   })
 }

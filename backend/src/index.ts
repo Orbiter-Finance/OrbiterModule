@@ -116,7 +116,7 @@ const main = async () => {
 
     // initialize mysql connect, waiting for mysql server started
     accessLogger.info('Connecting to the database...')
-    const reconnectTotal = 5
+    const reconnectTotal = 18
     for (let index = 1; index <= reconnectTotal; index++) {
       try {
         // db bind

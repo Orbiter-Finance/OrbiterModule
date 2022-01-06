@@ -4,12 +4,14 @@ import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
+import { isEthTokenAddress } from '..'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
+import { Web3Orbiter } from '../web3_orbiter'
 import * as orbiterCore from './core'
 import { makerList } from './maker_list'
 import send from './send'
@@ -165,93 +167,106 @@ function watchTransfers(pool, state) {
   // )
   const web3 = createAlchemyWeb3(wsEndPoint)
 
-  web3List.push(web3)
+  // checkData
+  const checkData = async (amount: string, transactionHash: string) => {
+    const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
+    if (ptext.state === false) {
+      return
+    }
+    const pText = ptext.pText
+    let validPText = (9000 + Number(toChainID)).toString()
 
-  // Instantiate token contract object with JSON ABI and address
-  const tokenContract = new web3.eth.Contract(
-    // @ts-ignore
-    makerConfig.ABI,
-    tokenAddress
-    // (error, result) => {
-    //   if (error) console.log(error)
-    // }
-  )
-
-  // Generate filter options
-  const options = {
-    filter: {
-      to: makerConfig.makerAddress,
-    },
-    fromBlock: 'latest',
-  }
-
-  // Subscribe to Transfer events matching filter criteria
-  tokenContract.events
-    .Transfer(options, async (error, event) => {
-      if (error) {
-        errorLogger.error('wsEndPoint =', wsEndPoint)
-        errorLogger.error(error)
+    const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
+    if (realAmount.state === false) {
+      return
+    }
+    const rAmount = <any>realAmount.rAmount
+    if (
+      new BigNumber(rAmount).comparedTo(
+        new BigNumber(pool.maxPrice)
+          .plus(new BigNumber(pool.tradingFee))
+          .multipliedBy(new BigNumber(10 ** pool.precision))
+      ) === 1 ||
+      new BigNumber(rAmount).comparedTo(
+        new BigNumber(pool.minPrice)
+          .plus(new BigNumber(pool.tradingFee))
+          .multipliedBy(new BigNumber(10 ** pool.precision))
+      ) === -1 ||
+      pText !== validPText
+    ) {
+      // donothing
+    } else {
+      if (matchHashList.indexOf(transactionHash) > -1) {
+        accessLogger.info('event.transactionHash exist: ' + transactionHash)
         return
       }
+      matchHashList.push(transactionHash)
 
-      if (event.returnValues.to === makerConfig.makerAddress) {
-        // var toChainID = state ? pool.c1ID : pool.c2ID
-        var amount = event.returnValues.value
+      // Initiate transaction confirmation
+      accessLogger.info('match one transaction')
+      confirmFromTransaction(pool, state, transactionHash)
+    }
+  }
 
-        const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
-        if (ptext.state === false) {
-          return
-        }
-        const pText = ptext.pText
-        let validPText = (9000 + Number(toChainID)).toString()
-
-        const realAmount = orbiterCore.getRAmountFromTAmount(
-          fromChainID,
-          amount
-        )
-        if (realAmount.state === false) {
-          return
-        }
-        const rAmount = <any>realAmount.rAmount
-        if (
-          new BigNumber(rAmount).comparedTo(
-            new BigNumber(pool.maxPrice)
-              .plus(new BigNumber(pool.tradingFee))
-              .multipliedBy(new BigNumber(10 ** pool.precision))
-          ) === 1 ||
-          new BigNumber(rAmount).comparedTo(
-            new BigNumber(pool.minPrice)
-              .plus(new BigNumber(pool.tradingFee))
-              .multipliedBy(new BigNumber(10 ** pool.precision))
-          ) === -1 ||
-          pText !== validPText
-        ) {
-          // donothing
-        } else {
-          let matchHash = event.transactionHash
-          if (matchHashList.indexOf(matchHash) > -1) {
-            accessLogger.info('event.transactionHash exist: ' + matchHash)
-            return
-          }
-          matchHashList.push(matchHash)
-
-          // Initiate transaction confirmation
-          accessLogger.info('match one transaction')
-          confirmFromTransaction(pool, state, event.transactionHash)
-        }
-      } else {
-        accessLogger.info('over')
-      }
-      return
-    })
-    .on('connected', async function (subscriptionId) {
+  if (isEthTokenAddress(tokenAddress)) {
+    new Web3Orbiter(<any>web3, (subscriptionId) => {
       accessLogger.info(
-        'subscriptionId =',
+        'eth subscriptionId =',
         subscriptionId,
         ' time =',
         getTime()
       )
-    })
+    }).transferListen(
+      { to: makerConfig.makerAddress },
+      {
+        onConfirmation: (transaction) => {
+          if (!transaction.hash) {
+            return
+          }
+
+          checkData(transaction.value + '', transaction.hash)
+        },
+      }
+    )
+  } else {
+    // Instantiate token contract object with JSON ABI and address
+    const tokenContract = new web3.eth.Contract(
+      <any>makerConfig.ABI,
+      tokenAddress
+    )
+
+    // Generate filter options
+    const options = {
+      filter: {
+        to: makerConfig.makerAddress,
+      },
+      fromBlock: 'latest',
+    }
+
+    // Subscribe to Transfer events matching filter criteria
+    tokenContract.events
+      .Transfer(options, (error, event) => {
+        if (error) {
+          errorLogger.error('wsEndPoint =', wsEndPoint)
+          errorLogger.error(error)
+          return
+        }
+
+        if (event.returnValues.to === makerConfig.makerAddress) {
+          checkData(event.returnValues.value, event.transactionHash)
+        } else {
+          accessLogger.info('over')
+        }
+      })
+      .on('connected', (subscriptionId: string) => {
+        accessLogger.info(
+          'contract subscriptionId =',
+          subscriptionId,
+          ' time =',
+          getTime()
+        )
+      })
+  }
 }
 
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
@@ -487,8 +502,14 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
-    var amountHex = '0x' + trx.input.slice(74)
-    var amountStr = Web3.utils.hexToNumberString(amountHex)
+    let amountStr = '0'
+    if (isEthTokenAddress(tokenAddress)) {
+      console.log(Web3.utils.toHex(trx.value), trx.value)
+      amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
+    } else {
+      const amountHex = '0x' + trx.input.slice(74)
+      amountStr = Web3.utils.hexToNumberString(amountHex)
+    }
 
     let makerNode: MakerNode | undefined
     try {
@@ -718,11 +739,11 @@ function getTime() {
  * @returns
  */
 export function getAmountToSend(
-  fromChainID,
-  toChainID,
-  amountStr,
-  pool,
-  nonce
+  fromChainID: number,
+  toChainID: number,
+  amountStr: string,
+  pool: { precision: number; tradingFee: number; gasFee: number },
+  nonce: string | number
 ) {
   const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amountStr)
   if (!realAmount.state) {
@@ -770,6 +791,7 @@ export async function sendTransaction(
   nonce,
   result_nonce = 0
 ) {
+  console.log({ fromChainID, toChainID, amountStr, pool, nonce })
   const amountToSend = getAmountToSend(
     fromChainID,
     toChainID,

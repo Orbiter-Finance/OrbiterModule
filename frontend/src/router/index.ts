@@ -1,13 +1,14 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import Home from '../views/Home.vue'
+// import Home from '../views/Home.vue'
 import Maker from '../views/Maker.vue'
+import MakerHistory from '../views/MakerHistory.vue'
 
 const routes: Array<RouteRecordRaw> = [
-  {
-    path: '/',
-    name: 'Home',
-    component: Home
-  },
+  // {
+  //   path: '/',
+  //   name: 'Home',
+  //   component: Home,
+  // },
   // {
   //   path: '/about',
   //   name: 'About',
@@ -19,13 +20,19 @@ const routes: Array<RouteRecordRaw> = [
   {
     path: '/maker',
     name: 'Maker',
-    component: Maker
-  }
+    component: Maker,
+  },
+  {
+    path: '/maker/history',
+    name: 'MakerHistory',
+    component: MakerHistory,
+    meta: { navHide: true },
+  },
 ]
 
 const router = createRouter({
   history: createWebHistory(process.env.BASE_URL),
-  routes
+  routes,
 })
 
 export default router

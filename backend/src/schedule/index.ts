@@ -2,10 +2,18 @@ import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger } from '../util/logger'
 import { startMaker } from '../util/maker'
-import { jobGetWealths, jobMakerNodeTodo, jobMakerPull } from './jobs'
+import {
+  jobCacheCoinbase,
+  jobGetWealths,
+  jobMakerNodeTodo,
+  jobMakerPull,
+} from './jobs'
 
 export const startJobs = async () => {
   const scene = process.env.ORBITER_SCENE
+
+  // cache coinbase
+  jobCacheCoinbase()
 
   // get wealths
   jobGetWealths()

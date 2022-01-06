@@ -43,3 +43,12 @@ export function equalsIgnoreCase(value1: string, value2: string): boolean {
 
   return false
 }
+
+/**
+ *
+ * @param tokenAddress when tokenAddress=/^0x0+$/i
+ * @returns
+ */
+export function isEthTokenAddress(tokenAddress: string) {
+  return /^0x0+$/i.test(tokenAddress)
+}

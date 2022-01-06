@@ -37,22 +37,36 @@ type MakerNodes = {
   toChainName: string
   formTx: string
   fromTxHref: string
+  fromAmountFormat: string
+  toAmountFormat: string
   toTx: string
   toTxHref: string
   fromTimeStamp: string
+  fromTimeStampAgo: string
   toTimeStamp: string
+  toTimeStampAgo: string
   state: number
-  txTokenName: string,
-  needTo: any
+  txTokenName: string
+  needTo: any,
+  profitUSD: string
 }[]
 export const makerNodes = reactive({
   loading: false,
   list: [] as MakerNodes,
 
-  async get(fromChain: number = 0, rangeDate: Date[]) {
+  async get(
+    makerAddress: string,
+    fromChain: number = 0,
+    rangeDate: Date[] = [],
+    userAddress = ''
+  ) {
+    if (!makerAddress) {
+      return
+    }
+
     this.loading = true
     try {
-      const params = { fromChain }
+      const params = { makerAddress, fromChain, userAddress }
       if (rangeDate?.[0]) {
         params['startTime'] = rangeDate?.[0].getTime()
       }
@@ -95,17 +109,23 @@ type MakerWealths = {
     makerAddress: string
     tokenAddress: string
     tokenName: string
-    value: string,
+    value: string
   }[]
 }[]
 export const makerWealth = reactive({
   loading: false,
   list: [] as MakerWealths,
 
-  async get() {
+  async get(makerAddress: string) {
+    if (!makerAddress) {
+      return
+    }
+
     this.loading = true
     try {
-      const resp = await $axios.get<MakerWealths>('maker/wealths')
+      const resp = await $axios.get<MakerWealths>('maker/wealths', {
+        params: { makerAddress },
+      })
       const wealths = resp.data
 
       // fill chain's accountExploreUrl
@@ -117,5 +137,5 @@ export const makerWealth = reactive({
       console.error(error)
     }
     this.loading = false
-  }
+  },
 })
