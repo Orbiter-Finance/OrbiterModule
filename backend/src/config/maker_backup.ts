@@ -1,31 +1,31 @@
 export default {
   mainnet: {
     wsEndPoint:
-      'wss://eth-mainnet.alchemyapi.io/v2/skJe4xzfGPk5Afu13sJap5PNxkWPecnr',
+      'wss://eth-mainnet.alchemyapi.io/v2/xxx',
     httpEndPoint:
-      'https://eth-mainnet.alchemyapi.io/v2/skJe4xzfGPk5Afu13sJap5PNxkWPecnr',
+      'https://eth-mainnet.alchemyapi.io/v2/xxx',
     api: {
       endPoint: 'https://api.etherscan.io/api',
-      key: '14PRR4UT6TKMGNX8U4FGMQR3D2KAIY2ICR',
+      key: 'xxx',
     },
     gasPrice: 0,
   },
   rinkeby: {
     wsEndPoint:
-      'wss://eth-rinkeby.alchemyapi.io/v2/lQgWSDmhGqRBNcqQdb6y75D4fNE2zgrs',
+      'wss://eth-rinkeby.alchemyapi.io/v2/xxx',
     httpEndPoint:
-      'https://eth-rinkeby.alchemyapi.io/v2/lQgWSDmhGqRBNcqQdb6y75D4fNE2zgrs',
+      'https://eth-rinkeby.alchemyapi.io/v2/xxx',
     api: {
       endPoint: 'https://api-rinkeby.etherscan.io/api',
-      key: '14PRR4UT6TKMGNX8U4FGMQR3D2KAIY2ICR',
+      key: 'xxx',
     },
     gasPrice: 2,
   },
   arbitrum: {
     wsEndPoint:
-      'wss://arb-mainnet.g.alchemy.com/v2/nj8MxIXJdw4LwRcN4joraxgs-ZfXKSsI',
+      'wss://arb-mainnet.g.alchemy.com/v2/xxx',
     httpEndPoint:
-      'https://arb-mainnet.g.alchemy.com/v2/nj8MxIXJdw4LwRcN4joraxgs-ZfXKSsI',
+      'https://arb-mainnet.g.alchemy.com/v2/xxx',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -34,9 +34,9 @@ export default {
   },
   arbitrum_test: {
     wsEndPoint:
-      'wss://arb-rinkeby.g.alchemy.com/v2/z_hx6pB-gJVXCubqDV8ZPLlR-73qd6yC',
+      'wss://arb-rinkeby.g.alchemy.com/v2/xxx',
     httpEndPoint:
-      'https://arb-rinkeby.g.alchemy.com/v2/z_hx6pB-gJVXCubqDV8ZPLlR-73qd6yC',
+      'https://arb-rinkeby.g.alchemy.com/v2/xxx',
     api: {
       endPoint: 'https://testnet.arbiscan.io/api',
       key: '',

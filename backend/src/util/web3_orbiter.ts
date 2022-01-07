@@ -12,6 +12,9 @@ type TransferListenCallbacks = {
 
 const TRANSFERLISTEN_INTERVAL_DURATION = 2 * 1000
 
+/**
+ * @deprecated Because alchemy limit request
+ */
 export class Web3Orbiter {
   private web3: Web3
   private transferListenDatas: any[] = []
