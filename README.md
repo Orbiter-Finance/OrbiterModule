@@ -1,11 +1,11 @@
 # Orbiter Module
 
 ## Statement
+
 - Orbiter Module is quick developmenting, If you find a problem, please send a [new issue](https://github.com/OrbiterCross/OrbitalModule/issues/new)
 - The risk of using this software will be entirely borne by him, and the author of the software (Orbiter Module) does not bear any responsibility.
 - The author of the software (Orbiter Module) does not bear any responsibility for service interruption or other defects caused by force majeure or uncontrollable reasons such as hacker attacks, communication line interruption, etc., which cause users to be unable to use normally, but will try to reduce the resulting damage to users(Loss or impact).
 - For issues not covered by this statement, please refer to the relevant national laws and regulations. When this statement conflicts with the relevant national laws and regulations, the national laws and regulations shall prevail.
-
 
 ## Project
 
@@ -29,9 +29,11 @@
 
 ### Change config
 
-#### 1. Set your main maker address at this file
+#### 1. Set backend/src/config/maker.ts
 
-**[./backend/src/config/maker.ts](./backend/src/config/maker.ts)**, replace `makerAddress` value
+- Copy [backend/src/config/maker_backend.ts](./backend/src/config/maker_backend.ts) as maker.ts
+- Replace the [Your Key] part with your key
+- replace `makerAddress` value
 
 #### 2. Set trade maker address and token address at this file
 

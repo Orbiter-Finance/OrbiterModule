@@ -1,31 +1,31 @@
 export default {
   mainnet: {
     wsEndPoint:
-      'wss://eth-mainnet.alchemyapi.io/v2/XXX',
+      'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint:
-      'https://eth-mainnet.alchemyapi.io/v2/XXX',
+      'https://eth-mainnet.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
-      key: 'XXX',
+      key: 'Your Key',
     },
     gasPrice: 0,
   },
   rinkeby: {
     wsEndPoint:
-      'wss://eth-rinkeby.alchemyapi.io/v2/XXX',
+      'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
     httpEndPoint:
-      'https://eth-rinkeby.alchemyapi.io/v2/XXX',
+      'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api-rinkeby.etherscan.io/api',
-      key: 'XXX',
+      key: 'Your Key',
     },
     gasPrice: 2,
   },
   arbitrum: {
     wsEndPoint:
-      'wss://arb-mainnet.g.alchemy.com/v2/XXX',
+      'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint:
-      'https://arb-mainnet.g.alchemy.com/v2/XXX',
+      'https://arb-mainnet.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -34,11 +34,11 @@ export default {
   },
   arbitrum_test: {
     wsEndPoint:
-      'wss://arb-rinkeby.g.alchemy.com/v2/XXX',
+      'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint:
-      'https://arb-rinkeby.g.alchemy.com/v2/XXX',
+      'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
     api: {
-      endPoint: 'https://testnet.arbiscan.io/api',
+      endPoint: 'https://testnet.arbiscan.io/Your Key',
       key: '',
     },
     gasPrice: 2,
