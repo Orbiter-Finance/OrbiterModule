@@ -38,7 +38,7 @@ export default {
     httpEndPoint:
       'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
     api: {
-      endPoint: 'https://testnet.arbiscan.io/Your Key',
+      endPoint: 'https://testnet.arbiscan.io/',
       key: '',
     },
     gasPrice: 2,
