@@ -9,10 +9,11 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
+import { SystemCache } from '../../model/system_cache'
 import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
-import { Web3Orbiter } from '../web3_orbiter'
 import * as orbiterCore from './core'
+import { EthListen } from './eth_listen'
 import { makerList } from './maker_list'
 import send from './send'
 
@@ -28,6 +29,9 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
   return Core.db.getRepository(MakerZkHash)
+}
+const repositorySystemCache = (): Repository<SystemCache> => {
+  return Core.db.getRepository(SystemCache)
 }
 
 // function stopMaker() {
@@ -114,6 +118,7 @@ function watchPool(pool) {
  */
 function watchTransfers(pool, state) {
   // Instantiate web3 with WebSocketProvider
+  let api = state ? makerConfig[pool.c2Name].api : makerConfig[pool.c1Name].api
   let wsEndPoint = state
     ? makerConfig[pool.c2Name].wsEndPoint
     : makerConfig[pool.c1Name].wsEndPoint
@@ -209,25 +214,39 @@ function watchTransfers(pool, state) {
   }
 
   if (isEthTokenAddress(tokenAddress)) {
-    new Web3Orbiter(<any>web3, (subscriptionId) => {
-      accessLogger.info(
-        'eth subscriptionId =',
-        subscriptionId,
-        ' time =',
-        getTime()
-      )
-    }).transferListen(
-      { to: makerConfig.makerAddress },
-      {
-        onConfirmation: (transaction) => {
-          if (!transaction.hash) {
-            return
-          }
+    const EthListenBlockNumberCacheKey = `EthListenBlockNumber_${pool.makerAddress}_${fromChainID}_${toChainID}`
 
-          checkData(transaction.value + '', transaction.hash)
-        },
+    new EthListen(api, makerConfig.makerAddress, async () => {
+      const systemCaches = await repositorySystemCache().findOne({
+        cache_key: EthListenBlockNumberCacheKey,
+      })
+
+      if (systemCaches) {
+        return systemCaches.cache_value
+      } else {
+        const blockNumber = (await web3.eth.getBlockNumber()) + ''
+        await repositorySystemCache().insert({
+          cache_key: EthListenBlockNumberCacheKey,
+          cache_value: blockNumber,
+        })
+
+        return blockNumber
       }
-    )
+    })
+    .transfer(undefined, {
+      onConfirmation: async (transaction) => {
+        await repositorySystemCache().insert({
+          cache_key: EthListenBlockNumberCacheKey,
+          cache_value: transaction.blockNumber + '',
+        })
+
+        if (!transaction.hash) {
+          return
+        }
+
+        checkData(transaction.value + '', transaction.hash)
+      },
+    })
   } else {
     // Instantiate token contract object with JSON ABI and address
     const tokenContract = new web3.eth.Contract(
@@ -504,7 +523,6 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
 
     let amountStr = '0'
     if (isEthTokenAddress(tokenAddress)) {
-      console.log(Web3.utils.toHex(trx.value), trx.value)
       amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
     } else {
       const amountHex = '0x' + trx.input.slice(74)
@@ -791,7 +809,6 @@ export async function sendTransaction(
   nonce,
   result_nonce = 0
 ) {
-  console.log({ fromChainID, toChainID, amountStr, pool, nonce })
   const amountToSend = getAmountToSend(
     fromChainID,
     toChainID,

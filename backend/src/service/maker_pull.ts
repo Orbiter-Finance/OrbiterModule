@@ -341,7 +341,6 @@ export class ServiceMakerPull {
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
 
-    // TODO
     const resp = await axios.get(api.endPoint, {
       params: {
         apiKey: api.key,
@@ -360,7 +359,7 @@ export class ServiceMakerPull {
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
-      accessLogger.warn('Get etherscan tokentx faild: ' + JSON.stringify(data))
+      accessLogger.warn('Get etherscan tokentx/txlist faild: ' + JSON.stringify(data))
       return
     }
 
@@ -432,12 +431,11 @@ export class ServiceMakerPull {
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
 
-    // TODO
     const resp = await axios.get(api.endPoint, {
       params: {
         // apiKey: api.key,
         module: 'account',
-        action: 'tokentx',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
         address: this.makerAddress,
         page: 1,
         offset: 100,
@@ -451,7 +449,7 @@ export class ServiceMakerPull {
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
-      accessLogger.warn('Get arbitrum tokentx faild: ' + JSON.stringify(data))
+      accessLogger.warn('Get arbitrum tokentx/txlist faild: ' + JSON.stringify(data))
       return
     }
 

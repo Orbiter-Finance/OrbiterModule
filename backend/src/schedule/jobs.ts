@@ -88,7 +88,7 @@ export function jobGetWealths() {
     }
   }
 
-  new MJobPessimism('* */1 * * * *', callback).schedule()
+  new MJobPessimism('* */5 * * * *', callback).schedule()
 }
 
 export function jobMakerPull() {
