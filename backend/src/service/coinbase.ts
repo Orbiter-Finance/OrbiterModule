@@ -1,9 +1,9 @@
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { equalsIgnoreCase } from '../util'
-import { Core } from '../util/core'
+import { errorLogger } from '../util/logger'
 
-const CACHE_KEY_EXCHANGE_RATES = 'EXCHANGE_RATES'
+let exchangeRates: any
 
 /**
  * @param sourceCurrency
@@ -16,16 +16,20 @@ export async function getExchangeToUsdRate(
   sourceCurrency = sourceCurrency.toUpperCase()
 
   const currency = 'USD'
-  const cacheKey = `${CACHE_KEY_EXCHANGE_RATES}_${currency}`
-  let exchangeRates: any = Core.memoryCache.get(cacheKey)
-  if (!exchangeRates) {
-    exchangeRates = await cacheExchangeRates(currency)
-  }
-  if (!exchangeRates?.[sourceCurrency]) {
-    throw `No found exchangeRates[${sourceCurrency}]`
+
+  let rate = -1
+  try {
+    if (!exchangeRates) {
+      exchangeRates = await cacheExchangeRates(currency)
+    }
+    if (exchangeRates?.[sourceCurrency]) {
+      rate = exchangeRates[sourceCurrency]
+    }
+  } catch (error) {
+    errorLogger.error(error)
   }
 
-  return new BigNumber(exchangeRates[sourceCurrency])
+  return new BigNumber(rate)
 }
 
 /**
@@ -63,8 +67,7 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   }
 
   // cache
-  const cacheKey = `${CACHE_KEY_EXCHANGE_RATES}_${currency}`
-  Core.memoryCache.set(cacheKey, data.rates)
+  exchangeRates = data.rates
 
   return data.rates
 }
