@@ -6,18 +6,12 @@ import { Core } from '../util/core'
 const CACHE_KEY_EXCHANGE_RATES = 'EXCHANGE_RATES'
 
 /**
- * @param chainId
- * @param amount
+ * @param sourceCurrency
  * @returns
  */
-export async function exchangeToUsd(
-  value: string | BigNumber,
-  sourceCurrency: string
+export async function getExchangeToUsdRate(
+  sourceCurrency = 'ETH'
 ): Promise<BigNumber> {
-  if (typeof value === 'string') {
-    value = new BigNumber(value)
-  }
-
   // toUpperCase
   sourceCurrency = sourceCurrency.toUpperCase()
 
@@ -28,10 +22,28 @@ export async function exchangeToUsd(
     exchangeRates = await cacheExchangeRates(currency)
   }
   if (!exchangeRates?.[sourceCurrency]) {
-    return new BigNumber(0)
+    throw `No found exchangeRates[${sourceCurrency}]`
   }
 
-  return value.dividedBy(exchangeRates[sourceCurrency])
+  return new BigNumber(exchangeRates[sourceCurrency])
+}
+
+/**
+ * @param value
+ * @param sourceCurrency
+ * @returns
+ */
+export async function exchangeToUsd(
+  value: string | BigNumber,
+  sourceCurrency: string
+): Promise<BigNumber> {
+  if (!(value instanceof BigNumber)) {
+    value = new BigNumber(value)
+  }
+
+  const rate = await getExchangeToUsdRate(sourceCurrency)
+
+  return value.dividedBy(rate)
 }
 
 /**
