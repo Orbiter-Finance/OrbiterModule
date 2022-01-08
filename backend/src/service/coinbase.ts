@@ -1,37 +1,56 @@
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { equalsIgnoreCase } from '../util'
-import { Core } from '../util/core'
+import { errorLogger } from '../util/logger'
 
-const CACHE_KEY_EXCHANGE_RATES = 'EXCHANGE_RATES'
+let exchangeRates: any
 
 /**
- * @param chainId
- * @param amount
+ * @param sourceCurrency
+ * @returns
+ */
+export async function getExchangeToUsdRate(
+  sourceCurrency = 'ETH'
+): Promise<BigNumber> {
+  // toUpperCase
+  sourceCurrency = sourceCurrency.toUpperCase()
+
+  const currency = 'USD'
+
+  let rate = -1
+  try {
+    if (!exchangeRates) {
+      exchangeRates = await cacheExchangeRates(currency)
+    }
+    if (exchangeRates?.[sourceCurrency]) {
+      rate = exchangeRates[sourceCurrency]
+    }
+  } catch (error) {
+    errorLogger.error(error)
+  }
+
+  return new BigNumber(rate)
+}
+
+/**
+ * @param value
+ * @param sourceCurrency
  * @returns
  */
 export async function exchangeToUsd(
   value: string | BigNumber,
   sourceCurrency: string
 ): Promise<BigNumber> {
-  if (typeof value === 'string') {
+  if (!(value instanceof BigNumber)) {
     value = new BigNumber(value)
   }
 
-  // toUpperCase
-  sourceCurrency = sourceCurrency.toUpperCase()
-
-  const currency = 'USD'
-  const cacheKey = `${CACHE_KEY_EXCHANGE_RATES}_${currency}`
-  let exchangeRates: any = Core.memoryCache.get(cacheKey)
-  if (!exchangeRates) {
-    exchangeRates = await cacheExchangeRates(currency)
-  }
-  if (!exchangeRates?.[sourceCurrency]) {
+  const rate = await getExchangeToUsdRate(sourceCurrency)
+  if (rate.comparedTo(0) !== 1) {
     return new BigNumber(0)
   }
 
-  return value.dividedBy(exchangeRates[sourceCurrency])
+  return value.dividedBy(rate)
 }
 
 /**
@@ -51,8 +70,7 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   }
 
   // cache
-  const cacheKey = `${CACHE_KEY_EXCHANGE_RATES}_${currency}`
-  Core.memoryCache.set(cacheKey, data.rates)
+  exchangeRates = data.rates
 
   return data.rates
 }
