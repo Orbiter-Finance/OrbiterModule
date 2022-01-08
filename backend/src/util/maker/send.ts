@@ -246,7 +246,7 @@ async function send(
     details['value'] = web3.utils.toHex(amountToSend)
   } else {
     details['to'] = tokenAddress
-    details['value'] = 0x0
+    details['value'] = '0x0'
     details['data'] = tokenContract.methods
       .transfer(toAddress, web3.utils.toHex(amountToSend))
       .encodeABI()
