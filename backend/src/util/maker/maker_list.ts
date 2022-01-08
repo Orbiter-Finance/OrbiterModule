@@ -16,10 +16,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0015,
-    c2TradingFee: 0.0042,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.00135,
+    c2TradingFee: 0.0038,
+    c1GasFee: 2,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
@@ -49,10 +49,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.00035,
-    c2TradingFee: 0.0042,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.0003,
+    c2TradingFee: 0.0038,
+    c1GasFee: 2,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
@@ -82,10 +82,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.00035,
-    c2TradingFee: 0.0015,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.0003,
+    c2TradingFee: 0.00135,
+    c1GasFee: 2,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
