@@ -36,23 +36,22 @@ const ETHLISTEN_TRANSFER_DURATION = 5 * 1000
 export class EthListen {
   private api: Api
   private address: string
-  private blockProvider?: () => Promise<string>
-  private receivedHashs: { [key: string]: boolean }
+  private blockProvider?: (isFirst: boolean) => Promise<string>
+  private transferReceivedHashs: { [key: string]: boolean }
+  private transferConfirmationedHashs: { [key: string]: boolean }
   private transferBreaker?: () => boolean
-  private transferConfirmationAlways: boolean
 
   constructor(
     api: Api,
     address: string,
-    blockProvider?: () => Promise<string>,
-    transferConfirmationAlways = false
+    blockProvider?: (isFirst: boolean) => Promise<string>
   ) {
     this.api = api
     this.address = address
     this.blockProvider = blockProvider
-    this.transferConfirmationAlways = transferConfirmationAlways
 
-    this.receivedHashs = {}
+    this.transferReceivedHashs = {}
+    this.transferConfirmationedHashs = {}
   }
 
   setTransferBreaker(transferBreaker?: () => boolean): EthListen {
@@ -80,19 +79,19 @@ export class EthListen {
       return true
     }
 
-    const timer = setInterval(() => {
-      if (this.transferBreaker && this.transferBreaker() === false) {
-        clearInterval(timer)
-        return
-      }
-
-      ticker()
-    }, ETHLISTEN_TRANSFER_DURATION)
+    let isFirstTicker = true
+    const timer = setInterval(() => ticker(), ETHLISTEN_TRANSFER_DURATION)
     const ticker = async () => {
       try {
+        if (this.transferBreaker && this.transferBreaker() === false) {
+          clearInterval(timer)
+          return
+        }
+
         let startblock = ''
         if (this.blockProvider) {
-          startblock = await this.blockProvider()
+          startblock = await this.blockProvider(isFirstTicker)
+          isFirstTicker = false
         }
 
         const resp = await axios.get(this.api.endPoint, {
@@ -120,28 +119,22 @@ export class EthListen {
             continue
           }
 
-          if (this.receivedHashs[item.hash] === undefined) {
+          if (this.transferReceivedHashs[item.hash] === undefined) {
+            this.transferReceivedHashs[item.hash] = true
             callbacks &&
               callbacks.onReceived &&
               callbacks.onReceived(<Transaction>item)
           }
 
           if (confirmationsTotal > 0) {
-            if (item.confirmations < confirmationsTotal) {
-              this.receivedHashs[item.hash] = true
-              return
-            }
-
             if (
-              (this.transferConfirmationAlways ||
-                this.receivedHashs[item.hash]) &&
+              this.transferConfirmationedHashs[item.hash] === undefined &&
               item.confirmations >= confirmationsTotal
             ) {
+              this.transferConfirmationedHashs[item.hash] = true
               callbacks &&
                 callbacks.onConfirmation &&
                 callbacks.onConfirmation(<Transaction>item)
-
-              this.receivedHashs[item.hash] = false
             }
           }
         }

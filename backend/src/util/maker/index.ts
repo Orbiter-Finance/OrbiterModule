@@ -155,21 +155,7 @@ function watchTransfers(pool, state) {
     confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
     return
   }
-  // var socketOptions = {
-  //   clientConfig: {
-  //     keepalive: true,
-  //     keepaliveInterval: 60000,
-  //   },
-  //   reconnect: {
-  //     auto: true,
-  //     delay: 1000,
-  //     maxAttempts: Infinity,
-  //     onTimeout: false,
-  //   },
-  // }
-  // const web3 = new Web3(
-  //   new Web3.providers.WebsocketProvider(wsEndPoint, socketOptions),
-  // )
+
   const web3 = createAlchemyWeb3(wsEndPoint)
 
   // checkData
@@ -208,45 +194,35 @@ function watchTransfers(pool, state) {
       matchHashList.push(transactionHash)
 
       // Initiate transaction confirmation
-      accessLogger.info('match one transaction')
+      accessLogger.info('match one transaction >>> ', transactionHash)
       confirmFromTransaction(pool, state, transactionHash)
     }
   }
 
   if (isEthTokenAddress(tokenAddress)) {
-    const EthListenBlockNumberCacheKey = `EthListenBlockNumber_${pool.makerAddress}_${fromChainID}_${toChainID}`
+    let startBlockNumber = 0
 
     new EthListen(api, makerConfig.makerAddress, async () => {
-      const systemCaches = await repositorySystemCache().findOne({
-        cache_key: EthListenBlockNumberCacheKey,
-      })
-
-      if (systemCaches) {
-        return systemCaches.cache_value
+      if (startBlockNumber) {
+        return startBlockNumber + ''
       } else {
-        const blockNumber = (await web3.eth.getBlockNumber()) + ''
-        await repositorySystemCache().insert({
-          cache_key: EthListenBlockNumberCacheKey,
-          cache_value: blockNumber,
-        })
-
-        return blockNumber
+        startBlockNumber = await web3.eth.getBlockNumber()
+        return startBlockNumber + ''
       }
-    })
-    .transfer(undefined, {
-      onConfirmation: async (transaction) => {
-        await repositorySystemCache().insert({
-          cache_key: EthListenBlockNumberCacheKey,
-          cache_value: transaction.blockNumber + '',
-        })
+    }).transfer(
+      { to: makerConfig.makerAddress },
+      {
+        onConfirmation: async (transaction) => {
+          if (!transaction.hash) {
+            return
+          }
 
-        if (!transaction.hash) {
-          return
-        }
+          startBlockNumber = transaction.blockNumber
 
-        checkData(transaction.value + '', transaction.hash)
-      },
-    })
+          checkData(transaction.value + '', transaction.hash)
+        },
+      }
+    )
   } else {
     // Instantiate token contract object with JSON ABI and address
     const tokenContract = new web3.eth.Contract(

@@ -165,7 +165,7 @@ async function send(
   try {
     if (isEthTokenAddress(tokenAddress)) {
       tokenBalanceWei =
-        Number(await web3.eth.getBalance(web3.eth.defaultAccount)) || 0
+        Number(await web3.eth.getBalance(<any>web3.eth.defaultAccount)) || 0
     } else {
       tokenContract = new web3.eth.Contract(<any>makerConfig.ABI, tokenAddress)
       tokenBalanceWei = await tokenContract.methods
@@ -196,7 +196,7 @@ async function send(
 
   if (result_nonce == 0) {
     let nonce = await web3.eth.getTransactionCount(
-      web3.eth.defaultAccount,
+      <any>web3.eth.defaultAccount,
       'pending'
     )
     /**

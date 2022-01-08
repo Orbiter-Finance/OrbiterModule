@@ -46,6 +46,9 @@ export async function exchangeToUsd(
   }
 
   const rate = await getExchangeToUsdRate(sourceCurrency)
+  if (rate.comparedTo(0) !== 1) {
+    return new BigNumber(0)
+  }
 
   return value.dividedBy(rate)
 }
