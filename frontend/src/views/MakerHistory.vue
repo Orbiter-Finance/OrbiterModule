@@ -1,30 +1,39 @@
 <template>
   <div class="maker-history">
     <div class="maker-history__filter">
-      <el-checkbox
+      <div
         :border="true"
-        :model-value="showRejected"
-        @change="showRejected = !showRejected"
+        @click="showRejected = !showRejected"
+        :class="{ 'filter-item--invalid': !showRejected }"
       >
-        Show rejected
-      </el-checkbox>
-      <el-checkbox
+        <span
+          class="filter__color-block"
+          style="background-color: var(--el-color-warning-light)"
+        ></span>
+        Transaction rejected
+      </div>
+      <div
         :border="true"
-        :model-value="showCannotMatched"
-        @change="showCannotMatched = !showCannotMatched"
+        :class="{ 'filter-item--invalid': !showCannotMatched }"
+        @click="showCannotMatched = !showCannotMatched"
       >
-        Show cannotMatched
-      </el-checkbox>
-      <el-checkbox
+        <span
+          class="filter__color-block"
+          style="background-color: var(--el-color-danger-light)"
+        ></span>
+        Transaction finalized but can't match
+      </div>
+      <div
         :border="true"
-        :model-value="showSuccessed"
-        @change="showSuccessed = !showSuccessed"
+        :class="{ 'filter-item--invalid': !showSuccessed }"
+        @click="showSuccessed = !showSuccessed"
       >
-        Show successed
-      </el-checkbox>
+        <span class="filter__color-block"></span>
+        Transaction successed
+      </div>
     </div>
-    <el-row>
-      <el-col :span="11">
+    <el-row :gutter="16">
+      <el-col :span="12">
         <h3>In</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
@@ -66,8 +75,7 @@
           <vxe-column field="tx_status" title="Status" />
         </vxe-table>
       </el-col>
-      <el-col :span="2"></el-col>
-      <el-col :span="11">
+      <el-col :span="12">
         <h3>Out</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
@@ -163,7 +171,7 @@ export default defineComponent({
       const conditions: boolean[] = []
 
       if (state.showSuccessed) {
-        conditions.push(tx_status == 'finalized' && target_tx)
+        conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
       }
       if (state.showRejected) {
         conditions.push(tx_status == 'rejected')
@@ -209,9 +217,34 @@ export default defineComponent({
   background: white;
   padding: 18px 36px;
 
-  .maker-history__filter > * {
-    margin-right: 20px;
-    text-align: center;
+  .maker-history__filter {
+    display: flex;
+    flex-direction: row;
+
+    > * {
+      margin-right: 40px;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      flex-direction: row;
+      align-items: center;
+
+      &:hover {
+        opacity: 0.8;
+      }
+    }
+    .filter-item--invalid {
+      opacity: 0.7;
+      text-decoration: line-through;
+    }
+
+    .filter__color-block {
+      display: inline-block;
+      width: 30px;
+      height: 14px;
+      margin-right: 5px;
+      border: 1px solid rgba($color: #000000, $alpha: 0.1);
+    }
   }
 
   a {
