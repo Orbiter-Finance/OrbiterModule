@@ -17,7 +17,7 @@ export const makerList = [
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.00135,
-    c2TradingFee: 0.0038,
+    c2TradingFee: 0.0045,
     c1GasFee: 2,
     c2GasFee: 2,
     c1AvalibleTimes: [
@@ -50,7 +50,7 @@ export const makerList = [
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0003,
-    c2TradingFee: 0.0038,
+    c2TradingFee: 0.0045,
     c1GasFee: 2,
     c2GasFee: 2,
     c1AvalibleTimes: [
