@@ -82,7 +82,7 @@ export async function statisticsProfit(
     }
   }
 
-  if (fromToCurrency) {
+  if (fromToCurrency && Number(makerNode.toAmount) > 0) {
     const fromMinusToUsd = await exchangeToUsd(
       new BigNumber(makerNode.fromAmount)
         .minus(makerNode.toAmount)
