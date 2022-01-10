@@ -139,7 +139,9 @@ export class EthListen {
           }
         }
       } catch (error) {
-        errorLogger.error(error)
+        errorLogger.error(
+          `Eth listen get transfer error: ${error.message}, api.endPoint: ${this.api.endPoint}, address: ${this.address}`
+        )
       }
     }
     ticker()

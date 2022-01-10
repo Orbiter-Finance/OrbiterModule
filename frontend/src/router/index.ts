@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
+import Dashboard from '../views/Dashboard.vue'
 // import Home from '../views/Home.vue'
 import Maker from '../views/Maker.vue'
 import MakerHistory from '../views/MakerHistory.vue'
@@ -17,6 +18,12 @@ const routes: Array<RouteRecordRaw> = [
   //   // which is lazy-loaded when the route is visited.
   //   component: () => import(/* webpackChunkName: "about" */ '../views/About.vue')
   // },
+  {
+    path: '/',
+    name: 'Dashboard',
+    component: Dashboard,
+    meta: { navHide: true },
+  },
   {
     path: '/maker',
     name: 'Maker',
