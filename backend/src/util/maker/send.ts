@@ -58,8 +58,6 @@ const getCurrentGasPrices = async (
 const sendQueue = new SendQueue()
 
 async function sendConsumer(value: any) {
-  accessLogger.info('value >>>> ', value)
-
   let {
     toAddress,
     toChain,
