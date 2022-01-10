@@ -25,11 +25,21 @@ const getCurrentGasPrices = async (
         medium: response.data.average / 10,
         high: response.data.fast / 10,
       }
-      return Web3.utils.toHex(
-        Web3.utils.toWei(prices[ethgasAPITarget].toString(), 'gwei')
-      )
+      let gwei = prices[ethgasAPITarget]
+
+      // Limit max gwei
+      switch (ethgasAPITarget) {
+        case 'low':
+          gwei = gwei > 180 ? 180 : gwei
+          break
+        case 'medium':
+          gwei = gwei > 230 ? 230 : gwei
+          break
+      }
+
+      return Web3.utils.toHex(Web3.utils.toWei(gwei.toString(), 'gwei'))
     } catch (error) {
-      return Web3.utils.toHex(Web3.utils.toWei('500', 'gwei')) // 50
+      return Web3.utils.toHex(Web3.utils.toWei('200', 'gwei'))
     }
   } else {
     try {
