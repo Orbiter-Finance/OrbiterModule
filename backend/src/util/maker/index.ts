@@ -30,9 +30,6 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
   return Core.db.getRepository(MakerZkHash)
 }
-const repositorySystemCache = (): Repository<SystemCache> => {
-  return Core.db.getRepository(SystemCache)
-}
 
 // function stopMaker() {
 //   for (const web3 of web3List) {

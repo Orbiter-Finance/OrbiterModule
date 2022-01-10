@@ -42,7 +42,7 @@ class MJob {
       try {
         this.callback && (await this.callback())
       } catch (error) {
-        errorLogger.error(error)
+        errorLogger.error(`MJob.schedule error: ${error.message}, rule: ${this.rule}`)
       }
     })
   }

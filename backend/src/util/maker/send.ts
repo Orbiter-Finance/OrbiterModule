@@ -7,6 +7,7 @@ import * as zksync from 'zksync'
 import { isEthTokenAddress } from '..'
 import { makerConfig } from '../../config'
 import { accessLogger, errorLogger } from '../logger'
+import { SendQueue } from './send_queue'
 
 let nonceDic = {}
 
@@ -53,18 +54,21 @@ const getCurrentGasPrices = async (
   }
 }
 
-/**
- * This is the process that will run when you execute the program.
- */
-async function send(
-  toAddress,
-  toChain,
-  chainID,
-  tokenID, // 3 33 use
-  tokenAddress,
-  amountToSend,
-  result_nonce = 0
-): Promise<any> {
+// SendQueue
+const sendQueue = new SendQueue()
+
+async function sendConsumer(value: any) {
+  accessLogger.info('value >>>> ', value)
+
+  let {
+    toAddress,
+    toChain,
+    chainID,
+    tokenAddress,
+    amountToSend,
+    result_nonce,
+  } = value
+
   if (chainID === 3 || chainID === 33) {
     try {
       let ethProvider
@@ -313,6 +317,43 @@ async function send(
           result_nonce,
         })
       })
+  })
+}
+
+/**
+ * This is the process that will run when you execute the program.
+ */
+async function send(
+  toAddress,
+  toChain,
+  chainID,
+  tokenID, // 3 33 use
+  tokenAddress,
+  amountToSend,
+  result_nonce = 0
+): Promise<any> {
+  sendQueue.registerConsumer(chainID, sendConsumer)
+
+  return new Promise((resolve, reject) => {
+    const value = {
+      toAddress,
+      toChain,
+      chainID,
+      tokenID,
+      tokenAddress,
+      amountToSend,
+      result_nonce,
+    }
+    sendQueue.produce(chainID, {
+      value,
+      callback: (error, result) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(result)
+        }
+      },
+    })
   })
 }
 
