@@ -394,7 +394,6 @@ export class ServiceMakerPull {
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
           .multipliedBy(item.gasPrice)
-          .dividedBy(10 ** 18)
           .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS
@@ -484,7 +483,6 @@ export class ServiceMakerPull {
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
           .multipliedBy(item.gasPrice)
-          .dividedBy(10 ** 18)
           .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS

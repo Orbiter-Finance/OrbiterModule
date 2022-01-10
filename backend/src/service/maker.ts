@@ -61,7 +61,7 @@ export async function statisticsProfit(
 ): Promise<BigNumber> {
   let fromToCurrency = ''
   let fromToPrecision = 0
-  let gasPrecision = 0
+  let gasPrecision = 18 // gas default is eth, zksync is token
 
   const makerList = await getMakerList()
   for (const item of makerList) {
