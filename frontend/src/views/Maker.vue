@@ -9,7 +9,7 @@
         <el-card
           v-for="(item, index) in wealths"
           :key="index"
-          :header="item.chainName"
+          :header="mappingChainName(item.chainName)"
           shadow="hover"
         >
           <el-tabs class="maker-header--balances__names">
@@ -55,7 +55,7 @@
             <el-option
               v-for="(item, index) in chains"
               :key="index"
-              :label="item.chainName"
+              :label="mappingChainName(item.chainName)"
               :value="item.chainId"
             >
             </el-option>
@@ -92,12 +92,9 @@
         </el-tag>
       </el-row>
     </div>
-    <div
-      class="maker-block maker-header maker-header__statistics"
-      v-if="list.length > 0"
-    >
-      <span>TransactionTotal: {{ list.length }}</span>
-      <span>
+    <div class="maker-block maker-header maker-header__statistics">
+      <div>TransactionTotal: {{ list.length }}</div>
+      <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
             <div class="user-addresses">
@@ -114,10 +111,15 @@
             <span>UserAddressTotal:{{ userAddressList.length }}</span>
           </template>
         </el-popover>
-      </span>
-      <span>FromAmountTotal: {{ fromAmountTotal }}</span>
-      <span>ToAmountTotal: {{ toAmountTotal }}</span>
-      <span style="color: #67c23a">+{{ diffAmountTotal }}</span>
+      </div>
+      <div>FromAmountTotal: {{ fromAmountTotal }}</div>
+      <div>ToAmountTotal: {{ toAmountTotal }}</div>
+      <div style="color: #67c23a">+{{ diffAmountTotal }}</div>
+      <div style="margin-left: auto">
+        <router-link :to="`/maker/history?makerAddress=${makerAddressSelected}`" target="_blank">
+          <el-button size="small" round>All transactions</el-button>
+        </router-link>
+      </div>
     </div>
     <div class="maker-block">
       <template v-if="list.length > 0">
@@ -301,6 +303,13 @@ import {
 } from 'vue'
 import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
+// mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
+const CHAIN_NAME_MAPPING = {
+  mainnet: 'Mainnet',
+  arbitrum: 'Arbitrum',
+  zksync: 'zkSync',
+}
+
 export default defineComponent({
   components: {
     TextLong,
@@ -414,7 +423,17 @@ export default defineComponent({
       }
     )
 
+    // methods
+    const mappingChainName = (chainName: string) => {
+      if (CHAIN_NAME_MAPPING[chainName]) {
+        return CHAIN_NAME_MAPPING[chainName]
+      }
+      return chainName
+    }
+
     return {
+      makerAddressSelected,
+
       ...toRefs(state),
       stateTags,
       reset,
@@ -432,6 +451,8 @@ export default defineComponent({
       fromAmountTotal,
       toAmountTotal,
       diffAmountTotal,
+
+      mappingChainName,
     }
   },
 })
@@ -519,6 +540,9 @@ export default defineComponent({
 .maker-header__statistics {
   font-size: 14px;
   color: #555555;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
   & > * {
     margin-right: 16px;

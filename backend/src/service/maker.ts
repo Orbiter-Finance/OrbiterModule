@@ -56,6 +56,7 @@ export async function getMakerAddresses() {
   return makerAddresses
 }
 
+const GAS_PRICE_PAID_RATE = { arbitrum: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
 export async function statisticsProfit(
   makerNode: MakerNode
 ): Promise<BigNumber> {
@@ -89,8 +90,15 @@ export async function statisticsProfit(
         .dividedBy(10 ** fromToPrecision),
       fromToCurrency
     )
+
+    let gasPricePaidRate = 1
+    if (GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]) {
+      gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]
+    }
     const gasAmountUsd = await exchangeToUsd(
-      new BigNumber(makerNode.gasAmount).dividedBy(10 ** gasPrecision),
+      new BigNumber(makerNode.gasAmount)
+        .multipliedBy(gasPricePaidRate)
+        .dividedBy(10 ** gasPrecision),
       makerNode.gasCurrency
     )
 

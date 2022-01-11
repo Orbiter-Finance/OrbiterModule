@@ -14,10 +14,7 @@
         >
           <template v-for="(item, index) in navs" :key="index">
             <!-- If route.meta.navHide is undefined or navHide == false, display -->
-            <el-menu-item
-              v-if="!item.meta.navHide"
-              :index="item.path"
-            >
+            <el-menu-item v-if="!item.meta.navHide" :index="item.path">
               {{ item.name }}
             </el-menu-item>
           </template>
@@ -83,13 +80,23 @@ export default defineComponent({
     const getGlobalInfo = async () => {
       const resp = await $axios.get<{ makerAddresses: string[] }>('global')
       state.makerAddresses = resp.data.makerAddresses
+
       state.makerAddressSelected = state.makerAddresses?.[0] || ''
+
+      // Set makerAddressSelected from route.query.makerAddress
+      setTimeout(() => {
+        const makerAddress = String(route.query.makerAddress)
+        if (state.makerAddresses.indexOf(makerAddress) > -1) {
+          state.makerAddressSelected = makerAddress
+        }
+      }, 1)
     }
     getGlobalInfo()
     const onClickMakerAddressItem = (makerAddress: string) => {
       state.makerAddressSelected = makerAddress
     }
 
+    // watch
     watch(
       () => route.path,
       (nv) => {
