@@ -116,7 +116,10 @@
       <div>ToAmountTotal: {{ toAmountTotal }}</div>
       <div style="color: #67c23a">+{{ diffAmountTotal }}</div>
       <div style="margin-left: auto">
-        <router-link :to="`/maker/history?makerAddress=${makerAddressSelected}`" target="_blank">
+        <router-link
+          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
+          target="_blank"
+        >
           <el-button size="small" round>All transactions</el-button>
         </router-link>
       </div>
@@ -181,7 +184,7 @@
                 }}</TextLong>
               </a>
               <a :href="scope.row.userAddressHref" target="_blank">
-                <TextLong :content="scope.row.userAddress">{{
+                <TextLong :content="scope.row.userAddress" placement="bottom">{{
                   scope.row.userAddress
                 }}</TextLong>
               </a>
@@ -199,9 +202,11 @@
                 }}</TextLong>
               </a>
               <div class="table-timestamp">
-                <TextLong :content="scope.row.fromTimeStamp">{{
-                  scope.row.fromTimeStampAgo
-                }}</TextLong>
+                <TextLong
+                  :content="scope.row.fromTimeStamp"
+                  placement="bottom"
+                  >{{ scope.row.fromTimeStampAgo }}</TextLong
+                >
               </div>
             </template>
           </el-table-column>
@@ -227,6 +232,7 @@
                 <TextLong
                   v-if="scope.row.toTimeStamp && scope.row.toTimeStamp != '0'"
                   :content="scope.row.toTimeStamp"
+                  placement="bottom"
                 >
                   {{ scope.row.toTimeStampAgo }}
                 </TextLong>
@@ -244,7 +250,7 @@
                 ><span class="amount-operator--plus">+</span>
                 {{ scope.row.fromAmountFormat }}</TextLong
               >
-              <TextLong :content="scope.row.toAmountFormat"
+              <TextLong :content="scope.row.toAmountFormat" placement="bottom"
                 ><span class="amount-operator--minus">-</span>
                 {{ scope.row.toAmountFormat }}</TextLong
               >
