@@ -265,7 +265,8 @@ export class ServiceMakerPull {
         this.makerAddress,
         this.tokenAddress,
         makerPull.chainId,
-        Number(makerPull.amount_flag)
+        Number(makerPull.amount_flag),
+        makerPull.txTime
       )
       let needToAmount = '0'
       if (targetMakerPool) {

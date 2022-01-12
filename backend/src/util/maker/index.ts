@@ -9,12 +9,11 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
-import { SystemCache } from '../../model/system_cache'
 import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
-import { makerList } from './maker_list'
+import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 
 const web3List: AlchemyWeb3[] = []
@@ -59,6 +58,10 @@ export async function startMaker() {
 
 export async function getMakerList() {
   return makerList
+}
+
+export async function getAllMakerList() {
+  return makerList.concat(makerListHistory)
 }
 
 export function expanPool(pool) {

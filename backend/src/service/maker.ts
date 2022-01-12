@@ -9,7 +9,12 @@ import { MakerNodeTodo } from '../model/maker_node_todo'
 import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
-import { expanPool, getMakerList, sendTransaction } from '../util/maker'
+import {
+  expanPool,
+  getAllMakerList,
+  getMakerList,
+  sendTransaction,
+} from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
 
@@ -411,21 +416,30 @@ export async function getWealths(
  * @param tokenAddress
  * @param fromChainId
  * @param toChainId
+ * @param transactionTime
  * @returns
  */
 export async function getTargetMakerPool(
   makerAddress: string,
   tokenAddress: string,
   fromChainId: number,
-  toChainId: number
+  toChainId: number,
+  transactionTime?: Date
 ) {
-  for (const maker of await getMakerList()) {
+  if (!transactionTime) {
+    transactionTime = new Date()
+  }
+  const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
+
+  for (const maker of await getAllMakerList()) {
     const { pool1, pool2 } = expanPool(maker)
     if (
       pool1.makerAddress == makerAddress &&
       equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
       pool1.c1ID == fromChainId &&
-      pool1.c2ID == toChainId
+      pool1.c2ID == toChainId &&
+      transactionTimeStramp >= pool1.avalibleTimes.startTime &&
+      transactionTimeStramp <= pool1.avalibleTimes.endTime
     ) {
       return pool1
     }
@@ -434,7 +448,9 @@ export async function getTargetMakerPool(
       pool2.makerAddress == makerAddress &&
       equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
       pool2.c1ID == toChainId &&
-      pool2.c2ID == fromChainId
+      pool2.c2ID == fromChainId &&
+      transactionTimeStramp >= pool2.avalibleTimes.startTime &&
+      transactionTimeStramp <= pool2.avalibleTimes.endTime
     ) {
       return pool2
     }

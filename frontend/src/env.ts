@@ -33,7 +33,7 @@ export const $env = {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
     5: 'https://rinkeby.etherscan.io/tx/', // /tx/  /address/
     2: 'https://arbiscan.io/tx/', // /tx/  /address/
-    22: 'https://rinkeby-explorer.arbitrum.io/tx/',
+    22: 'https://testnet.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
     33: 'https://rinkeby.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
   },
@@ -41,7 +41,7 @@ export const $env = {
     1: 'https://etherscan.io/address/', // /tx/  /address/
     5: 'https://rinkeby.etherscan.io/address/', // /tx/  /address/
     2: 'https://arbiscan.io/address/', // /tx/  /address/
-    22: 'https://rinkeby-explorer.arbitrum.io/address/',
+    22: 'https://testnet.arbiscan.io/address/',
     3: 'https://zkscan.io/explorer/accounts/',
     33: 'https://rinkeby.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
   },
@@ -49,7 +49,7 @@ export const $env = {
     1: 'https://etherscan.io/token/', // /token/
     5: 'https://rinkeby.etherscan.io/token/', // /token/
     2: 'https://arbiscan.io/address/', // /address/
-    22: 'https://rinkeby-explorer.arbitrum.io/address/',
+    22: 'https://testnet.arbitrum.io/address/',
     3: 'https://etherscan.io/token/', // same as etherscan
     33: 'https://rinkeby.etherscan.io/token/', 
   },
