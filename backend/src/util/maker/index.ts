@@ -512,10 +512,9 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
       return
     }
     if (!makerNode) {
-      // const fromWeb3 = new Web3(config[fromChain].httpEndPoint)
-      const fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
       var info = <any>{}
       try {
+        const fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
         info = await fromWeb3.eth.getBlock(trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)
@@ -607,11 +606,9 @@ function confirmToTransaction(
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
-      // const toWeb3 = new Web3(config[Chain].httpEndPoint)
-      const toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
-
-      var info = <any>{}
+      let info = <any>{}
       try {
+        const toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
         info = await toWeb3.eth.getBlock(trxConfirmations.trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)

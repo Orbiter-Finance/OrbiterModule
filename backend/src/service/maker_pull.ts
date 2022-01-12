@@ -94,6 +94,10 @@ export async function getMakerPulls(
     } = :makerAddress`,
     { makerAddress }
   )
+
+  // conversion、query
+  startTime = Number(startTime)
+  endTime = Number(endTime)
   if (startTime) {
     queryBuilder.andWhere(`${ALIAS_MP}.txTime >= :startTime`, {
       startTime: dateFormatNormal(startTime),
@@ -359,7 +363,9 @@ export class ServiceMakerPull {
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
-      accessLogger.warn('Get etherscan tokentx/txlist faild: ' + JSON.stringify(data))
+      accessLogger.warn(
+        'Get etherscan tokentx/txlist faild: ' + JSON.stringify(data)
+      )
       return
     }
 
@@ -394,7 +400,6 @@ export class ServiceMakerPull {
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
           .multipliedBy(item.gasPrice)
-          .dividedBy(10 ** 18)
           .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS
@@ -449,7 +454,9 @@ export class ServiceMakerPull {
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
-      accessLogger.warn('Get arbitrum tokentx/txlist faild: ' + JSON.stringify(data))
+      accessLogger.warn(
+        'Get arbitrum tokentx/txlist faild: ' + JSON.stringify(data)
+      )
       return
     }
 
@@ -484,7 +491,6 @@ export class ServiceMakerPull {
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
           .multipliedBy(item.gasPrice)
-          .dividedBy(10 ** 18)
           .toString(),
         tx_status:
           item.confirmations >= FINALIZED_CONFIRMATIONS

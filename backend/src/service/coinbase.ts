@@ -38,7 +38,7 @@ export async function getExchangeToUsdRate(
  * @returns
  */
 export async function exchangeToUsd(
-  value: string | BigNumber,
+  value: string | number | BigNumber,
   sourceCurrency: string
 ): Promise<BigNumber> {
   if (!(value instanceof BigNumber)) {
