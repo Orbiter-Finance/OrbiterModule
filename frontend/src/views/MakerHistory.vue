@@ -1,6 +1,18 @@
 <template>
   <div class="maker-history">
     <div class="maker-history__filter">
+      <div class="filter__start-time">
+        <span>Start Time: </span>
+        <el-date-picker
+          v-model="startTime"
+          type="datetime"
+          :clearable="false"
+          :offset="-50"
+          :show-arrow="false"
+          @change="onChangeStartTime"
+        >
+        </el-date-picker>
+      </div>
       <div
         :border="true"
         @click="showRejected = !showRejected"
@@ -126,6 +138,7 @@
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
 import { makerPulls } from '@/hooks/maker-history'
+import dayjs from 'dayjs'
 import {
   computed,
   defineComponent,
@@ -145,14 +158,16 @@ export default defineComponent({
       showSuccessed: false,
       showRejected: true,
       showCannotMatched: true,
+      startTime: dayjs().startOf('month').subtract(1, 'month').toDate(),
     })
 
     const fromMakerPulls = makerPulls()
     const toMakerPulls = makerPulls()
 
     const getMakerPulls = () => {
-      fromMakerPulls.get(makerAddressSelected.value, 1)
-      toMakerPulls.get(makerAddressSelected.value, 0)
+      const rangeDate = [state.startTime]
+      fromMakerPulls.get(makerAddressSelected.value, 1, rangeDate)
+      toMakerPulls.get(makerAddressSelected.value, 0, rangeDate)
     }
     getMakerPulls()
 
@@ -197,6 +212,11 @@ export default defineComponent({
       }
     )
 
+    // methods
+    const onChangeStartTime = () => {
+      getMakerPulls()
+    }
+
     return {
       ...toRefs(state),
 
@@ -207,6 +227,8 @@ export default defineComponent({
       toLoading: toMakerPulls.state.loading,
 
       tableRowClassName,
+
+      onChangeStartTime,
     }
   },
 })
@@ -221,20 +243,28 @@ export default defineComponent({
     display: flex;
     flex-direction: row;
 
+    .filter__start-time {
+      flex: 1;
+
+      span {
+        margin-right: 10px;
+      }
+    }
+
     > * {
-      margin-right: 40px;
+      margin-right: 45px;
       font-size: 14px;
-      cursor: pointer;
       display: flex;
       flex-direction: row;
       align-items: center;
 
-      &:hover {
-        opacity: 0.8;
+      &:not(.filter__start-time):hover {
+        cursor: pointer;
+        opacity: 0.6;
       }
     }
     .filter-item--invalid {
-      opacity: 0.7;
+      opacity: 0.5;
       text-decoration: line-through;
     }
 
