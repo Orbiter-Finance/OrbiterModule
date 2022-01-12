@@ -438,8 +438,8 @@ export async function getTargetMakerPool(
       equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
       pool1.c1ID == fromChainId &&
       pool1.c2ID == toChainId &&
-      transactionTimeStramp >= pool1.avalibleTimes.startTime &&
-      transactionTimeStramp <= pool1.avalibleTimes.endTime
+      transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
+      transactionTimeStramp <= pool1.avalibleTimes[0].endTime
     ) {
       return pool1
     }
@@ -449,8 +449,8 @@ export async function getTargetMakerPool(
       equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
       pool2.c1ID == toChainId &&
       pool2.c2ID == fromChainId &&
-      transactionTimeStramp >= pool2.avalibleTimes.startTime &&
-      transactionTimeStramp <= pool2.avalibleTimes.endTime
+      transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
+      transactionTimeStramp <= pool2.avalibleTimes[0].endTime
     ) {
       return pool2
     }
