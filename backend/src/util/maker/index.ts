@@ -782,6 +782,7 @@ export async function sendTransaction(
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
   await send(
+    makerAddress,
     fromAddress,
     toChain,
     toChainID,
