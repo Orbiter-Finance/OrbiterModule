@@ -12,7 +12,7 @@ services:
     environment:
       NODE_ENV: 'development'
       ORBITER_SCENE: maker # dashboard: only dashboard | maker: only maker service | all
-      ORBITER_MAKER_PRIVATEKEY: ''
+      ORBITER_MAKER_PRIVATE_KEYS: '' # {"makerAddress":"private_key"}
       DB_HOST: db
       DB_PORT: '${DB_PORT}'
       DB_USER: '${DB_USER}'

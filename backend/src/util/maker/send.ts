@@ -9,7 +9,7 @@ import { makerConfig } from '../../config'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 
-let nonceDic = {}
+const nonceDic = {}
 
 const getCurrentGasPrices = async (
   toChain: string,
@@ -69,6 +69,7 @@ const sendQueue = new SendQueue()
 
 async function sendConsumer(value: any) {
   let {
+    makerAddress,
     toAddress,
     toChain,
     chainID,
@@ -89,7 +90,7 @@ async function sendConsumer(value: any) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
-      const ethWallet = new ethers.Wallet(makerConfig.privatekey).connect(
+      const ethWallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress]).connect(
         ethProvider
       )
       const syncWallet = await zksync.Wallet.fromEthSigner(
@@ -116,7 +117,7 @@ async function sendConsumer(value: any) {
       const has_result_nonce = result_nonce > 0
       if (!has_result_nonce) {
         let zk_nonce = await syncWallet.getNonce('committed')
-        let zk_sql_nonce = nonceDic[chainID]
+        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
         if (!zk_sql_nonce) {
           result_nonce = zk_nonce
         } else {
@@ -138,7 +139,7 @@ async function sendConsumer(value: any) {
         amount,
       })
       if (!has_result_nonce) {
-        nonceDic[chainID] = result_nonce
+        nonceDic[makerAddress][chainID] = result_nonce
       }
 
       return new Promise((resolve, reject) => {
@@ -169,7 +170,7 @@ async function sendConsumer(value: any) {
   }
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
-  web3.eth.defaultAccount = makerConfig.makerAddress
+  web3.eth.defaultAccount = makerAddress
 
   let tokenContract: any
 
@@ -215,7 +216,7 @@ async function sendConsumer(value: any) {
      * With every new transaction you send using a specific wallet address,
      * you need to increase a nonce which is tied to the sender wallet.
      */
-    let sql_nonce = nonceDic[chainID]
+    let sql_nonce = nonceDic[makerAddress]?.[chainID]
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -225,7 +226,7 @@ async function sendConsumer(value: any) {
         result_nonce = sql_nonce + 1
       }
     }
-    nonceDic[chainID] = result_nonce
+    nonceDic[makerAddress][chainID] = result_nonce
     accessLogger.info('nonce =', nonce)
     accessLogger.info('sql_nonce =', sql_nonce)
     accessLogger.info('result_nonde =', result_nonce)
@@ -294,7 +295,7 @@ async function sendConsumer(value: any) {
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(makerConfig.privatekey, 'hex'))
+  transaction.sign(Buffer.from(makerConfig.privateKeys[makerAddress], 'hex'))
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.
@@ -332,6 +333,7 @@ async function sendConsumer(value: any) {
  * This is the process that will run when you execute the program.
  */
 async function send(
+  makerAddress: string,
   toAddress,
   toChain,
   chainID,
@@ -344,6 +346,7 @@ async function send(
 
   return new Promise((resolve, reject) => {
     const value = {
+      makerAddress,
       toAddress,
       toChain,
       chainID,

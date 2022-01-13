@@ -1,5 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { plainToInstance } from 'class-transformer'
+import { isEthereumAddress } from 'class-validator'
 import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
@@ -160,15 +161,42 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json(rst)
   })
 
-  // set makerConfig.privatekey
-  router.post('maker/privatekey', async ({ request, restful }) => {
-    const { privatekey } = request.body
+  router.get('maker/miss_private_key_addresses', async ({ restful }) => {
+    const makerAddresses = await serviceMaker.getMakerAddresses()
+    const addresses: string[] = []
+    for (const item of makerAddresses) {
+      if (makerConfig.privateKeys[item]) {
+        continue
+      }
 
-    if (privatekey !== undefined) {
-      makerConfig.privatekey = privatekey
+      addresses.push(item)
     }
 
-    restful.json()
+    restful.json(addresses)
+  })
+
+  // set makerConfig.privateKeys
+  router.post('maker/privatekeys', async ({ request, restful }) => {
+    const { body } = request
+
+    const makerAddresses: string[] = []
+    for (const makerAddress in body) {
+      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
+        if (!isEthereumAddress(makerAddress)) {
+          continue
+        }
+
+        if (!body[makerAddress]) {
+          continue
+        }
+
+        makerAddresses.push(makerAddress)
+
+        makerConfig.privateKeys[makerAddress] = body[makerAddress]
+      }
+    }
+
+    restful.json(makerAddresses.join(','))
   })
 
   router.get('maker/pulls', async ({ request, restful }) => {

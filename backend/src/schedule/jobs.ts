@@ -160,9 +160,9 @@ export function jobMakerPull() {
   new MJobPessimism('*/10 * * * * *', callback).schedule()
 }
 
-export function jobMakerNodeTodo() {
+export function jobMakerNodeTodo(makerAddress: string) {
   const callback = async () => {
-    await serviceMaker.runTodo()
+    await serviceMaker.runTodo(makerAddress)
   }
 
   new MJobPessimism('*/10 * * * * *', callback).schedule()

@@ -458,11 +458,13 @@ export async function getTargetMakerPool(
   return undefined
 }
 
-export async function runTodo() {
+export async function runTodo(makerAddress: string) {
   // find: do_current < do_max and state = 0
   const todos = await repositoryMakerNodeTodo()
     .createQueryBuilder()
-    .where('do_current < do_max AND state = 0')
+    .where('makerAddress=:makerAddress and do_current < do_max AND state = 0', {
+      makerAddress,
+    })
     .getMany()
 
   for (const todo of todos) {
@@ -487,6 +489,7 @@ export async function runTodo() {
       if (result_nonce > 0) {
         // do_current insert or update logic in sendTransaction
         await sendTransaction(
+          todo.makerAddress,
           transactionID,
           fromChainID,
           toChainID,
