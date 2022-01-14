@@ -90,9 +90,9 @@ async function sendConsumer(value: any) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
-      const ethWallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress]).connect(
-        ethProvider
-      )
+      const ethWallet = new ethers.Wallet(
+        makerConfig.privateKeys[makerAddress]
+      ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
         syncProvider
@@ -138,7 +138,12 @@ async function sendConsumer(value: any) {
         nonce: result_nonce,
         amount,
       })
+      
       if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+
         nonceDic[makerAddress][chainID] = result_nonce
       }
 
@@ -226,7 +231,12 @@ async function sendConsumer(value: any) {
         result_nonce = sql_nonce + 1
       }
     }
+
+    if (!nonceDic[makerAddress]) {
+      nonceDic[makerAddress] = {}
+    }
     nonceDic[makerAddress][chainID] = result_nonce
+
     accessLogger.info('nonce =', nonce)
     accessLogger.info('sql_nonce =', sql_nonce)
     accessLogger.info('result_nonde =', result_nonce)

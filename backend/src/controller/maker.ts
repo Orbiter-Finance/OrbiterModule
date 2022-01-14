@@ -185,8 +185,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         if (!isEthereumAddress(makerAddress)) {
           continue
         }
-
-        if (!body[makerAddress]) {
+        if (!body[makerAddress] || makerConfig.privateKeys[makerAddress]) {
           continue
         }
 
