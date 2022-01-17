@@ -98,6 +98,16 @@ function watchPool(pool) {
   state    0 / 1   listen C1 /  listen C2
  */
 function watchTransfers(pool, state) {
+  // check
+  if (!makerConfig[pool.c1Name]) {
+    accessLogger.warn(`Miss [${pool.c1Name}] maker config!`)
+    return
+  }
+  if (!makerConfig[pool.c2Name]) {
+    accessLogger.warn(`Miss [${pool.c2Name}] maker config!`)
+    return
+  }
+
   // Instantiate web3 with WebSocketProvider
   const makerAddress = pool.makerAddress
   let api = state ? makerConfig[pool.c2Name].api : makerConfig[pool.c1Name].api
@@ -256,7 +266,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
         {
           makerAddress,
           validPText: validPText,
-          tokenAddress: tokenAddress,
+          tokenAddress,
         },
         { select: ['id', 'txhash'] }
       )
@@ -376,7 +386,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                             state: 1,
                           })
                           .then(async () => {
-                            var toTokenAddress = state
+                            const toTokenAddress = state
                               ? pool.t1Address
                               : pool.t2Address
                             sendTransaction(
@@ -406,7 +416,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                           {
                             makerAddress,
                             validPText: validPText,
-                            tokenAddress: tokenAddress,
+                            tokenAddress,
                           },
                           { txhash: element.txHash }
                         )
@@ -422,7 +432,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         const rst = await repositoryMakerZkHash().insert({
                           makerAddress,
                           validPText: validPText,
-                          tokenAddress: tokenAddress,
+                          tokenAddress,
                           txhash: element.txHash,
                         })
                         accessLogger.info('newHashResult =', rst)
@@ -455,7 +465,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
     const makerAddress = pool.makerAddress
     var fromChain = state ? pool.c2Name : pool.c1Name
     var toChain = state ? pool.c1Name : pool.c2Name
-    var tokenAddress = state ? pool.t1Address : pool.t2Address
+    var tokenAddress = state ? pool.t2Address : pool.t1Address
     var toChainID = state ? pool.c1ID : pool.c2ID
     var fromChainID = state ? pool.c2ID : pool.c1ID
     const trxConfirmations = await getConfirmations(fromChain, txHash)
@@ -542,13 +552,14 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
         return
       }
 
+      const toTokenAddress = state ? pool.t1Address : pool.t2Address
       sendTransaction(
         makerAddress,
         transactionID,
         fromChainID,
         toChainID,
         toChain,
-        tokenAddress,
+        toTokenAddress,
         amountStr,
         trx.from,
         pool,
@@ -558,7 +569,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
       return
     }
     return confirmFromTransaction(pool, state, txHash, confirmations)
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 function confirmToTransaction(
@@ -626,7 +637,7 @@ function confirmToTransaction(
       transactionID,
       confirmations
     )
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
@@ -658,7 +669,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return
     }
     return confirmToZKTransaction(syncProvider, txID)
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 async function getConfirmations(fromChain, txHash): Promise<any> {

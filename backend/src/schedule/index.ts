@@ -19,7 +19,7 @@ async function waittingStartMaker() {
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
-  while (true) {
+  while (startedIndexs.length < makerList.length) {
     const missPrivateKeyMakerAddresses: string[] = []
 
     for (let index = 0; index < makerList.length; index++) {
@@ -31,8 +31,6 @@ async function waittingStartMaker() {
         startedIndexs.indexOf(index) === -1
       ) {
         startMaker(item)
-        accessLogger.info(`startMaker: ${makerAddress}`)
-
         jobMakerNodeTodo(item.makerAddress)
 
         startedIndexs.push(index)
@@ -40,7 +38,9 @@ async function waittingStartMaker() {
         continue
       }
 
-      missPrivateKeyMakerAddresses.push(makerAddress)
+      if (startedIndexs.indexOf(index) === -1) {
+        missPrivateKeyMakerAddresses.push(makerAddress)
+      }
     }
 
     // Only first waiting or privateKeys changed

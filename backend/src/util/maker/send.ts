@@ -17,7 +17,7 @@ const getCurrentGasPrices = async (
 ) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
-      let response = await axios.get(
+      const response = await axios.get(
         'https://ethgasstation.info/json/ethgasAPI.json'
       )
       let prices = {
@@ -43,7 +43,7 @@ const getCurrentGasPrices = async (
     }
   } else {
     try {
-      let response = await axios.post(makerConfig[toChain].httpEndPoint, {
+      const response = await axios.post(makerConfig[toChain].httpEndPoint, {
         jsonrpc: '2.0',
         method: 'eth_gasPrice',
         params: [],
@@ -138,7 +138,7 @@ async function sendConsumer(value: any) {
         nonce: result_nonce,
         amount,
       })
-      
+
       if (!has_result_nonce) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
@@ -245,7 +245,7 @@ async function sendConsumer(value: any) {
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let gasPrices = await getCurrentGasPrices(
+  const gasPrices = await getCurrentGasPrices(
     toChain,
     isEthTokenAddress(tokenAddress) ? 'medium' : 'low'
   )
@@ -258,6 +258,7 @@ async function sendConsumer(value: any) {
   /**
    * Build a new transaction object and sign it locally.
    */
+
   const details = {
     gas: web3.utils.toHex(gasLimit),
     gasPrice: gasPrices, // converts the gwei price to wei
@@ -275,30 +276,21 @@ async function sendConsumer(value: any) {
       .encodeABI()
   }
 
-  let result_chain = toChain
-  let useCommon = false
-  let transaction
-  if (toChain === 'arbitrum_test') {
-    result_chain = 421611
-    useCommon = true
-  }
-  if (toChain === 'arbitrum') {
-    result_chain = 42161
-    useCommon = true
-  }
-  if (useCommon) {
+  let transaction: EthereumTx
+  if (makerConfig[toChain]?.customChainId) {
+    const networkId = makerConfig[toChain]?.customChainId
     const customCommon = Common.forCustomChain(
       'mainnet',
       {
-        name: 'toChain',
-        networkId: result_chain,
-        chainId: result_chain,
+        name: toChain,
+        networkId,
+        chainId: networkId,
       },
       'petersburg'
     )
     transaction = new EthereumTx(details, { common: customCommon })
   } else {
-    transaction = new EthereumTx(details, { chain: result_chain })
+    transaction = new EthereumTx(details, { chain: toChain })
   }
 
   /**
@@ -320,7 +312,7 @@ async function sendConsumer(value: any) {
   /**
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     web3.eth
       .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
       .on('transactionHash', async (hash) => {

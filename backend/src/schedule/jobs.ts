@@ -42,7 +42,9 @@ class MJob {
       try {
         this.callback && (await this.callback())
       } catch (error) {
-        errorLogger.error(`MJob.schedule error: ${error.message}, rule: ${this.rule}`)
+        errorLogger.error(
+          `MJob.schedule error: ${error.message}, rule: ${this.rule}`
+        )
       }
     })
   }
@@ -123,6 +125,14 @@ export function jobMakerPull() {
 
           await serviceMakerPull.arbitrum(apiArbitrum)
           break
+        case 'polygon':
+          let apiPolygon = makerConfig.polygon.api
+          if (toChain == 66) {
+            apiPolygon = makerConfig.polygon_test.api
+          }
+
+          await serviceMakerPull.polygon(apiPolygon)
+          break
         case 'zksync':
           let apiZksync = makerConfig.zksync.api
           if (toChain == 33) {
@@ -160,7 +170,14 @@ export function jobMakerPull() {
   new MJobPessimism('*/10 * * * * *', callback).schedule()
 }
 
+const jobMakerNodeTodoMakerAddresses: string[] = []
 export function jobMakerNodeTodo(makerAddress: string) {
+  // Prevent multiple makerAddress
+  if (jobMakerNodeTodoMakerAddresses.indexOf(makerAddress) > -1) {
+    return
+  }
+  jobMakerNodeTodoMakerAddresses.push(makerAddress)
+
   const callback = async () => {
     await serviceMaker.runTodo(makerAddress)
   }

@@ -13,21 +13,21 @@ export const $env = {
     2: 'wss://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     5: 'wss://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
     22: 'wss://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
+    6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
-  supportLocalNetWorksIDs: [1, 2, 3, 5, 22, 33],
-  supportNetWorks: {
-    MainNet: 1,
-    Rinkeby: 4,
-    ArbitrumTest: 421611,
-    Arbitrum: 42161,
-  },
+  supportLocalNetWorksIDs: [1, 2, 3, 5, 6, 22, 33, 66],
   localChainID_netChainID: {
-    1: 1, // mainnet
-    2: 42161, // Arbitrum
-    3: 1, // zk
-    5: 4, // rinkeby
-    22: 421611, // arbitrum test
-    33: 4, // zktest
+    1: '1', // mainnet
+    2: '42161', // Arbitrum
+    3: '1', // zk
+    4: '1', // starknet
+    5: '4', // rinkeby
+    6: '137', // polygon
+    22: '421611', // arbitrum test
+    33: '4', // zktest
+    44: '4', // starknet(R)
+    66: '80001', // polygon(R)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -36,6 +36,8 @@ export const $env = {
     22: 'https://testnet.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
     33: 'https://rinkeby.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
+    6: 'https://polygonscan.com/tx/',
+    66: 'https://mumbai.polygonscan.com/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -44,6 +46,8 @@ export const $env = {
     22: 'https://testnet.arbiscan.io/address/',
     3: 'https://zkscan.io/explorer/accounts/',
     33: 'https://rinkeby.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
+    6: 'https://polygonscan.com/address/',
+    66: 'https://mumbai.polygonscan.com/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -51,6 +55,8 @@ export const $env = {
     2: 'https://arbiscan.io/address/', // /address/
     22: 'https://testnet.arbitrum.io/address/',
     3: 'https://etherscan.io/token/', // same as etherscan
-    33: 'https://rinkeby.etherscan.io/token/', 
+    33: 'https://rinkeby.etherscan.io/token/',
+    6: 'https://polygonscan.com/token/',
+    66: 'https://mumbai.polygonscan.com/token/',
   },
 }

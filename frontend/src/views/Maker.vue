@@ -532,6 +532,10 @@ export default defineComponent({
     flex-direction: row;
     align-items: center;
     margin-bottom: 4px;
+
+    > * {
+      display: contents;
+    }
   }
 }
 .maker-header--search {
@@ -583,6 +587,7 @@ export default defineComponent({
 .table-timestamp {
   font-size: 12px;
   color: #888888;
+  width: max-content;
 }
 
 .maker__chain-tag {
