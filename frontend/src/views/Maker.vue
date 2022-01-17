@@ -321,7 +321,7 @@ export default defineComponent({
     TextLong,
   },
   setup() {
-    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
+    const makerAddressSelected: any = inject('makerAddressSelected')
 
     const state = reactive({
       rangeDate: [] as Date[],
@@ -340,7 +340,7 @@ export default defineComponent({
     makerInfo.get()
 
     const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected.value)
+      makerWealth.get(makerAddressSelected?.value)
     }
     getMakerWealth()
 
@@ -355,7 +355,7 @@ export default defineComponent({
 
     const getMakerNodes = () => {
       makerNodes.get(
-        makerAddressSelected.value,
+        makerAddressSelected?.value,
         Number(state.chainId),
         state.rangeDate
       )
@@ -422,7 +422,7 @@ export default defineComponent({
 
     // When makerAddressSelected changed, get maker's data
     watch(
-      () => makerAddressSelected.value,
+      () => makerAddressSelected?.value,
       () => {
         getMakerWealth()
         getMakerNodes()
