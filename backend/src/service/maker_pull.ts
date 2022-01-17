@@ -408,7 +408,7 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull, 'txBlock')
+      await savePull(makerPull)
 
       // compare
       await this.compareData(makerPull, item.hash)
@@ -499,7 +499,7 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull, 'txBlock')
+      await savePull(makerPull)
 
       // compare
       await this.compareData(makerPull, item.hash)
@@ -590,7 +590,7 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull, 'txBlock')
+      await savePull(makerPull)
 
       // compare
       await this.compareData(makerPull, item.hash)
