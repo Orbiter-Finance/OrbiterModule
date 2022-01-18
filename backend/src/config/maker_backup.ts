@@ -25,6 +25,7 @@ export default {
       key: '',
     },
     gasPrice: 2,
+    customChainId: 42161,
   },
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
@@ -34,6 +35,7 @@ export default {
       key: '',
     },
     gasPrice: 2,
+    customChainId: 421611,
   },
   zksync: {
     wsEndPoint: null,
