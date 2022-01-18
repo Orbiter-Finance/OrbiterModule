@@ -55,24 +55,24 @@ export default {
   },
   polygon: {
     wsEndPoint:
-      'wss://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+      'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint:
-      'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+      'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
-      key: '93B5F59W4XWXRPJFD2WRERHNSPQ1T4UTAE',
+      key: 'Your Key',
     },
     gasPrice: 2,
     customChainId: 137,
   },
   polygon_test: {
     wsEndPoint:
-      'wss://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+      'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint:
-      'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+      'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
-      key: '93B5F59W4XWXRPJFD2WRERHNSPQ1T4UTAE',
+      key: 'Your Key',
     },
     gasPrice: 2,
     customChainId: 80001,
