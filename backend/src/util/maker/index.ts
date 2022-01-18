@@ -198,7 +198,8 @@ function watchTransfers(pool, state) {
       if (startBlockNumber) {
         return startBlockNumber + ''
       } else {
-        startBlockNumber = await web3.eth.getBlockNumber()
+        // Current block number +1, to prevent restart too fast!!!
+        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
         return startBlockNumber + ''
       }
     }).transfer(

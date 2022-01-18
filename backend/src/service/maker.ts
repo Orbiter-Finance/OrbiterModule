@@ -243,8 +243,21 @@ async function getTokenBalance(
   let value = '0'
   try {
     switch (CHAIN_INDEX[chainId]) {
-      case 'eth':
-      case 'arbitrum':
+      case 'zksync':
+        let api = makerConfig.zksync.api
+        if (chainId == 33) {
+          api = makerConfig.zksync_test.api
+        }
+
+        const respData = (
+          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
+        ).data
+
+        if (respData.status == 'success' && respData?.result?.balances) {
+          value = respData?.result?.balances[tokenName.toUpperCase()]
+        }
+        break
+      default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
           break
@@ -271,21 +284,6 @@ async function getTokenBalance(
             break
           }
         }
-        break
-      case 'zksync':
-        let api = makerConfig.zksync.api
-        if (chainId == 33) {
-          api = makerConfig.zksync_test.api
-        }
-
-        const respData = (
-          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
-        ).data
-
-        if (respData.status == 'success' && respData?.result?.balances) {
-          value = respData?.result?.balances[tokenName.toUpperCase()]
-        }
-
         break
     }
   } catch (error) {
@@ -345,7 +343,7 @@ export async function getWealths(
       return find
     }
 
-    // push chain where no exist, default add eth
+    // push chain where no exist
     const item = { makerAddress, chainId, chainName, balances: [] }
     wealthsChains.push(item)
 
@@ -383,7 +381,7 @@ export async function getWealths(
       // add eth balances item
       item.balances.unshift({
         tokenAddress: '',
-        tokenName: 'ETH',
+        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : 'ETH',
         decimals: 18,
         value: '',
       })

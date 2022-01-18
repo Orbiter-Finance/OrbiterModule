@@ -1,9 +1,7 @@
 export default {
   mainnet: {
-    wsEndPoint:
-      'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
-    httpEndPoint:
-      'https://eth-mainnet.alchemyapi.io/v2/Your Key',
+    wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
+    httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key',
@@ -11,10 +9,8 @@ export default {
     gasPrice: 0,
   },
   rinkeby: {
-    wsEndPoint:
-      'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPoint:
-      'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
+    wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
+    httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api-rinkeby.etherscan.io/api',
       key: 'Your Key',
@@ -22,10 +18,8 @@ export default {
     gasPrice: 2,
   },
   arbitrum: {
-    wsEndPoint:
-      'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://arb-mainnet.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://arb-mainnet.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -33,10 +27,8 @@ export default {
     gasPrice: 2,
   },
   arbitrum_test: {
-    wsEndPoint:
-      'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://testnet.arbiscan.io/api',
       key: '',
@@ -60,6 +52,30 @@ export default {
       key: '',
     },
     gasPrice: 2,
+  },
+  polygon: {
+    wsEndPoint:
+      'wss://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    httpEndPoint:
+      'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    api: {
+      endPoint: 'https://api.polygonscan.com/api',
+      key: '93B5F59W4XWXRPJFD2WRERHNSPQ1T4UTAE',
+    },
+    gasPrice: 2,
+    customChainId: 137,
+  },
+  polygon_test: {
+    wsEndPoint:
+      'wss://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    httpEndPoint:
+      'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    api: {
+      endPoint: 'https://api-testnet.polygonscan.com/api',
+      key: '93B5F59W4XWXRPJFD2WRERHNSPQ1T4UTAE',
+    },
+    gasPrice: 2,
+    customChainId: 80001,
   },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   ABI: [
