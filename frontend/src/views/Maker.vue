@@ -245,14 +245,19 @@
               FromAmount <br />
               ToAmount
             </template>
-            <template #default="scope">
-              <TextLong :content="scope.row.fromAmountFormat"
+            <template #default="{ row }">
+              <TextLong :content="row.fromAmountFormat"
                 ><span class="amount-operator--plus">+</span>
-                {{ scope.row.fromAmountFormat }}</TextLong
+                {{ row.fromAmountFormat }}</TextLong
               >
-              <TextLong :content="scope.row.toAmountFormat" placement="bottom"
+              <TextLong
+                :content="
+                  row.toAmountFormat +
+                  (row.toAmount <= 0 ? ` (NeedTo: ${row.needTo.amountFormat})` : '')
+                "
+                placement="bottom"
                 ><span class="amount-operator--minus">-</span>
-                {{ scope.row.toAmountFormat }}</TextLong
+                {{ row.toAmountFormat }}</TextLong
               >
             </template>
           </el-table-column>

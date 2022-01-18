@@ -143,7 +143,7 @@ export function jobMakerPull() {
           break
       }
     } catch (error) {
-      errorLogger.error('jobMakerPull.startPull', error)
+      errorLogger.error(`jobMakerPull.startPull: ${error.message}, toChainId: ${toChain}, tokenAddress: ${tokenAddress}`)
     }
   }
 

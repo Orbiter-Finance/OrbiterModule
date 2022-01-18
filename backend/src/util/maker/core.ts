@@ -246,11 +246,11 @@ function getRAmountFromTAmount(chain, amount) {
 }
 
 function isChainSupport(chain) {
-  if (typeof chain === 'number') {
+  if (parseInt(chain) == chain) {
     if (CHAIN_INDEX[chain] && MAX_BITS[CHAIN_INDEX[chain]]) {
       return true
     }
-  } else if (typeof chain === 'string') {
+  } else {
     if (MAX_BITS[chain.toLowerCase()]) {
       return true
     }
