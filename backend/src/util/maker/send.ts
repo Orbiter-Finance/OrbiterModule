@@ -13,7 +13,7 @@ const nonceDic = {}
 
 const getCurrentGasPrices = async (
   toChain: string,
-  ethgasAPITarget = 'low'
+  maxGwei = 165
 ) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
@@ -25,21 +25,16 @@ const getCurrentGasPrices = async (
         medium: response.data.average / 10,
         high: response.data.fast / 10,
       }
-      let gwei = prices[ethgasAPITarget]
+      let gwei = prices['medium']
 
       // Limit max gwei
-      switch (ethgasAPITarget) {
-        case 'low':
-          gwei = gwei > 180 ? 180 : gwei
-          break
-        case 'medium':
-          gwei = gwei > 230 ? 230 : gwei
-          break
+      if (gwei > maxGwei) {
+        gwei = maxGwei
       }
 
-      return Web3.utils.toHex(Web3.utils.toWei(gwei.toString(), 'gwei'))
+      return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
     } catch (error) {
-      return Web3.utils.toHex(Web3.utils.toWei('200', 'gwei'))
+      return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
     try {
@@ -247,7 +242,7 @@ async function sendConsumer(value: any) {
    */
   const gasPrices = await getCurrentGasPrices(
     toChain,
-    isEthTokenAddress(tokenAddress) ? 'medium' : 'low'
+    isEthTokenAddress(tokenAddress) ? 230 : undefined
   )
 
   let gasLimit = 100000
