@@ -318,7 +318,7 @@ export async function getWealths(
   const makerList = await getMakerList()
   const wealthsChains: WealthsChain[] = []
 
-  const pushToChainBalances = async (
+  const pushToChainBalances = (
     wChain: WealthsChain,
     tokenAddress: string,
     tokenName: string,
@@ -354,13 +354,13 @@ export async function getWealths(
       continue
     }
 
-    await pushToChainBalances(
+    pushToChainBalances(
       pushToChains(item.makerAddress, item.c1ID, item.c1Name),
       item.t1Address,
       item.tName,
       item.precision
     )
-    await pushToChainBalances(
+    pushToChainBalances(
       pushToChains(item.makerAddress, item.c2ID, item.c2Name),
       item.t2Address,
       item.tName,
@@ -369,6 +369,7 @@ export async function getWealths(
   }
 
   // get tokan balance
+  const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     // add eth
     const ethBalancesItem = item.balances.find((item2) => {
@@ -388,22 +389,29 @@ export async function getWealths(
     }
 
     for (const item2 of item.balances) {
-      let value = await getTokenBalance(
-        item.makerAddress,
-        item.chainId,
-        item.chainName,
-        item2.tokenAddress,
-        item2.tokenName
-      )
+      const promiseItem = async () => {
+        let value = await getTokenBalance(
+          item.makerAddress,
+          item.chainId,
+          item.chainName,
+          item2.tokenAddress,
+          item2.tokenName
+        )
 
-      // When value!='' && > 0, format it
-      if (value) {
-        value = new BigNumber(value).dividedBy(10 ** item2.decimals).toString()
+        // When value!='' && > 0, format it
+        if (value) {
+          value = new BigNumber(value)
+            .dividedBy(10 ** item2.decimals)
+            .toString()
+        }
+
+        item2.value = value
       }
-
-      item2.value = value
+      promises.push(promiseItem())
     }
   }
+
+  await Promise.all(promises)
 
   return wealthsChains
 }
