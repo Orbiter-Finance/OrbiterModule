@@ -7,7 +7,10 @@ export class MakerNodeTodo extends CommonEntity {
   id: number
 
   @Column('varchar', { length: 255, unique: true })
-  transactionID: string 
+  transactionID: string
+
+  @Column('varchar', { length: 60, default: '0x' })
+  makerAddress: string
 
   @Column('text')
   data: string

@@ -1,4 +1,3 @@
-import { errorLogger } from '../logger'
 
 type SendQueueConsumer = (value: any) => Promise<unknown>
 type SendQueueData = {

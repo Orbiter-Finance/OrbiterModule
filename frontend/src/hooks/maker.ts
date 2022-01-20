@@ -83,7 +83,7 @@ export const makerNodes = reactive({
         item['makerAddressHref'] =
           $env.accountExploreUrl[item.fromChain] + item['makerAddress']
         item['userAddressHref'] =
-          $env.accountExploreUrl[item.fromChain] + item['userAddress']
+          $env.accountExploreUrl[item.toChain] + item['userAddress']
 
         item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['formTx']
 

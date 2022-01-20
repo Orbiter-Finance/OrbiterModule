@@ -144,7 +144,6 @@ import {
   defineComponent,
   inject,
   reactive,
-  ToRef,
   toRefs,
   watch,
 } from 'vue'
@@ -152,7 +151,7 @@ import {
 export default defineComponent({
   components: { TextLong },
   setup() {
-    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
+    const makerAddressSelected: any = inject('makerAddressSelected')
 
     const state = reactive({
       showSuccessed: false,
@@ -166,8 +165,8 @@ export default defineComponent({
 
     const getMakerPulls = () => {
       const rangeDate = [state.startTime]
-      fromMakerPulls.get(makerAddressSelected.value, 1, rangeDate)
-      toMakerPulls.get(makerAddressSelected.value, 0, rangeDate)
+      fromMakerPulls.get(makerAddressSelected?.value, 1, rangeDate)
+      toMakerPulls.get(makerAddressSelected?.value, 0, rangeDate)
     }
     getMakerPulls()
 
@@ -206,7 +205,7 @@ export default defineComponent({
 
     // watchs
     watch(
-      () => makerAddressSelected.value,
+      () => makerAddressSelected?.value,
       () => {
         getMakerPulls()
       }

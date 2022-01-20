@@ -1,5 +1,5 @@
 import axios from 'axios'
-import { errorLogger } from '../logger'
+import { accessLogger, errorLogger } from '../logger'
 
 type Api = { endPoint: string; key: string }
 type Transaction = {
@@ -132,6 +132,7 @@ export class EthListen {
               item.confirmations >= confirmationsTotal
             ) {
               this.transferConfirmationedHashs[item.hash] = true
+              accessLogger.info(`Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`)
               callbacks &&
                 callbacks.onConfirmation &&
                 callbacks.onConfirmation(<Transaction>item)

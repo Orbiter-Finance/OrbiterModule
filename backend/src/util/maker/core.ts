@@ -5,6 +5,7 @@ const MAX_BITS = {
   eth: 256,
   arbitrum: 256,
   zksync: 35,
+  polygon: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -15,6 +16,8 @@ export const CHAIN_INDEX = {
   33: 'zksync',
   4: 'eth',
   5: 'eth',
+  6: 'polygon',
+  66: 'polygon',
 }
 
 export const SIZE_OP = {
@@ -243,11 +246,11 @@ function getRAmountFromTAmount(chain, amount) {
 }
 
 function isChainSupport(chain) {
-  if (typeof chain === 'number') {
+  if (parseInt(chain) == chain) {
     if (CHAIN_INDEX[chain] && MAX_BITS[CHAIN_INDEX[chain]]) {
       return true
     }
-  } else if (typeof chain === 'string') {
+  } else {
     if (MAX_BITS[chain.toLowerCase()]) {
       return true
     }

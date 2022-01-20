@@ -7,10 +7,10 @@ import * as logConfig from './log'
 import makerConfig from './maker'
 import * as ormConfig from './orm'
 
-// cover private key
-const omp = process.env.ORBITER_MAKER_PRIVATEKEY
+// cover private keys
+const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
 if (omp) {
-  makerConfig.privatekey = omp
+  makerConfig.privateKeys = JSON.parse(omp)
 }
 
 const appConfig = {
