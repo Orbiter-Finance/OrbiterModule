@@ -1,4 +1,4 @@
-import { AlchemyWeb3, createAlchemyWeb3 } from '@alch/alchemy-web3'
+import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
@@ -9,15 +9,13 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
-import { SystemCache } from '../../model/system_cache'
 import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
-import { makerList } from './maker_list'
+import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 
-const web3List: AlchemyWeb3[] = []
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
 
@@ -31,34 +29,20 @@ const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
   return Core.db.getRepository(MakerZkHash)
 }
 
-// function stopMaker() {
-//   for (const web3 of web3List) {
-//     web3.eth.clearSubscriptions(() => {})
-//   }
-//   web3List.splice(0, web3List.length)
-//   return 'stop Maker'
-// }
-export async function startMaker() {
-  for (const web3 of web3List) {
-    web3.eth.clearSubscriptions(() => {})
+export function startMaker(makerInfo: any) {
+  if (!makerInfo.t1Address || !makerInfo.t2Address) {
+    return
   }
 
-  var poolList = await getMakerList()
-  if (poolList.length === 0) {
-    return 'none poollist'
-  }
-  for (const pool of poolList) {
-    if (!pool.t1Address || !pool.t2Address) {
-      continue
-    }
-
-    watchPool(pool)
-  }
-  return 'start Maker'
+  watchPool(makerInfo)
 }
 
 export async function getMakerList() {
   return makerList
+}
+
+export async function getAllMakerList() {
+  return makerList.concat(makerListHistory)
 }
 
 export function expanPool(pool) {
@@ -114,7 +98,18 @@ function watchPool(pool) {
   state    0 / 1   listen C1 /  listen C2
  */
 function watchTransfers(pool, state) {
+  // check
+  if (!makerConfig[pool.c1Name]) {
+    accessLogger.warn(`Miss [${pool.c1Name}] maker config!`)
+    return
+  }
+  if (!makerConfig[pool.c2Name]) {
+    accessLogger.warn(`Miss [${pool.c2Name}] maker config!`)
+    return
+  }
+
   // Instantiate web3 with WebSocketProvider
+  const makerAddress = pool.makerAddress
   let api = state ? makerConfig[pool.c2Name].api : makerConfig[pool.c1Name].api
   let wsEndPoint = state
     ? makerConfig[pool.c2Name].wsEndPoint
@@ -199,15 +194,16 @@ function watchTransfers(pool, state) {
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
-    new EthListen(api, makerConfig.makerAddress, async () => {
+    new EthListen(api, makerAddress, async () => {
       if (startBlockNumber) {
         return startBlockNumber + ''
       } else {
-        startBlockNumber = await web3.eth.getBlockNumber()
+        // Current block number +1, to prevent restart too fast!!!
+        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
         return startBlockNumber + ''
       }
     }).transfer(
-      { to: makerConfig.makerAddress },
+      { to: makerAddress },
       {
         onConfirmation: async (transaction) => {
           if (!transaction.hash) {
@@ -228,12 +224,7 @@ function watchTransfers(pool, state) {
     )
 
     // Generate filter options
-    const options = {
-      filter: {
-        to: makerConfig.makerAddress,
-      },
-      fromBlock: 'latest',
-    }
+    const options = { filter: { to: makerAddress }, fromBlock: 'latest' }
 
     // Subscribe to Transfer events matching filter criteria
     tokenContract.events
@@ -244,7 +235,7 @@ function watchTransfers(pool, state) {
           return
         }
 
-        if (event.returnValues.to === makerConfig.makerAddress) {
+        if (event.returnValues.to === makerAddress) {
           checkData(event.returnValues.value, event.transactionHash)
         } else {
           accessLogger.info('over')
@@ -264,6 +255,7 @@ function watchTransfers(pool, state) {
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
   let isFirst = true
   setInterval(async () => {
+    const makerAddress = pool.makerAddress
     let fromChainID = state ? pool.c2ID : pool.c1ID
     let toChainID = state ? pool.c1ID : pool.c2ID
     let toChain = state ? pool.c1Name : pool.c2Name
@@ -273,9 +265,9 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
     try {
       const makerZkHash = await repositoryMakerZkHash().findOne(
         {
-          makerAddress: pool.makerAddress,
+          makerAddress,
           validPText: validPText,
-          tokenAddress: tokenAddress,
+          tokenAddress,
         },
         { select: ['id', 'txhash'] }
       )
@@ -290,8 +282,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
       limit: 100,
       direction: 'newer',
     }
-    const url =
-      httpEndPoint + '/accounts/' + pool.makerAddress + '/transactions'
+    const url = httpEndPoint + '/accounts/' + makerAddress + '/transactions'
     axios
       .get(url, {
         params: zkInfoParams,
@@ -351,7 +342,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.txHash !== lastHash &&
                       element.op.type === 'Transfer' &&
                       element.op.to.toLowerCase() ===
-                        makerConfig.makerAddress.toLowerCase() &&
+                        makerAddress.toLowerCase() &&
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
@@ -383,7 +374,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                           .insert({
                             transactionID: transactionID,
                             userAddress: element.op.from,
-                            makerAddress: makerConfig.makerAddress,
+                            makerAddress,
                             fromChain: fromChainID,
                             toChain: toChainID,
                             formTx: element.txHash,
@@ -396,10 +387,11 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                             state: 1,
                           })
                           .then(async () => {
-                            var toTokenAddress = state
+                            const toTokenAddress = state
                               ? pool.t1Address
                               : pool.t2Address
                             sendTransaction(
+                              makerAddress,
                               transactionID,
                               fromChainID,
                               toChainID,
@@ -423,9 +415,9 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       try {
                         await repositoryMakerZkHash().update(
                           {
-                            makerAddress: makerConfig.makerAddress,
+                            makerAddress,
                             validPText: validPText,
-                            tokenAddress: tokenAddress,
+                            tokenAddress,
                           },
                           { txhash: element.txHash }
                         )
@@ -439,9 +431,9 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     if (!lastHash) {
                       try {
                         const rst = await repositoryMakerZkHash().insert({
-                          makerAddress: makerConfig.makerAddress,
+                          makerAddress,
                           validPText: validPText,
-                          tokenAddress: tokenAddress,
+                          tokenAddress,
                           txhash: element.txHash,
                         })
                         accessLogger.info('newHashResult =', rst)
@@ -471,9 +463,10 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
   accessLogger.info('confirmFromTransaction =', getTime())
 
   setTimeout(async () => {
+    const makerAddress = pool.makerAddress
     var fromChain = state ? pool.c2Name : pool.c1Name
     var toChain = state ? pool.c1Name : pool.c2Name
-    var tokenAddress = state ? pool.t1Address : pool.t2Address
+    var tokenAddress = state ? pool.t2Address : pool.t1Address
     var toChainID = state ? pool.c1ID : pool.c2ID
     var fromChainID = state ? pool.c2ID : pool.c1ID
     const trxConfirmations = await getConfirmations(fromChain, txHash)
@@ -524,7 +517,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
         await repositoryMakerNode().insert({
           transactionID: transactionID,
           userAddress: trx.from,
-          makerAddress: makerConfig.makerAddress,
+          makerAddress,
           fromChain: fromChainID,
           toChain: toChainID,
           formTx: trx.hash,
@@ -560,12 +553,14 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
         return
       }
 
+      const toTokenAddress = state ? pool.t1Address : pool.t2Address
       sendTransaction(
+        makerAddress,
         transactionID,
         fromChainID,
         toChainID,
         toChain,
-        tokenAddress,
+        toTokenAddress,
         amountStr,
         trx.from,
         pool,
@@ -575,7 +570,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
       return
     }
     return confirmFromTransaction(pool, state, txHash, confirmations)
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 function confirmToTransaction(
@@ -643,7 +638,7 @@ function confirmToTransaction(
       transactionID,
       confirmations
     )
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
@@ -675,7 +670,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return
     }
     return confirmToZKTransaction(syncProvider, txID)
-  }, 20 * 1000)
+  }, 8 * 1000)
 }
 
 async function getConfirmations(fromChain, txHash): Promise<any> {
@@ -755,6 +750,7 @@ export function getAmountToSend(
 
 /**
  *
+ * @param makerAddress
  * @param transactionID
  * @param fromChainID
  * @param toChainID
@@ -768,6 +764,7 @@ export function getAmountToSend(
  * @returns
  */
 export async function sendTransaction(
+  makerAddress: string,
   transactionID,
   fromChainID,
   toChainID,
@@ -797,6 +794,7 @@ export async function sendTransaction(
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
   await send(
+    makerAddress,
     fromAddress,
     toChain,
     toChainID,
@@ -862,6 +860,7 @@ export async function sendTransaction(
           } else {
             await repositoryMakerNodeTodo().insert({
               transactionID,
+              makerAddress,
               data: JSON.stringify({
                 transactionID,
                 fromChainID,

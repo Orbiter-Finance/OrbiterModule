@@ -157,6 +157,7 @@ class MakerPullLastData {
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
 const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
+const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 
 export class ServiceMakerPull {
@@ -265,7 +266,8 @@ export class ServiceMakerPull {
         this.makerAddress,
         this.tokenAddress,
         makerPull.chainId,
-        Number(makerPull.amount_flag)
+        Number(makerPull.amount_flag),
+        makerPull.txTime
       )
       let needToAmount = '0'
       if (targetMakerPool) {
@@ -406,7 +408,7 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull, 'txBlock')
+      await savePull(makerPull)
 
       // compare
       await this.compareData(makerPull, item.hash)
@@ -497,7 +499,7 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull, 'txBlock')
+      await savePull(makerPull)
 
       // compare
       await this.compareData(makerPull, item.hash)
@@ -509,6 +511,97 @@ export class ServiceMakerPull {
     }
     makerPullLastData.makerPull = lastMakePull
     ARBITRUM_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  /**
+   * pull polygon
+   * @param api
+   */
+  async polygon(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = POLYGON_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+
+    // when endblock is empty, will end latest
+    const startblock = ''
+    const endblock = lastMakePull ? lastMakePull.txBlock : ''
+
+    const resp = await axios.get(api.endPoint, {
+      params: {
+        apikey: api.key,
+        module: 'account',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
+        address: this.makerAddress,
+        page: 1,
+        offset: 100,
+        startblock,
+        endblock,
+        sort: 'desc',
+      },
+      timeout: 16000,
+    })
+
+    // check data
+    const { data } = resp
+    if (data.status != '1' || !data.result || data.result.length <= 0) {
+      accessLogger.warn(
+        'Get polygon tokentx/txlist faild: ' + JSON.stringify(data)
+      )
+      return
+    }
+
+    for (const item of data.result) {
+      // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        contractAddress = this.tokenAddress
+      }
+
+      // checks
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
+        continue
+      }
+
+      const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // save
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: contractAddress,
+        data: JSON.stringify(item),
+        amount: item.value,
+        amount_flag,
+        nonce: item.nonce,
+        fromAddress: item.from,
+        toAddress: item.to,
+        txBlock: item.blockNumber,
+        txHash: item.hash,
+        txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'MATIC',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .toString(),
+        tx_status:
+          item.confirmations >= FINALIZED_CONFIRMATIONS
+            ? 'finalized'
+            : 'committed',
+      })
+      await savePull(makerPull)
+
+      // compare
+      await this.compareData(makerPull, item.hash)
+    }
+
+    // set POLYGON_LAST
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    POLYGON_LAST[makerPullLastKey] = makerPullLastData
   }
 
   /**

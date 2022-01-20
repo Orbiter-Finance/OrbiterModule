@@ -245,14 +245,19 @@
               FromAmount <br />
               ToAmount
             </template>
-            <template #default="scope">
-              <TextLong :content="scope.row.fromAmountFormat"
+            <template #default="{ row }">
+              <TextLong :content="row.fromAmountFormat"
                 ><span class="amount-operator--plus">+</span>
-                {{ scope.row.fromAmountFormat }}</TextLong
+                {{ row.fromAmountFormat }}</TextLong
               >
-              <TextLong :content="scope.row.toAmountFormat" placement="bottom"
+              <TextLong
+                :content="
+                  row.toAmountFormat +
+                  (row.toAmount <= 0 ? ` (NeedTo: ${row.needTo.amountFormat})` : '')
+                "
+                placement="bottom"
                 ><span class="amount-operator--minus">-</span>
-                {{ scope.row.toAmountFormat }}</TextLong
+                {{ row.toAmountFormat }}</TextLong
               >
             </template>
           </el-table-column>
@@ -303,7 +308,6 @@ import {
   inject,
   reactive,
   toRef,
-  ToRef,
   toRefs,
   watch,
 } from 'vue'
@@ -321,7 +325,7 @@ export default defineComponent({
     TextLong,
   },
   setup() {
-    const makerAddressSelected: ToRef<any> = inject('makerAddressSelected')
+    const makerAddressSelected: any = inject('makerAddressSelected')
 
     const state = reactive({
       rangeDate: [] as Date[],
@@ -340,7 +344,7 @@ export default defineComponent({
     makerInfo.get()
 
     const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected.value)
+      makerWealth.get(makerAddressSelected?.value)
     }
     getMakerWealth()
 
@@ -355,7 +359,7 @@ export default defineComponent({
 
     const getMakerNodes = () => {
       makerNodes.get(
-        makerAddressSelected.value,
+        makerAddressSelected?.value,
         Number(state.chainId),
         state.rangeDate
       )
@@ -422,7 +426,7 @@ export default defineComponent({
 
     // When makerAddressSelected changed, get maker's data
     watch(
-      () => makerAddressSelected.value,
+      () => makerAddressSelected?.value,
       () => {
         getMakerWealth()
         getMakerNodes()
@@ -532,6 +536,10 @@ export default defineComponent({
     flex-direction: row;
     align-items: center;
     margin-bottom: 4px;
+
+    > * {
+      display: contents;
+    }
   }
 }
 .maker-header--search {
@@ -583,6 +591,7 @@ export default defineComponent({
 .table-timestamp {
   font-size: 12px;
   color: #888888;
+  width: max-content;
 }
 
 .maker__chain-tag {

@@ -9,7 +9,12 @@ import { MakerNodeTodo } from '../model/maker_node_todo'
 import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
-import { expanPool, getMakerList, sendTransaction } from '../util/maker'
+import {
+  expanPool,
+  getAllMakerList,
+  getMakerList,
+  sendTransaction,
+} from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
 
@@ -238,8 +243,21 @@ async function getTokenBalance(
   let value = '0'
   try {
     switch (CHAIN_INDEX[chainId]) {
-      case 'eth':
-      case 'arbitrum':
+      case 'zksync':
+        let api = makerConfig.zksync.api
+        if (chainId == 33) {
+          api = makerConfig.zksync_test.api
+        }
+
+        const respData = (
+          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
+        ).data
+
+        if (respData.status == 'success' && respData?.result?.balances) {
+          value = respData?.result?.balances[tokenName.toUpperCase()]
+        }
+        break
+      default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
           break
@@ -266,21 +284,6 @@ async function getTokenBalance(
             break
           }
         }
-        break
-      case 'zksync':
-        let api = makerConfig.zksync.api
-        if (chainId == 33) {
-          api = makerConfig.zksync_test.api
-        }
-
-        const respData = (
-          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
-        ).data
-
-        if (respData.status == 'success' && respData?.result?.balances) {
-          value = respData?.result?.balances[tokenName.toUpperCase()]
-        }
-
         break
     }
   } catch (error) {
@@ -315,7 +318,7 @@ export async function getWealths(
   const makerList = await getMakerList()
   const wealthsChains: WealthsChain[] = []
 
-  const pushToChainBalances = async (
+  const pushToChainBalances = (
     wChain: WealthsChain,
     tokenAddress: string,
     tokenName: string,
@@ -340,7 +343,7 @@ export async function getWealths(
       return find
     }
 
-    // push chain where no exist, default add eth
+    // push chain where no exist
     const item = { makerAddress, chainId, chainName, balances: [] }
     wealthsChains.push(item)
 
@@ -351,13 +354,13 @@ export async function getWealths(
       continue
     }
 
-    await pushToChainBalances(
+    pushToChainBalances(
       pushToChains(item.makerAddress, item.c1ID, item.c1Name),
       item.t1Address,
       item.tName,
       item.precision
     )
-    await pushToChainBalances(
+    pushToChainBalances(
       pushToChains(item.makerAddress, item.c2ID, item.c2Name),
       item.t2Address,
       item.tName,
@@ -366,6 +369,7 @@ export async function getWealths(
   }
 
   // get tokan balance
+  const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     // add eth
     const ethBalancesItem = item.balances.find((item2) => {
@@ -378,29 +382,36 @@ export async function getWealths(
       // add eth balances item
       item.balances.unshift({
         tokenAddress: '',
-        tokenName: 'ETH',
+        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : 'ETH',
         decimals: 18,
         value: '',
       })
     }
 
     for (const item2 of item.balances) {
-      let value = await getTokenBalance(
-        item.makerAddress,
-        item.chainId,
-        item.chainName,
-        item2.tokenAddress,
-        item2.tokenName
-      )
+      const promiseItem = async () => {
+        let value = await getTokenBalance(
+          item.makerAddress,
+          item.chainId,
+          item.chainName,
+          item2.tokenAddress,
+          item2.tokenName
+        )
 
-      // When value!='' && > 0, format it
-      if (value) {
-        value = new BigNumber(value).dividedBy(10 ** item2.decimals).toString()
+        // When value!='' && > 0, format it
+        if (value) {
+          value = new BigNumber(value)
+            .dividedBy(10 ** item2.decimals)
+            .toString()
+        }
+
+        item2.value = value
       }
-
-      item2.value = value
+      promises.push(promiseItem())
     }
   }
+
+  await Promise.all(promises)
 
   return wealthsChains
 }
@@ -411,21 +422,30 @@ export async function getWealths(
  * @param tokenAddress
  * @param fromChainId
  * @param toChainId
+ * @param transactionTime
  * @returns
  */
 export async function getTargetMakerPool(
   makerAddress: string,
   tokenAddress: string,
   fromChainId: number,
-  toChainId: number
+  toChainId: number,
+  transactionTime?: Date
 ) {
-  for (const maker of await getMakerList()) {
+  if (!transactionTime) {
+    transactionTime = new Date()
+  }
+  const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
+
+  for (const maker of await getAllMakerList()) {
     const { pool1, pool2 } = expanPool(maker)
     if (
       pool1.makerAddress == makerAddress &&
       equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
       pool1.c1ID == fromChainId &&
-      pool1.c2ID == toChainId
+      pool1.c2ID == toChainId &&
+      transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
+      transactionTimeStramp <= pool1.avalibleTimes[0].endTime
     ) {
       return pool1
     }
@@ -434,7 +454,9 @@ export async function getTargetMakerPool(
       pool2.makerAddress == makerAddress &&
       equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
       pool2.c1ID == toChainId &&
-      pool2.c2ID == fromChainId
+      pool2.c2ID == fromChainId &&
+      transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
+      transactionTimeStramp <= pool2.avalibleTimes[0].endTime
     ) {
       return pool2
     }
@@ -442,11 +464,13 @@ export async function getTargetMakerPool(
   return undefined
 }
 
-export async function runTodo() {
+export async function runTodo(makerAddress: string) {
   // find: do_current < do_max and state = 0
   const todos = await repositoryMakerNodeTodo()
     .createQueryBuilder()
-    .where('do_current < do_max AND state = 0')
+    .where('makerAddress=:makerAddress and do_current < do_max AND state = 0', {
+      makerAddress,
+    })
     .getMany()
 
   for (const todo of todos) {
@@ -471,6 +495,7 @@ export async function runTodo() {
       if (result_nonce > 0) {
         // do_current insert or update logic in sendTransaction
         await sendTransaction(
+          todo.makerAddress,
           transactionID,
           fromChainID,
           toChainID,
