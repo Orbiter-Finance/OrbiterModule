@@ -57,9 +57,9 @@ export default {
   },
   polygon: {
     wsEndPoint:
-      'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
+      'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint:
-      'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
+      'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
