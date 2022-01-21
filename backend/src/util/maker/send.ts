@@ -11,10 +11,7 @@ import { SendQueue } from './send_queue'
 
 const nonceDic = {}
 
-const getCurrentGasPrices = async (
-  toChain: string,
-  maxGwei = 165
-) => {
+const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const response = await axios.get(
@@ -44,16 +41,23 @@ const getCurrentGasPrices = async (
         params: [],
         id: 0,
       })
-      if (response.status === 200 && response.statusText === 'OK') {
-        accessLogger.info('gasPrice =', response.data.result)
-        return response.data.result
+
+      if (response.status !== 200 || response.statusText !== 'OK') {
+        throw 'Eth_gasPrice response failed!'
       }
-      return Web3.utils.toHex(
-        Web3.utils.toWei(makerConfig[toChain].gasPrice.toString(), 'gwei')
-      )
+
+      let gasPrice = response.data.result
+
+      // polygon gas price x2
+      if (toChain == 'polygon' || toChain == 'polygon_test') {
+        gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+      }
+
+      accessLogger.info('gasPrice =', gasPrice)
+      return gasPrice
     } catch (error) {
       return Web3.utils.toHex(
-        Web3.utils.toWei(makerConfig[toChain].gasPrice.toString(), 'gwei')
+        Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
     }
   }
