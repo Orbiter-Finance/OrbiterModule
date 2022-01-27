@@ -8,12 +8,14 @@ const configure: Configuration = {
     access: {
       type: 'dateFile',
       filename: path.resolve(logsDir, 'access.log'),
-      pattern: '.dd',
+      pattern: 'dd',
+      mode: 0o644
     },
     error: {
       type: 'dateFile',
       filename: path.resolve(logsDir, 'error.log'),
-      pattern: '.dd',
+      pattern: 'dd',
+      mode: 0o644
     },
     console: { type: 'console' },
   },
