@@ -72,12 +72,12 @@ export const startJobs = async () => {
   // cache coinbase
   jobCacheCoinbase()
 
-  // get wealths
-  jobGetWealths()
-
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
+
+    // get wealths
+    jobGetWealths()
   }
 
   // maker
