@@ -2,6 +2,7 @@ import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
 import cors from 'koa2-cors'
 import NodeCache from 'node-cache'
+import { exit } from 'process'
 import 'reflect-metadata'
 import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
@@ -11,6 +12,15 @@ import { startJobs } from './schedule'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
+import { getCurrentGasPrices } from './util/maker/send'
+
+const a =async () => {
+  console.warn('xxxxx')
+
+  const rst = await getCurrentGasPrices('mainnet')
+  console.warn({rst});
+}
+a();
 
 const main = async () => {
   try {
@@ -80,4 +90,4 @@ const main = async () => {
     console.log(error)
   }
 }
-main()
+// main()

@@ -11,12 +11,20 @@ import { SendQueue } from './send_queue'
 
 const nonceDic = {}
 
-const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
+
+export const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
+      console.log('toChain ==',toChain)
       const httpEndPoint = makerConfig[toChain].api.endPoint
+      console.log('httpEndPoint ==',httpEndPoint)
+
       const apiKey = makerConfig[toChain].api.key
+      console.log('apiKey ==',apiKey)
+
       const url = httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
+      console.log('url ==',url)
+
       const response = await axios.get(
         url
       )
@@ -37,6 +45,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
     } catch (error) {
+      console.log('error =',error)
       return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
