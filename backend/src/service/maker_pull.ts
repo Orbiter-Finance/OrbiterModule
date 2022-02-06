@@ -152,7 +152,8 @@ const FINALIZED_CONFIRMATIONS = 3
  */
 class MakerPullLastData {
   makerPull: MakerPull | undefined = undefined
-  pullCount: 0
+  pullCount = 0
+  roundTotal = 0 // When it is zero(0) full update, else incremental update
 }
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
@@ -185,17 +186,25 @@ export class ServiceMakerPull {
 
   /**
    * get last maker_pull
-   * @param last ETHERSCAN_LAST || ARBITRUM_LAST || ZKSYNC_LAST
+   * @param last
    */
   private getLastMakerPull(last: MakerPullLastData) {
-    // if last's pullCount < max pullCount, the last makerPull valid
+    // 1. if last's pullCount >= max pullCount, the last makerPull invalid
+    // 2. if roundTotal > 0 and makerPull.txTime before 24 hour, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
-    if (last.pullCount < LAST_PULL_COUNT_MAX) {
-      lastMakePull = last.makerPull
-    } else {
+    const hour24ago = new Date().getTime() - 86400000
+    if (
+      last.pullCount >= LAST_PULL_COUNT_MAX ||
+      (last.roundTotal > 0 &&
+        last.makerPull &&
+        hour24ago > last.makerPull.txTime.getTime())
+    ) {
       // update last data
       last.makerPull = undefined
       last.pullCount = 0
+      last.roundTotal++
+    } else {
+      lastMakePull = last.makerPull
     }
 
     return lastMakePull
