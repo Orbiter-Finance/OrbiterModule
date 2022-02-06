@@ -11,25 +11,31 @@ import { SendQueue } from './send_queue'
 
 const nonceDic = {}
 
+
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
+      const httpEndPoint = makerConfig[toChain].api.endPoint
+      const apiKey = makerConfig[toChain].api.key
+      const url = httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
       const response = await axios.get(
-        'https://ethgasstation.info/json/ethgasAPI.json'
+        url
       )
-      let prices = {
-        low: response.data.safeLow / 10,
-        medium: response.data.average / 10,
-        high: response.data.fast / 10,
+      if (response.data.status == 1 && response.data.message === "OK") {
+        let prices = {
+          low: response.data.result.SafeGasPrice,
+          medium: response.data.result.ProposeGasPrice,
+          high: response.data.result.FastGasPrice,
+        }
+        let gwei = prices['medium']
+        // Limit max gwei
+        if (gwei > maxGwei) {
+          gwei = maxGwei
+        }
+        return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
+      } else {
+        return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
-      let gwei = prices['medium']
-
-      // Limit max gwei
-      if (gwei > maxGwei) {
-        gwei = maxGwei
-      }
-
-      return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
     } catch (error) {
       return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
