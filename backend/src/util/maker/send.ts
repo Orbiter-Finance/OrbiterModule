@@ -23,9 +23,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       )
       if (response.data.status == 1 && response.data.message === "OK") {
         let prices = {
-          low: response.data.result.SafeGasPrice + 10,
-          medium: response.data.result.ProposeGasPrice + 10,
-          high: response.data.result.FastGasPrice + 10,
+          low: Number(response.data.result.SafeGasPrice) + 10,
+          medium: Number(response.data.result.ProposeGasPrice) + 10,
+          high: Number(response.data.result.FastGasPrice) + 10,
         }
         let gwei = prices['medium']
         // Limit max gwei
