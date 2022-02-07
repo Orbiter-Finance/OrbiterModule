@@ -49,6 +49,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       class {
         makerAddress: string
         fromChain?: number
+        toChain?: number
         startTime?: number
         endTime?: number
         userAddress?: string
@@ -59,6 +60,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     const list = await serviceMaker.getMakerNodes(
       params.makerAddress,
       params.fromChain,
+      params.toChain,
       Number(params.startTime),
       Number(params.endTime),
       params.userAddress
@@ -94,11 +96,18 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         )
       }
 
-      // time ago
-      item['fromTimeStampAgo'] = dayjs().to(dayjs(item.fromTimeStamp))
+      // Trade duration
+      item['tradeDuration'] = 0
+
+      // Time duration、time ago
+      const dayjsFrom = dayjs(item.fromTimeStamp)
+      item['fromTimeStampAgo'] = dayjs().to(dayjsFrom)
       item['toTimeStampAgo'] = '-'
       if (item.toTimeStamp && item.toTimeStamp != '0') {
-        item['toTimeStampAgo'] = dayjs().to(dayjs(item.toTimeStamp))
+        const dayjsTo = dayjs(item.toTimeStamp)
+        item['toTimeStampAgo'] = dayjs().to(dayjsTo)
+
+        item['tradeDuration'] = dayjsTo.unix() - dayjsFrom.unix()
       }
 
       let needTo = {

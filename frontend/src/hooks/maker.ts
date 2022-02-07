@@ -45,6 +45,7 @@ type MakerNodes = {
   fromTimeStampAgo: string
   toTimeStamp: string
   toTimeStampAgo: string
+  tradeDuration: number
   state: number
   txTokenName: string
   needTo: any,
@@ -57,6 +58,7 @@ export const makerNodes = reactive({
   async get(
     makerAddress: string,
     fromChain: number = 0,
+    toChain: number = 0,
     rangeDate: Date[] = [],
     userAddress = ''
   ) {
@@ -66,7 +68,7 @@ export const makerNodes = reactive({
 
     this.loading = true
     try {
-      const params = { makerAddress, fromChain, userAddress }
+      const params = { makerAddress, fromChain, toChain, userAddress }
       if (rangeDate?.[0]) {
         params['startTime'] = rangeDate?.[0].getTime()
       }

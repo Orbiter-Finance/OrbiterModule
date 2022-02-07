@@ -172,6 +172,7 @@ export function makeTransactionID(
  * Get maker nodes
  * @param makerAddress
  * @param fromChain 0: All
+ * @param toChain 0: All
  * @param startTime start time
  * @param endTime end time
  * @param userAddress user's address
@@ -179,7 +180,8 @@ export function makeTransactionID(
  */
 export async function getMakerNodes(
   makerAddress: string,
-  fromChain: number = 0,
+  fromChain = 0,
+  toChain = 0,
   startTime = 0,
   endTime = 0,
   userAddress = ''
@@ -200,6 +202,9 @@ export async function getMakerNodes(
   })
   if (fromChain > 0) {
     queryBuilder.andWhere('fromChain = :fromChain', { fromChain })
+  }
+  if (toChain > 0) {
+    queryBuilder.andWhere('toChain = :toChain', { toChain })
   }
   if (startTime) {
     queryBuilder.andWhere('fromTimeStamp >= :startTime', {

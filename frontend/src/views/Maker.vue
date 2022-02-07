@@ -49,9 +49,9 @@
       v-loading="loadingNodes"
     >
       <el-row :gutter="20">
-        <el-col :span="6" class="maker-search__item">
+        <el-col :span="4" class="maker-search__item">
           <div class="title">From chain</div>
-          <el-select v-model="chainId" placeholder="Select">
+          <el-select v-model="fromChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -61,7 +61,19 @@
             </el-option>
           </el-select>
         </el-col>
-        <el-col :span="12" class="maker-search__item">
+        <el-col :span="4" class="maker-search__item">
+          <div class="title">To chain</div>
+          <el-select v-model="toChainId" placeholder="Select">
+            <el-option
+              v-for="(item, index) in chains"
+              :key="index"
+              :label="mappingChainName(item.chainName)"
+              :value="item.chainId"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="10" class="maker-search__item">
           <div class="title">
             From date range
             <!-- <span style="font-size: 12px"
@@ -215,28 +227,23 @@
               ToTx <br />
               ToTime
             </template>
-            <template #default="scope">
-              <a
-                v-if="scope.row.toTxHref"
-                :href="scope.row.toTxHref"
-                target="_blank"
-              >
-                <TextLong :content="scope.row.toTx">{{
-                  scope.row.toTx
-                }}</TextLong>
+            <template #default="{ row }">
+              <a v-if="row.toTxHref" :href="row.toTxHref" target="_blank">
+                <TextLong :content="row.toTx">{{ row.toTx }}</TextLong>
               </a>
-              <TextLong v-else :content="scope.row.toTx">{{
-                scope.row.toTx
-              }}</TextLong>
+              <TextLong v-else :content="row.toTx">{{ row.toTx }}</TextLong>
               <div class="table-timestamp">
                 <TextLong
-                  v-if="scope.row.toTimeStamp && scope.row.toTimeStamp != '0'"
-                  :content="scope.row.toTimeStamp"
+                  v-if="row.toTimeStamp && row.toTimeStamp != '0'"
+                  :content="row.toTimeStamp"
                   placement="bottom"
                 >
-                  {{ scope.row.toTimeStampAgo }}
+                  {{ row.toTimeStampAgo }}
+                  <span v-if="row.tradeDuration > 0">
+                    ({{ row.tradeDuration }}s)
+                  </span>
                 </TextLong>
-                <span v-else>{{ scope.row.toTimeStampAgo }}</span>
+                <span v-else>{{ row.toTimeStampAgo }}</span>
               </div>
             </template>
           </el-table-column>
@@ -253,7 +260,9 @@
               <TextLong
                 :content="
                   row.toAmountFormat +
-                  (row.toAmount <= 0 ? ` (NeedTo: ${row.needTo.amountFormat})` : '')
+                  (row.toAmount <= 0
+                    ? ` (NeedTo: ${row.needTo.amountFormat})`
+                    : '')
                 "
                 placement="bottom"
                 ><span class="amount-operator--minus">-</span>
@@ -329,7 +338,8 @@ export default defineComponent({
 
     const state = reactive({
       rangeDate: [] as Date[],
-      chainId: '',
+      fromChainId: '',
+      toChainId: '',
       userAddressSelected: '',
     })
 
@@ -352,7 +362,8 @@ export default defineComponent({
       const endTime = new Date()
       const startTime = new Date(endTime.getTime() - 86400000)
       state.rangeDate = [startTime, endTime]
-      state.chainId = ''
+      state.fromChainId = ''
+      state.toChainId = ''
       state.userAddressSelected = ''
     }
     reset()
@@ -360,7 +371,8 @@ export default defineComponent({
     const getMakerNodes = () => {
       makerNodes.get(
         makerAddressSelected?.value,
-        Number(state.chainId),
+        Number(state.fromChainId),
+        Number(state.toChainId),
         state.rangeDate
       )
     }
