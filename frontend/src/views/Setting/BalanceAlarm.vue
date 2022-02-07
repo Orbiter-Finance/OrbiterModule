@@ -5,7 +5,7 @@
     </template>
     <div class="setting__balance-alarm__body">
       <div class="setting__balance-alarm__menu">
-        <el-menu default-active="2">
+        <el-menu default-active="5">
           <el-menu-item
             v-for="item in chains"
             :index="String(item.id)"
@@ -20,8 +20,7 @@
         ref="formRef"
         :model="form"
         label-width="140px"
-        @submit.prevent="true"
-        @submit.stop="() => { console.log('xxxxxx') }"
+        @submit.prevent
       >
         <el-form-item label="Select token">
           <el-radio-group v-model="form.token">
@@ -31,7 +30,12 @@
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Alarm baseline">
-          <el-input-number style="min-width: 240px" v-model="form.baseline" :step="5"/>
+          <el-input
+            style="width: 250px"
+            v-model="form.baseline"
+            :step="5"
+            placeholder="Less than this value will alarm."
+          />
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit">Submit</el-button>
@@ -44,8 +48,8 @@
 
 <script setup lang="ts">
 const form = reactive({
-  token: '',
-  baseline: 1,
+  token: 'ETH',
+  baseline: '',
 })
 
 const chains = ref([

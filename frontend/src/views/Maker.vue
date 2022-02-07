@@ -239,7 +239,7 @@
                   placement="bottom"
                 >
                   {{ row.toTimeStampAgo }}
-                  <span v-if="row.tradeDuration > 0">
+                  <span v-if="row.tradeDuration >= 0">
                     ({{ row.tradeDuration }}s)
                   </span>
                 </TextLong>

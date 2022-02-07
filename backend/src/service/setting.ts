@@ -1,0 +1,1 @@
+export const BALANCE_ALARM_BASELINE = 2
