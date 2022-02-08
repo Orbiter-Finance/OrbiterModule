@@ -309,9 +309,7 @@ type WealthsChain = {
     decimals: number // for format
   }[]
 }
-export async function getWealths(
-  makerAddress: string
-): Promise<WealthsChain[]> {
+export async function getWealthsChains(makerAddress: string) {
   // check
   if (!makerAddress) {
     throw new ServiceError(
@@ -374,7 +372,6 @@ export async function getWealths(
   }
 
   // get tokan balance
-  const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     // add eth
     const ethBalancesItem = item.balances.find((item2) => {
@@ -392,7 +389,18 @@ export async function getWealths(
         value: '',
       })
     }
+  }
 
+  return wealthsChains
+}
+export async function getWealths(
+  makerAddress: string
+): Promise<WealthsChain[]> {
+  const wealthsChains = await getWealthsChains(makerAddress)
+
+  // get tokan balance
+  const promises: Promise<void>[] = []
+  for (const item of wealthsChains) {
     for (const item2 of item.balances) {
       const promiseItem = async () => {
         let value = await getTokenBalance(

@@ -380,7 +380,7 @@ export default defineComponent({
 
     // computeds
     const list = computed(() => {
-      return makerNodes.list.filter((item) => {
+      return makerNodes.state.list.filter((item) => {
         if (!state.userAddressSelected) {
           return true
         }
@@ -389,7 +389,7 @@ export default defineComponent({
     })
     const userAddressList = computed(() => {
       const userAddressList: { address: string; count: number }[] = []
-      for (const item of makerNodes.list) {
+      for (const item of makerNodes.state.list) {
         if (!item.userAddress) {
           continue
         }
@@ -460,12 +460,12 @@ export default defineComponent({
       stateTags,
       reset,
 
-      chains: toRef(makerInfo, 'chains'),
+      chains: toRef(makerInfo.state, 'chains'),
 
-      loadingWealths: toRef(makerWealth, 'loading'),
-      wealths: toRef(makerWealth, 'list'),
+      loadingWealths: toRef(makerWealth.state, 'loading'),
+      wealths: toRef(makerWealth.state, 'list'),
 
-      loadingNodes: toRef(makerNodes, 'loading'),
+      loadingNodes: toRef(makerNodes.state, 'loading'),
       list,
       getMakerNodes,
 

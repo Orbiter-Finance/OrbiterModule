@@ -6,6 +6,7 @@ import { ListenOptions } from 'net'
 import * as logConfig from './log'
 import makerConfig from './maker'
 import * as ormConfig from './orm'
+import * as prometheusConfig from './prometheus'
 
 // cover private keys
 const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
@@ -20,4 +21,4 @@ const appConfig = {
   },
 }
 
-export { appConfig, ormConfig, logConfig, makerConfig }
+export { appConfig, ormConfig, logConfig, makerConfig, prometheusConfig }
