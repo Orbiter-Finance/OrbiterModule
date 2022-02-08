@@ -17,8 +17,8 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0014,
     c2TradingFee: 0.0045,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
@@ -48,10 +48,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0005,
-    c2TradingFee: 0.0045,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.00085,
+    c2TradingFee: 0.0035,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
@@ -81,10 +81,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0005,
+    c1TradingFee: 0.0007,
     c2TradingFee: 0.0014,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
@@ -114,10 +114,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0005,
+    c1TradingFee: 0.0007,
     c2TradingFee: 0.0045,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
@@ -147,10 +147,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0005,
-    c2TradingFee: 0.0005,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.0007,
+    c2TradingFee: 0.0007,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
@@ -180,10 +180,10 @@ export const makerList = [
     precision: 18,
     c1AvalibleDeposit: 1000,
     c2AvalibleDeposit: 1000,
-    c1TradingFee: 0.0002,
-    c2TradingFee: 0.0011,
-    c1GasFee: 1.5,
-    c2GasFee: 1.5,
+    c1TradingFee: 0.0003,
+    c2TradingFee: 0.001,
+    c1GasFee: 0.6,
+    c2GasFee: 0.6,
     c1AvalibleTimes: [
       {
         startTime: 1641956401,
