@@ -81,6 +81,7 @@ async function sendConsumer(value: any) {
     tokenAddress,
     amountToSend,
     result_nonce,
+    fromChainID,
   } = value
 
   if (chainID === 3 || chainID === 33) {
@@ -247,12 +248,17 @@ async function sendConsumer(value: any) {
     accessLogger.info('result_nonde =', result_nonce)
   }
 
+
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
+  let maxPrice = 230;
+  if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
   const gasPrices = await getCurrentGasPrices(
     toChain,
-    isEthTokenAddress(tokenAddress) ? 230 : undefined
+    isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
 
   let gasLimit = 100000
@@ -347,7 +353,8 @@ async function send(
   tokenID, // 3 33 use
   tokenAddress,
   amountToSend,
-  result_nonce = 0
+  result_nonce = 0,
+  fromChainID
 ): Promise<any> {
   sendQueue.registerConsumer(chainID, sendConsumer)
 
@@ -361,6 +368,7 @@ async function send(
       tokenAddress,
       amountToSend,
       result_nonce,
+      fromChainID
     }
     sendQueue.produce(chainID, {
       value,

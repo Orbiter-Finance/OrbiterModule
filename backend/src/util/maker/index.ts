@@ -801,7 +801,8 @@ export async function sendTransaction(
     getZKTokenID(tokenAddress),
     tokenAddress,
     tAmount,
-    result_nonce
+    result_nonce,
+    fromChainID
   ).then(async (response) => {
     accessLogger.info('response =', response)
     if (!response.code) {
