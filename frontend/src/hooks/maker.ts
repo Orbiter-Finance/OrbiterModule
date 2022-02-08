@@ -119,10 +119,10 @@ type MakerWealths = {
   }[]
 }[]
 export const makerWealth = {
-  state: {
+  state: reactive({
     loading: false,
     list: [] as MakerWealths,
-  },
+  }),
 
   async get(makerAddress: string) {
     if (!makerAddress) {

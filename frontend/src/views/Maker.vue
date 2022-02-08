@@ -310,6 +310,7 @@
 
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
+import { makerInfo, makerNodes, makerWealth } from '@/hooks/maker'
 import { BigNumber } from 'bignumber.js'
 import {
   computed,
@@ -320,7 +321,6 @@ import {
   toRefs,
   watch,
 } from 'vue'
-import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
@@ -350,33 +350,6 @@ export default defineComponent({
       3: { label: 'To: okay', type: 'success' },
       20: { label: 'To: failed', type: 'danger' },
     }
-
-    makerInfo.get()
-
-    const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected?.value)
-    }
-    getMakerWealth()
-
-    const reset = () => {
-      const endTime = new Date()
-      const startTime = new Date(endTime.getTime() - 86400000)
-      state.rangeDate = [startTime, endTime]
-      state.fromChainId = ''
-      state.toChainId = ''
-      state.userAddressSelected = ''
-    }
-    reset()
-
-    const getMakerNodes = () => {
-      makerNodes.get(
-        makerAddressSelected?.value,
-        Number(state.fromChainId),
-        Number(state.toChainId),
-        state.rangeDate
-      )
-    }
-    getMakerNodes()
 
     // computeds
     const list = computed(() => {
@@ -435,6 +408,33 @@ export default defineComponent({
       }
       return num.toString() + ' USD'
     })
+
+    makerInfo.get()
+
+    const getMakerWealth = () => {
+      makerWealth.get(makerAddressSelected?.value)
+    }
+    getMakerWealth()
+
+    const reset = () => {
+      const endTime = new Date()
+      const startTime = new Date(endTime.getTime() - 86400000)
+      state.rangeDate = [startTime, endTime]
+      state.fromChainId = ''
+      state.toChainId = ''
+      state.userAddressSelected = ''
+    }
+    reset()
+
+    const getMakerNodes = () => {
+      makerNodes.get(
+        makerAddressSelected?.value,
+        Number(state.fromChainId),
+        Number(state.toChainId),
+        state.rangeDate
+      )
+    }
+    getMakerNodes()
 
     // When makerAddressSelected changed, get maker's data
     watch(
