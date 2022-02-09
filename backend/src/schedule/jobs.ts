@@ -7,6 +7,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+import { doBalanceAlarm } from '../service/setting'
 
 class MJob {
   protected rule:
@@ -188,6 +189,14 @@ export function jobMakerNodeTodo(makerAddress: string) {
 export function jobCacheCoinbase() {
   const callback = async () => {
     await coinbase.cacheExchangeRates()
+  }
+
+  new MJobPessimism('*/10 * * * * *', callback).schedule()
+}
+
+export function jobBalanceAlarm() {
+  const callback = async () => {
+    await doBalanceAlarm.do()
   }
 
   new MJobPessimism('*/10 * * * * *', callback).schedule()
