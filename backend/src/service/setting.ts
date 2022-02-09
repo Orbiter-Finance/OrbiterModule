@@ -170,7 +170,7 @@ export const doBalanceAlarm = new (class {
           serverity: 'critical',
         },
         annotations: {
-          info: 'Not enough balance. ',
+          info: 'Not enough balance.',
           summary: `${item.tokenName}: ${item.balance}`,
         },
       })
@@ -180,7 +180,6 @@ export const doBalanceAlarm = new (class {
     const postToAlertmanager = async (total = 0) => {
       try {
         const url = `${prometheusConfig.alertmanager.api}/api/v2/alerts`
-        
         await axios.post(url, alerts, {
           headers: { 'Content-Type': 'application/json' },
         })
