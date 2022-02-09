@@ -1,3 +1,3 @@
 export const alertmanager = {
-  api: 'http://localhost:9093/',
+  api: 'http://localhost:9093',
 }

@@ -10,6 +10,7 @@ type BalanceAlarms = {
     tokenAddress: string
     tokenName: string
     value: number
+    balance?: string
   }[]
 }[]
 export const balanceAlarms = {

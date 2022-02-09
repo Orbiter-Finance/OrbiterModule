@@ -3,9 +3,8 @@ import KoaRouter from 'koa-router'
 import {
   BALANCE_ALARM_BASELINE,
   getBalanceAlarms,
-  saveBalanceAlarms,
+  saveBalanceAlarms
 } from '../service/setting'
-import { sleep } from '../util'
 
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('setting/balance_alarms', async ({ restful, request }) => {

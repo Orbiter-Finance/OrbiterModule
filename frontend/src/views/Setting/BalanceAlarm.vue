@@ -33,8 +33,10 @@
               v-for="(item, index) in baselines"
               :label="item.tokenAddress"
               :key="index"
-              >{{ item.tokenName }}</el-radio
+              border
             >
+              {{ item.tokenName }}
+            </el-radio>
           </el-radio-group>
         </el-form-item>
         <el-form-item label="Alarm baseline">
@@ -46,6 +48,14 @@
             placeholder="Less than this value will alarm."
             @input="onInputBaselineValue"
           />
+        </el-form-item>
+        <el-form-item label="Current Balance">
+          <span
+            style="
+              color: var(--el-input-text-color, var(--el-text-color-regular));
+            "
+            >{{ balanceValue }}</span
+          >
         </el-form-item>
         <el-form-item>
           <el-button type="primary" @click="onSubmit">Submit</el-button>
@@ -89,6 +99,18 @@ const baselineValue = computed(() => {
     }
   }
   return ''
+})
+const balanceValue = computed(() => {
+  let balance: string | undefined = '0'
+  let tokenName = ''
+  for (const item of baselines.value) {
+    if (item.tokenAddress == state.tokenAddress) {
+      balance = item.balance
+      tokenName = item.tokenName
+      break
+    }
+  }
+  return `${balance} ${tokenName}`
 })
 
 const getBalanceAlarms = () => {

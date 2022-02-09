@@ -6,7 +6,7 @@ import { SystemSetting } from '../model/system_setting'
 import { sleep } from '../util'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
-import { getMakerAddresses, getWealths, getWealthsChains } from './maker'
+import { getMakerAddresses, getWealths } from './maker'
 
 type BalanceAlarm = {
   chainId: number
@@ -16,6 +16,7 @@ type BalanceAlarm = {
     tokenAddress: string
     tokenName: string
     value: number
+    balance?: string
   }[]
 }
 
@@ -25,7 +26,7 @@ const repositorySystemSetting = (): Repository<SystemSetting> => {
 const BALANCE_ALARM_KEY = 'balance_alarm'
 
 // Default Baseline
-export const BALANCE_ALARM_BASELINE = 2
+export const BALANCE_ALARM_BASELINE = 0
 
 export function getTargetBaseline(
   chainId: number,
@@ -67,7 +68,7 @@ export async function getSettingValueJson(setting_key: string) {
 }
 
 export async function getBalanceAlarms(makerAddress: string) {
-  const wealthsChains = await getWealthsChains(makerAddress)
+  const wealthsChains = await getWealths(makerAddress)
   const balanceAlarms: BalanceAlarm[] = []
 
   const settingValue: BalanceAlarm[] | undefined = await getSettingValueJson(
@@ -94,6 +95,7 @@ export async function getBalanceAlarms(makerAddress: string) {
         tokenAddress: item1.tokenAddress,
         tokenName: item1.tokenName,
         value,
+        balance: item1.value
       })
     }
 
@@ -171,13 +173,15 @@ export const doBalanceAlarm = new (class {
         },
         annotations: {
           info: 'Not enough balance.',
-          summary: `${item.tokenName}: ${item.balance}`,
+          summary: `${item.chainName}-${item.tokenName}: ${item.balance}`,
         },
       })
     }
 
     // Post to alertmanager
     const postToAlertmanager = async (total = 0) => {
+      console.warn('alerts >>> ', JSON.stringify(alerts));
+      
       try {
         const url = `${prometheusConfig.alertmanager.api}/api/v2/alerts`
         await axios.post(url, alerts, {
