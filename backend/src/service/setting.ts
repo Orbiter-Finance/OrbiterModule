@@ -5,7 +5,7 @@ import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { SystemSetting } from '../model/system_setting'
 import { sleep } from '../util'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerAddresses, getWealths } from './maker'
 
 type BalanceAlarm = {
@@ -95,7 +95,7 @@ export async function getBalanceAlarms(makerAddress: string) {
         tokenAddress: item1.tokenAddress,
         tokenName: item1.tokenName,
         value,
-        balance: item1.value
+        balance: item1.value,
       })
     }
 
@@ -167,22 +167,22 @@ export const doBalanceAlarm = new (class {
     for (const item of doList) {
       alerts.push({
         labels: {
-          alertname: 'Dashboard',
-          instance: 'BalanceAlarm',
+          alertname: 'Not enough balance',
+          instance: `${item.chainName}-${item.tokenName}: ${item.balance.toFixed(6)}`,
           serverity: 'critical',
-        },
-        annotations: {
-          info: 'Not enough balance.',
-          summary: `${item.chainName}-${item.tokenName}: ${item.balance}`,
         },
       })
     }
 
     // Post to alertmanager
     const postToAlertmanager = async (total = 0) => {
-      console.warn('alerts >>> ', JSON.stringify(alerts));
-      
+      if (alerts.length < 1) {
+        return
+      }
+
       try {
+        accessLogger.info('postToAlertmanager: ', JSON.stringify(alerts))
+
         const url = `${prometheusConfig.alertmanager.api}/api/v2/alerts`
         await axios.post(url, alerts, {
           headers: { 'Content-Type': 'application/json' },
