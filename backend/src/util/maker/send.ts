@@ -55,14 +55,12 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       let gasPrice = response.data.result
 
       // polygon gas price x2
-      if (parseInt(response.data.result, 16) < 100000000000) {
-          gasPrice = Web3.utils.toHex(200000000000)
-      } else {
-          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
-      }
-
       if (toChain == 'polygon' || toChain == 'polygon_test') {
-        gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        if (parseInt(response.data.result, 16) < 100000000000) {
+          gasPrice = Web3.utils.toHex(200000000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        }
       }
 
       accessLogger.info('gasPrice =', gasPrice)
