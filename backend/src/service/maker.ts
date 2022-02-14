@@ -244,8 +244,8 @@ async function getTokenBalance(
   chainName: string,
   tokenAddress: string,
   tokenName: string
-): Promise<string> {
-  let value = '0'
+): Promise<string | undefined> {
+  let value: string | undefined
   try {
     switch (CHAIN_INDEX[chainId]) {
       case 'zksync':
@@ -259,7 +259,7 @@ async function getTokenBalance(
         ).data
 
         if (respData.status == 'success' && respData?.result?.balances) {
-          value = respData?.result?.balances[tokenName.toUpperCase()]
+          value = respData.result.balances[tokenName.toUpperCase()]
         }
         break
       default:
@@ -292,7 +292,7 @@ async function getTokenBalance(
         break
     }
   } catch (error) {
-    errorLogger.error(error)
+    errorLogger.error(`GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `, error.message)
   }
 
   return value
@@ -305,7 +305,7 @@ type WealthsChain = {
   balances: {
     tokenAddress: string
     tokenName: string
-    value: string
+    value?: string // When can't get balance(e: Network fail), it is undefined
     decimals: number // for format
   }[]
 }

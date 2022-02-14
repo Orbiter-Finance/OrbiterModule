@@ -168,7 +168,9 @@ export const doBalanceAlarm = new (class {
       alerts.push({
         labels: {
           alertname: 'Not enough balance',
-          instance: `${item.chainName}-${item.tokenName}: ${item.balance.toFixed(6)}`,
+          instance: `${item.chainName}-${
+            item.tokenName
+          }: ${item.balance.toFixed(6)}`,
           serverity: 'critical',
         },
       })
@@ -235,7 +237,10 @@ export const doBalanceAlarm = new (class {
           // Call onCompared
           onCompared && onCompared(doBalanceAlarmItem, baseline)
 
-          balance < baseline && list.push(doBalanceAlarmItem)
+          // When balance isNaN, invaild value, ignore it
+          if (!Number.isNaN(balance)) {
+            balance < baseline && list.push(doBalanceAlarmItem)
+          }
         }
       }
     }
