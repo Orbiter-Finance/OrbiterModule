@@ -190,14 +190,14 @@ export class ServiceMakerPull {
    */
   private getLastMakerPull(last: MakerPullLastData) {
     // 1. if last's pullCount >= max pullCount, the last makerPull invalid
-    // 2. if roundTotal > 0 and makerPull.txTime before 24 hour, the last makerPull invalid(Incremental update)
+    // 2. if roundTotal > 0 and makerPull.txTime before some time, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
-    const hour24ago = new Date().getTime() - 86400000
+    const startTime = new Date().getTime() - 3600000
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
       (last.roundTotal > 0 &&
         last.makerPull &&
-        hour24ago > last.makerPull.txTime.getTime())
+        startTime > last.makerPull.txTime.getTime())
     ) {
       // update last data
       last.makerPull = undefined
