@@ -157,7 +157,7 @@ export default defineComponent({
       showSuccessed: false,
       showRejected: true,
       showCannotMatched: true,
-      startTime: dayjs().startOf('month').subtract(1, 'month').toDate(),
+      startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
     })
 
     const fromMakerPulls = makerPulls()

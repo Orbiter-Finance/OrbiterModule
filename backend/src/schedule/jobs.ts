@@ -7,6 +7,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+import { doBalanceAlarm } from '../service/setting'
 
 class MJob {
   protected rule:
@@ -17,6 +18,7 @@ class MJob {
     | schedule.RecurrenceSpecObjLit
     | Date
   protected callback?: () => any
+  protected jobName?: string
 
   /**
    * @param rule
@@ -31,10 +33,12 @@ class MJob {
       | schedule.RecurrenceSpecDateRange
       | schedule.RecurrenceSpecObjLit
       | Date,
-    callback?: () => any
+    callback?: () => any,
+    jobName?: string
   ) {
     this.rule = rule
     this.callback = callback
+    this.jobName = jobName
   }
 
   public schedule(): schedule.Job {
@@ -42,9 +46,11 @@ class MJob {
       try {
         this.callback && (await this.callback())
       } catch (error) {
-        errorLogger.error(
-          `MJob.schedule error: ${error.message}, rule: ${this.rule}`
-        )
+        let message = `MJob.schedule error: ${error.message}, rule: ${this.rule}`
+        if (this.jobName) {
+          message += `, jobName: ${this.jobName}`
+        }
+        errorLogger.error(message)
       }
     })
   }
@@ -90,7 +96,7 @@ export function jobGetWealths() {
     }
   }
 
-  new MJobPessimism('* */5 * * * *', callback).schedule()
+  new MJobPessimism('* */5 * * * *', callback, jobGetWealths.name).schedule()
 }
 
 export function jobMakerPull() {
@@ -143,7 +149,9 @@ export function jobMakerPull() {
           break
       }
     } catch (error) {
-      errorLogger.error(`jobMakerPull.startPull: ${error.message}, toChainId: ${toChain}, tokenAddress: ${tokenAddress}`)
+      errorLogger.error(
+        `jobMakerPull.startPull: ${error.message}, toChainId: ${toChain}, tokenAddress: ${tokenAddress}`
+      )
     }
   }
 
@@ -167,7 +175,7 @@ export function jobMakerPull() {
     }
   }
 
-  new MJobPessimism('*/10 * * * * *', callback).schedule()
+  new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
 }
 
 const jobMakerNodeTodoMakerAddresses: string[] = []
@@ -182,7 +190,7 @@ export function jobMakerNodeTodo(makerAddress: string) {
     await serviceMaker.runTodo(makerAddress)
   }
 
-  new MJobPessimism('*/10 * * * * *', callback).schedule()
+  new MJobPessimism('*/10 * * * * *', callback, jobMakerNodeTodo.name).schedule()
 }
 
 export function jobCacheCoinbase() {
@@ -190,5 +198,13 @@ export function jobCacheCoinbase() {
     await coinbase.cacheExchangeRates()
   }
 
-  new MJobPessimism('*/10 * * * * *', callback).schedule()
+  new MJobPessimism('*/10 * * * * *', callback, jobCacheCoinbase.name).schedule()
+}
+
+export function jobBalanceAlarm() {
+  const callback = async () => {
+    await doBalanceAlarm.do()
+  }
+
+  new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }

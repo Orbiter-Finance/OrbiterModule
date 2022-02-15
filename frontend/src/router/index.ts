@@ -2,6 +2,7 @@ import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import Dashboard from '../views/Dashboard.vue'
 // import Home from '../views/Home.vue'
 import Maker from '../views/Maker.vue'
+import Setting from '../views/Setting/index.vue'
 import MakerHistory from '../views/MakerHistory.vue'
 
 const routes: Array<RouteRecordRaw> = [
@@ -28,6 +29,11 @@ const routes: Array<RouteRecordRaw> = [
     path: '/maker',
     name: 'Maker',
     component: Maker,
+  },
+  {
+    path: '/setting',
+    name: 'Setting',
+    component: Setting,
   },
   {
     path: '/maker/history',

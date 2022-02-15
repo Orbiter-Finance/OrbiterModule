@@ -1,6 +1,6 @@
 import { $env } from '@/env'
 import { $axios } from '@/plugins/axios'
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 
 type MakerInfoChains = {
   chainId: string
@@ -10,9 +10,11 @@ type MakerInfo = {
   chains: MakerInfoChains
   earliestTime: number
 }
-export const makerInfo = reactive({
-  chains: [] as MakerInfoChains,
-  earliestTime: 0,
+export const makerInfo = {
+  state: reactive({
+    chains: [] as MakerInfoChains,
+    earliestTime: 0,
+  }),
 
   async get() {
     const resp = await $axios.get<MakerInfo>('maker')
@@ -21,10 +23,10 @@ export const makerInfo = reactive({
     // unshift All item
     data.chains.unshift({ chainId: '', chainName: 'All' })
 
-    this.chains = data.chains
-    this.earliestTime = data.earliestTime
+    makerInfo.state.chains = data.chains
+    makerInfo.state.earliestTime = data.earliestTime
   },
-})
+}
 
 type MakerNodes = {
   id: number
@@ -45,18 +47,22 @@ type MakerNodes = {
   fromTimeStampAgo: string
   toTimeStamp: string
   toTimeStampAgo: string
+  tradeDuration: number
   state: number
   txTokenName: string
-  needTo: any,
+  needTo: any
   profitUSD: string
 }[]
-export const makerNodes = reactive({
-  loading: false,
-  list: [] as MakerNodes,
+export const makerNodes = {
+  state: reactive({
+    loading: false,
+    list: [] as MakerNodes,
+  }),
 
   async get(
     makerAddress: string,
     fromChain: number = 0,
+    toChain: number = 0,
     rangeDate: Date[] = [],
     userAddress = ''
   ) {
@@ -64,9 +70,9 @@ export const makerNodes = reactive({
       return
     }
 
-    this.loading = true
+    makerNodes.state.loading = true
     try {
-      const params = { makerAddress, fromChain, userAddress }
+      const params = { makerAddress, fromChain, toChain, userAddress }
       if (rangeDate?.[0]) {
         params['startTime'] = rangeDate?.[0].getTime()
       }
@@ -93,13 +99,13 @@ export const makerNodes = reactive({
         }
       }
 
-      this.list = list
+      makerNodes.state.list = list
     } catch (error) {
       console.error(error)
     }
-    this.loading = false
+    makerNodes.state.loading = false
   },
-})
+}
 
 type MakerWealths = {
   chainId: number
@@ -112,16 +118,18 @@ type MakerWealths = {
     value: string
   }[]
 }[]
-export const makerWealth = reactive({
-  loading: false,
-  list: [] as MakerWealths,
+export const makerWealth = {
+  state: reactive({
+    loading: false,
+    list: [] as MakerWealths,
+  }),
 
   async get(makerAddress: string) {
     if (!makerAddress) {
       return
     }
 
-    this.loading = true
+    makerWealth.state.loading = true
     try {
       const resp = await $axios.get<MakerWealths>('maker/wealths', {
         params: { makerAddress },
@@ -132,10 +140,10 @@ export const makerWealth = reactive({
       for (const item of wealths) {
         item['tokenExploreUrl'] = $env.tokenExploreUrl[item.chainId]
       }
-      this.list = wealths
+      makerWealth.state.list = wealths
     } catch (error) {
       console.error(error)
     }
-    this.loading = false
+    makerWealth.state.loading = false
   },
-})
+}

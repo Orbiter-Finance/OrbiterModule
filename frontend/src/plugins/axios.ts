@@ -1,5 +1,6 @@
 import { $env } from '@/env'
 import axios from 'axios'
+import { ElNotification } from 'element-plus'
 
 // Full config:  https://github.com/axios/axios#request-config
 // axios.defaults.baseURL = process.env.baseURL || process.env.apiUrl || '';
@@ -31,11 +32,7 @@ $axios.interceptors.response.use(
   function (response) {
     const respData = response.data
 
-    if (
-      respData.data === undefined ||
-      respData.errCode === undefined ||
-      respData.errMessage === undefined
-    ) {
+    if (respData.errCode === undefined || respData.errMessage === undefined) {
       return Promise.reject(new Error('Invalid data!'))
     }
 
@@ -46,6 +43,12 @@ $axios.interceptors.response.use(
     return respData
   },
   function (error) {
+    ElNotification({
+      title: 'Error',
+      message: `Fail: ${error.message}`,
+      type: 'error',
+    })
+
     // Do something with response error
     return Promise.reject(error)
   }

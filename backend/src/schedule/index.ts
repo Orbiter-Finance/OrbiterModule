@@ -3,6 +3,7 @@ import { sleep } from '../util'
 import { accessLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
 import {
+  jobBalanceAlarm,
   jobCacheCoinbase,
   jobGetWealths,
   jobMakerNodeTodo,
@@ -78,6 +79,8 @@ export const startJobs = async () => {
 
     // get wealths
     jobGetWealths()
+
+    jobBalanceAlarm()
   }
 
   // maker
