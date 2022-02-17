@@ -5,11 +5,14 @@
   "scripts": {
     "build": "vue-cli-service build",
     "lint": "vue-cli-service lint",
-    "dev": "vue-cli-service serve"
+    "dev": "vue-cli-service serve",
+    "report": "yarn run build --report"
   },
   "dependencies": {
+    "@element-plus/icons": "^0.0.11",
     "axios": "^0.24.0",
     "bignumber.js": "^9.0.2",
+    "chart.js": "^3.7.0",
     "core-js": "^3.6.5",
     "dayjs": "^1.10.7",
     "element-plus": "1.2.0-beta.6",
@@ -17,7 +20,9 @@
     "vue": "^3.2.26",
     "vue-router": "^4.0.0-0",
     "vuex": "^4.0.0-0",
+    "vxe-table": "^4.1.18",
     "web3": "^1.6.1",
+    "xe-utils": "^3.5.1",
     "zksync": "^0.11.6"
   },
   "devDependencies": {

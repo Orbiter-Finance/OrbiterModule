@@ -4,76 +4,105 @@ import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
+import { isEthTokenAddress } from '..'
 import { makerConfig } from '../../config'
 import { accessLogger, errorLogger } from '../logger'
+import { SendQueue } from './send_queue'
 
-let nonceDic = {}
+const nonceDic = {}
 
-const getCurrentGasPrices = async (toChain) => {
+
+const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
-      let response = await axios.get(
-        'https://ethgasstation.info/json/ethgasAPI.json'
+      const httpEndPoint = makerConfig[toChain].api.endPoint
+      const apiKey = makerConfig[toChain].api.key
+      const url = httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
+      const response = await axios.get(
+        url
       )
-      let prices = {
-        low: response.data.safeLow / 10,
-        medium: response.data.average / 10,
-        high: response.data.fast / 10,
+      if (response.data.status == 1 && response.data.message === "OK") {
+        let prices = {
+          low: Number(response.data.result.SafeGasPrice) + 10,
+          medium: Number(response.data.result.ProposeGasPrice) + 10,
+          high: Number(response.data.result.FastGasPrice) + 10,
+        }
+        let gwei = prices['medium']
+        // Limit max gwei
+        if (gwei > maxGwei) {
+          gwei = maxGwei
+        }
+        return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
+      } else {
+        return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
-      return Web3.utils.toHex(Web3.utils.toWei(prices.low.toString(), 'gwei'))
     } catch (error) {
-      return Web3.utils.toHex(Web3.utils.toWei('500', 'gwei')) // 50
+      return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
     try {
-      let response = await axios.post(makerConfig[toChain].httpEndPoint, {
+      const response = await axios.post(makerConfig[toChain].httpEndPoint, {
         jsonrpc: '2.0',
         method: 'eth_gasPrice',
         params: [],
         id: 0,
       })
-      if (response.status === 200 && response.statusText === 'OK') {
-        accessLogger.info('gasPrice =', response.data.result)
-        return response.data.result
+
+      if (response.status !== 200 || response.statusText !== 'OK') {
+        throw 'Eth_gasPrice response failed!'
       }
-      return Web3.utils.toHex(
-        Web3.utils.toWei(makerConfig[toChain].gasPrice.toString(), 'gwei')
-      )
+
+      let gasPrice = response.data.result
+
+      // polygon gas price x2
+      if (toChain == 'polygon' || toChain == 'polygon_test') {
+        if (parseInt(response.data.result, 16) < 100000000000) {
+          gasPrice = Web3.utils.toHex(200000000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        }
+      }
+
+      accessLogger.info('gasPrice =', gasPrice)
+      return gasPrice
     } catch (error) {
       return Web3.utils.toHex(
-        Web3.utils.toWei(makerConfig[toChain].gasPrice.toString(), 'gwei')
+        Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
     }
   }
 }
 
-/**
- * This is the process that will run when you execute the program.
- */
-async function send(
-  toAddress,
-  toChain,
-  chainID,
-  tokenID, // 3 33 use
-  tokenAddress,
-  amountToSend,
-  result_nonce = 0
-): Promise<any> {
+// SendQueue
+const sendQueue = new SendQueue()
+
+async function sendConsumer(value: any) {
+  let {
+    makerAddress,
+    toAddress,
+    toChain,
+    chainID,
+    tokenAddress,
+    amountToSend,
+    result_nonce,
+    fromChainID,
+  } = value
+
   if (chainID === 3 || chainID === 33) {
     try {
       let ethProvider
       let syncProvider
       if (chainID === 3) {
-        ethProvider = await ethers.providers.getDefaultProvider('mainnet')
+        ethProvider = ethers.providers.getDefaultProvider('mainnet')
         syncProvider = await zksync.getDefaultProvider('mainnet')
       }
       if (chainID === 33) {
-        ethProvider = await ethers.providers.getDefaultProvider('rinkeby')
+        ethProvider = ethers.providers.getDefaultProvider('rinkeby')
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
-      const ethWallet = new ethers.Wallet(makerConfig.privatekey).connect(
-        ethProvider
-      )
+      const ethWallet = new ethers.Wallet(
+        makerConfig.privateKeys[makerAddress]
+      ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
         syncProvider
@@ -98,7 +127,7 @@ async function send(
       const has_result_nonce = result_nonce > 0
       if (!has_result_nonce) {
         let zk_nonce = await syncWallet.getNonce('committed')
-        let zk_sql_nonce = nonceDic[chainID]
+        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
         if (!zk_sql_nonce) {
           result_nonce = zk_nonce
         } else {
@@ -119,8 +148,13 @@ async function send(
         nonce: result_nonce,
         amount,
       })
+
       if (!has_result_nonce) {
-        nonceDic[chainID] = result_nonce
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+
+        nonceDic[makerAddress][chainID] = result_nonce
       }
 
       return new Promise((resolve, reject) => {
@@ -151,31 +185,27 @@ async function send(
   }
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
-  web3.eth.defaultAccount = makerConfig.makerAddress
+  web3.eth.defaultAccount = makerAddress
 
-  const tokenContract = new web3.eth.Contract(
-    // @ts-ignore
-    makerConfig.ABI,
-    tokenAddress
-    // (error, result) => {
-    //   if (error) accessLogger.info(error)
-    // }
-  )
+  let tokenContract: any
 
   let tokenBalanceWei = 0
-
-  await tokenContract.methods.balanceOf(web3.eth.defaultAccount).call(
-    {
-      from: web3.eth.defaultAccount,
-    },
-    function (error, result) {
-      if (!error) {
-        tokenBalanceWei = result
-      } else {
-        errorLogger.error('tokenBalanceWeiError =', error)
-      }
+  try {
+    if (isEthTokenAddress(tokenAddress)) {
+      tokenBalanceWei =
+        Number(await web3.eth.getBalance(<any>web3.eth.defaultAccount)) || 0
+    } else {
+      tokenContract = new web3.eth.Contract(<any>makerConfig.ABI, tokenAddress)
+      tokenBalanceWei = await tokenContract.methods
+        .balanceOf(web3.eth.defaultAccount)
+        .call({
+          from: web3.eth.defaultAccount,
+        })
     }
-  )
+  } catch (error) {
+    errorLogger.error('tokenBalanceWeiError =', error)
+  }
+
   if (!tokenBalanceWei) {
     errorLogger.error('Insufficient balance')
     return {
@@ -194,14 +224,14 @@ async function send(
 
   if (result_nonce == 0) {
     let nonce = await web3.eth.getTransactionCount(
-      web3.eth.defaultAccount,
+      <any>web3.eth.defaultAccount,
       'pending'
     )
     /**
      * With every new transaction you send using a specific wallet address,
      * you need to increase a nonce which is tied to the sender wallet.
      */
-    let sql_nonce = nonceDic[chainID]
+    let sql_nonce = nonceDic[makerAddress]?.[chainID]
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -211,16 +241,29 @@ async function send(
         result_nonce = sql_nonce + 1
       }
     }
-    nonceDic[chainID] = result_nonce
+
+    if (!nonceDic[makerAddress]) {
+      nonceDic[makerAddress] = {}
+    }
+    nonceDic[makerAddress][chainID] = result_nonce
+
     accessLogger.info('nonce =', nonce)
     accessLogger.info('sql_nonce =', sql_nonce)
     accessLogger.info('result_nonde =', result_nonce)
   }
 
+
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let gasPrices = await getCurrentGasPrices(toChain)
+  let maxPrice = 230;
+  if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
+  const gasPrices = await getCurrentGasPrices(
+    toChain,
+    isEthTokenAddress(tokenAddress) ? maxPrice : undefined
+  )
 
   let gasLimit = 100000
   if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
@@ -230,49 +273,46 @@ async function send(
   /**
    * Build a new transaction object and sign it locally.
    */
-  let details = {
-    to: tokenAddress,
-    value: '0x0',
-    data: tokenContract.methods
-      .transfer(toAddress, web3.utils.toHex(amountToSend))
-      .encodeABI(),
+
+  const details = {
     gas: web3.utils.toHex(gasLimit),
     gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
     chainId: chainID, // mainnet: 1, rinkeby: 4
   }
+  if (isEthTokenAddress(tokenAddress)) {
+    details['to'] = toAddress
+    details['value'] = web3.utils.toHex(amountToSend)
+  } else {
+    details['to'] = tokenAddress
+    details['value'] = '0x0'
+    details['data'] = tokenContract.methods
+      .transfer(toAddress, web3.utils.toHex(amountToSend))
+      .encodeABI()
+  }
 
-  let result_chain = toChain
-  let useCommon = false
-  let transaction
-  if (toChain === 'arbitrum_test') {
-    result_chain = 421611
-    useCommon = true
-  }
-  if (toChain === 'arbitrum') {
-    result_chain = 42161
-    useCommon = true
-  }
-  if (useCommon) {
+  let transaction: EthereumTx
+  if (makerConfig[toChain]?.customChainId) {
+    const networkId = makerConfig[toChain]?.customChainId
     const customCommon = Common.forCustomChain(
       'mainnet',
       {
-        name: 'toChain',
-        networkId: result_chain,
-        chainId: result_chain,
+        name: toChain,
+        networkId,
+        chainId: networkId,
       },
       'petersburg'
     )
     transaction = new EthereumTx(details, { common: customCommon })
   } else {
-    transaction = new EthereumTx(details, { chain: result_chain })
+    transaction = new EthereumTx(details, { chain: toChain })
   }
 
   /**
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(makerConfig.privatekey, 'hex'))
+  transaction.sign(Buffer.from(makerConfig.privateKeys[makerAddress], 'hex'))
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.
@@ -287,7 +327,7 @@ async function send(
   /**
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
-  return new Promise((resolve, reject) => {
+  return new Promise((resolve) => {
     web3.eth
       .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
       .on('transactionHash', async (hash) => {
@@ -303,6 +343,47 @@ async function send(
           result_nonce,
         })
       })
+  })
+}
+
+/**
+ * This is the process that will run when you execute the program.
+ */
+async function send(
+  makerAddress: string,
+  toAddress,
+  toChain,
+  chainID,
+  tokenID, // 3 33 use
+  tokenAddress,
+  amountToSend,
+  result_nonce = 0,
+  fromChainID
+): Promise<any> {
+  sendQueue.registerConsumer(chainID, sendConsumer)
+
+  return new Promise((resolve, reject) => {
+    const value = {
+      makerAddress,
+      toAddress,
+      toChain,
+      chainID,
+      tokenID,
+      tokenAddress,
+      amountToSend,
+      result_nonce,
+      fromChainID
+    }
+    sendQueue.produce(chainID, {
+      value,
+      callback: (error, result) => {
+        if (error) {
+          reject(error)
+        } else {
+          resolve(result)
+        }
+      },
+    })
   })
 }
 

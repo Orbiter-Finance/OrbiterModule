@@ -9,7 +9,7 @@
         <el-card
           v-for="(item, index) in wealths"
           :key="index"
-          :header="item.chainName"
+          :header="mappingChainName(item.chainName)"
           shadow="hover"
         >
           <el-tabs class="maker-header--balances__names">
@@ -44,7 +44,10 @@
       </template>
       <el-empty v-else description="Empty balances"></el-empty>
     </div>
-    <div class="maker-block maker-header" v-loading="loadingNodes">
+    <div
+      class="maker-block maker-header maker-header--search"
+      v-loading="loadingNodes"
+    >
       <el-row :gutter="20">
         <el-col :span="6" class="maker-search__item">
           <div class="title">From chain</div>
@@ -52,7 +55,7 @@
             <el-option
               v-for="(item, index) in chains"
               :key="index"
-              :label="item.chainName"
+              :label="mappingChainName(item.chainName)"
               :value="item.chainId"
             >
             </el-option>
@@ -72,7 +75,7 @@
             start-placeholder="Start date"
             end-placeholder="End date"
             :clearable="false"
-            offset="-110"
+            :offset="-110"
             :show-arrow="false"
           >
           </el-date-picker>
@@ -83,15 +86,43 @@
           <el-button type="primary" @click="getMakerNodes">Apply</el-button>
         </el-col>
       </el-row>
+      <el-row v-if="userAddressSelected">
+        <el-tag closable @close="userAddressSelected = ''">
+          UserAddress: {{ userAddressSelected }}
+        </el-tag>
+      </el-row>
     </div>
-    <div
-      class="maker-block maker-header maker-header__statistics"
-      v-if="list.length > 0"
-    >
-      <span>TransactionTotal: {{ transactionTotal }}</span>
-      <span>FromAmountTotal: {{ fromAmountTotal }}</span>
-      <span>ToAmountTotal: {{ toAmountTotal }}</span>
-      <span style="color: #67c23a">+{{ diffAmountTotal }}</span>
+    <div class="maker-block maker-header maker-header__statistics">
+      <div>TransactionTotal: {{ list.length }}</div>
+      <div>
+        <el-popover placement="bottom" width="max-content" trigger="hover">
+          <template #default>
+            <div class="user-addresses">
+              <div
+                v-for="(item, index) in userAddressList"
+                :key="index"
+                @click="userAddressSelected = item.address"
+              >
+                {{ item.address }}<span>&nbsp;({{ item.count }})</span>
+              </div>
+            </div>
+          </template>
+          <template #reference>
+            <span>UserAddressTotal:{{ userAddressList.length }}</span>
+          </template>
+        </el-popover>
+      </div>
+      <div>FromAmountTotal: {{ fromAmountTotal }}</div>
+      <div>ToAmountTotal: {{ toAmountTotal }}</div>
+      <div style="color: #67c23a">+{{ diffAmountTotal }}</div>
+      <div style="margin-left: auto">
+        <router-link
+          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
+          target="_blank"
+        >
+          <el-button size="small" round>All transactions</el-button>
+        </router-link>
+      </div>
     </div>
     <div class="maker-block">
       <template v-if="list.length > 0">
@@ -117,15 +148,28 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="From ·· To" width="160">
+          <el-table-column width="90">
+            <template #header>
+              From <br />
+              To
+            </template>
             <template #default="scope">
-              <el-tag effect="light" size="mini">{{
-                scope.row.fromChainName
-              }}</el-tag>
-              ··
-              <el-tag effect="light" size="mini">{{
-                scope.row.toChainName
-              }}</el-tag>
+              <el-tag
+                class="maker__chain-tag"
+                type="success"
+                effect="light"
+                size="mini"
+              >
+                + {{ scope.row.fromChainName }}
+              </el-tag>
+              <el-tag
+                class="maker__chain-tag"
+                type="danger"
+                effect="light"
+                size="mini"
+              >
+                - {{ scope.row.toChainName }}
+              </el-tag>
             </template>
           </el-table-column>
           <el-table-column style="min-width: 120px">
@@ -140,7 +184,7 @@
                 }}</TextLong>
               </a>
               <a :href="scope.row.userAddressHref" target="_blank">
-                <TextLong :content="scope.row.userAddress">{{
+                <TextLong :content="scope.row.userAddress" placement="bottom">{{
                   scope.row.userAddress
                 }}</TextLong>
               </a>
@@ -157,7 +201,13 @@
                   scope.row.formTx
                 }}</TextLong>
               </a>
-              <div class="table-timestamp">{{ scope.row.fromTimeStamp }}</div>
+              <div class="table-timestamp">
+                <TextLong
+                  :content="scope.row.fromTimeStamp"
+                  placement="bottom"
+                  >{{ scope.row.fromTimeStampAgo }}</TextLong
+                >
+              </div>
             </template>
           </el-table-column>
           <el-table-column width="145">
@@ -178,7 +228,16 @@
               <TextLong v-else :content="scope.row.toTx">{{
                 scope.row.toTx
               }}</TextLong>
-              <div class="table-timestamp">{{ scope.row.toTimeStamp }}</div>
+              <div class="table-timestamp">
+                <TextLong
+                  v-if="scope.row.toTimeStamp && scope.row.toTimeStamp != '0'"
+                  :content="scope.row.toTimeStamp"
+                  placement="bottom"
+                >
+                  {{ scope.row.toTimeStampAgo }}
+                </TextLong>
+                <span v-else>{{ scope.row.toTimeStampAgo }}</span>
+              </div>
             </template>
           </el-table-column>
           <el-table-column width="120">
@@ -186,25 +245,40 @@
               FromAmount <br />
               ToAmount
             </template>
-            <template #default="scope">
-              <TextLong :content="scope.row.fromAmountFormat"
+            <template #default="{ row }">
+              <TextLong :content="row.fromAmountFormat"
                 ><span class="amount-operator--plus">+</span>
-                {{ scope.row.fromAmountFormat }}</TextLong
+                {{ row.fromAmountFormat }}</TextLong
               >
-              <TextLong :content="scope.row.toAmountFormat"
+              <TextLong
+                :content="
+                  row.toAmountFormat +
+                  (row.toAmount <= 0 ? ` (NeedTo: ${row.needTo.amountFormat})` : '')
+                "
+                placement="bottom"
                 ><span class="amount-operator--minus">-</span>
-                {{ scope.row.toAmountFormat }}</TextLong
+                {{ row.toAmountFormat }}</TextLong
               >
             </template>
           </el-table-column>
-          <el-table-column prop="state" label="State" width="120">
+          <el-table-column label="Profit" width="150">
+            <template #default="{ row }">
+              <div v-if="row.profitUSD > 0" class="amount-operator--plus">
+                +{{ row.profitUSD }} USD
+              </div>
+              <div v-else class="amount-operator--minus">
+                {{ row.profitUSD }} USD
+              </div>
+            </template>
+          </el-table-column>
+          <el-table-column prop="state" label="State" width="140">
             <template #default="scope">
               <el-tag :type="stateTags[scope.row.state]?.type" effect="dark">
                 {{ stateTags[scope.row.state]?.label }}
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column label="Others"
+          <!-- <el-table-column label="Others"
             ><template #default="scope">
               <el-button
                 v-if="scope.row.needTo?.amount > 0"
@@ -216,7 +290,7 @@
                 -{{ scope.row.needTo?.amountFormat }}
               </el-button>
             </template>
-          </el-table-column>
+          </el-table-column> -->
         </el-table>
       </template>
 
@@ -228,17 +302,35 @@
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
 import { BigNumber } from 'bignumber.js'
-import { defineComponent, reactive, toRefs } from 'vue'
+import {
+  computed,
+  defineComponent,
+  inject,
+  reactive,
+  toRef,
+  toRefs,
+  watch,
+} from 'vue'
 import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
+
+// mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
+const CHAIN_NAME_MAPPING = {
+  mainnet: 'Mainnet',
+  arbitrum: 'Arbitrum',
+  zksync: 'zkSync',
+}
 
 export default defineComponent({
   components: {
     TextLong,
   },
   setup() {
+    const makerAddressSelected: any = inject('makerAddressSelected')
+
     const state = reactive({
       rangeDate: [] as Date[],
       chainId: '',
+      userAddressSelected: '',
     })
 
     const stateTags = {
@@ -251,62 +343,127 @@ export default defineComponent({
 
     makerInfo.get()
 
-    makerWealth.get()
+    const getMakerWealth = () => {
+      makerWealth.get(makerAddressSelected?.value)
+    }
+    getMakerWealth()
 
     const reset = () => {
       const endTime = new Date()
       const startTime = new Date(endTime.getTime() - 86400000)
       state.rangeDate = [startTime, endTime]
       state.chainId = ''
+      state.userAddressSelected = ''
     }
     reset()
 
     const getMakerNodes = () => {
-      makerNodes.get(Number(state.chainId), state.rangeDate)
+      makerNodes.get(
+        makerAddressSelected?.value,
+        Number(state.chainId),
+        state.rangeDate
+      )
     }
     getMakerNodes()
 
+    // computeds
+    const list = computed(() => {
+      return makerNodes.list.filter((item) => {
+        if (!state.userAddressSelected) {
+          return true
+        }
+        return item.userAddress == state.userAddressSelected
+      })
+    })
+    const userAddressList = computed(() => {
+      const userAddressList: { address: string; count: number }[] = []
+      for (const item of makerNodes.list) {
+        if (!item.userAddress) {
+          continue
+        }
+
+        const userAddress = userAddressList.find(
+          (item1) => item.userAddress == item1.address
+        )
+        if (userAddress) {
+          userAddress.count++
+          continue
+        }
+
+        userAddressList.push({ address: item.userAddress, count: 1 })
+      }
+
+      // Sort by count desc
+      userAddressList.sort((a, b) => b.count - a.count)
+
+      return userAddressList
+    })
+    const fromAmountTotal = computed(() => {
+      let num = new BigNumber(0)
+      for (const item of list.value) {
+        num = num.plus(item.fromAmountFormat)
+      }
+      return num
+    })
+    const toAmountTotal = computed(() => {
+      let num = new BigNumber(0)
+      for (const item of list.value) {
+        num = num.plus(item.toAmountFormat)
+      }
+      return num
+    })
+    const diffAmountTotal = computed(() => {
+      let num = new BigNumber(0)
+      for (const item of list.value) {
+        if (!item.profitUSD) {
+          continue
+        }
+
+        num = num.plus(item.profitUSD)
+      }
+      return num.toString() + ' USD'
+    })
+
+    // When makerAddressSelected changed, get maker's data
+    watch(
+      () => makerAddressSelected?.value,
+      () => {
+        getMakerWealth()
+        getMakerNodes()
+      }
+    )
+
+    // methods
+    const mappingChainName = (chainName: string) => {
+      if (CHAIN_NAME_MAPPING[chainName]) {
+        return CHAIN_NAME_MAPPING[chainName]
+      }
+      return chainName
+    }
+
     return {
+      makerAddressSelected,
+
       ...toRefs(state),
       stateTags,
       reset,
 
-      chains: toRefs(makerInfo).chains,
+      chains: toRef(makerInfo, 'chains'),
 
-      loadingWealths: toRefs(makerWealth).loading,
-      wealths: toRefs(makerWealth).list,
+      loadingWealths: toRef(makerWealth, 'loading'),
+      wealths: toRef(makerWealth, 'list'),
 
-      loadingNodes: toRefs(makerNodes).loading,
-      list: toRefs(makerNodes).list,
+      loadingNodes: toRef(makerNodes, 'loading'),
+      list,
       getMakerNodes,
-    }
-  },
-  computed: {
-    transactionTotal() {
-      return this.list.length
-    },
-    fromAmountTotal() {
-      let num = new BigNumber(0)
-      for (const item of this.list) {
-        // filter item when toAmount <= 0
-        if (item.toAmount <= 0) {
-          continue
-        }
 
-        num = num.plus(item.fromAmountFormat)
-      }
-      return num
-    },
-    toAmountTotal() {
-      let num = new BigNumber(0)
-      for (const item of this.list) {
-        num = num.plus(item.toAmountFormat)
-      }
-      return num
-    },
-    diffAmountTotal() {
-      return new BigNumber(this.fromAmountTotal).minus(this.toAmountTotal)
-    },
+      userAddressList,
+      fromAmountTotal,
+      toAmountTotal,
+      diffAmountTotal,
+
+      mappingChainName,
+    }
   },
 })
 </script>
@@ -379,18 +536,73 @@ export default defineComponent({
     flex-direction: row;
     align-items: center;
     margin-bottom: 4px;
+
+    > * {
+      display: contents;
+    }
+  }
+}
+.maker-header--search {
+  .el-row {
+    margin-top: 10px;
+
+    &:first-child {
+      margin-top: 0;
+    }
   }
 }
 .maker-header__statistics {
   font-size: 14px;
   color: #555555;
+  display: flex;
+  flex-direction: row;
+  align-items: center;
 
   & > * {
     margin-right: 16px;
   }
 }
+
+.user-addresses {
+  max-height: 300px;
+  overflow-y: scroll;
+
+  > * {
+    padding: 8px 0;
+    border-bottom: 1px solid #f0f0f0;
+    text-align: center;
+
+    &:hover {
+      background-color: #f8f8f8;
+      cursor: pointer;
+    }
+
+    &:last-child {
+      border-bottom: none;
+    }
+
+    span {
+      font-size: 13px;
+      color: #{var(--el-color-primary)};
+    }
+  }
+}
+
 .table-timestamp {
   font-size: 12px;
   color: #888888;
+  width: max-content;
+}
+
+.maker__chain-tag {
+  display: block;
+  width: 100%;
+  margin: 0 auto;
+  margin-bottom: 5px;
+  text-align: center;
+
+  &:last-child {
+    margin-bottom: 0;
+  }
 }
 </style>

@@ -1,3 +1,17 @@
+// ::-webkit-scrollbar {
+//   width: 5px;
+//   height: 5px;
+//   background-color: transparent;
+// }
+// ::-webkit-scrollbar-track {
+//   border-radius: 5px;
+//   background-color: transparent;
+// }
+// ::-webkit-scrollbar-thumb {
+//   border-radius: 5px;
+//   background-color: rgba(0, 0, 0, 0.25);
+// }
+
 body {
   background-color: #e8e8e8;
   padding: 0;
@@ -16,4 +30,16 @@ body {
 }
 .amount-operator--minus {
   color: #{var(--el-color-danger)};
+}
+
+.el-table,.vxe-table {
+  .warning-row {
+    background-color: var(--el-color-warning-light);
+  }
+  .success-row {
+    background-color: var(--el-color-success-light);
+  }
+  .danger-row {
+    background-color: var(--el-color-danger-light);
+  }
 }

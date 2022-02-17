@@ -30,14 +30,14 @@
 ### Change config
 
 #### 1. Set backend/src/config/maker.ts
-
-- Copy [backend/src/config/maker_backend.ts](./backend/src/config/maker_backend.ts) as maker.ts
+- Copy [backend/src/config/maker_backend.ts](./backend/src/config/maker_backup.ts) as maker.ts
 - Replace the [Your Key] part with your key
 - replace `makerAddress` value
 
 #### 2. Set trade maker address and token address at this file
 
 **[./backend/src/util/maker/maker_list.ts](./backend/src/util/maker/maker_list.ts)**
+
 
 ### Install docker and docker-compose
 

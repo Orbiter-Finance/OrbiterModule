@@ -5,6 +5,7 @@ const MAX_BITS = {
   eth: 256,
   arbitrum: 256,
   zksync: 35,
+  polygon: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -15,13 +16,15 @@ export const CHAIN_INDEX = {
   33: 'zksync',
   4: 'eth',
   5: 'eth',
+  6: 'polygon',
+  66: 'polygon',
 }
 
 export const SIZE_OP = {
   P_NUMBER: 4,
 }
 
-function isZKChain(chain) {
+function isZKChain(chain: string | number) {
   if (chain === 3 || chain === 33 || chain === 'zksync') {
     return true
   }
@@ -91,17 +94,17 @@ function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
     new BigNumber(selectMakerInfo.tradingFee)
   )
-  accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
+  // accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
   let gasFee = toAmount_tradingFee
     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
     .dividedBy(new BigNumber(1000))
-  accessLogger.info('gasFee =', gasFee.toString())
+  // accessLogger.info('gasFee =', gasFee.toString())
   let digit = selectMakerInfo.precision === 18 ? 5 : 2
-  accessLogger.info('digit =', digit)
+  // accessLogger.info('digit =', digit)
   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP)
-  accessLogger.info('gasFee_fix =', gasFee_fix.toString())
+  // accessLogger.info('gasFee_fix =', gasFee_fix.toString())
   let toAmount_fee = toAmount_tradingFee.minus(gasFee_fix)
-  accessLogger.info('toAmount_fee =', toAmount_fee.toString())
+  // accessLogger.info('toAmount_fee =', toAmount_fee.toString())
   if (!toAmount_fee || isNaN(Number(toAmount_fee))) {
     return 0
   }
@@ -243,11 +246,11 @@ function getRAmountFromTAmount(chain, amount) {
 }
 
 function isChainSupport(chain) {
-  if (typeof chain === 'number') {
+  if (parseInt(chain) == chain) {
     if (CHAIN_INDEX[chain] && MAX_BITS[CHAIN_INDEX[chain]]) {
       return true
     }
-  } else if (typeof chain === 'string') {
+  } else {
     if (MAX_BITS[chain.toLowerCase()]) {
       return true
     }

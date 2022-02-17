@@ -1,10 +1,11 @@
 import schedule from 'node-schedule'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
+import * as coinbase from '../service/coinbase'
 import { ServiceMakerPull } from '../service/maker_pull'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
-import { getMakerList } from '../util/maker'
+import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
 class MJob {
@@ -41,7 +42,9 @@ class MJob {
       try {
         this.callback && (await this.callback())
       } catch (error) {
-        errorLogger.error(error)
+        errorLogger.error(
+          `MJob.schedule error: ${error.message}, rule: ${this.rule}`
+        )
       }
     })
   }
@@ -76,24 +79,33 @@ class MJobPessimism extends MJob {
 
 export function jobGetWealths() {
   const callback = async () => {
-    const wealths = await serviceMaker.getWealths()
-    Core.memoryCache.set(serviceMaker.CACHE_KEY_GET_WEALTHS, wealths, 100000)
+    const makerAddresses = await serviceMaker.getMakerAddresses()
+    for (const item of makerAddresses) {
+      const wealths = await serviceMaker.getWealths(item)
+      Core.memoryCache.set(
+        `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${item}`,
+        wealths,
+        100000
+      )
+    }
   }
 
-  new MJobPessimism('* */1 * * * *', callback).schedule()
+  new MJobPessimism('* */5 * * * *', callback).schedule()
 }
 
 export function jobMakerPull() {
   const startPull = async (
     toChain: number,
     makerAddress: string,
-    tokenAddress: string
+    tokenAddress: string,
+    tokenSymbol: string
   ) => {
     try {
       const serviceMakerPull = new ServiceMakerPull(
         toChain,
         makerAddress,
-        tokenAddress
+        tokenAddress,
+        tokenSymbol
       )
 
       switch (CHAIN_INDEX[toChain]) {
@@ -113,6 +125,14 @@ export function jobMakerPull() {
 
           await serviceMakerPull.arbitrum(apiArbitrum)
           break
+        case 'polygon':
+          let apiPolygon = makerConfig.polygon.api
+          if (toChain == 66) {
+            apiPolygon = makerConfig.polygon_test.api
+          }
+
+          await serviceMakerPull.polygon(apiPolygon)
+          break
         case 'zksync':
           let apiZksync = makerConfig.zksync.api
           if (toChain == 33) {
@@ -123,24 +143,51 @@ export function jobMakerPull() {
           break
       }
     } catch (error) {
-      errorLogger.error('jobMakerPull.startPull', error)
+      errorLogger.error(`jobMakerPull.startPull: ${error.message}, toChainId: ${toChain}, tokenAddress: ${tokenAddress}`)
     }
   }
 
   const callback = async () => {
     const makerList = await getMakerList()
     for (const item of makerList) {
-      await startPull(item.c1ID, item.makerAddress, item.t1Address)
-      await startPull(item.c2ID, item.makerAddress, item.t2Address)
+      const { pool1, pool2 } = expanPool(item)
+
+      await startPull(
+        pool1.c1ID,
+        pool1.makerAddress,
+        pool1.t1Address,
+        pool1.tName
+      )
+      await startPull(
+        pool2.c2ID,
+        pool2.makerAddress,
+        pool2.t2Address,
+        pool2.tName
+      )
     }
   }
 
   new MJobPessimism('*/10 * * * * *', callback).schedule()
 }
 
-export function jobMakerNodeTodo() {
+const jobMakerNodeTodoMakerAddresses: string[] = []
+export function jobMakerNodeTodo(makerAddress: string) {
+  // Prevent multiple makerAddress
+  if (jobMakerNodeTodoMakerAddresses.indexOf(makerAddress) > -1) {
+    return
+  }
+  jobMakerNodeTodoMakerAddresses.push(makerAddress)
+
   const callback = async () => {
-    await serviceMaker.runTodo()
+    await serviceMaker.runTodo(makerAddress)
+  }
+
+  new MJobPessimism('*/10 * * * * *', callback).schedule()
+}
+
+export function jobCacheCoinbase() {
+  const callback = async () => {
+    await coinbase.cacheExchangeRates()
   }
 
   new MJobPessimism('*/10 * * * * *', callback).schedule()
