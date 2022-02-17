@@ -79,6 +79,30 @@ export default {
     gasPrice: 2,
     customChainId: 80001,
   },
+  optimistic: {
+    wsEndPoint:
+      'wss://opt.g.alchemy.com/v2/Your Key',
+    httpEndPoint:
+      'https://opt.g.alchemy.com/v2/Your Key',
+    api: {
+      endPoint: 'https://api-optimistic.etherscan.io/api',
+      key: 'Your Key',
+    },
+    gasPrice: 2,
+    customChainId: 10,
+  },
+  optimistic_test: {
+    wsEndPoint:
+      'wss://opt-kovan.g.alchemy.com/v2/Your Key',
+    httpEndPoint:
+      'https://opt-kovan.g.alchemy.com/v2/Your Key',
+    api: {
+      endPoint: 'https://api-kovan-optimistic.etherscan.io/api',
+      key: 'Your Key',
+    },
+    gasPrice: 2,
+    customChainId: 69,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   ABI: [
     {

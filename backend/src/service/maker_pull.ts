@@ -10,7 +10,9 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
+import Axios from '../util/Axios'
 
+Axios.axios()
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -160,6 +162,7 @@ const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
 const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
 const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
+// error  op
 
 export class ServiceMakerPull {
   private chainId: number

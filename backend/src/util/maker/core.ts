@@ -6,6 +6,7 @@ const MAX_BITS = {
   arbitrum: 256,
   zksync: 35,
   polygon: 256,
+  optimistic:256
 }
 
 export const CHAIN_INDEX = {
@@ -18,6 +19,8 @@ export const CHAIN_INDEX = {
   5: 'eth',
   6: 'polygon',
   66: 'polygon',
+  7: 'optimistic',
+  77: 'optimistic'
 }
 
 export const SIZE_OP = {

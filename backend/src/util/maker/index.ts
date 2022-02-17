@@ -153,6 +153,7 @@ function watchTransfers(pool, state) {
   // checkData
   const checkData = async (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
+
     if (ptext.state === false) {
       return
     }
@@ -160,6 +161,7 @@ function watchTransfers(pool, state) {
     let validPText = (9000 + Number(toChainID)).toString()
 
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
+
     if (realAmount.state === false) {
       return
     }
@@ -368,6 +370,8 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         errorLogger.error('zk_isHaveSqlError =', error)
                         break
                       }
+                      console.warn('makerNode =',makerNode);
+                      console.warn('isFirst =',isFirst);
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
                         await repositoryMakerNode()
