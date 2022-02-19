@@ -261,6 +261,9 @@ async function sendConsumer(value: any) {
   if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
     maxPrice = 180;
   }
+   if ((fromChainID == 7 || fromChainID == 77) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
   const gasPrices = await getCurrentGasPrices(
     toChain,
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined

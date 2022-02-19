@@ -24,7 +24,7 @@ services:
     #   - './backend:/app'
     ports:
       - '3002:3002'
-    # restart: always
+    restart: always
     networks:
       - app-network
 
@@ -42,8 +42,8 @@ services:
   #     - app-network
 
   db:
-    # image: mysql:5.7.16
-    image: ibex/debian-mysql-server-5.7
+    image: mysql:5.7.16
+    # image: ibex/debian-mysql-server-5.7
     # Set mysqld charset
     command:
       - '--character-set-server=utf8mb4'
