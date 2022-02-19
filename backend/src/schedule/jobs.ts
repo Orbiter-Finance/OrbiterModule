@@ -120,7 +120,6 @@ export function jobMakerPull() {
           if (toChain == 4 || toChain == 5) {
             apiEth = makerConfig.rinkeby.api
           }
-
           await serviceMakerPull.etherscan(apiEth)
           break
         case 'arbitrum':
@@ -128,7 +127,6 @@ export function jobMakerPull() {
           if (toChain == 22) {
             apiArbitrum = makerConfig.arbitrum_test.api
           }
-
           await serviceMakerPull.arbitrum(apiArbitrum)
           break
         case 'polygon':
@@ -136,7 +134,6 @@ export function jobMakerPull() {
           if (toChain == 66) {
             apiPolygon = makerConfig.polygon_test.api
           }
-
           await serviceMakerPull.polygon(apiPolygon)
           break
         case 'zksync':
@@ -144,8 +141,14 @@ export function jobMakerPull() {
           if (toChain == 33) {
             apiZksync = makerConfig.zksync_test.api
           }
-
           await serviceMakerPull.zkSync(apiZksync)
+          break
+        case 'optimistic':
+          let optimistic = makerConfig.optimistic.api
+          if (toChain == 77) {
+            optimistic = makerConfig.optimistic_test.api
+          }
+          await serviceMakerPull.optimistic(optimistic)
           break
       }
     } catch (error) {

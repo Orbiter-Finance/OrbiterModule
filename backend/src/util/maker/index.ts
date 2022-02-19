@@ -153,6 +153,7 @@ function watchTransfers(pool, state) {
   // checkData
   const checkData = async (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
+
     if (ptext.state === false) {
       return
     }
@@ -160,6 +161,7 @@ function watchTransfers(pool, state) {
     let validPText = (9000 + Number(toChainID)).toString()
 
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
+
     if (realAmount.state === false) {
       return
     }
@@ -801,7 +803,8 @@ export async function sendTransaction(
     getZKTokenID(tokenAddress),
     tokenAddress,
     tAmount,
-    result_nonce
+    result_nonce,
+    fromChainID
   ).then(async (response) => {
     accessLogger.info('response =', response)
     if (!response.code) {
@@ -846,37 +849,37 @@ export async function sendTransaction(
         accessLogger.info('update success')
 
         // todo need result_nonce
-        if (response.result_nonce > 0) {
-          // insert or update todo
-          const todo = await repositoryMakerNodeTodo().findOne({
-            transactionID,
-          })
-          if (todo) {
-            await repositoryMakerNodeTodo().increment(
-              { transactionID },
-              'do_current',
-              1
-            )
-          } else {
-            await repositoryMakerNodeTodo().insert({
-              transactionID,
-              makerAddress,
-              data: JSON.stringify({
-                transactionID,
-                fromChainID,
-                toChainID,
-                toChain,
-                tokenAddress,
-                amountStr,
-                fromAddress,
-                pool,
-                nonce,
-                result_nonce: response.result_nonce,
-              }),
-              do_state: 20,
-            })
-          }
-        }
+        // if (response.result_nonce > 0) {
+        //   // insert or update todo
+        //   const todo = await repositoryMakerNodeTodo().findOne({
+        //     transactionID,
+        //   })
+        //   if (todo) {
+        //     await repositoryMakerNodeTodo().increment(
+        //       { transactionID },
+        //       'do_current',
+        //       1
+        //     )
+        //   } else {
+        //     await repositoryMakerNodeTodo().insert({
+        //       transactionID,
+        //       makerAddress,
+        //       data: JSON.stringify({
+        //         transactionID,
+        //         fromChainID,
+        //         toChainID,
+        //         toChain,
+        //         tokenAddress,
+        //         amountStr,
+        //         fromAddress,
+        //         pool,
+        //         nonce,
+        //         result_nonce: response.result_nonce,
+        //       }),
+        //       do_state: 20,
+        //     })
+        //   }
+        // }
       } catch (error) {
         errorLogger.error('updateErrorSqlError =', error)
         return

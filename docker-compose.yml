@@ -43,6 +43,7 @@ services:
 
   db:
     image: mysql:5.7.16
+    # image: ibex/debian-mysql-server-5.7
     # Set mysqld charset
     command:
       - '--character-set-server=utf8mb4'

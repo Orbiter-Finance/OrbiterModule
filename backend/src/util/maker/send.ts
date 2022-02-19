@@ -23,15 +23,16 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       )
       if (response.data.status == 1 && response.data.message === "OK") {
         let prices = {
-          low: response.data.result.SafeGasPrice + 10,
-          medium: response.data.result.ProposeGasPrice + 10,
-          high: response.data.result.FastGasPrice + 10,
+          low: Number(response.data.result.SafeGasPrice) + 10,
+          medium: Number(response.data.result.ProposeGasPrice) + 10,
+          high: Number(response.data.result.FastGasPrice) + 10,
         }
         let gwei = prices['medium']
         // Limit max gwei
         if (gwei > maxGwei) {
           gwei = maxGwei
         }
+        accessLogger.info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
@@ -56,7 +57,11 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 
       // polygon gas price x2
       if (toChain == 'polygon' || toChain == 'polygon_test') {
-        gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        if (parseInt(response.data.result, 16) < 100000000000) {
+          gasPrice = Web3.utils.toHex(200000000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        }
       }
 
       accessLogger.info('gasPrice =', gasPrice)
@@ -81,6 +86,7 @@ async function sendConsumer(value: any) {
     tokenAddress,
     amountToSend,
     result_nonce,
+    fromChainID,
   } = value
 
   if (chainID === 3 || chainID === 33) {
@@ -247,12 +253,20 @@ async function sendConsumer(value: any) {
     accessLogger.info('result_nonde =', result_nonce)
   }
 
+
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
+  let maxPrice = 230;
+  if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
+   if ((fromChainID == 7 || fromChainID == 77) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
   const gasPrices = await getCurrentGasPrices(
     toChain,
-    isEthTokenAddress(tokenAddress) ? 230 : undefined
+    isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
 
   let gasLimit = 100000
@@ -327,6 +341,7 @@ async function sendConsumer(value: any) {
         })
       })
       .on('error', (err) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1
         resolve({
           code: 1,
           txid: err,
@@ -347,7 +362,8 @@ async function send(
   tokenID, // 3 33 use
   tokenAddress,
   amountToSend,
-  result_nonce = 0
+  result_nonce = 0,
+  fromChainID
 ): Promise<any> {
   sendQueue.registerConsumer(chainID, sendConsumer)
 
@@ -361,6 +377,7 @@ async function send(
       tokenAddress,
       amountToSend,
       result_nonce,
+      fromChainID
     }
     sendQueue.produce(chainID, {
       value,

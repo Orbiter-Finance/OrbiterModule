@@ -17,7 +17,9 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
+// import Axios from '../util/Axios'
 
+// Axios.axios()
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
