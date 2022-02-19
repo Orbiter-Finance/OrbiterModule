@@ -370,8 +370,6 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         errorLogger.error('zk_isHaveSqlError =', error)
                         break
                       }
-                      console.warn('makerNode =',makerNode);
-                      console.warn('isFirst =',isFirst);
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
                         await repositoryMakerNode()

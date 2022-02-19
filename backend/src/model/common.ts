@@ -14,8 +14,9 @@ export abstract class CommonEntity extends BaseEntity {
   @Column('int', { default: 0 })
   updated_by: number
 
-  
-  @CreateDateColumn()
+  @Column('timestamp', {
+    default: () => null,
+  })
   published_at?: Date
 
   @CreateDateColumn()

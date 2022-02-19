@@ -162,8 +162,6 @@ const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 const OPTIMISTIC_LAST: { [key: string]: MakerPullLastData } = {}
 
-// error  op
-
 export class ServiceMakerPull {
   private chainId: number
   private makerAddress: string

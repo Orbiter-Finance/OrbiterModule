@@ -309,8 +309,6 @@ async function sendConsumer(value: any) {
     )
     transaction = new EthereumTx(details, { common: customCommon })
   } else {
-    console.log('details =',details)
-    console.log('chain =',toChain)
     transaction = new EthereumTx(details, { chain: toChain })
   }
 
