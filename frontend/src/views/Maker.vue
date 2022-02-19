@@ -314,6 +314,8 @@ const CHAIN_NAME_MAPPING = {
   mainnet: 'Mainnet',
   arbitrum: 'Arbitrum',
   zksync: 'zkSync',
+  polygon: 'Polygon',
+  optimism: 'Optimism',
 }
 
 export default defineComponent({

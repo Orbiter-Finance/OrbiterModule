@@ -1,4 +1,5 @@
 import axios from 'axios'
+import dayjs from 'dayjs'
 import { Repository } from 'typeorm'
 import { prometheusConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
@@ -19,21 +20,32 @@ type BalanceAlarm = {
     balance?: string
   }[]
 }
+type MakerPullStart = {
+  totalPull: number,
+  incrementPull: number,
+}
 
 const repositorySystemSetting = (): Repository<SystemSetting> => {
   return Core.db.getRepository(SystemSetting)
 }
 const BALANCE_ALARM_KEY = 'balance_alarm'
+const MAKER_PULL_START_KEY = 'maker_pull_start'
 
 // Default Baseline
-export const BALANCE_ALARM_BASELINE = 0
+export const DEFAULT_BALANCE_ALARM_BASELINE = 0
+
+// Default makerPullStart
+export const DEFAULT_MAKER_PULL_START: MakerPullStart = {
+  totalPull: 86400000, // ms
+  incrementPull: 1800000,
+}
 
 export function getTargetBaseline(
   chainId: number,
   tokenAddress: string,
   balanceAlarms?: BalanceAlarm[]
 ) {
-  // Default use BALANCE_ALARM_BASELINE, When settingValue has value, use it
+  // Default use DEFAULT_BALANCE_ALARM_BASELINE, When settingValue has value, use it
   if (balanceAlarms) {
     for (const item of balanceAlarms) {
       for (const item1 of item.baselines) {
@@ -44,7 +56,7 @@ export function getTargetBaseline(
     }
   }
 
-  return BALANCE_ALARM_BASELINE
+  return DEFAULT_BALANCE_ALARM_BASELINE
 }
 
 /**
@@ -84,7 +96,7 @@ export async function getBalanceAlarms(makerAddress: string) {
     }
 
     for (const item1 of item.balances) {
-      // Default use BALANCE_ALARM_BASELINE, When settingValue has value, use it
+      // Default use DEFAULT_BALANCE_ALARM_BASELINE, When settingValue has value, use it
       let value = getTargetBaseline(
         item.chainId,
         item1.tokenAddress,
@@ -131,6 +143,24 @@ export async function saveBalanceAlarms(
   }
 
   return true
+}
+
+export async function getMakerPullStart() {
+  const value = await getSettingValueJson(MAKER_PULL_START_KEY)
+  
+  const makerPullStart = DEFAULT_MAKER_PULL_START
+  if (value?.totalPull) {
+    makerPullStart.totalPull = Number(value.totalPull)
+  }
+  if (value?.incrementPull) {
+    makerPullStart.incrementPull = Number(value.incrementPull)
+  }
+
+  return makerPullStart
+}
+
+export async function saveMakerPullStart(value: any) {
+  
 }
 
 type DoBalanceAlarmItem = {

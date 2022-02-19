@@ -1,7 +1,7 @@
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import {
-  BALANCE_ALARM_BASELINE,
+  DEFAULT_BALANCE_ALARM_BASELINE,
   getBalanceAlarms,
   saveBalanceAlarms
 } from '../service/setting'
@@ -12,7 +12,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
 
     const list = await getBalanceAlarms(makerAddress)
 
-    restful.json({ list, defaultBaseline: BALANCE_ALARM_BASELINE })
+    restful.json({ list, defaultBaseline: DEFAULT_BALANCE_ALARM_BASELINE })
   })
 
   router.post('setting/balance_alarms/save', async ({ restful, request }) => {
