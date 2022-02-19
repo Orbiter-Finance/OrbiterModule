@@ -10,9 +10,7 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
-import Axios from '../util/Axios'
 
-Axios.axios()
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -162,6 +160,8 @@ const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
 const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
 const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
+const OPTIMISTIC_LAST: { [key: string]: MakerPullLastData } = {}
+
 // error  op
 
 export class ServiceMakerPull {
@@ -721,4 +721,97 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     ZKSYNC_LAST[makerPullLastKey] = makerPullLastData
   }
+
+
+  /**
+   * pull optimistic
+   * @prarm api
+   */
+  async optimistic(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = OPTIMISTIC_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+
+    // when endblock is empty, will end latest
+    const startblock = ''
+    const endblock = lastMakePull ? lastMakePull.txBlock : ''
+
+    const resp = await axios.get(api.endPoint, {
+      params: {
+        // apiKey: api.key,
+        module: 'account',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
+        address: this.makerAddress,
+        page: 1,
+        offset: 100,
+        startblock,
+        endblock,
+        sort: 'desc',
+      },
+      timeout: 16000,
+    })
+
+    // check data
+    const { data } = resp
+    if (data.status != '1' || !data.result || data.result.length <= 0) {
+      accessLogger.warn(
+        'Get optimistc tokentx/txlist faild: ' + JSON.stringify(data)
+      )
+      return
+    }
+
+    for (const item of data.result) {
+      // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        contractAddress = this.tokenAddress
+      }
+
+      // checks
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
+        continue
+      }
+
+      const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // save
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: contractAddress,
+        data: JSON.stringify(item),
+        amount: item.value,
+        amount_flag,
+        nonce: item.nonce,
+        fromAddress: item.from,
+        toAddress: item.to,
+        txBlock: item.blockNumber,
+        txHash: item.hash,
+        txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'ETH',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .toString(),
+        tx_status:
+          item.confirmations >= FINALIZED_CONFIRMATIONS
+            ? 'finalized'
+            : 'committed',
+      })
+      await savePull(makerPull)
+
+      // compare
+      await this.compareData(makerPull, item.hash)
+    }
+
+    // set OPTIMISTIC_LAST
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    OPTIMISTIC_LAST[makerPullLastKey] = makerPullLastData
+  }
+
 }
