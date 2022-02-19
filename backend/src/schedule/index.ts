@@ -6,7 +6,7 @@ import {
   jobBalanceAlarm,
   jobCacheCoinbase,
   jobGetWealths,
-  jobMakerNodeTodo,
+  // jobMakerNodeTodo,
   jobMakerPull,
 } from './jobs'
 
@@ -32,7 +32,7 @@ async function waittingStartMaker() {
         startedIndexs.indexOf(index) === -1
       ) {
         startMaker(item)
-        jobMakerNodeTodo(item.makerAddress)
+        // jobMakerNodeTodo(item.makerAddress)
 
         startedIndexs.push(index)
         isPrivateKeysChanged = true

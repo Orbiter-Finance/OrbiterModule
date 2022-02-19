@@ -32,6 +32,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         if (gwei > maxGwei) {
           gwei = maxGwei
         }
+        accessLogger.info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
@@ -339,6 +340,7 @@ async function sendConsumer(value: any) {
         })
       })
       .on('error', (err) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1
         resolve({
           code: 1,
           txid: err,
