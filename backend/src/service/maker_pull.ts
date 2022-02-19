@@ -160,7 +160,7 @@ const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
 const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
 const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
-const OPTIMISTIC_LAST: { [key: string]: MakerPullLastData } = {}
+const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
 
 export class ServiceMakerPull {
   private chainId: number
@@ -722,12 +722,12 @@ export class ServiceMakerPull {
 
 
   /**
-   * pull optimistic
+   * pull optimism
    * @prarm api
    */
-  async optimistic(api: { endPoint: string; key: string }) {
+  async optimism(api: { endPoint: string; key: string }) {
     const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
-    let makerPullLastData = OPTIMISTIC_LAST[makerPullLastKey]
+    let makerPullLastData = OPTIMISM_LAST[makerPullLastKey]
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
@@ -804,12 +804,12 @@ export class ServiceMakerPull {
       await this.compareData(makerPull, item.hash)
     }
 
-    // set OPTIMISTIC_LAST
+    // set OPTIMISM_LAST
     if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    OPTIMISTIC_LAST[makerPullLastKey] = makerPullLastData
+    OPTIMISM_LAST[makerPullLastKey] = makerPullLastData
   }
 
 }
