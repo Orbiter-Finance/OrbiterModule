@@ -287,19 +287,6 @@
               </el-tag>
             </template>
           </el-table-column>
-          <!-- <el-table-column label="Others"
-            ><template #default="scope">
-              <el-button
-                v-if="scope.row.needTo?.amount > 0"
-                type="danger"
-                plain
-                size="small"
-                @click="() => {}"
-              >
-                -{{ scope.row.needTo?.amountFormat }}
-              </el-button>
-            </template>
-          </el-table-column> -->
         </el-table>
       </template>
 

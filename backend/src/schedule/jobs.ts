@@ -143,12 +143,12 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.zkSync(apiZksync)
           break
-        case 'optimistic':
-          let optimistic = makerConfig.optimistic.api
+        case 'optimism':
+          let apiOptimism = makerConfig.optimism.api
           if (toChain == 77) {
-            optimistic = makerConfig.optimistic_test.api
+            apiOptimism = makerConfig.optimism_test.api
           }
-          await serviceMakerPull.optimistic(optimistic)
+          await serviceMakerPull.optimism(apiOptimism)
           break
       }
     } catch (error) {

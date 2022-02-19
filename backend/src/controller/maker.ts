@@ -116,16 +116,18 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         amountFormat: '',
         tokenAddress: '',
       }
+
       if (item.state == 1 || item.state == 20) {
+        const _fromChain = Number(item.fromChain)
         needTo.chainId = Number(
-          serviceMaker.getAmountFlag(item.fromChain, item.fromAmount)
+          serviceMaker.getAmountFlag(_fromChain, item.fromAmount)
         )
 
         // find pool
         const pool = await serviceMaker.getTargetMakerPool(
           item.makerAddress,
           item.txToken,
-          Number(item.fromChain),
+          _fromChain,
           needTo.chainId
         )
 
@@ -136,7 +138,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
 
           needTo.amount =
             getAmountToSend(
-              Number(item.fromChain),
+              _fromChain,
               needTo.chainId,
               item.fromAmount,
               pool,

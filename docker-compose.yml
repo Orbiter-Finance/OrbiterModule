@@ -37,7 +37,7 @@ services:
   #   # - './frontend:/app'
   #   ports:
   #     - '80:80'
-  #   # restart: always
+  #   restart: always
   #   networks:
   #     - app-network
 
@@ -58,6 +58,6 @@ services:
       - './mysql/conf.d:/etc/mysql/conf.d'
     ports:
       - '3306:3306'
-    # restart: always
+    restart: always
     networks:
       - app-network

@@ -79,7 +79,7 @@ export default {
     gasPrice: 2,
     customChainId: 80001,
   },
-  optimistic: {
+  optimism: {
     wsEndPoint:
       'wss://opt.g.alchemy.com/v2/Your Key',
     httpEndPoint:
@@ -91,7 +91,7 @@ export default {
     gasPrice: 2,
     customChainId: 10,
   },
-  optimistic_test: {
+  optimism_test: {
     wsEndPoint:
       'wss://opt-kovan.g.alchemy.com/v2/Your Key',
     httpEndPoint:
