@@ -7,7 +7,7 @@ import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
-import { getMakerPulls } from '../service/maker_pull'
+import { getLastStatus, getMakerPulls } from '../service/maker_pull'
 import { Core } from '../util/core'
 import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
@@ -170,6 +170,13 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
 
     restful.json(rst)
+  })
+
+
+  router.get('maker/get_last_status', async ({ restful }) => {
+    const lastStatus = getLastStatus()
+
+    restful.json(lastStatus)
   })
 
   router.get('maker/miss_private_key_addresses', async ({ restful }) => {

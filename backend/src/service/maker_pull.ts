@@ -162,6 +162,17 @@ const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
 
+export function getLastStatus() {
+  return {
+    LAST_PULL_COUNT_MAX,
+    ETHERSCAN_LAST,
+    ARBITRUM_LAST,
+    POLYGON_LAST,
+    ZKSYNC_LAST,
+    OPTIMISM_LAST,
+  }
+}
+
 export class ServiceMakerPull {
   private chainId: number
   private makerAddress: string
@@ -720,7 +731,6 @@ export class ServiceMakerPull {
     ZKSYNC_LAST[makerPullLastKey] = makerPullLastData
   }
 
-
   /**
    * pull optimism
    * @prarm api
@@ -811,5 +821,4 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     OPTIMISM_LAST[makerPullLastKey] = makerPullLastData
   }
-
 }
