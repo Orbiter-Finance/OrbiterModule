@@ -17,6 +17,7 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "target": "es2017",
+    "resolveJsonModule": true
     // "declaration": true,
     // "declarationDir": "./declarations"
   },
