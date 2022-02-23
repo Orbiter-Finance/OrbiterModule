@@ -10,6 +10,7 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
+import { getMakerPullStart } from './setting'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -162,6 +163,17 @@ const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
 
+export function getLastStatus() {
+  return {
+    LAST_PULL_COUNT_MAX,
+    ETHERSCAN_LAST,
+    ARBITRUM_LAST,
+    POLYGON_LAST,
+    ZKSYNC_LAST,
+    OPTIMISM_LAST,
+  }
+}
+
 export class ServiceMakerPull {
   private chainId: number
   private makerAddress: string
@@ -189,16 +201,21 @@ export class ServiceMakerPull {
    * get last maker_pull
    * @param last
    */
-  private getLastMakerPull(last: MakerPullLastData) {
+  private async getLastMakerPull(last: MakerPullLastData) {
+    const makerPullStart = await getMakerPullStart()
+    
+    const nowTime = new Date().getTime()
+
     // 1. if last's pullCount >= max pullCount, the last makerPull invalid
     // 2. if roundTotal > 0 and makerPull.txTime before some time, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
-    const startTime = new Date().getTime() - 3600000
+    let startTime = nowTime - makerPullStart.totalPull
+    if (last.roundTotal > 0) {
+      startTime = nowTime - makerPullStart.incrementPull
+    }
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
-      (last.roundTotal > 0 &&
-        last.makerPull &&
-        startTime > last.makerPull.txTime.getTime())
+      (last.makerPull && startTime > last.makerPull.txTime.getTime())
     ) {
       // update last data
       last.makerPull = undefined
@@ -351,7 +368,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -442,7 +459,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -533,7 +550,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -636,7 +653,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     const resp = await axios.get(
       `${api.endPoint}/accounts/${this.makerAddress}/transactions`,
@@ -720,7 +737,6 @@ export class ServiceMakerPull {
     ZKSYNC_LAST[makerPullLastKey] = makerPullLastData
   }
 
-
   /**
    * pull optimism
    * @prarm api
@@ -731,7 +747,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -811,5 +827,4 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     OPTIMISM_LAST[makerPullLastKey] = makerPullLastData
   }
-
 }

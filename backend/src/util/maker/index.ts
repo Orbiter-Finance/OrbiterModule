@@ -461,7 +461,13 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
   }, 10 * 1000)
 }
 
-function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
+function confirmFromTransaction(
+  pool,
+  state,
+  txHash,
+  confirmations = 3,
+  isFirst = true
+) {
   accessLogger.info('confirmFromTransaction =', getTime())
 
   setTimeout(async () => {
@@ -475,7 +481,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
 
     // TODO
     if (!trxConfirmations) {
-      return confirmFromTransaction(pool, state, txHash, confirmations)
+      return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
 
     var trx = trxConfirmations.trx
@@ -502,6 +508,13 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
       makerNode = await repositoryMakerNode().findOne({
         transactionID: transactionID,
       })
+
+      // When polygon newHash replace oldHash, return it
+      // ex: 0x552efd239d3d3a45f15cbcfe476f5661c7133c6899f7fa259614e9411700b477 => 0xa834060e5c5374b4470b7942eeba81fd96ef7bc123cee317a13010d6af16665a
+      if (makerNode && isFirst) {
+        console.warn('TransactionID was exist: ' + transactionID)
+        return
+      }
     } catch (error) {
       errorLogger.error('isHaveSqlError =', error)
       return
@@ -571,7 +584,7 @@ function confirmFromTransaction(pool, state, txHash, confirmations = 3) {
 
       return
     }
-    return confirmFromTransaction(pool, state, txHash, confirmations)
+    return confirmFromTransaction(pool, state, txHash, confirmations, false)
   }, 8 * 1000)
 }
 
