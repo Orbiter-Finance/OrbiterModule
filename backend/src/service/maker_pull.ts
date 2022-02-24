@@ -261,7 +261,7 @@ export class ServiceMakerPull {
         await repositoryMakerNode().update(
           {
             transactionID,
-            needToAmount: targetMP.amount,
+            needToAmount: makerPull.amount,
           },
           {
             toTx: makerPull.txHash,
