@@ -1,6 +1,7 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
+import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
@@ -17,6 +18,7 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
+import { getErc20BalanceByL1, getNetworkIdByChainId, getProviderByChainId } from './starknet/helper'
 // import Axios from '../util/Axios'
 
 // Axios.axios()
@@ -264,6 +266,10 @@ async function getTokenBalance(
           value = respData.result.balances[tokenName.toUpperCase()]
         }
         break
+      case 'starknet':
+        const networkId = getNetworkIdByChainId(chainId)
+        value = String(await getErc20BalanceByL1(makerAddress, tokenAddress, networkId))
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
@@ -294,7 +300,10 @@ async function getTokenBalance(
         break
     }
   } catch (error) {
-    errorLogger.error(`GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `, error.message)
+    errorLogger.error(
+      `GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      error.message
+    )
   }
 
   return value

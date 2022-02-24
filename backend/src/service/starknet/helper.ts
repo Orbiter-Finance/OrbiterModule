@@ -21,14 +21,14 @@ import erc20Abi from './erc20_abi.json'
 const L1_SWAP_L2_CONTRACT_ADDRESS = {
   'mainnet-alpha': '',
   'georli-alpha':
-    '0x06ef36929b6c9e538615beb8ec324d1b46e3ec9bdc6d8798463d04191a502d9b',
+    '0x021c6bbdabdfbf86997471f547d4aa5362787f18b76dad8d3e6b8f3d7471395a',
 }
 
 const L1_TO_L2_ADDRESSES = {
   '0x0043d60e87c5dd08C86C3123340705a1556C4719': {
     'mainnet-alpha': '',
     'georli-alpha':
-      '0x1df1126679634918ab3e57bdf278e5f437ff44f6530c1cf30a58f9082d2bcb6',
+      '0x2b31ce585a1f407cb3b414e2a71ee45c4430b4df36c8528ab42c0bcee97a887',
   },
 }
 
@@ -111,7 +111,6 @@ export async function getStarknetAccount(l1Address: string, networkId = 1) {
     data: msgParams,
     version: SignTypedDataVersion.V3,
   })
-  console.warn({ data })
 
   const keyPair = keyPairFromData(Buffer.from(stripHexPrefix(data), 'hex'))
 

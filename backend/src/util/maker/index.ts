@@ -2,19 +2,27 @@ import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
+import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
-import { isEthTokenAddress } from '..'
+import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
+import {
+  getNetworkIdByChainId,
+  getProviderByChainId,
+  getStarknetAccount,
+  saveMappingL1AndL2,
+} from '../../service/starknet/helper'
 import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
+import { factoryStarknetListen } from './starknet_listen'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -29,10 +37,70 @@ const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
   return Core.db.getRepository(MakerZkHash)
 }
 
-export function startMaker(makerInfo: any) {
+const starknetMakers: { [key: string]: string } = {}
+async function deployStarknetMaker(makerInfo: any, chainId: number) {
+  if (chainId != 4 && chainId != 44) {
+    return
+  }
+
+  const { makerAddress } = makerInfo
+
+  try {
+    if (typeof starknetMakers[makerAddress] === 'undefined') {
+      starknetMakers[makerAddress] = ''
+
+      const networkId = getNetworkIdByChainId(chainId)
+      const account = await getStarknetAccount(makerAddress, networkId)
+      accessLogger.info(`Deploying starknet, l1: ${makerAddress}`)
+
+      while (true) {
+        try {
+          const provider = getProviderByChainId(chainId)
+          const resp = await provider.callContract({
+            contract_address: account.starknetAddress,
+            entry_point_selector: getSelectorFromName('get_nonce'),
+          })
+
+          if (resp.result?.[0]) {
+            accessLogger.info(
+              `🎉Deployed starknet, l1: ${makerAddress}, starknet: ${account.starknetAddress}`
+            )
+            starknetMakers[makerAddress] = account.starknetAddress
+
+            // Save L1 <=> L2
+            saveMappingL1AndL2(makerAddress, networkId)
+
+            break
+          }
+        } catch (err) {}
+
+        await sleep(1000)
+      }
+    }
+
+    // When deploying, wait it
+    if (starknetMakers[makerAddress] === '') {
+      while (true) {
+        if (starknetMakers[makerAddress]) {
+          break
+        }
+
+        await sleep(1000)
+      }
+    }
+  } catch (err) {
+    delete starknetMakers[makerAddress]
+    errorLogger.error('Deploy starknet maker error: ' + err.message)
+  }
+}
+
+export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
     return
   }
+
+  await deployStarknetMaker(makerInfo, makerInfo.c1ID)
+  await deployStarknetMaker(makerInfo, makerInfo.c2ID)
 
   watchPool(makerInfo)
 }
@@ -118,12 +186,11 @@ function watchTransfers(pool, state) {
   let fromChainID = state ? pool.c2ID : pool.c1ID
   let toChainID = state ? pool.c1ID : pool.c2ID
 
-  if (wsEndPoint === null) {
-    //zk || zk_test
+  // zk || zk_test
+  if (fromChainID == 3 || fromChainID == 33) {
     let httpEndPoint = state
       ? makerConfig[pool.c2Name].httpEndPoint
       : makerConfig[pool.c1Name].httpEndPoint
-
     const zkTokenInfoUrl = httpEndPoint + '/tokens/' + tokenAddress
     axios
       .get(zkTokenInfoUrl)
@@ -145,6 +212,16 @@ function watchTransfers(pool, state) {
       })
 
     confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
+    return
+  }
+
+  // starknet || starknet_test
+  if (fromChainID == 4 || fromChainID == 44) {
+    // confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
+    const _api = state
+      ? makerConfig[pool.c2Name].api
+      : makerConfig[pool.c1Name].api
+    factoryStarknetListen(_api)
     return
   }
 

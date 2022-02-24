@@ -31,8 +31,6 @@ async function waittingStartMaker() {
         makerConfig.privateKeys[makerAddress] &&
         startedIndexs.indexOf(index) === -1
       ) {
-        
-
         startMaker(item)
         // jobMakerNodeTodo(item.makerAddress)
 
