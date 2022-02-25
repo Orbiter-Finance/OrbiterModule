@@ -11,6 +11,7 @@ import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import {
+  getL2AddressByL1,
   getNetworkIdByChainId,
   getProviderByChainId,
   getStarknetAccount,
@@ -61,7 +62,7 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
             entry_point_selector: getSelectorFromName('get_nonce'),
           })
 
-          if (resp.result?.[0]) {
+          if (typeof resp.result?.[0] !== 'undefined') {
             accessLogger.info(
               `🎉Deployed starknet, l1: ${makerAddress}, starknet: ${account.starknetAddress}`
             )
@@ -215,18 +216,6 @@ function watchTransfers(pool, state) {
     return
   }
 
-  // starknet || starknet_test
-  if (fromChainID == 4 || fromChainID == 44) {
-    // confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
-    const _api = state
-      ? makerConfig[pool.c2Name].api
-      : makerConfig[pool.c1Name].api
-    factoryStarknetListen(_api)
-    return
-  }
-
-  const web3 = createAlchemyWeb3(wsEndPoint)
-
   // checkData
   const checkData = async (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
@@ -269,6 +258,37 @@ function watchTransfers(pool, state) {
       confirmFromTransaction(pool, state, transactionHash)
     }
   }
+
+  // starknet || starknet_test
+  if (fromChainID == 4 || fromChainID == 44) {
+    // confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
+    const _api = state
+      ? makerConfig[pool.c2Name].api
+      : makerConfig[pool.c1Name].api
+    const networkId = getNetworkIdByChainId(fromChainID)
+    getL2AddressByL1(makerAddress, networkId)
+      .then((starknetAddressMaker) => {
+        accessLogger.info('Starknet transfer listen: ' + starknetAddressMaker)
+
+        const skl = factoryStarknetListen(_api)
+        skl.transfer(
+          {
+            to: starknetAddressMaker,
+          },
+          {
+            onConfirmation: (transaction) => {
+              console.warn({ transaction })
+            },
+          }
+        )
+      })
+      .catch((err) => {
+        errorLogger.error('GetL2AddressByL1 faild: ' + err.message)
+      })
+    return
+  }
+
+  const web3 = createAlchemyWeb3(wsEndPoint)
 
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
@@ -588,6 +608,7 @@ function confirmFromTransaction(
 
       // When polygon newHash replace oldHash, return it
       // ex: 0x552efd239d3d3a45f15cbcfe476f5661c7133c6899f7fa259614e9411700b477 => 0xa834060e5c5374b4470b7942eeba81fd96ef7bc123cee317a13010d6af16665a
+      // Warnning!!!: Because of the existence of this code, dashboard and maker cannot be turned on at the same time
       if (makerNode && isFirst) {
         console.warn('TransactionID was exist: ' + transactionID)
         return
@@ -765,6 +786,48 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
   }, 8 * 1000)
 }
 
+async function confirmToSNTransaction(
+  txID: string,
+  transactionID: string,
+  chainId: number
+) {
+  accessLogger.info('confirmToSNTransaction =', getTime())
+  while (true) {
+    try {
+      const provider = getProviderByChainId(chainId)
+      const transaction = await provider.getTransaction(txID)
+      accessLogger.info(
+        'sn_transaction =',
+        JSON.stringify({ status: transaction.status, txID })
+      )
+
+      if (
+        transaction.status == 'ACCEPTED_ON_L1' ||
+        transaction.status == 'ACCEPTED_ON_L2'
+      ) {
+        accessLogger.info(
+          'sn_Transaction with hash ' +
+            txID +
+            ' has been successfully confirmed'
+        )
+        accessLogger.info(
+          'update maker_node =',
+          `state = 3 WHERE transactionID = '${transactionID}'`
+        )
+        await repositoryMakerNode().update(
+          { transactionID: transactionID },
+          { state: 3 }
+        )
+        break
+      }
+    } catch (err) {
+      errorLogger.error('sn_getTransaction failed: ', err)
+    }
+
+    await sleep(8 * 1000)
+  }
+}
+
 async function getConfirmations(fromChain, txHash): Promise<any> {
   accessLogger.info('getConfirmations =', getTime())
   try {
@@ -920,6 +983,8 @@ export async function sendTransaction(
       if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
         let syncProvider = response.zkProvider
         confirmToZKTransaction(syncProvider, txID, transactionID)
+      } else if (toChainID === 4 || toChainID === 44) {
+        confirmToSNTransaction(txID, transactionID, toChainID)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)
       }

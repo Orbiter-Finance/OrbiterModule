@@ -2,26 +2,34 @@ import axios from 'axios'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
+import { Provider } from 'starknet'
+import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
-import { isEthTokenAddress } from '..'
+import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import {
+  getAccountNonce,
+  getL2AddressByL1,
+  getNetworkIdByChainId,
+  getProviderByChainId,
+  getStarknetSigner,
+  sendTransaction,
+} from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 
 const nonceDic = {}
-
 
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
       const apiKey = makerConfig[toChain].api.key
-      const url = httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
-      const response = await axios.get(
-        url
-      )
-      if (response.data.status == 1 && response.data.message === "OK") {
+      const url =
+        httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
+      const response = await axios.get(url)
+      if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
           low: Number(response.data.result.SafeGasPrice) + 10,
           medium: Number(response.data.result.ProposeGasPrice) + 10,
@@ -184,6 +192,92 @@ async function sendConsumer(value: any) {
     }
     return
   }
+
+  if (chainID == 4 || chainID == 44) {
+    try {
+      const starknetNetworkId = getNetworkIdByChainId(chainID)
+      const starknetAddressMaker = await getL2AddressByL1(
+        makerAddress,
+        starknetNetworkId
+      )
+
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        const sn_nonce = await getAccountNonce(
+          starknetAddressMaker,
+          starknetNetworkId
+        )
+        let sn_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!sn_sql_nonce) {
+          result_nonce = sn_nonce
+        } else {
+          if (sn_nonce > sn_sql_nonce) {
+            result_nonce = sn_nonce
+          } else {
+            result_nonce = sn_sql_nonce + 1
+          }
+        }
+        accessLogger.info('sn_nonce =', sn_nonce)
+        accessLogger.info('sn_sql_nonce =', sn_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
+
+      // Wait user starknet account deploy
+      let starknetAddressTo = ''
+      const starknetNow = new Date().getTime()
+      while (new Date().getTime() - starknetNow < 1000000) {
+        starknetAddressTo = await getL2AddressByL1(toAddress, starknetNetworkId)
+        if (starknetAddressTo) {
+          break
+        }
+
+        accessLogger.info('Waitting user starknet account deploy: ' + toAddress)
+        await sleep(5000)
+      }
+      if (!starknetAddressTo) {
+        throw new Error("User starknet account cann't deploy: " + toAddress)
+      }
+
+      // Starknet transfer
+      const starknetHash = await sendTransaction(
+        makerAddress,
+        tokenAddress,
+        starknetAddressTo,
+        amountToSend,
+        starknetNetworkId
+      )
+
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+
+      if (starknetHash) {
+        return {
+          code: 0,
+          txid: starknetHash,
+          chainID: chainID,
+          zkNonce: result_nonce,
+        }
+      } else {
+        return {
+          code: 1,
+          error: 'starknet transfer error',
+          result_nonce,
+        }
+      }
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'starknet transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -253,16 +347,21 @@ async function sendConsumer(value: any) {
     accessLogger.info('result_nonde =', result_nonce)
   }
 
-
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let maxPrice = 230;
-  if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
-    maxPrice = 180;
+  let maxPrice = 230
+  if (
+    (fromChainID == 3 || fromChainID == 33) &&
+    (chainID == 1 || chainID == 5)
+  ) {
+    maxPrice = 180
   }
-   if ((fromChainID == 7 || fromChainID == 77) && (chainID == 1 || chainID == 5)) {
-    maxPrice = 180;
+  if (
+    (fromChainID == 7 || fromChainID == 77) &&
+    (chainID == 1 || chainID == 5)
+  ) {
+    maxPrice = 180
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
@@ -377,7 +476,7 @@ async function send(
       tokenAddress,
       amountToSend,
       result_nonce,
-      fromChainID
+      fromChainID,
     }
     sendQueue.produce(chainID, {
       value,

@@ -220,7 +220,37 @@ export async function getL2AddressByL1(l1Address: string, networkId = 1) {
     calldata: compileCalldata({ l1: l1Address }),
   })
 
-  return resp?.result?.[0]
+  let starknetAddress = resp?.result?.[0]
+  if (starknetAddress == '0x0') {
+    starknetAddress = ''
+  }
+
+  return starknetAddress
+}
+
+/**
+ *
+ * @param starknetAddress
+ * @param networkId
+ * @returns
+ */
+export async function getAccountNonce(starknetAddress: string, networkId = 1) {
+  if (!starknetAddress) {
+    return 0
+  }
+  const network = networkId == 1 ? 'mainnet-alpha' : 'georli-alpha'
+  const provider = new Provider({ network })
+
+  const resp = await provider.callContract({
+    contract_address: starknetAddress,
+    entry_point_selector: getSelectorFromName('get_nonce'),
+  })
+
+  if (typeof resp.result?.[0] === 'undefined') {
+    return 0
+  }
+
+  return parseInt(resp.result?.[0], 16)
 }
 
 /**
