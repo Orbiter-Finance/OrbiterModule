@@ -38,6 +38,7 @@ const STARKNET_LISTEN_TRANSFER_DURATION = 5 * 1000
 
 class StarknetListen {
   private api: Api
+  private apiParamsTo: string
   private selectorDec = ''
   private isFirstTicker = true
   private transferReceivedHashs: { [key: string]: boolean }
@@ -47,8 +48,9 @@ class StarknetListen {
     callbacks?: TransferCallbacks
   }[]
 
-  constructor(api: Api) {
+  constructor(api: Api, apiParamsTo = '') {
     this.api = api
+    this.apiParamsTo = apiParamsTo
     this.selectorDec = starknet.number.hexToDecimalString(
       getSelectorFromName('transfer')
     )
@@ -61,7 +63,7 @@ class StarknetListen {
 
   start() {
     const ticker = async () => {
-      const resp = await axios.get(`${this.api.endPoint}/api/txns?ps=20&p=1`)
+      const resp = await axios.get(`${this.api.endPoint}/api/txns?to=${this.apiParamsTo}&ps=50&p=1`)
       const { data } = resp
 
       if (!data?.items) {
@@ -181,12 +183,12 @@ class StarknetListen {
 }
 
 const factorys: { [key: string]: StarknetListen } = {}
-export function factoryStarknetListen(api: Api) {
+export function factoryStarknetListen(api: Api, apiParamsTo = '') {
   const factoryKey = `${api.endPoint}:${api.key}`
 
   if (factorys[factoryKey]) {
     return factorys[factoryKey]
   } else {
-    return (factorys[factoryKey] = new StarknetListen(api))
+    return (factorys[factoryKey] = new StarknetListen(api, apiParamsTo))
   }
 }
