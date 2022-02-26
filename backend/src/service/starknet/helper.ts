@@ -230,6 +230,36 @@ export async function getL2AddressByL1(l1Address: string, networkId = 1) {
 
 /**
  *
+ * @param l2Address starknetAddress
+ * @param networkId
+ * @returns
+ */
+export async function getL1AddressByL2(l2Address: string, networkId = 1) {
+  if (!l2Address) {
+    throw new Error('Sorry, miss l2 address!')
+  }
+
+  const network = networkId == 1 ? 'mainnet-alpha' : 'georli-alpha'
+
+  const provider = new Provider({ network })
+  const contractAddress = L1_SWAP_L2_CONTRACT_ADDRESS[network]
+
+  const resp = await provider.callContract({
+    contract_address: contractAddress,
+    entry_point_selector: getSelectorFromName('get_l1_address'),
+    calldata: compileCalldata({ l2: l2Address }),
+  })
+
+  let l1Address = resp?.result?.[0]
+  if (l1Address == '0x0') {
+    l1Address = ''
+  }
+
+  return l1Address
+}
+
+/**
+ *
  * @param starknetAddress
  * @param networkId
  * @returns

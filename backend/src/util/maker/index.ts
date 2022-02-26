@@ -11,6 +11,7 @@ import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import {
+  getL1AddressByL2,
   getL2AddressByL1,
   getNetworkIdByChainId,
   getProviderByChainId,
@@ -24,6 +25,7 @@ import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
+import * as starknet from 'starknet'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -217,11 +219,11 @@ function watchTransfers(pool, state) {
   }
 
   // checkData
-  const checkData = async (amount: string, transactionHash: string) => {
+  const checkData = (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
 
     if (ptext.state === false) {
-      return
+      return false
     }
     const pText = ptext.pText
     let validPText = (9000 + Number(toChainID)).toString()
@@ -229,7 +231,7 @@ function watchTransfers(pool, state) {
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
 
     if (realAmount.state === false) {
-      return
+      return false
     }
     const rAmount = <any>realAmount.rAmount
     if (
@@ -245,23 +247,23 @@ function watchTransfers(pool, state) {
       ) === -1 ||
       pText !== validPText
     ) {
-      // donothing
+      return false
     } else {
       if (matchHashList.indexOf(transactionHash) > -1) {
         accessLogger.info('event.transactionHash exist: ' + transactionHash)
-        return
+        return false
       }
       matchHashList.push(transactionHash)
 
       // Initiate transaction confirmation
       accessLogger.info('match one transaction >>> ', transactionHash)
-      confirmFromTransaction(pool, state, transactionHash)
+
+      return true
     }
   }
 
   // starknet || starknet_test
   if (fromChainID == 4 || fromChainID == 44) {
-    // confirmZKTransaction(httpEndPoint, pool, tokenAddress, state)
     const _api = state
       ? makerConfig[pool.c2Name].api
       : makerConfig[pool.c1Name].api
@@ -277,7 +279,15 @@ function watchTransfers(pool, state) {
           },
           {
             onConfirmation: (transaction) => {
-              console.warn({ transaction })
+              if (!transaction.hash) {
+                return
+              }
+
+              if (
+                checkData(transaction.value + '', transaction.hash) === true
+              ) {
+                confirmSNTransaction(pool, state, transaction)
+              }
             },
           }
         )
@@ -311,7 +321,9 @@ function watchTransfers(pool, state) {
 
           startBlockNumber = transaction.blockNumber
 
-          checkData(transaction.value + '', transaction.hash)
+          if (checkData(transaction.value + '', transaction.hash) === true) {
+            confirmFromTransaction(pool, state, transaction.hash)
+          }
         },
       }
     )
@@ -335,7 +347,11 @@ function watchTransfers(pool, state) {
         }
 
         if (event.returnValues.to === makerAddress) {
-          checkData(event.returnValues.value, event.transactionHash)
+          if (
+            checkData(event.returnValues.value, event.transactionHash) === true
+          ) {
+            confirmFromTransaction(pool, state, event.transactionHash)
+          }
         } else {
           accessLogger.info('over')
         }
@@ -353,7 +369,7 @@ function watchTransfers(pool, state) {
 
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
   let isFirst = true
-  setInterval(async () => {
+  const ticker = async () => {
     const makerAddress = pool.makerAddress
     let fromChainID = state ? pool.c2ID : pool.c1ID
     let toChainID = state ? pool.c1ID : pool.c2ID
@@ -555,7 +571,93 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
       .catch(function (error) {
         errorLogger.error('error3 = getZKTransactionListError')
       })
-  }, 10 * 1000)
+  }
+
+  setInterval(ticker, 10 * 1000)
+}
+
+async function confirmSNTransaction(pool: any, state: any, transaction: any) {
+  const makerAddress = pool.makerAddress
+  const toChain = state ? pool.c1Name : pool.c2Name
+  const tokenAddress = state ? pool.t2Address : pool.t1Address
+  const toChainID = state ? pool.c1ID : pool.c2ID
+  const fromChainID = state ? pool.c2ID : pool.c1ID
+  const { hash, from, nonce, timeStamp, value, txreceipt_status } = transaction
+
+  accessLogger.info(
+    'Starknet Transaction with hash ' + hash + ', status: ' + txreceipt_status
+  )
+  const networkId = getNetworkIdByChainId(fromChainID)
+  const fromL1Address = await getL1AddressByL2(from, networkId)
+  if (!fromL1Address) {
+    return
+  }
+
+  const transactionID = fromL1Address.toLowerCase() + fromChainID + nonce
+
+  let makerNode: MakerNode | undefined
+  try {
+    makerNode = await repositoryMakerNode().findOne({
+      transactionID: transactionID,
+    })
+  } catch (error) {
+    errorLogger.error('isHaveSqlError =', error)
+    return
+  }
+
+  if (!makerNode) {
+    try {
+      await repositoryMakerNode().insert({
+        transactionID: transactionID,
+        userAddress: fromL1Address,
+        makerAddress,
+        fromChain: fromChainID,
+        toChain: toChainID,
+        formTx: hash,
+        fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
+        fromAmount: value,
+        formNonce: nonce,
+        txToken: tokenAddress,
+        state: 0,
+      })
+      accessLogger.info('add success')
+    } catch (error) {
+      errorLogger.error('newTransactionSqlError =', error)
+    }
+  }
+
+  accessLogger.info(
+    'Transaction with hash ' + hash + ' has been successfully confirmed'
+  )
+  accessLogger.info(
+    'updateFromSql =',
+    `state = 1 WHERE transactionID = '${transactionID}'`
+  )
+  try {
+    await repositoryMakerNode().update(
+      { transactionID: transactionID },
+      { state: 1 }
+    )
+    accessLogger.info('update success')
+  } catch (error) {
+    errorLogger.error('updateFromError =', error)
+    return
+  }
+
+  const toTokenAddress = state ? pool.t1Address : pool.t2Address
+
+  sendTransaction(
+    makerAddress,
+    transactionID,
+    fromChainID,
+    toChainID,
+    toChain,
+    toTokenAddress,
+    value,
+    fromL1Address,
+    pool,
+    nonce
+  )
 }
 
 function confirmFromTransaction(
@@ -567,7 +669,7 @@ function confirmFromTransaction(
 ) {
   accessLogger.info('confirmFromTransaction =', getTime())
 
-  setTimeout(async () => {
+  const ticker = async () => {
     const makerAddress = pool.makerAddress
     var fromChain = state ? pool.c2Name : pool.c1Name
     var toChain = state ? pool.c1Name : pool.c2Name
@@ -610,7 +712,7 @@ function confirmFromTransaction(
       // ex: 0x552efd239d3d3a45f15cbcfe476f5661c7133c6899f7fa259614e9411700b477 => 0xa834060e5c5374b4470b7942eeba81fd96ef7bc123cee317a13010d6af16665a
       // Warnning!!!: Because of the existence of this code, dashboard and maker cannot be turned on at the same time
       if (makerNode && isFirst) {
-        console.warn('TransactionID was exist: ' + transactionID)
+        accessLogger.info('TransactionID was exist: ' + transactionID)
         return
       }
     } catch (error) {
@@ -683,7 +785,9 @@ function confirmFromTransaction(
       return
     }
     return confirmFromTransaction(pool, state, txHash, confirmations, false)
-  }, 8 * 1000)
+  }
+
+  setTimeout(ticker, 8 * 1000)
 }
 
 function confirmToTransaction(

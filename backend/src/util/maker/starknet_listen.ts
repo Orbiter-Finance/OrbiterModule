@@ -1,7 +1,7 @@
 import axios from 'axios'
 import * as starknet from 'starknet'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
-import { equalsIgnoreCase } from '..'
+import { equalsIgnoreCase, sleep } from '..'
 import { accessLogger, errorLogger } from '../logger'
 
 type Api = { endPoint: string; key: string }
@@ -39,9 +39,9 @@ const STARKNET_LISTEN_TRANSFER_DURATION = 5 * 1000
 class StarknetListen {
   private api: Api
   private selectorDec = ''
+  private isFirstTicker = true
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
-  private transferBreaker?: () => boolean
   private listens: {
     filter: Filter | undefined
     callbacks?: TransferCallbacks
@@ -61,7 +61,7 @@ class StarknetListen {
 
   start() {
     const ticker = async () => {
-      const resp = await axios.get(`${this.api.endPoint}/api/txns?ps=50&p=1`)
+      const resp = await axios.get(`${this.api.endPoint}/api/txns?ps=20&p=1`)
       const { data } = resp
 
       if (!data?.items) {
@@ -74,6 +74,17 @@ class StarknetListen {
         if (!equalsIgnoreCase(type, 'invoke')) {
           continue
         }
+        if (this.transferReceivedHashs[hash] !== undefined) {
+          continue
+        }
+
+        // Set transferReceivedHashs[hash] = false
+        this.transferReceivedHashs[hash] = false
+
+        // Ignore first ticker
+        if (this.isFirstTicker) {
+          continue
+        }
 
         this.getTransaction(hash).catch((err) => {
           errorLogger.error(
@@ -81,6 +92,8 @@ class StarknetListen {
           )
         })
       }
+
+      this.isFirstTicker = false
     }
     ticker()
 
@@ -91,15 +104,8 @@ class StarknetListen {
     if (!hash) {
       return
     }
-    if (this.transferReceivedHashs[hash] !== undefined) {
-      return
-    }
-
-    // Set transferReceivedHashs[hash] = false
-    this.transferReceivedHashs[hash] = false
 
     const resp = await axios.get(`${this.api.endPoint}/api/txn/${hash}`)
-    
     const { header, calldata } = resp.data || {}
     if (!header || !calldata || calldata.length < 7) {
       return
@@ -132,11 +138,9 @@ class StarknetListen {
       contractAddress,
       confirmations: 0,
     }
-    console.warn({ transaction })
 
     for (const item of this.listens) {
       const { filter, callbacks } = item
-      console.warn({ filter })
 
       if (filter) {
         if (filter.from && filter.from.toUpperCase() != from.toUpperCase()) {
@@ -147,27 +151,28 @@ class StarknetListen {
         }
       }
 
-      callbacks && callbacks.onReceived && callbacks.onReceived(transaction)
+      if (this.transferReceivedHashs[hash] !== true) {
+        callbacks && callbacks.onReceived && callbacks.onReceived(transaction)
+      }
 
-      if (
-        this.transferConfirmationedHashs[transaction.hash] === undefined &&
-        (equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
-          equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1'))
-      ) {
-        this.transferConfirmationedHashs[transaction.hash] = true
-        accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
-        callbacks &&
-          callbacks.onConfirmation &&
-          callbacks.onConfirmation(transaction)
+      if (this.transferConfirmationedHashs[transaction.hash] === undefined) {
+        if (
+          equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
+          equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1')
+        ) {
+          this.transferConfirmationedHashs[transaction.hash] = true
+          accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
+          callbacks &&
+            callbacks.onConfirmation &&
+            callbacks.onConfirmation(transaction)
+        } else {
+          await sleep(2000)
+          this.getTransaction(hash)
+        }
       }
     }
 
     this.transferReceivedHashs[hash] = true
-  }
-
-  setTransferBreaker(transferBreaker?: () => boolean) {
-    this.transferBreaker = transferBreaker
-    return this
   }
 
   transfer(filter: Filter | undefined, callbacks?: TransferCallbacks) {

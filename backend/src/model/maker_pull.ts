@@ -9,10 +9,10 @@ export class MakerPull extends CommonEntity {
   @Column('int', { width: 11, default: 0 })
   chainId: number
 
-  @Column('varchar', { length: 60, default: '0x' })
+  @Column('varchar', { length: 255, default: '0x' })
   makerAddress: string
 
-  @Column('varchar', { length: 60, default: '' })
+  @Column('varchar', { length: 255, default: '' })
   tokenAddress: string
 
   @Column('text')
@@ -27,10 +27,10 @@ export class MakerPull extends CommonEntity {
   @Column('varchar', { length: 10, default: '' })
   nonce: string
 
-  @Column('varchar', { length: 60, default: '' })
+  @Column('varchar', { length: 255, default: '' })
   fromAddress: string
 
-  @Column('varchar', { length: 60, default: '' })
+  @Column('varchar', { length: 255, default: '' })
   toAddress: string
 
   @Column('varchar', { length: 255, default: '' })
