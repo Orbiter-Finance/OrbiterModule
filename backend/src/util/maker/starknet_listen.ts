@@ -109,7 +109,7 @@ class StarknetListen {
     }
     ticker()
 
-    // setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
+    setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
   }
 
   async getTransaction(hash: string, retryCount = 0) {
