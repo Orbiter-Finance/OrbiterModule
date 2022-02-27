@@ -5,6 +5,7 @@
   "license": "MIT",
   "scripts": {
     "dev": "cross-env NODE_ENV=development nodemon src/index.ts --no-cache",
+    "dev:maker": "cross-env NODE_ENV=development ORBITER_SCENE=maker nodemon src/index.ts --no-cache",
     "start": "node ./dist/index.js",
     "build": "tsc -p .",
     "test": "jest --coverage"

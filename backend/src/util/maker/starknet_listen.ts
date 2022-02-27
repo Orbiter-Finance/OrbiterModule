@@ -62,13 +62,17 @@ class StarknetListen {
   }
 
   start() {
-    const ticker = async () => {
-      const resp = await axios.get(`${this.api.endPoint}/api/txns?to=${this.apiParamsTo}&ps=50&p=1`)
+    const ticker = async (p = 1) => {
+      const resp = await axios.get(
+        `${this.api.endPoint}/api/txns?to=${this.apiParamsTo}&ps=50&p=${p}`
+      )
       const { data } = resp
 
       if (!data?.items) {
         return
       }
+
+      let isGetNextPage = true
 
       for (const item of data.items) {
         const { hash, type } = item
@@ -77,6 +81,7 @@ class StarknetListen {
           continue
         }
         if (this.transferReceivedHashs[hash] !== undefined) {
+          isGetNextPage = false
           continue
         }
 
@@ -85,6 +90,7 @@ class StarknetListen {
 
         // Ignore first ticker
         if (this.isFirstTicker) {
+          isGetNextPage = false
           continue
         }
 
@@ -95,20 +101,42 @@ class StarknetListen {
         })
       }
 
+      if (isGetNextPage) {
+        await ticker((p += 1))
+      }
+
       this.isFirstTicker = false
     }
     ticker()
 
-    setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
+    // setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
   }
 
-  async getTransaction(hash: string) {
+  async getTransaction(hash: string, retryCount = 0) {
     if (!hash) {
       return
     }
 
-    const resp = await axios.get(`${this.api.endPoint}/api/txn/${hash}`)
-    const { header, calldata } = resp.data || {}
+    let header: any, calldata: any
+    try {
+      const resp = await axios.get(`${this.api.endPoint}/api/txn/${hash}`)
+      header = resp.data?.header
+      calldata = resp.data?.calldata
+    } catch (err) {
+      errorLogger.error(
+        `Get starknet transaction [${hash}] failed: ${err.message}, retryCount: ${retryCount}`
+      )
+
+      // Out max retry count
+      if (retryCount >= 10) {
+        return
+      }
+
+      await sleep(10000)
+      return this.getTransaction(hash, (retryCount += 1))
+    }
+
+    // Check data
     if (!header || !calldata || calldata.length < 7) {
       return
     }
@@ -141,6 +169,10 @@ class StarknetListen {
       confirmations: 0,
     }
 
+    const isConfirmed =
+      equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
+      equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1')
+
     for (const item of this.listens) {
       const { filter, callbacks } = item
 
@@ -157,24 +189,25 @@ class StarknetListen {
         callbacks && callbacks.onReceived && callbacks.onReceived(transaction)
       }
 
-      if (this.transferConfirmationedHashs[transaction.hash] === undefined) {
-        if (
-          equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
-          equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1')
-        ) {
-          this.transferConfirmationedHashs[transaction.hash] = true
-          accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
-          callbacks &&
-            callbacks.onConfirmation &&
-            callbacks.onConfirmation(transaction)
-        } else {
-          await sleep(2000)
-          this.getTransaction(hash)
-        }
+      if (
+        this.transferConfirmationedHashs[transaction.hash] === undefined &&
+        isConfirmed
+      ) {
+        accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
+        callbacks &&
+          callbacks.onConfirmation &&
+          callbacks.onConfirmation(transaction)
       }
     }
 
     this.transferReceivedHashs[hash] = true
+
+    if (isConfirmed) {
+      this.transferConfirmationedHashs[transaction.hash] = true
+    } else {
+      await sleep(2000)
+      this.getTransaction(hash)
+    }
   }
 
   transfer(filter: Filter | undefined, callbacks?: TransferCallbacks) {
