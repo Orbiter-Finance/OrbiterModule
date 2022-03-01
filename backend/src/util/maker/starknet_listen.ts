@@ -64,7 +64,7 @@ class StarknetListen {
   start() {
     const ticker = async (p = 1) => {
       const resp = await axios.get(
-        `${this.api.endPoint}/api/txns?to=${this.apiParamsTo}&ps=50&p=${p}`
+        `${this.api.endPoint}/api/txns?to=${this.apiParamsTo}&ps=10&p=${p}`
       )
       const { data } = resp
 
@@ -172,6 +172,10 @@ class StarknetListen {
     const isConfirmed =
       equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
       equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1')
+    const isRejected = equalsIgnoreCase(
+      transaction.txreceipt_status,
+      'Rejected'
+    )
 
     for (const item of this.listens) {
       const { filter, callbacks } = item
@@ -204,7 +208,7 @@ class StarknetListen {
 
     if (isConfirmed) {
       this.transferConfirmationedHashs[transaction.hash] = true
-    } else {
+    } else if (!isRejected) {
       await sleep(2000)
       this.getTransaction(hash)
     }

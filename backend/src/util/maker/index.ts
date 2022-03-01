@@ -905,6 +905,11 @@ async function confirmToSNTransaction(
         JSON.stringify({ status: transaction.status, txID })
       )
 
+      // When reject
+      if (transaction.status == 'REJECTED') {
+        break
+      }
+
       if (
         transaction.status == 'ACCEPTED_ON_L1' ||
         transaction.status == 'ACCEPTED_ON_L2'
@@ -925,7 +930,7 @@ async function confirmToSNTransaction(
         break
       }
     } catch (err) {
-      errorLogger.error('sn_getTransaction failed: ', err)
+      errorLogger.error('sn_getTransaction failed: ', err.message)
     }
 
     await sleep(8 * 1000)

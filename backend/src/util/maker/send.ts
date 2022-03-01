@@ -12,8 +12,6 @@ import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  getProviderByChainId,
-  getStarknetSigner,
   sendTransaction,
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
@@ -318,10 +316,19 @@ async function sendConsumer(value: any) {
   }
 
   if (result_nonce == 0) {
-    let nonce = await web3.eth.getTransactionCount(
-      <any>web3.eth.defaultAccount,
-      'pending'
-    )
+    let nonce = 0
+    try {
+      nonce = await web3.eth.getTransactionCount(
+        <any>web3.eth.defaultAccount,
+        'pending'
+      )
+    } catch (err) {
+      return {
+        code: 1,
+        txid: 'GetTransactionCount failed: ' + err.message,
+      }
+    }
+
     /**
      * With every new transaction you send using a specific wallet address,
      * you need to increase a nonce which is tied to the sender wallet.
