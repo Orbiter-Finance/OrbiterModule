@@ -25,7 +25,7 @@ const L1_SWAP_L2_CONTRACT_ADDRESS = {
 }
 
 const L1_TO_L2_ADDRESSES = {
-  '0x0043d60e87c5dd08C86C3123340705a1556C4719': {
+  '0x0043d60e87c5dd08c86c3123340705a1556c4719': {
     'mainnet-alpha': '',
     'georli-alpha':
       '0x2b31ce585a1f407cb3b414e2a71ee45c4430b4df36c8528ab42c0bcee97a887',
@@ -203,6 +203,7 @@ export async function getL2AddressByL1(l1Address: string, networkId = 1) {
   if (!l1Address) {
     throw new Error('Sorry, miss l1 address!')
   }
+  l1Address = l1Address.toLowerCase()
 
   const network = networkId == 1 ? 'mainnet-alpha' : 'georli-alpha'
 

@@ -221,7 +221,7 @@ class StarknetListen {
 
 const factorys: { [key: string]: StarknetListen } = {}
 export function factoryStarknetListen(api: Api, apiParamsTo = '') {
-  const factoryKey = `${api.endPoint}:${api.key}`
+  const factoryKey = `${api.endPoint}:${api.key}:${apiParamsTo}`
 
   if (factorys[factoryKey]) {
     return factorys[factoryKey]
