@@ -659,7 +659,14 @@ function confirmToTransaction(
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
-    const transferReceipt = await syncProvider.getTxReceipt(txID)
+    let transferReceipt: any
+    try {
+      transferReceipt = await syncProvider.getTxReceipt(txID)
+    } catch (err) {
+      errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
+      return confirmToZKTransaction(syncProvider, txID)
+    }
+
     accessLogger.info('transferReceipt =', transferReceipt)
     if (
       transferReceipt.executed &&
@@ -684,6 +691,12 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       }
       return
     }
+
+    // When failReason, don't try again
+    if (!transferReceipt.success && transferReceipt.failReason) {
+      return
+    }
+
     return confirmToZKTransaction(syncProvider, txID)
   }, 8 * 1000)
 }
