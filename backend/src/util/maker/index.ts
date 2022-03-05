@@ -899,7 +899,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
     }
 
     // When failReason, don't try again
-    if (transferReceipt.failReason) {
+    if (!transferReceipt.success && transferReceipt.failReason) {
       return
     }
 
