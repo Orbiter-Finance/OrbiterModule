@@ -667,7 +667,12 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return confirmToZKTransaction(syncProvider, txID)
     }
 
-    accessLogger.info('transferReceipt =', transferReceipt)
+    accessLogger.info(
+      'transactionID =',
+      transactionID,
+      'transferReceipt =',
+      transferReceipt
+    )
     if (
       transferReceipt.executed &&
       transferReceipt.success &&
@@ -691,7 +696,6 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       }
       return
     }
-
     // When failReason, don't try again
     if (!transferReceipt.success && transferReceipt.failReason) {
       return
