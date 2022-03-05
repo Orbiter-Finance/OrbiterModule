@@ -1,7 +1,7 @@
 export const makerList = [
   // eth
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 5,
     c2ID: 33,
     c1Name: 'rinkeby',
@@ -34,7 +34,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 5,
     c2ID: 22,
     c1Name: 'rinkeby',
@@ -67,7 +67,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 22,
     c2ID: 33,
     c1Name: 'arbitrum_test',
@@ -100,7 +100,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 5,
     c2ID: 66,
     c1Name: 'rinkeby',
@@ -133,7 +133,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 22,
     c2ID: 66,
     c1Name: 'arbitrum_test',
@@ -166,7 +166,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 33,
     c2ID: 66,
     c1Name: 'zksync_test',
@@ -200,7 +200,7 @@ export const makerList = [
   },
 
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 5,
     c2ID: 77,
     c1Name: 'rinkeby',
@@ -233,7 +233,7 @@ export const makerList = [
     ]
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 22,
     c2ID: 77,
     c1Name: 'arbitrum_test',
@@ -266,7 +266,7 @@ export const makerList = [
     ]
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 77,
     c2ID: 33,
     c1Name: 'optimism_test',
@@ -299,7 +299,7 @@ export const makerList = [
     ]
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 77,
     c2ID: 66,
     c1Name: 'optimism_test',
@@ -332,7 +332,7 @@ export const makerList = [
     ]
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 44,
     c2ID: 5,
     c1Name: 'starknet_test',
@@ -365,7 +365,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 44,
     c2ID: 22,
     c1Name: 'starknet_test',
@@ -398,7 +398,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 44,
     c2ID: 33,
     c1Name: 'starknet_test',
@@ -431,7 +431,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 44,
     c2ID: 77,
     c1Name: 'starknet_test',
@@ -464,7 +464,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 44,
     c2ID: 66,
     c1Name: 'starknet_test',

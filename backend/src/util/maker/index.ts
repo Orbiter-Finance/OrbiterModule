@@ -587,7 +587,12 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
     'Starknet Transaction with hash ' + hash + ', status: ' + txreceipt_status
   )
   const networkId = getNetworkIdByChainId(fromChainID)
-  const fromL1Address = await getL1AddressByL2(from, networkId)
+  let fromL1Address = ''
+  try {
+    fromL1Address = await getL1AddressByL2(from, networkId)
+  } catch (err) {}
+
+  // check
   if (!fromL1Address) {
     return
   }
@@ -860,7 +865,14 @@ function confirmToTransaction(
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
-    const transferReceipt = await syncProvider.getTxReceipt(txID)
+    let transferReceipt: any
+    try {
+      transferReceipt = await syncProvider.getTxReceipt(txID)
+    } catch (err) {
+      errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
+      return confirmToZKTransaction(syncProvider, txID)
+    }
+
     accessLogger.info('transferReceipt =', transferReceipt)
     if (
       transferReceipt.executed &&

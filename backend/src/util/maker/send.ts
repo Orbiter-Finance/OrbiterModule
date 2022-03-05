@@ -2,8 +2,6 @@ import axios from 'axios'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
-import { Provider } from 'starknet'
-import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
@@ -12,7 +10,7 @@ import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  sendTransaction,
+  sendTransaction
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
