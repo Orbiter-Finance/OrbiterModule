@@ -10,6 +10,7 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
+import { getMakerPullStart } from './setting'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -152,13 +153,26 @@ const FINALIZED_CONFIRMATIONS = 3
  */
 class MakerPullLastData {
   makerPull: MakerPull | undefined = undefined
-  pullCount: 0
+  pullCount = 0
+  roundTotal = 0 // When it is zero(0) full update, else incremental update
 }
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
 const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
 const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
+const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
+
+export function getLastStatus() {
+  return {
+    LAST_PULL_COUNT_MAX,
+    ETHERSCAN_LAST,
+    ARBITRUM_LAST,
+    POLYGON_LAST,
+    ZKSYNC_LAST,
+    OPTIMISM_LAST,
+  }
+}
 
 export class ServiceMakerPull {
   private chainId: number
@@ -185,17 +199,30 @@ export class ServiceMakerPull {
 
   /**
    * get last maker_pull
-   * @param last ETHERSCAN_LAST || ARBITRUM_LAST || ZKSYNC_LAST
+   * @param last
    */
-  private getLastMakerPull(last: MakerPullLastData) {
-    // if last's pullCount < max pullCount, the last makerPull valid
+  private async getLastMakerPull(last: MakerPullLastData) {
+    const makerPullStart = await getMakerPullStart()
+    
+    const nowTime = new Date().getTime()
+
+    // 1. if last's pullCount >= max pullCount, the last makerPull invalid
+    // 2. if roundTotal > 0 and makerPull.txTime before some time, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
-    if (last.pullCount < LAST_PULL_COUNT_MAX) {
-      lastMakePull = last.makerPull
-    } else {
+    let startTime = nowTime - makerPullStart.totalPull
+    if (last.roundTotal > 0) {
+      startTime = nowTime - makerPullStart.incrementPull
+    }
+    if (
+      last.pullCount >= LAST_PULL_COUNT_MAX ||
+      (last.makerPull && startTime > last.makerPull.txTime.getTime())
+    ) {
       // update last data
       last.makerPull = undefined
       last.pullCount = 0
+      last.roundTotal++
+    } else {
+      lastMakePull = last.makerPull
     }
 
     return lastMakePull
@@ -341,7 +368,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -432,7 +459,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -523,7 +550,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -626,7 +653,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = this.getLastMakerPull(makerPullLastData)
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     const resp = await axios.get(
       `${api.endPoint}/accounts/${this.makerAddress}/transactions`,
@@ -708,5 +735,96 @@ export class ServiceMakerPull {
     }
     makerPullLastData.makerPull = lastMakePull
     ZKSYNC_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  /**
+   * pull optimism
+   * @prarm api
+   */
+  async optimism(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = OPTIMISM_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+
+    // when endblock is empty, will end latest
+    const startblock = ''
+    const endblock = lastMakePull ? lastMakePull.txBlock : ''
+
+    const resp = await axios.get(api.endPoint, {
+      params: {
+        // apiKey: api.key,
+        module: 'account',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
+        address: this.makerAddress,
+        page: 1,
+        offset: 100,
+        startblock,
+        endblock,
+        sort: 'desc',
+      },
+      timeout: 16000,
+    })
+
+    // check data
+    const { data } = resp
+    if (data.status != '1' || !data.result || data.result.length <= 0) {
+      accessLogger.warn(
+        'Get optimistc tokentx/txlist faild: ' + JSON.stringify(data)
+      )
+      return
+    }
+
+    for (const item of data.result) {
+      // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        contractAddress = this.tokenAddress
+      }
+
+      // checks
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
+        continue
+      }
+
+      const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // save
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: contractAddress,
+        data: JSON.stringify(item),
+        amount: item.value,
+        amount_flag,
+        nonce: item.nonce,
+        fromAddress: item.from,
+        toAddress: item.to,
+        txBlock: item.blockNumber,
+        txHash: item.hash,
+        txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'ETH',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .toString(),
+        tx_status:
+          item.confirmations >= FINALIZED_CONFIRMATIONS
+            ? 'finalized'
+            : 'committed',
+      })
+      await savePull(makerPull)
+
+      // compare
+      await this.compareData(makerPull, item.hash)
+    }
+
+    // set OPTIMISM_LAST
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    OPTIMISM_LAST[makerPullLastKey] = makerPullLastData
   }
 }

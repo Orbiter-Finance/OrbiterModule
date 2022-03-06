@@ -13,6 +13,7 @@ services:
       NODE_ENV: 'development'
       ORBITER_SCENE: maker # dashboard: only dashboard | maker: only maker service | all
       ORBITER_MAKER_PRIVATE_KEYS: '' # {"makerAddress":"private_key"}
+      PROMETHEUS_ALERTMANAGER: '{"api":"http://alertmanager:9093"}' # {"api":"http://alertmanager:9093"}
       DB_HOST: db
       DB_PORT: '${DB_PORT}'
       DB_USER: '${DB_USER}'
@@ -23,7 +24,7 @@ services:
     #   - './backend:/app'
     ports:
       - '3002:3002'
-    # restart: always
+    restart: always
     networks:
       - app-network
 
@@ -36,12 +37,13 @@ services:
   #   # - './frontend:/app'
   #   ports:
   #     - '80:80'
-  #   # restart: always
+  #   restart: always
   #   networks:
   #     - app-network
 
   db:
     image: mysql:5.7.16
+    # image: ibex/debian-mysql-server-5.7
     # Set mysqld charset
     command:
       - '--character-set-server=utf8mb4'
@@ -56,6 +58,6 @@ services:
       - './mysql/conf.d:/etc/mysql/conf.d'
     ports:
       - '3306:3306'
-    # restart: always
+    restart: always
     networks:
       - app-network

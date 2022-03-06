@@ -17,7 +17,9 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
+// import Axios from '../util/Axios'
 
+// Axios.axios()
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -172,6 +174,7 @@ export function makeTransactionID(
  * Get maker nodes
  * @param makerAddress
  * @param fromChain 0: All
+ * @param toChain 0: All
  * @param startTime start time
  * @param endTime end time
  * @param userAddress user's address
@@ -179,7 +182,8 @@ export function makeTransactionID(
  */
 export async function getMakerNodes(
   makerAddress: string,
-  fromChain: number = 0,
+  fromChain = 0,
+  toChain = 0,
   startTime = 0,
   endTime = 0,
   userAddress = ''
@@ -200,6 +204,9 @@ export async function getMakerNodes(
   })
   if (fromChain > 0) {
     queryBuilder.andWhere('fromChain = :fromChain', { fromChain })
+  }
+  if (toChain > 0) {
+    queryBuilder.andWhere('toChain = :toChain', { toChain })
   }
   if (startTime) {
     queryBuilder.andWhere('fromTimeStamp >= :startTime', {
@@ -239,8 +246,8 @@ async function getTokenBalance(
   chainName: string,
   tokenAddress: string,
   tokenName: string
-): Promise<string> {
-  let value = '0'
+): Promise<string | undefined> {
+  let value: string | undefined
   try {
     switch (CHAIN_INDEX[chainId]) {
       case 'zksync':
@@ -254,7 +261,7 @@ async function getTokenBalance(
         ).data
 
         if (respData.status == 'success' && respData?.result?.balances) {
-          value = respData?.result?.balances[tokenName.toUpperCase()]
+          value = respData.result.balances[tokenName.toUpperCase()]
         }
         break
       default:
@@ -287,7 +294,7 @@ async function getTokenBalance(
         break
     }
   } catch (error) {
-    errorLogger.error(error)
+    errorLogger.error(`GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `, error.message)
   }
 
   return value
@@ -300,13 +307,11 @@ type WealthsChain = {
   balances: {
     tokenAddress: string
     tokenName: string
-    value: string
+    value?: string // When can't get balance(e: Network fail), it is undefined
     decimals: number // for format
   }[]
 }
-export async function getWealths(
-  makerAddress: string
-): Promise<WealthsChain[]> {
+export async function getWealthsChains(makerAddress: string) {
   // check
   if (!makerAddress) {
     throw new ServiceError(
@@ -369,7 +374,6 @@ export async function getWealths(
   }
 
   // get tokan balance
-  const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     // add eth
     const ethBalancesItem = item.balances.find((item2) => {
@@ -387,7 +391,18 @@ export async function getWealths(
         value: '',
       })
     }
+  }
 
+  return wealthsChains
+}
+export async function getWealths(
+  makerAddress: string
+): Promise<WealthsChain[]> {
+  const wealthsChains = await getWealthsChains(makerAddress)
+
+  // get tokan balance
+  const promises: Promise<void>[] = []
+  for (const item of wealthsChains) {
     for (const item2 of item.balances) {
       const promiseItem = async () => {
         let value = await getTokenBalance(

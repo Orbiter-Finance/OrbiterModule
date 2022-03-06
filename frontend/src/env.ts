@@ -38,6 +38,8 @@ export const $env = {
     33: 'https://rinkeby.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
     6: 'https://polygonscan.com/tx/',
     66: 'https://mumbai.polygonscan.com/tx/',
+    7: 'https://optimistic.etherscan.io/tx/',
+    77: 'https://kovan-optimistic.etherscan.io/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -48,6 +50,8 @@ export const $env = {
     33: 'https://rinkeby.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
     6: 'https://polygonscan.com/address/',
     66: 'https://mumbai.polygonscan.com/address/',
+    7: 'https://optimistic.etherscan.io/address/',
+    77: 'https://kovan-optimistic.etherscan.io/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -58,5 +62,7 @@ export const $env = {
     33: 'https://rinkeby.etherscan.io/token/',
     6: 'https://polygonscan.com/token/',
     66: 'https://mumbai.polygonscan.com/token/',
+    7: 'https://optimistic.etherscan.io/token/',
+    77: 'https://kovan-optimistic.etherscan.io/token/'
   },
 }

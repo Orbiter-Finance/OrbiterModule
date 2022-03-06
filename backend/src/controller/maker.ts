@@ -7,7 +7,7 @@ import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
-import { getMakerPulls } from '../service/maker_pull'
+import { getLastStatus, getMakerPulls } from '../service/maker_pull'
 import { Core } from '../util/core'
 import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
@@ -49,6 +49,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       class {
         makerAddress: string
         fromChain?: number
+        toChain?: number
         startTime?: number
         endTime?: number
         userAddress?: string
@@ -59,6 +60,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     const list = await serviceMaker.getMakerNodes(
       params.makerAddress,
       params.fromChain,
+      params.toChain,
       Number(params.startTime),
       Number(params.endTime),
       params.userAddress
@@ -94,11 +96,18 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         )
       }
 
-      // time ago
-      item['fromTimeStampAgo'] = dayjs().to(dayjs(item.fromTimeStamp))
+      // Trade duration
+      item['tradeDuration'] = 0
+
+      // Time duration、time ago
+      const dayjsFrom = dayjs(item.fromTimeStamp)
+      item['fromTimeStampAgo'] = dayjs().to(dayjsFrom)
       item['toTimeStampAgo'] = '-'
       if (item.toTimeStamp && item.toTimeStamp != '0') {
-        item['toTimeStampAgo'] = dayjs().to(dayjs(item.toTimeStamp))
+        const dayjsTo = dayjs(item.toTimeStamp)
+        item['toTimeStampAgo'] = dayjs().to(dayjsTo)
+
+        item['tradeDuration'] = dayjsTo.unix() - dayjsFrom.unix()
       }
 
       let needTo = {
@@ -107,16 +116,18 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         amountFormat: '',
         tokenAddress: '',
       }
+
       if (item.state == 1 || item.state == 20) {
+        const _fromChain = Number(item.fromChain)
         needTo.chainId = Number(
-          serviceMaker.getAmountFlag(item.fromChain, item.fromAmount)
+          serviceMaker.getAmountFlag(_fromChain, item.fromAmount)
         )
 
         // find pool
         const pool = await serviceMaker.getTargetMakerPool(
           item.makerAddress,
           item.txToken,
-          Number(item.fromChain),
+          _fromChain,
           needTo.chainId
         )
 
@@ -127,7 +138,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
 
           needTo.amount =
             getAmountToSend(
-              Number(item.fromChain),
+              _fromChain,
               needTo.chainId,
               item.fromAmount,
               pool,
@@ -159,6 +170,13 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
 
     restful.json(rst)
+  })
+
+
+  router.get('maker/get_last_status', async ({ restful }) => {
+    const lastStatus = getLastStatus()
+
+    restful.json(lastStatus)
   })
 
   router.get('maker/miss_private_key_addresses', async ({ restful }) => {

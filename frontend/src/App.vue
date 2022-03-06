@@ -127,7 +127,7 @@ $max-width: 1600px;
   background: white;
   border-bottom: 1px solid #{var(--el-border-color-base)};
   padding: 0;
-  z-index: 99999;
+  z-index: var(--el-index-popper);
 
   .el-header__container {
     max-width: $max-width;

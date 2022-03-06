@@ -49,9 +49,9 @@
       v-loading="loadingNodes"
     >
       <el-row :gutter="20">
-        <el-col :span="6" class="maker-search__item">
+        <el-col :span="4" class="maker-search__item">
           <div class="title">From chain</div>
-          <el-select v-model="chainId" placeholder="Select">
+          <el-select v-model="fromChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -61,7 +61,19 @@
             </el-option>
           </el-select>
         </el-col>
-        <el-col :span="12" class="maker-search__item">
+        <el-col :span="4" class="maker-search__item">
+          <div class="title">To chain</div>
+          <el-select v-model="toChainId" placeholder="Select">
+            <el-option
+              v-for="(item, index) in chains"
+              :key="index"
+              :label="mappingChainName(item.chainName)"
+              :value="item.chainId"
+            >
+            </el-option>
+          </el-select>
+        </el-col>
+        <el-col :span="10" class="maker-search__item">
           <div class="title">
             From date range
             <!-- <span style="font-size: 12px"
@@ -215,28 +227,23 @@
               ToTx <br />
               ToTime
             </template>
-            <template #default="scope">
-              <a
-                v-if="scope.row.toTxHref"
-                :href="scope.row.toTxHref"
-                target="_blank"
-              >
-                <TextLong :content="scope.row.toTx">{{
-                  scope.row.toTx
-                }}</TextLong>
+            <template #default="{ row }">
+              <a v-if="row.toTxHref" :href="row.toTxHref" target="_blank">
+                <TextLong :content="row.toTx">{{ row.toTx }}</TextLong>
               </a>
-              <TextLong v-else :content="scope.row.toTx">{{
-                scope.row.toTx
-              }}</TextLong>
+              <TextLong v-else :content="row.toTx">{{ row.toTx }}</TextLong>
               <div class="table-timestamp">
                 <TextLong
-                  v-if="scope.row.toTimeStamp && scope.row.toTimeStamp != '0'"
-                  :content="scope.row.toTimeStamp"
+                  v-if="row.toTimeStamp && row.toTimeStamp != '0'"
+                  :content="row.toTimeStamp"
                   placement="bottom"
                 >
-                  {{ scope.row.toTimeStampAgo }}
+                  {{ row.toTimeStampAgo }}
+                  <span v-if="row.tradeDuration >= 0">
+                    ({{ row.tradeDuration }}s)
+                  </span>
                 </TextLong>
-                <span v-else>{{ scope.row.toTimeStampAgo }}</span>
+                <span v-else>{{ row.toTimeStampAgo }}</span>
               </div>
             </template>
           </el-table-column>
@@ -253,7 +260,9 @@
               <TextLong
                 :content="
                   row.toAmountFormat +
-                  (row.toAmount <= 0 ? ` (NeedTo: ${row.needTo.amountFormat})` : '')
+                  (row.toAmount <= 0
+                    ? ` (NeedTo: ${row.needTo.amountFormat})`
+                    : '')
                 "
                 placement="bottom"
                 ><span class="amount-operator--minus">-</span>
@@ -278,19 +287,6 @@
               </el-tag>
             </template>
           </el-table-column>
-          <!-- <el-table-column label="Others"
-            ><template #default="scope">
-              <el-button
-                v-if="scope.row.needTo?.amount > 0"
-                type="danger"
-                plain
-                size="small"
-                @click="() => {}"
-              >
-                -{{ scope.row.needTo?.amountFormat }}
-              </el-button>
-            </template>
-          </el-table-column> -->
         </el-table>
       </template>
 
@@ -301,6 +297,7 @@
 
 <script lang="ts">
 import TextLong from '@/components/TextLong.vue'
+import { makerInfo, makerNodes, makerWealth } from '@/hooks/maker'
 import { BigNumber } from 'bignumber.js'
 import {
   computed,
@@ -311,13 +308,14 @@ import {
   toRefs,
   watch,
 } from 'vue'
-import { makerInfo, makerNodes, makerWealth } from '../hooks/maker'
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
   mainnet: 'Mainnet',
   arbitrum: 'Arbitrum',
   zksync: 'zkSync',
+  polygon: 'Polygon',
+  optimism: 'Optimism',
 }
 
 export default defineComponent({
@@ -329,7 +327,8 @@ export default defineComponent({
 
     const state = reactive({
       rangeDate: [] as Date[],
-      chainId: '',
+      fromChainId: '',
+      toChainId: '',
       userAddressSelected: '',
     })
 
@@ -341,34 +340,9 @@ export default defineComponent({
       20: { label: 'To: failed', type: 'danger' },
     }
 
-    makerInfo.get()
-
-    const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected?.value)
-    }
-    getMakerWealth()
-
-    const reset = () => {
-      const endTime = new Date()
-      const startTime = new Date(endTime.getTime() - 86400000)
-      state.rangeDate = [startTime, endTime]
-      state.chainId = ''
-      state.userAddressSelected = ''
-    }
-    reset()
-
-    const getMakerNodes = () => {
-      makerNodes.get(
-        makerAddressSelected?.value,
-        Number(state.chainId),
-        state.rangeDate
-      )
-    }
-    getMakerNodes()
-
     // computeds
     const list = computed(() => {
-      return makerNodes.list.filter((item) => {
+      return makerNodes.state.list.filter((item) => {
         if (!state.userAddressSelected) {
           return true
         }
@@ -377,7 +351,7 @@ export default defineComponent({
     })
     const userAddressList = computed(() => {
       const userAddressList: { address: string; count: number }[] = []
-      for (const item of makerNodes.list) {
+      for (const item of makerNodes.state.list) {
         if (!item.userAddress) {
           continue
         }
@@ -424,6 +398,33 @@ export default defineComponent({
       return num.toString() + ' USD'
     })
 
+    makerInfo.get()
+
+    const getMakerWealth = () => {
+      makerWealth.get(makerAddressSelected?.value)
+    }
+    getMakerWealth()
+
+    const reset = () => {
+      const endTime = new Date()
+      const startTime = new Date(endTime.getTime() - 86400000)
+      state.rangeDate = [startTime, endTime]
+      state.fromChainId = ''
+      state.toChainId = ''
+      state.userAddressSelected = ''
+    }
+    reset()
+
+    const getMakerNodes = () => {
+      makerNodes.get(
+        makerAddressSelected?.value,
+        Number(state.fromChainId),
+        Number(state.toChainId),
+        state.rangeDate
+      )
+    }
+    getMakerNodes()
+
     // When makerAddressSelected changed, get maker's data
     watch(
       () => makerAddressSelected?.value,
@@ -448,12 +449,12 @@ export default defineComponent({
       stateTags,
       reset,
 
-      chains: toRef(makerInfo, 'chains'),
+      chains: toRef(makerInfo.state, 'chains'),
 
-      loadingWealths: toRef(makerWealth, 'loading'),
-      wealths: toRef(makerWealth, 'list'),
+      loadingWealths: toRef(makerWealth.state, 'loading'),
+      wealths: toRef(makerWealth.state, 'list'),
 
-      loadingNodes: toRef(makerNodes, 'loading'),
+      loadingNodes: toRef(makerNodes.state, 'loading'),
       list,
       getMakerNodes,
 

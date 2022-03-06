@@ -32,6 +32,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         if (gwei > maxGwei) {
           gwei = maxGwei
         }
+        accessLogger.info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
@@ -56,7 +57,11 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 
       // polygon gas price x2
       if (toChain == 'polygon' || toChain == 'polygon_test') {
-        gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        if (parseInt(response.data.result, 16) < 100000000000) {
+          gasPrice = Web3.utils.toHex(200000000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
+        }
       }
 
       accessLogger.info('gasPrice =', gasPrice)
@@ -270,6 +275,9 @@ async function sendConsumer(value: any) {
   if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
     maxPrice = 180;
   }
+   if ((fromChainID == 7 || fromChainID == 77) && (chainID == 1 || chainID == 5)) {
+    maxPrice = 180;
+  }
   const gasPrices = await getCurrentGasPrices(
     toChain,
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
@@ -347,6 +355,7 @@ async function sendConsumer(value: any) {
         })
       })
       .on('error', (err) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1
         resolve({
           code: 1,
           txid: err,

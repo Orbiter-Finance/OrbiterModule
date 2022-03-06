@@ -3,9 +3,10 @@ import { sleep } from '../util'
 import { accessLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
 import {
+  jobBalanceAlarm,
   jobCacheCoinbase,
   jobGetWealths,
-  jobMakerNodeTodo,
+  // jobMakerNodeTodo,
   jobMakerPull,
 } from './jobs'
 
@@ -31,7 +32,7 @@ async function waittingStartMaker() {
         startedIndexs.indexOf(index) === -1
       ) {
         startMaker(item)
-        jobMakerNodeTodo(item.makerAddress)
+        // jobMakerNodeTodo(item.makerAddress)
 
         startedIndexs.push(index)
         isPrivateKeysChanged = true
@@ -78,6 +79,8 @@ export const startJobs = async () => {
 
     // get wealths
     jobGetWealths()
+
+    jobBalanceAlarm()
   }
 
   // maker
