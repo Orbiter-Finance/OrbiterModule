@@ -11,17 +11,15 @@ import { SendQueue } from './send_queue'
 
 const nonceDic = {}
 
-
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
       const apiKey = makerConfig[toChain].api.key
-      const url = httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
-      const response = await axios.get(
-        url
-      )
-      if (response.data.status == 1 && response.data.message === "OK") {
+      const url =
+        httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
+      const response = await axios.get(url)
+      if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
           low: Number(response.data.result.SafeGasPrice) + 10,
           medium: Number(response.data.result.ProposeGasPrice) + 10,
@@ -152,8 +150,8 @@ async function sendConsumer(value: any) {
             tokenAddress
           )
         ).totalFee
-        
-        zk_fee = zk_totalFee.add(90000000000000).toString()
+
+        zk_fee = zk_totalFee.add(50000000000000).toString()
       }
 
       const transfer = await syncWallet.syncTransfer({
@@ -267,16 +265,21 @@ async function sendConsumer(value: any) {
     accessLogger.info('result_nonde =', result_nonce)
   }
 
-
   /**
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
-  let maxPrice = 230;
-  if ((fromChainID == 3 || fromChainID == 33) && (chainID == 1 || chainID == 5)) {
-    maxPrice = 180;
+  let maxPrice = 230
+  if (
+    (fromChainID == 3 || fromChainID == 33) &&
+    (chainID == 1 || chainID == 5)
+  ) {
+    maxPrice = 180
   }
-   if ((fromChainID == 7 || fromChainID == 77) && (chainID == 1 || chainID == 5)) {
-    maxPrice = 180;
+  if (
+    (fromChainID == 7 || fromChainID == 77) &&
+    (chainID == 1 || chainID == 5)
+  ) {
+    maxPrice = 180
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
@@ -391,7 +394,7 @@ async function send(
       tokenAddress,
       amountToSend,
       result_nonce,
-      fromChainID
+      fromChainID,
     }
     sendQueue.produce(chainID, {
       value,
