@@ -150,8 +150,8 @@ async function sendConsumer(value: any) {
             tokenAddress
           )
         ).totalFee
-
-        zk_fee = zk_totalFee.add(50000000000000).toString()
+        accessLogger.info('origin_zk_fee =', zk_totalFee)
+        zk_fee = zk_totalFee.add(30000000000000).toString()
       }
 
       const transfer = await syncWallet.syncTransfer({
