@@ -1,4 +1,5 @@
 import axios from 'axios'
+import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
@@ -141,18 +142,21 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
-      let zk_fee: string | undefined
-      if (isEthTokenAddress(tokenAddress)) {
-        const zk_totalFee = (
-          await (<zksync.Provider>syncProvider).getTransactionFee(
-            'Transfer',
-            toAddress,
-            tokenAddress
-          )
-        ).totalFee
-        accessLogger.info('origin_zk_fee =', zk_totalFee)
-        zk_fee = zk_totalFee.add(30000000000000).toString()
-      }
+      // let zk_fee: BigNumber | undefined
+      // if (isEthTokenAddress(tokenAddress)) {
+      const zk_totalFee = (
+        await (<zksync.Provider>syncProvider).getTransactionFee(
+          'Transfer',
+          toAddress,
+          tokenAddress
+        )
+      ).totalFee
+
+      accessLogger.info('origin_zk_fee =', zk_totalFee.toNumber())
+      let newFee = zk_totalFee.toNumber() + 30000000000000
+      let zk_fee = zksync.utils.closestPackableTransactionAmount(newFee)
+      accessLogger.info('new_zk_fee =', newFee)
+      // }
 
       const transfer = await syncWallet.syncTransfer({
         to: toAddress,
