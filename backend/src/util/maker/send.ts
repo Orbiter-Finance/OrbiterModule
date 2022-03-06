@@ -10,7 +10,7 @@ import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  sendTransaction
+  sendTransaction,
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
@@ -147,11 +147,25 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
+      let zk_fee: string | undefined
+      if (isEthTokenAddress(tokenAddress)) {
+        const zk_totalFee = (
+          await (<zksync.Provider>syncProvider).getTransactionFee(
+            'Transfer',
+            toAddress,
+            tokenAddress
+          )
+        ).totalFee
+        
+        zk_fee = zk_totalFee.add(90000000000000).toString()
+      }
+
       const transfer = await syncWallet.syncTransfer({
         to: toAddress,
         token: tokenAddress,
         nonce: result_nonce,
         amount,
+        fee: zk_fee,
       })
 
       if (!has_result_nonce) {
