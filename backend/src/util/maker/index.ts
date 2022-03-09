@@ -297,6 +297,42 @@ function watchTransfers(pool, state) {
     return
   }
 
+  // immutablex || immutablex_test
+  if (fromChainID == 8 || fromChainID == 88) {
+    // const _api = state
+    //   ? makerConfig[pool.c2Name].api
+    //   : makerConfig[pool.c1Name].api
+    // const networkId = getNetworkIdByChainId(fromChainID)
+    // getL2AddressByL1(makerAddress, networkId)
+    //   .then((starknetAddressMaker) => {
+    //     accessLogger.info('Starknet transfer listen: ' + starknetAddressMaker)
+
+    //     const skl = factoryStarknetListen(_api)
+    //     skl.transfer(
+    //       {
+    //         to: starknetAddressMaker,
+    //       },
+    //       {
+    //         onConfirmation: (transaction) => {
+    //           if (!transaction.hash) {
+    //             return
+    //           }
+
+    //           if (
+    //             checkData(transaction.value + '', transaction.hash) === true
+    //           ) {
+    //             confirmSNTransaction(pool, state, transaction)
+    //           }
+    //         },
+    //       }
+    //     )
+    //   })
+    //   .catch((err) => {
+    //     errorLogger.error('GetL2AddressByL1 faild: ' + err.message)
+    //   })
+    return
+  }
+
   const web3 = createAlchemyWeb3(wsEndPoint)
 
   if (isEthTokenAddress(tokenAddress)) {
@@ -1111,6 +1147,10 @@ export async function sendTransaction(
         confirmToZKTransaction(syncProvider, txID, transactionID)
       } else if (toChainID === 4 || toChainID === 44) {
         confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 8 || toChainID === 88) {
+        console.warn({ toChainID, toChain, txID, transactionID })
+
+        // confirmToSNTransaction(txID, transactionID, toChainID)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)
       }

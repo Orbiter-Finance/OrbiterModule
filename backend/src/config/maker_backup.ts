@@ -121,6 +121,24 @@ export default {
     gasPrice: 2,
     customChainId: 69,
   },
+  immutableX: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.x.immutable.com/v1',
+    api: {
+      endPoint: 'https://api.x.immutable.com/v1',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  immutableX_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.ropsten.x.immutable.com/v1',
+    api: {
+      endPoint: 'https://api.ropsten.x.immutable.com/v1',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   ABI: [
     {

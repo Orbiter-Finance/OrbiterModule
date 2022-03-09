@@ -1,3 +1,4 @@
+import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
 import axios from 'axios'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
@@ -6,6 +7,7 @@ import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import { IMXHelper } from '../../service/immutablex/imx_helper'
 import {
   getAccountNonce,
   getL2AddressByL1,
@@ -93,6 +95,7 @@ async function sendConsumer(value: any) {
     fromChainID,
   } = value
 
+  // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
       let ethProvider
@@ -156,7 +159,7 @@ async function sendConsumer(value: any) {
             tokenAddress
           )
         ).totalFee
-        
+
         zk_fee = zk_totalFee.add(90000000000000).toString()
       }
 
@@ -203,6 +206,7 @@ async function sendConsumer(value: any) {
     return
   }
 
+  // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     try {
       const starknetNetworkId = getNetworkIdByChainId(chainID)
@@ -270,7 +274,7 @@ async function sendConsumer(value: any) {
           code: 0,
           txid: starknetHash,
           chainID: chainID,
-          zkNonce: result_nonce,
+          snNonce: result_nonce,
         }
       } else {
         return {
@@ -283,6 +287,80 @@ async function sendConsumer(value: any) {
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
+  // immutablex || immutablex_test
+  if (chainID == 8 || chainID == 88) {
+    try {
+      const imxHelper = new IMXHelper(chainID)
+      const imxClient = await imxHelper.getImmutableXClient(makerAddress)
+
+      // Warnning: The nonce value of immutablex currently has no substantial effect
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        const imx_nonce = 0
+        let imx_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!imx_sql_nonce) {
+          result_nonce = imx_nonce
+        } else {
+          if (imx_nonce > imx_sql_nonce) {
+            result_nonce = imx_nonce
+          } else {
+            result_nonce = imx_sql_nonce + 1
+          }
+        }
+        accessLogger.info('imx_nonce =', imx_nonce)
+        accessLogger.info('imx_sql_nonce =', imx_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
+
+      // IMX transfer(Only ETH)
+      if (!isEthTokenAddress(tokenAddress)) {
+        return
+      }
+
+      const tokenInfo = {
+        type: ETHTokenType.ETH,
+        data: {
+          decimals: 18,
+        },
+      }
+      const imxHash = await imxClient.transfer({
+        sender: toAddress,
+        token: tokenInfo,
+        quantity: amountToSend,
+        receiver: toAddress,
+      })
+
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+
+      if (imxHash) {
+        return {
+          code: 0,
+          txid: imxHash,
+          chainID: chainID,
+          imxNonce: result_nonce,
+        }
+      } else {
+        return {
+          code: 1,
+          error: 'immutablex transfer error',
+          result_nonce,
+        }
+      }
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'immutablex transfer error: ' + error.message,
         result_nonce,
       }
     }

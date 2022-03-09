@@ -13,6 +13,7 @@
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
     "@dydxprotocol/starkex-lib": "^1.1.6",
+    "@imtbl/imx-sdk": "^1.6.0",
     "@metamask/eth-sig-util": "^4.0.0",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
