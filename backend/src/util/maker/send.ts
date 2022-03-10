@@ -142,20 +142,18 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
-      // let zk_fee: BigNumber | undefined
-      // if (isEthTokenAddress(tokenAddress)) {
-      const zk_totalFee = (
-        await (<zksync.Provider>syncProvider).getTransactionFee(
-          'Transfer',
-          toAddress,
-          tokenAddress
-        )
-      ).totalFee
+      // const zk_totalFee = (
+      //   await (<zksync.Provider>syncProvider).getTransactionFee(
+      //     'Transfer',
+      //     toAddress,
+      //     tokenAddress
+      //   )
+      // ).totalFee
 
-      accessLogger.info('origin_zk_fee =', zk_totalFee.toNumber())
-      let newFee = zk_totalFee.toNumber() + 30000000000000
-      let zk_fee = zksync.utils.closestPackableTransactionAmount(newFee)
-      accessLogger.info('new_zk_fee =', newFee)
+      // accessLogger.info('origin_zk_fee =', zk_totalFee.toNumber())
+      // let newFee = zk_totalFee.toNumber() + 30000000000000
+      // let zk_fee = zksync.utils.closestPackableTransactionFee(newFee)
+      // accessLogger.info('new_zk_fee =', newFee)
       // }
 
       const transfer = await syncWallet.syncTransfer({
@@ -163,7 +161,7 @@ async function sendConsumer(value: any) {
         token: tokenAddress,
         nonce: result_nonce,
         amount,
-        fee: zk_fee,
+        // fee: zk_fee,
       })
 
       if (!has_result_nonce) {
