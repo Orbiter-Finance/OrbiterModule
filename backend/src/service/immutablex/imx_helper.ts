@@ -1,6 +1,7 @@
 import { ETHTokenType, ImmutableXClient } from '@imtbl/imx-sdk'
 import { ethers, providers, Wallet } from 'ethers'
 import { makerConfig } from '../../config'
+import { errorLogger } from '../../util/logger'
 
 export type Transaction = {
   blockNumber?: number
@@ -61,10 +62,13 @@ export class IMXHelper {
    * @param  addressOrIndex
    * @returns
    */
-  async getImmutableXClient(addressOrIndex: string | number | undefined = '') {
+  async getImmutableXClient(
+    addressOrIndex: string | number | undefined = '',
+    alwaysNew = false
+  ) {
     const immutableXClientKey = String(addressOrIndex)
 
-    if (IMMUTABLEX_CLIENTS[immutableXClientKey]) {
+    if (IMMUTABLEX_CLIENTS[immutableXClientKey] && !alwaysNew) {
       return IMMUTABLEX_CLIENTS[immutableXClientKey]
     }
 
@@ -123,7 +127,7 @@ export class IMXHelper {
         balance = balance.add(item.balance)
       }
     } catch (err) {
-      console.warn('GetBalanceBySymbol failed: ' + err.message)
+      errorLogger.error('GetBalanceBySymbol failed: ' + err.message)
     }
 
     return balance
@@ -152,7 +156,7 @@ export class IMXHelper {
       transactionIndex: 0,
       from: transfer.user,
       to: transfer.receiver,
-      value: transfer.token.data.quantity,
+      value: transfer.token.data.quantity + '',
       txreceipt_status: transfer.status,
       contractAddress,
       confirmations: 0,

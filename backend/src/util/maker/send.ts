@@ -8,6 +8,7 @@ import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
+import { getTargetMakerPool } from '../../service/maker'
 import {
   getAccountNonce,
   getL2AddressByL1,
@@ -150,25 +151,26 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
-      let zk_fee: string | undefined
-      if (isEthTokenAddress(tokenAddress)) {
-        const zk_totalFee = (
-          await (<zksync.Provider>syncProvider).getTransactionFee(
-            'Transfer',
-            toAddress,
-            tokenAddress
-          )
-        ).totalFee
+      // let zk_fee: string | undefined
+      // if (isEthTokenAddress(tokenAddress)) {
+      //   let zk_totalFee = (
+      //     await (<zksync.Provider>syncProvider).getTransactionFee(
+      //       'Transfer',
+      //       toAddress,
+      //       tokenAddress
+      //     )
+      //   ).totalFee
+      //   zk_totalFee = zk_totalFee.add(30000000000000)
 
-        zk_fee = zk_totalFee.add(90000000000000).toString()
-      }
+      //   zk_fee = zksync.closestPackableTransactionFee(zk_totalFee) + ''
+      // }
 
       const transfer = await syncWallet.syncTransfer({
         to: toAddress,
         token: tokenAddress,
         nonce: result_nonce,
         amount,
-        fee: zk_fee,
+        // fee: zk_fee,
       })
 
       if (!has_result_nonce) {
@@ -322,18 +324,35 @@ async function sendConsumer(value: any) {
         return
       }
 
-      const tokenInfo = {
+      let tokenInfo: any = {
         type: ETHTokenType.ETH,
         data: {
           decimals: 18,
         },
       }
-      const imxHash = await imxClient.transfer({
-        sender: toAddress,
+      if (!isEthTokenAddress(tokenAddress)) {
+        const makerPool = await getTargetMakerPool(
+          makerAddress,
+          tokenAddress,
+          fromChainID,
+          chainID
+        )
+        tokenInfo = {
+          type: ERC20TokenType.ERC20,
+          data: {
+            symbol: makerPool?.tName,
+            decimals: makerPool?.precision,
+            tokenAddress: tokenAddress,
+          },
+        }
+      }
+      const imxResult = await imxClient.transfer({
+        sender: makerAddress,
         token: tokenInfo,
         quantity: amountToSend,
         receiver: toAddress,
       })
+      const imxHash = imxResult.transfer_id
 
       if (!has_result_nonce) {
         if (!nonceDic[makerAddress]) {

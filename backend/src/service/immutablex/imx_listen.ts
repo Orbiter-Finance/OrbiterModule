@@ -1,4 +1,5 @@
-import { sleep } from '../../util'
+import { equalsIgnoreCase, sleep } from '../../util'
+import { accessLogger, errorLogger } from '../../util/logger'
 import { IMXHelper, Transaction } from './imx_helper'
 
 type Filter = {
@@ -23,14 +24,19 @@ class IMXListen {
     callbacks?: TransferCallbacks
   }[] = []
 
-  constructor(chainId: number, receiver: string | undefined = undefined) {
+  constructor(
+    chainId: number,
+    receiver: string | undefined = undefined,
+    isFirstTicker = true
+  ) {
     this.chainId = chainId
     this.receiver = receiver
+    this.isFirstTicker = isFirstTicker
 
     this.start()
   }
 
-  start() {
+  private start() {
     const ticker = async () => {
       const imxHelper = new IMXHelper(this.chainId)
 
@@ -77,7 +83,7 @@ class IMXListen {
    * @param retryCount
    * @returns
    */
-  async doTransfer(transfer: any, retryCount = 0) {
+  private async doTransfer(transfer: any, retryCount = 0) {
     const { transaction_id } = transfer
     if (!transaction_id) {
       return
@@ -90,7 +96,7 @@ class IMXListen {
         const imxClient = await imxHelper.getImmutableXClient()
         transfer = await imxClient.getTransfer({ id: transfer.transaction_id })
       } catch (err) {
-        console.error(
+        errorLogger.error(
           `Get imx transaction [${transaction_id}] failed: ${err.message}, retryCount: ${retryCount}`
         )
 
@@ -109,52 +115,56 @@ class IMXListen {
     }
 
     const transaction = imxHelper.toTransaction(transfer)
+    const { hash, from, to, txreceipt_status } = transaction
 
-    console.warn({ transaction })
+    const isConfirmed =
+      equalsIgnoreCase(txreceipt_status, 'confirmed') ||
+      equalsIgnoreCase(txreceipt_status, 'success')
+    const isRejected = equalsIgnoreCase(txreceipt_status, 'rejected')
 
-    // const isConfirmed =
-    //   util.equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L2') ||
-    //   util.equalsIgnoreCase(transaction.txreceipt_status, 'Accepted on L1')
+    for (const item of this.listens) {
+      const { filter, callbacks } = item
 
-    // for (const item of this.listens) {
-    //   const { filter, callbacks } = item
+      if (filter) {
+        if (filter.from && filter.from.toUpperCase() != from.toUpperCase()) {
+          continue
+        }
+        if (filter.to && filter.to.toUpperCase() != to.toUpperCase()) {
+          continue
+        }
+      }
 
-    //   if (filter) {
-    //     if (filter.from && filter.from.toUpperCase() != from.toUpperCase()) {
-    //       continue
-    //     }
-    //     if (filter.to && filter.to.toUpperCase() != to.toUpperCase()) {
-    //       continue
-    //     }
-    //   }
+      if (this.transferReceivedHashs[hash] !== true) {
+        callbacks && callbacks.onReceived && callbacks.onReceived(transaction)
+      }
 
-    //   if (this.transferReceivedHashs[hash] !== true) {
-    //     callbacks && callbacks.onReceived && callbacks.onReceived(transaction)
-    //   }
+      if (
+        this.transferConfirmationedHashs[transaction.hash] === undefined &&
+        isConfirmed
+      ) {
+        accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
+        callbacks &&
+          callbacks.onConfirmation &&
+          callbacks.onConfirmation(transaction)
+      }
+    }
 
-    //   if (
-    //     this.transferConfirmationedHashs[transaction.hash] === undefined &&
-    //     isConfirmed
-    //   ) {
-    //     console.warn(`Transaction [${transaction.hash}] was confirmed.`)
-    //     callbacks &&
-    //       callbacks.onConfirmation &&
-    //       callbacks.onConfirmation(transaction)
-    //   }
-    // }
+    this.transferReceivedHashs[hash] = true
 
-    // this.transferReceivedHashs[hash] = true
-
-    // if (isConfirmed) {
-    //   this.transferConfirmationedHashs[transaction.hash] = true
-    // } else {
-    //   await util.sleep(2000)
-    //   this.getTransaction(hash)
-    // }
+    if (isConfirmed) {
+      this.transferConfirmationedHashs[transaction.hash] = true
+    } else if (!isRejected) {
+      await sleep(2000)
+      this.doTransfer(transfer)
+    }
   }
 
   transfer(filter: Filter, callbacks = undefined) {
     this.listens.push({ filter, callbacks })
+  }
+
+  clearListens() {
+    this.listens = []
   }
 }
 
@@ -167,13 +177,18 @@ const factorys = {}
  */
 export function factoryIMXListen(
   chainId: number,
-  receiver: string | undefined = undefined
+  receiver: string | undefined = undefined,
+  isFirstTicker = true
 ) {
-  const factoryKey = `${chainId}:${receiver}`
+  const factoryKey = `${chainId}:${receiver}:${isFirstTicker}`
 
   if (factorys[factoryKey]) {
     return factorys[factoryKey]
   } else {
-    return (factorys[factoryKey] = new IMXListen(chainId, receiver))
+    return (factorys[factoryKey] = new IMXListen(
+      chainId,
+      receiver,
+      isFirstTicker
+    ))
   }
 }
