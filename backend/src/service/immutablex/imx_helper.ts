@@ -134,6 +134,30 @@ export class IMXHelper {
   }
 
   /**
+   * @param user
+   */
+  async ensureUser(user: string) {
+    if (!user) {
+      throw new Error('Sorry, miss param [user]')
+    }
+
+    try {
+      const imxClient = await this.getImmutableXClient()
+      await imxClient.getUser({ user })
+    } catch (err) {
+      if (!err.message || !/account_not_found/i.test(err.message)) {
+        throw err
+      }
+
+      const userClient = await this.getImmutableXClient(user)
+      await userClient.registerImx({
+        etherKey: userClient.address,
+        starkPublicKey: userClient.starkPublicKey,
+      })
+    }
+  }
+
+  /**
    * IMX transfer => Eth transaction
    * @param transfer IMX transfer
    * @returns

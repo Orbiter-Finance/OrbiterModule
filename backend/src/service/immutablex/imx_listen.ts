@@ -23,6 +23,7 @@ class IMXListen {
     filter: Filter | undefined
     callbacks?: TransferCallbacks
   }[] = []
+  private tickerTimer: NodeJS.Timer
 
   constructor(
     chainId: number,
@@ -75,7 +76,7 @@ class IMXListen {
     }
     ticker()
 
-    setInterval(ticker, IMX_LISTEN_TRANSFER_DURATION)
+    this.tickerTimer = setInterval(ticker, IMX_LISTEN_TRANSFER_DURATION)
   }
 
   /**
@@ -165,6 +166,12 @@ class IMXListen {
 
   clearListens() {
     this.listens = []
+  }
+
+  destroy() {
+    if (this.tickerTimer) {
+      clearInterval(this.tickerTimer)
+    }
   }
 }
 

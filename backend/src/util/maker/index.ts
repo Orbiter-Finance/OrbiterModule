@@ -311,7 +311,6 @@ function watchTransfers(pool, state) {
           if (!transaction.hash) {
             return
           }
-          console.warn('transaction >>> ', transaction);
 
           if (checkData(transaction.value + '', transaction.hash) === true) {
             confirmIMXTransaction(pool, state, transaction)
