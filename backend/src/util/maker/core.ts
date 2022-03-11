@@ -5,6 +5,7 @@ const MAX_BITS = {
   eth: 256,
   arbitrum: 256,
   zksync: 35,
+  starknet: 256,
   polygon: 256,
   optimism: 256
 }
@@ -15,7 +16,8 @@ export const CHAIN_INDEX = {
   22: 'arbitrum',
   3: 'zksync',
   33: 'zksync',
-  4: 'eth',
+  4: 'starknet',
+  44: 'starknet',
   5: 'eth',
   6: 'polygon',
   66: 'polygon',

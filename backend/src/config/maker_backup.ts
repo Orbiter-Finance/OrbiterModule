@@ -55,6 +55,24 @@ export default {
     },
     gasPrice: 2,
   },
+  starknet: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://voyager.online/api',
+    api: {
+      endPoint: 'https://voyager.online/api',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  starknet_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://goerli.voyager.online/api',
+    api: {
+      endPoint: 'https://goerli.voyager.online/api',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   polygon: {
     wsEndPoint:
       'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',

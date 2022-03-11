@@ -4,8 +4,14 @@ import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
-import { isEthTokenAddress } from '..'
+import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import {
+  getAccountNonce,
+  getL2AddressByL1,
+  getNetworkIdByChainId,
+  sendTransaction,
+} from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 
@@ -141,6 +147,7 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
+<<<<<<< HEAD
       // const zk_totalFee = (
       //   await (<zksync.Provider>syncProvider).getTransactionFee(
       //     'Transfer',
@@ -154,13 +161,31 @@ async function sendConsumer(value: any) {
       // let zk_fee = zksync.utils.closestPackableTransactionFee(newFee)
       // accessLogger.info('new_zk_fee =', newFee)
       // }
+=======
+      let zk_fee: string | undefined
+      if (isEthTokenAddress(tokenAddress)) {
+        const zk_totalFee = (
+          await (<zksync.Provider>syncProvider).getTransactionFee(
+            'Transfer',
+            toAddress,
+            tokenAddress
+          )
+        ).totalFee
+        
+        zk_fee = zk_totalFee.add(90000000000000).toString()
+      }
+>>>>>>> develop
 
       const transfer = await syncWallet.syncTransfer({
         to: toAddress,
         token: tokenAddress,
         nonce: result_nonce,
         amount,
+<<<<<<< HEAD
         // fee: zk_fee,
+=======
+        fee: zk_fee,
+>>>>>>> develop
       })
 
       if (!has_result_nonce) {
@@ -197,6 +222,92 @@ async function sendConsumer(value: any) {
     }
     return
   }
+
+  if (chainID == 4 || chainID == 44) {
+    try {
+      const starknetNetworkId = getNetworkIdByChainId(chainID)
+      const starknetAddressMaker = await getL2AddressByL1(
+        makerAddress,
+        starknetNetworkId
+      )
+
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        const sn_nonce = await getAccountNonce(
+          starknetAddressMaker,
+          starknetNetworkId
+        )
+        let sn_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!sn_sql_nonce) {
+          result_nonce = sn_nonce
+        } else {
+          if (sn_nonce > sn_sql_nonce) {
+            result_nonce = sn_nonce
+          } else {
+            result_nonce = sn_sql_nonce + 1
+          }
+        }
+        accessLogger.info('sn_nonce =', sn_nonce)
+        accessLogger.info('sn_sql_nonce =', sn_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
+
+      // Wait user starknet account deploy
+      let starknetAddressTo = ''
+      const starknetNow = new Date().getTime()
+      while (new Date().getTime() - starknetNow < 1000000) {
+        starknetAddressTo = await getL2AddressByL1(toAddress, starknetNetworkId)
+        if (starknetAddressTo) {
+          break
+        }
+
+        accessLogger.info('Waitting user starknet account deploy: ' + toAddress)
+        await sleep(5000)
+      }
+      if (!starknetAddressTo) {
+        throw new Error("User starknet account cann't deploy: " + toAddress)
+      }
+
+      // Starknet transfer
+      const starknetHash = await sendTransaction(
+        makerAddress,
+        tokenAddress,
+        starknetAddressTo,
+        amountToSend,
+        starknetNetworkId
+      )
+
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+
+      if (starknetHash) {
+        return {
+          code: 0,
+          txid: starknetHash,
+          chainID: chainID,
+          zkNonce: result_nonce,
+        }
+      } else {
+        return {
+          code: 1,
+          error: 'starknet transfer error',
+          result_nonce,
+        }
+      }
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'starknet transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -237,10 +348,19 @@ async function sendConsumer(value: any) {
   }
 
   if (result_nonce == 0) {
-    let nonce = await web3.eth.getTransactionCount(
-      <any>web3.eth.defaultAccount,
-      'pending'
-    )
+    let nonce = 0
+    try {
+      nonce = await web3.eth.getTransactionCount(
+        <any>web3.eth.defaultAccount,
+        'pending'
+      )
+    } catch (err) {
+      return {
+        code: 1,
+        txid: 'GetTransactionCount failed: ' + err.message,
+      }
+    }
+
     /**
      * With every new transaction you send using a specific wallet address,
      * you need to increase a nonce which is tied to the sender wallet.
