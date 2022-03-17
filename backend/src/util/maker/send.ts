@@ -14,6 +14,17 @@ import {
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
+import {
+  ExchangeAPI,
+  GlobalAPI,
+  ConnectorNames,
+  ChainId,
+  generateKeyPair,
+  UserAPI,
+  VALID_UNTIL,
+} from '@loopring-web/loopring-sdk'
+
+const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
 
@@ -91,6 +102,7 @@ async function sendConsumer(value: any) {
     amountToSend,
     result_nonce,
     fromChainID,
+    lpMemo,
   } = value
 
   if (chainID === 3 || chainID === 33) {
@@ -147,7 +159,6 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
-<<<<<<< HEAD
       // const zk_totalFee = (
       //   await (<zksync.Provider>syncProvider).getTransactionFee(
       //     'Transfer',
@@ -160,32 +171,13 @@ async function sendConsumer(value: any) {
       // let newFee = zk_totalFee.toNumber() + 30000000000000
       // let zk_fee = zksync.utils.closestPackableTransactionFee(newFee)
       // accessLogger.info('new_zk_fee =', newFee)
-      // }
-=======
-      let zk_fee: string | undefined
-      if (isEthTokenAddress(tokenAddress)) {
-        const zk_totalFee = (
-          await (<zksync.Provider>syncProvider).getTransactionFee(
-            'Transfer',
-            toAddress,
-            tokenAddress
-          )
-        ).totalFee
-        
-        zk_fee = zk_totalFee.add(90000000000000).toString()
-      }
->>>>>>> develop
 
       const transfer = await syncWallet.syncTransfer({
         to: toAddress,
         token: tokenAddress,
         nonce: result_nonce,
         amount,
-<<<<<<< HEAD
-        // fee: zk_fee,
-=======
-        fee: zk_fee,
->>>>>>> develop
+        //zk_fee
       })
 
       if (!has_result_nonce) {
@@ -306,6 +298,146 @@ async function sendConsumer(value: any) {
         result_nonce,
       }
     }
+  }
+
+  if (chainID == 9 || chainID == 99) {
+    try {
+      let netWorkID = chainID == 9 ? 1 : 5
+      const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
+      const userApi = new UserAPI({ chainId: netWorkID })
+      let GetAccountRequest = {
+        owner: makerAddress,
+      }
+      let accountInfo
+      let AccountResult = await exchangeApi.getAccount(GetAccountRequest)
+      if (AccountResult.accInfo && AccountResult.raw_data) {
+        accountInfo = AccountResult.accInfo
+      } else {
+        throw Error('account unlocked')
+      }
+      const { exchangeInfo } = await exchangeApi.getExchangeInfo()
+
+      const provider = new PrivateKeyProvider(
+        makerConfig.privateKeys[makerAddress],
+        chainID == 9
+          ? makerConfig[toChain].httpEndPoint
+          : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
+      )
+      const localWeb3 = new Web3(provider)
+
+      let options = {
+        web3: localWeb3,
+        address: accountInfo.owner,
+        keySeed:
+          accountInfo.keySeed && accountInfo.keySeed !== ''
+            ? accountInfo.keySeed
+            : GlobalAPI.KEY_MESSAGE.replace(
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.WalletLink,
+        chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+      }
+
+      const eddsaKey = await generateKeyPair(options)
+
+      console.log('eddsaKey =', eddsaKey)
+      let GetUserApiKeyRequest = {
+        accountId: accountInfo.accountId,
+      }
+      const { apiKey } = await userApi.getUserApiKey(
+        GetUserApiKeyRequest,
+        eddsaKey.sk
+      )
+      if (!apiKey) {
+        throw Error('Get Loopring ApiKey Error')
+      }
+      // step 3 get storageId
+      const GetNextStorageIdRequest = {
+        accountId: accountInfo.accountId,
+        sellTokenId: 0,
+      }
+      const storageId = await userApi.getNextStorageId(
+        GetNextStorageIdRequest,
+        apiKey
+      )
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        let lp_nonce = storageId.offchainId
+        let lp_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!lp_sql_nonce) {
+          result_nonce = lp_nonce
+        } else {
+          if (lp_nonce > lp_sql_nonce) {
+            result_nonce = lp_nonce
+          } else {
+            result_nonce = lp_sql_nonce + 2
+          }
+        }
+        accessLogger.info('lp_nonce =', lp_nonce)
+        accessLogger.info('lp_sql_nonce =', lp_sql_nonce)
+        accessLogger.info('result_nonce =', result_nonce)
+      }
+      // step 4 transfer
+      const OriginTransferRequestV3 = {
+        exchange: exchangeInfo.exchangeAddress,
+        payerAddr: makerAddress,
+        payerId: accountInfo.accountId,
+        payeeAddr: toAddress,
+        payeeId: 0,
+        storageId: result_nonce,
+        token: {
+          tokenId: 0,
+          volume: amountToSend + '',
+        },
+        maxFee: {
+          tokenId: 0,
+          volume: '940000000000000',
+        },
+        validUntil: VALID_UNTIL,
+        memo: lpMemo,
+      }
+      console.log('OriginTransferRequestV3 =', OriginTransferRequestV3)
+      const transactionResult = await userApi.submitInternalTransfer({
+        request: <any>OriginTransferRequestV3,
+        web3: <any>localWeb3,
+        chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+        walletType: ConnectorNames.WalletLink,
+        eddsaKey: eddsaKey.sk,
+        apiKey: apiKey,
+        isHWAddr: false,
+      })
+      console.log('transactionResult >>> ', transactionResult)
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+      return new Promise((resolve, reject) => {
+        if (transactionResult['hash']) {
+          resolve({
+            code: 0,
+            txid: transactionResult['hash'],
+            makerAddress: makerAddress,
+            lpNonce: result_nonce,
+          })
+        } else {
+          resolve({
+            code: 1,
+            error: 'loopring transfer error',
+            result_nonce,
+          })
+        }
+      })
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'loopring transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+    return
   }
 
   const web3Net = makerConfig[toChain].httpEndPoint
@@ -501,7 +633,8 @@ async function send(
   tokenAddress,
   amountToSend,
   result_nonce = 0,
-  fromChainID
+  fromChainID,
+  lpMemo
 ): Promise<any> {
   sendQueue.registerConsumer(chainID, sendConsumer)
 
@@ -516,6 +649,7 @@ async function send(
       amountToSend,
       result_nonce,
       fromChainID,
+      lpMemo,
     }
     sendQueue.produce(chainID, {
       value,

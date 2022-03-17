@@ -7,7 +7,8 @@ const MAX_BITS = {
   zksync: 35,
   starknet: 256,
   polygon: 256,
-  optimism: 256
+  optimism: 256,
+  loopring: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -22,7 +23,9 @@ export const CHAIN_INDEX = {
   6: 'polygon',
   66: 'polygon',
   7: 'optimism',
-  77: 'optimism'
+  77: 'optimism',
+  9: 'loopring',
+  99: 'loopring',
 }
 
 export const SIZE_OP = {
