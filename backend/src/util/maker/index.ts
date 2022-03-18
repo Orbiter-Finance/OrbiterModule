@@ -26,9 +26,27 @@ import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
+import {
+  ExchangeAPI,
+  GlobalAPI,
+  ConnectorNames,
+  ChainId,
+  generateKeyPair,
+  UserAPI,
+  AccountInfo,
+} from '@loopring-web/loopring-sdk'
+const PrivateKeyProvider = require('truffle-privatekey-provider')
+
+import Axios from '../../util/Axios'
+
+Axios.axios()
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
+let loopringStartTime: number = 0
+let loopringLastHash: string = ''
+let accountInfo: AccountInfo
+let lpKey: string
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -168,7 +186,7 @@ function watchPool(pool) {
   pool
   state    0 / 1   listen C1 /  listen C2
  */
-function watchTransfers(pool, state) {
+async function watchTransfers(pool, state) {
   // check
   if (!makerConfig[pool.c1Name]) {
     accessLogger.warn(`Miss [${pool.c1Name}] maker config!`)
@@ -297,7 +315,6 @@ function watchTransfers(pool, state) {
       })
     return
   }
-
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
     accessLogger.info(
@@ -320,9 +337,18 @@ function watchTransfers(pool, state) {
     )
     return
   }
+  // loopring || loopring_test
+  if (fromChainID == 9 || fromChainID == 99) {
+    try {
+      confirmLPTransaction(pool, tokenAddress, state)
+    } catch (error) {
+      console.log('error =', error)
+      throw 'getLPTransactionDataError'
+    }
+    return
+  }
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
@@ -596,6 +622,204 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
       })
   }
 
+  setInterval(ticker, 10 * 1000)
+}
+
+async function checkLoopringAccountKey(makerAddress, fromChainID) {
+  let netWorkID = fromChainID == 9 ? 1 : 5
+  const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
+  const userApi = new UserAPI({ chainId: netWorkID })
+  let GetAccountRequest = {
+    owner: makerAddress,
+  }
+  if (!accountInfo) {
+    let AccountResult = await exchangeApi.getAccount(GetAccountRequest)
+
+    if (AccountResult.accInfo && AccountResult.raw_data) {
+      accountInfo = AccountResult.accInfo
+    } else {
+      throw Error('account unlocked')
+    }
+  }
+  if (!lpKey) {
+    const { exchangeInfo } = await exchangeApi.getExchangeInfo()
+    const provider = new PrivateKeyProvider(
+      makerConfig.privateKeys[makerAddress],
+      fromChainID == 9
+        ? makerConfig['mainnet'].httpEndPoint
+        : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
+    )
+    const localWeb3 = new Web3(provider)
+    let options = {
+      web3: localWeb3,
+      address: makerAddress,
+      keySeed:
+        accountInfo.keySeed && accountInfo.keySeed !== ''
+          ? accountInfo.keySeed
+          : GlobalAPI.KEY_MESSAGE.replace(
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+      walletType: ConnectorNames.WalletLink,
+      chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+    }
+    const eddsaKey = await generateKeyPair(options)
+    let GetUserApiKeyRequest = {
+      accountId: accountInfo.accountId,
+    }
+    const { apiKey } = await userApi.getUserApiKey(
+      GetUserApiKeyRequest,
+      eddsaKey.sk
+    )
+    lpKey = apiKey
+    if (!apiKey) {
+      throw Error('Get Loopring ApiKey Error')
+    }
+  }
+}
+
+function confirmLPTransaction(pool, tokenAddress, state) {
+  const ticker = async () => {
+    try {
+      const makerAddress = pool.makerAddress
+      let fromChainID = state ? pool.c2ID : pool.c1ID
+      let toChainID = state ? pool.c1ID : pool.c2ID
+      let toChain = state ? pool.c1Name : pool.c2Name
+      let validPText = (9000 + Number(toChainID)).toString()
+      if (!loopringStartTime) {
+        loopringStartTime = new Date().getTime()
+      }
+      let netWorkID = fromChainID == 9 ? 1 : 5
+      const userApi = new UserAPI(<any>netWorkID)
+      try {
+        await checkLoopringAccountKey(makerAddress, fromChainID)
+      } catch (error) {
+        errorLogger.error('checkLoopringAccountKeyError =', error)
+      }
+      const GetUserTransferListRequest = {
+        accountId: accountInfo.accountId,
+        start: loopringStartTime,
+        end: 99999999999999,
+        status: 'processed',
+        limit: 50,
+        tokenSymbol: 'ETH',
+        transferTypes: 'transfer',
+      }
+      const LPTransferResult = await userApi.getUserTransferList(
+        GetUserTransferListRequest,
+        lpKey
+      )
+      if (
+        LPTransferResult.totalNum !== 0 &&
+        LPTransferResult.userTransfers.length !== 0
+      ) {
+        let transacionts = LPTransferResult.userTransfers.reverse()
+        for (let index = 0; index < transacionts.length; index++) {
+          const lpTransaction = transacionts[index]
+          if (loopringStartTime < lpTransaction.timestamp) {
+            loopringStartTime = lpTransaction.timestamp + 1
+          }
+
+          if (
+            lpTransaction.status == 'processed' &&
+            lpTransaction.txType == 'TRANSFER' &&
+            lpTransaction.receiverAddress.toLowerCase() ==
+              makerAddress.toLowerCase() &&
+            lpTransaction.symbol == 'ETH' &&
+            lpTransaction.hash !== loopringLastHash
+          ) {
+            const pText = lpTransaction.memo
+            const rAmount = lpTransaction.amount
+            if (
+              new BigNumber(rAmount).comparedTo(
+                new BigNumber(pool.maxPrice)
+                  .plus(new BigNumber(pool.tradingFee))
+                  .multipliedBy(new BigNumber(10 ** pool.precision))
+              ) === 1 ||
+              new BigNumber(rAmount).comparedTo(
+                new BigNumber(pool.minPrice)
+                  .plus(new BigNumber(pool.tradingFee))
+                  .multipliedBy(new BigNumber(10 ** pool.precision))
+              ) === -1 ||
+              pText !== validPText
+            ) {
+              // donothing
+            } else {
+              if (pText == validPText) {
+                loopringLastHash = lpTransaction.hash
+                accessLogger.info('element =', lpTransaction)
+                accessLogger.info('match one transaction')
+                let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
+                accessLogger.info(
+                  'Transaction with hash ' +
+                    lpTransaction.hash +
+                    'storageID ' +
+                    (nonce * 2 + 1) +
+                    ' has found'
+                )
+                var transactionID =
+                  lpTransaction.senderAddress.toLowerCase() +
+                  fromChainID +
+                  nonce
+                let makerNode: MakerNode | undefined
+                try {
+                  makerNode = await repositoryMakerNode().findOne(
+                    { transactionID: transactionID },
+                    { select: ['id'] }
+                  )
+                } catch (error) {
+                  errorLogger.error('lp_isHaveSqlError =', error)
+                  break
+                }
+                if (!makerNode) {
+                  accessLogger.info('newTransacioonID =', transactionID)
+                  await repositoryMakerNode()
+                    .insert({
+                      transactionID: transactionID,
+                      userAddress: lpTransaction.senderAddress,
+                      makerAddress,
+                      fromChain: fromChainID,
+                      toChain: toChainID,
+                      formTx: lpTransaction.hash,
+                      fromTimeStamp: orbiterCore.transferTimeStampToTime(
+                        lpTransaction.timestamp ? lpTransaction.timestamp : '0'
+                      ),
+                      fromAmount: lpTransaction.amount,
+                      formNonce: nonce + '',
+                      txToken: tokenAddress,
+                      state: 1,
+                    })
+                    .then(async () => {
+                      const toTokenAddress = state
+                        ? pool.t1Address
+                        : pool.t2Address
+                      sendTransaction(
+                        makerAddress,
+                        transactionID,
+                        fromChainID,
+                        toChainID,
+                        toChain,
+                        toTokenAddress,
+                        lpTransaction.amount,
+                        lpTransaction.senderAddress,
+                        pool,
+                        nonce
+                      )
+                    })
+                    .catch((error) => {
+                      errorLogger.error('newTransactionSqlError =', error)
+                      return
+                    })
+                }
+              }
+            }
+          }
+        }
+      }
+    } catch (error) {
+      errorLogger.error('loopringError =', error)
+    }
+  }
   setInterval(ticker, 10 * 1000)
 }
 
@@ -976,7 +1200,13 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return confirmToZKTransaction(syncProvider, txID)
     }
 
-    accessLogger.info('transferReceipt =', transferReceipt)
+    accessLogger.info(
+      'transactionID =',
+      transactionID,
+      'transferReceipt =',
+      transferReceipt
+    )
+
     if (
       transferReceipt.executed &&
       transferReceipt.success &&
@@ -1007,6 +1237,73 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
     }
 
     return confirmToZKTransaction(syncProvider, txID)
+  }, 8 * 1000)
+}
+
+function confirmToLPTransaction(
+  txID: string,
+  transactionID: string,
+  toChainId: number,
+  makerAddress: string
+) {
+  accessLogger.info('confirmToLPTransaction =', getTime())
+  setTimeout(async () => {
+    try {
+      checkLoopringAccountKey(makerAddress, toChainId)
+      const GetUserTransferListRequest = {
+        accountId: accountInfo.accountId,
+        hashes: txID,
+      }
+      let netWorkID = toChainId == 9 ? 1 : 5
+      const userApi = new UserAPI(<any>netWorkID)
+      const LPTransferResult = await userApi.getUserTransferList(
+        GetUserTransferListRequest,
+        lpKey
+      )
+      if (
+        LPTransferResult.totalNum === 1 &&
+        LPTransferResult.userTransfers.length === 1
+      ) {
+        let lpTransaction = LPTransferResult.userTransfers[0]
+        if (
+          lpTransaction.status == 'processed' &&
+          lpTransaction.txType == 'TRANSFER' &&
+          lpTransaction.symbol == 'ETH'
+        ) {
+          accessLogger.info({ lpTransaction })
+          accessLogger.info(
+            'lp_Transaction with hash ' +
+              txID +
+              ' has been successfully confirmed'
+          )
+          var timestamp = orbiterCore.transferTimeStampToTime(
+            lpTransaction.timestamp ? lpTransaction.timestamp : '0'
+          )
+          accessLogger.info(
+            'update maker_node =',
+            `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
+          )
+          try {
+            await repositoryMakerNode().update(
+              { transactionID: transactionID },
+              { state: 3 }
+            )
+          } catch (error) {
+            errorLogger.error('updateToSqlError =', error)
+          }
+          return
+        }
+      }
+    } catch (err) {
+      errorLogger.error('loopring getTxReceipt failed: ' + err.message)
+      return confirmToLPTransaction(
+        txID,
+        transactionID,
+        toChainId,
+        makerAddress
+      )
+    }
+    return confirmToLPTransaction(txID, transactionID, toChainId, makerAddress)
   }, 8 * 1000)
 }
 
@@ -1186,7 +1483,8 @@ export async function sendTransaction(
     tokenAddress,
     tAmount,
     result_nonce,
-    fromChainID
+    fromChainID,
+    nonce
   ).then(async (response) => {
     accessLogger.info('response =', response)
     if (!response.code) {
@@ -1216,8 +1514,9 @@ export async function sendTransaction(
         confirmToSNTransaction(txID, transactionID, toChainID)
       } else if (toChainID === 8 || toChainID === 88) {
         console.warn({ toChainID, toChain, txID, transactionID })
-
         // confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChain === 9 || toChainID === 99) {
+        confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)
       }

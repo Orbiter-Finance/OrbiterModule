@@ -150,6 +150,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.optimism(apiOptimism)
           break
+        case 'loopring':
+          let apiLoopring = makerConfig.loopring.api
+          if (toChain == 99) {
+            apiLoopring = makerConfig.loopring_test.api
+          }
+          await serviceMakerPull.loopring(apiLoopring)
+          break
       }
     } catch (error) {
       errorLogger.error(
@@ -193,7 +200,11 @@ export function jobMakerNodeTodo(makerAddress: string) {
     await serviceMaker.runTodo(makerAddress)
   }
 
-  new MJobPessimism('*/10 * * * * *', callback, jobMakerNodeTodo.name).schedule()
+  new MJobPessimism(
+    '*/10 * * * * *',
+    callback,
+    jobMakerNodeTodo.name
+  ).schedule()
 }
 
 export function jobCacheCoinbase() {
@@ -201,7 +212,11 @@ export function jobCacheCoinbase() {
     await coinbase.cacheExchangeRates()
   }
 
-  new MJobPessimism('*/10 * * * * *', callback, jobCacheCoinbase.name).schedule()
+  new MJobPessimism(
+    '*/10 * * * * *',
+    callback,
+    jobCacheCoinbase.name
+  ).schedule()
 }
 
 export function jobBalanceAlarm() {

@@ -9,6 +9,7 @@ const MAX_BITS = {
   polygon: 256,
   optimism: 256,
   immutablex: 28,
+  loopring: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -26,6 +27,8 @@ export const CHAIN_INDEX = {
   77: 'optimism',
   8: 'immutablex',
   88: 'immutablex',
+  9: 'loopring',
+  99: 'loopring',
 }
 
 export const SIZE_OP = {
@@ -51,7 +54,13 @@ function isLimitNumber(chain: string | number) {
   if (chain === 8 || chain === 88 || chain === 'immutablex') {
     return true
   }
+  return false
+}
 
+function isLPChain(chain) {
+  if (chain === 9 || chain === 99 || chain === 'loopring') {
+    return true
+  }
   return false
 }
 
@@ -176,6 +185,11 @@ function getTAmountFromRAmount(chain, amount, pText) {
     return {
       state: true,
       tAmount: tAmount,
+    }
+  } else if (isLPChain(chain)) {
+    return {
+      state: true,
+      tAmount: amount + '',
     }
   } else {
     let tAmount =

@@ -24,10 +24,12 @@ export const $env = {
     4: '1', // starknet
     5: '4', // rinkeby
     6: '137', // polygon
+    9: '1',
     22: '421611', // arbitrum test
     33: '4', // zktest
     44: '4', // starknet(R)
     66: '80001', // polygon(R)
+    99: '5', // loopring(G)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -39,7 +41,9 @@ export const $env = {
     6: 'https://polygonscan.com/tx/',
     66: 'https://mumbai.polygonscan.com/tx/',
     7: 'https://optimistic.etherscan.io/tx/',
-    77: 'https://kovan-optimistic.etherscan.io/tx/'
+    77: 'https://kovan-optimistic.etherscan.io/tx/',
+    9: 'https://explorer.loopring.io/tx/',
+    99: 'https://explorer.loopring.io/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -51,7 +55,9 @@ export const $env = {
     6: 'https://polygonscan.com/address/',
     66: 'https://mumbai.polygonscan.com/address/',
     7: 'https://optimistic.etherscan.io/address/',
-    77: 'https://kovan-optimistic.etherscan.io/address/'
+    77: 'https://kovan-optimistic.etherscan.io/address/',
+    9: 'https://explorer.loopring.io/account/',
+    99: 'https://explorer.loopring.io/account/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -63,6 +69,6 @@ export const $env = {
     6: 'https://polygonscan.com/token/',
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
-    77: 'https://kovan-optimistic.etherscan.io/token/'
+    77: 'https://kovan-optimistic.etherscan.io/token/',
   },
 }
