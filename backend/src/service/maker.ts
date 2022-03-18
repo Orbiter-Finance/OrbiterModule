@@ -18,7 +18,11 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
-import { getErc20BalanceByL1, getNetworkIdByChainId, getProviderByChainId } from './starknet/helper'
+import {
+  getErc20BalanceByL1,
+  getNetworkIdByChainId,
+  getProviderByChainId,
+} from './starknet/helper'
 // import Axios from '../util/Axios'
 
 // Axios.axios()
@@ -253,22 +257,61 @@ async function getTokenBalance(
   try {
     switch (CHAIN_INDEX[chainId]) {
       case 'zksync':
-        let api = makerConfig.zksync.api
-        if (chainId == 33) {
-          api = makerConfig.zksync_test.api
+        {
+          let api = makerConfig.zksync.api
+          if (chainId == 33) {
+            api = makerConfig.zksync_test.api
+          }
+
+          const respData = (
+            await axios.get(
+              `${api.endPoint}/accounts/${makerAddress}/committed`
+            )
+          ).data
+
+          if (respData.status == 'success' && respData?.result?.balances) {
+            value = respData.result.balances[tokenName.toUpperCase()]
+          }
         }
+        break
+      case 'loopring':
+        {
+          let api = makerConfig.loopring.api
+          let accountID: Number | undefined
+          if (chainId === 99) {
+            api = makerConfig.loopring_test.api
+          }
+          // getAccountID first
+          const accountInfo = await axios(
+            `${api.endPoint}/account?owner=${makerAddress}`
+          )
+          if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
+            accountID = accountInfo.data.accountId
+          }
 
-        const respData = (
-          await axios.get(`${api.endPoint}/accounts/${makerAddress}/committed`)
-        ).data
-
-        if (respData.status == 'success' && respData?.result?.balances) {
-          value = respData.result.balances[tokenName.toUpperCase()]
+          const balanceData = await axios.get(
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=0`
+          )
+          if (balanceData.status == 200 && balanceData.statusText == 'OK') {
+            if (!Array.isArray(balanceData.data)) {
+              value = '0'
+            }
+            if (balanceData.data.length == 0) {
+              value = '0'
+            }
+            let balanceMap = balanceData.data[0]
+            let totalBalance = balanceMap.total ? balanceMap.total : 0
+            let locked = balanceMap.locked ? balanceMap.locked : 0
+            let withDraw = balanceMap.withDraw ? balanceMap.withDraw : 0
+            value = totalBalance - locked - withDraw + ''
+          }
         }
         break
       case 'starknet':
         const networkId = getNetworkIdByChainId(chainId)
-        value = String(await getErc20BalanceByL1(makerAddress, tokenAddress, networkId))
+        value = String(
+          await getErc20BalanceByL1(makerAddress, tokenAddress, networkId)
+        )
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint

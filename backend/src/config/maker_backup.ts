@@ -74,10 +74,8 @@ export default {
     gasPrice: 2,
   },
   polygon: {
-    wsEndPoint:
-      'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
@@ -86,10 +84,8 @@ export default {
     customChainId: 137,
   },
   polygon_test: {
-    wsEndPoint:
-      'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
@@ -98,10 +94,8 @@ export default {
     customChainId: 80001,
   },
   optimism: {
-    wsEndPoint:
-      'wss://opt.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://opt.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://opt.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://opt.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api-optimistic.etherscan.io/api',
       key: 'Your Key',
@@ -110,10 +104,8 @@ export default {
     customChainId: 10,
   },
   optimism_test: {
-    wsEndPoint:
-      'wss://opt-kovan.g.alchemy.com/v2/Your Key',
-    httpEndPoint:
-      'https://opt-kovan.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://opt-kovan.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://opt-kovan.g.alchemy.com/v2/Your Key',
     api: {
       endPoint: 'https://api-kovan-optimistic.etherscan.io/api',
       key: 'Your Key',
@@ -130,11 +122,29 @@ export default {
     },
     gasPrice: 2,
   },
+  loopring: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api3.loopring.io',
+    api: {
+      endPoint: 'https://api3.loopring.io',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   immutableX_test: {
     wsEndPoint: null,
     httpEndPoint: 'https://api.ropsten.x.immutable.com/v1',
     api: {
       endPoint: 'https://api.ropsten.x.immutable.com/v1',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  loopring_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://uat2.loopring.io',
+    api: {
+      endPoint: 'https://uat2.loopring.io',
       key: '',
     },
     gasPrice: 2,
