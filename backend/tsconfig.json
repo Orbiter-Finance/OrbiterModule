@@ -17,6 +17,8 @@
     "emitDecoratorMetadata": true,
     "sourceMap": true,
     "target": "es2017",
+    "resolveJsonModule": true,
+    "skipLibCheck": true, // For @dydxprotocol/starkex-lib
     // "declaration": true,
     // "declarationDir": "./declarations"
   },

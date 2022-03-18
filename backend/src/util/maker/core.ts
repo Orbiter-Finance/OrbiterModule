@@ -5,8 +5,10 @@ const MAX_BITS = {
   eth: 256,
   arbitrum: 256,
   zksync: 35,
+  starknet: 256,
   polygon: 256,
-  optimism: 256
+  optimism: 256,
+  loopring: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -15,12 +17,15 @@ export const CHAIN_INDEX = {
   22: 'arbitrum',
   3: 'zksync',
   33: 'zksync',
-  4: 'eth',
+  4: 'starknet',
+  44: 'starknet',
   5: 'eth',
   6: 'polygon',
   66: 'polygon',
   7: 'optimism',
-  77: 'optimism'
+  77: 'optimism',
+  9: 'loopring',
+  99: 'loopring',
 }
 
 export const SIZE_OP = {
@@ -29,6 +34,13 @@ export const SIZE_OP = {
 
 function isZKChain(chain: string | number) {
   if (chain === 3 || chain === 33 || chain === 'zksync') {
+    return true
+  }
+  return false
+}
+
+function isLPChain(chain) {
+  if (chain === 9 || chain === 99 || chain === 'loopring') {
     return true
   }
   return false
@@ -155,6 +167,11 @@ function getTAmountFromRAmount(chain, amount, pText) {
     return {
       state: true,
       tAmount: tAmount,
+    }
+  } else if (isLPChain(chain)) {
+    return {
+      state: true,
+      tAmount: amount + '',
     }
   } else {
     let tAmount =

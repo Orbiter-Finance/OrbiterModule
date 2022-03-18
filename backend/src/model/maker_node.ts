@@ -9,10 +9,10 @@ export class MakerNode extends CommonEntity {
   @Column('varchar', { length: 255, unique: true })
   transactionID: string
 
-  @Column('varchar', { length: 60, default: '0x' })
+  @Column('varchar', { length: 255, default: '0x' })
   makerAddress: string
 
-  @Column('varchar', { length: 60, default: '0x' })
+  @Column('varchar', { length: 255, default: '0x' })
   userAddress: string
 
   @Column('varchar', { length: 10, default: '0' })
@@ -45,7 +45,7 @@ export class MakerNode extends CommonEntity {
   @Column('varchar', { length: 40, default: '0' })
   toTimeStamp: string
 
-  @Column('varchar', { length: 60, default: '' })
+  @Column('varchar', { length: 255, default: '' })
   txToken: string // ex: USDC‘s tokenAddress
 
   @Column('varchar', { length: 40, default: '' })

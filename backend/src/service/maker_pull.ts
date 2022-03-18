@@ -11,6 +11,20 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
+import {
+  ExchangeAPI,
+  GlobalAPI,
+  ConnectorNames,
+  ChainId,
+  generateKeyPair,
+  UserAPI,
+  AccountInfo,
+  UserTransferRecord,
+} from '@loopring-web/loopring-sdk'
+const PrivateKeyProvider = require('truffle-privatekey-provider')
+import { makerConfig } from '../config'
+import Web3 from 'web3'
+import { getTxHash } from 'zksync/build/utils'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -162,6 +176,7 @@ const ARBITRUM_LAST: { [key: string]: MakerPullLastData } = {}
 const POLYGON_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSYNC_LAST: { [key: string]: MakerPullLastData } = {}
 const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
+const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -203,7 +218,7 @@ export class ServiceMakerPull {
    */
   private async getLastMakerPull(last: MakerPullLastData) {
     const makerPullStart = await getMakerPullStart()
-    
+
     const nowTime = new Date().getTime()
 
     // 1. if last's pullCount >= max pullCount, the last makerPull invalid
@@ -213,6 +228,7 @@ export class ServiceMakerPull {
     if (last.roundTotal > 0) {
       startTime = nowTime - makerPullStart.incrementPull
     }
+
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
       (last.makerPull && startTime > last.makerPull.txTime.getTime())
@@ -251,7 +267,6 @@ export class ServiceMakerPull {
         nonce: makerPull.amount_flag,
         tx_status: Not('rejected'),
       })
-
       if (targetMP) {
         const transactionID = makeTransactionID(
           targetMP.fromAddress,
@@ -261,7 +276,7 @@ export class ServiceMakerPull {
         await repositoryMakerNode().update(
           {
             transactionID,
-            needToAmount: targetMP.amount,
+            needToAmount: makerPull.amount,
           },
           {
             toTx: makerPull.txHash,
@@ -287,7 +302,6 @@ export class ServiceMakerPull {
         makerPull.chainId,
         makerPull.nonce
       )
-
       // find pool and calculate needToAmount
       const targetMakerPool = await getTargetMakerPool(
         this.makerAddress,
@@ -327,10 +341,8 @@ export class ServiceMakerPull {
         otherData['gasAmount'] = _mp.gasAmount
         otherData['state'] = _mp.tx_status == 'finalized' ? 3 : 2
       }
-
       try {
         const makerNode = await repositoryMakerNode().findOne({ transactionID })
-
         // update or insert
         if (makerNode) {
           await repositoryMakerNode().update({ transactionID }, otherData)
@@ -665,7 +677,6 @@ export class ServiceMakerPull {
         },
       }
     )
-
     // parse data
     const { data } = resp
     if (data.status != 'success' || !data.result?.list) {
@@ -699,7 +710,6 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, _op.amount)
-
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -790,7 +800,6 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
-
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -826,5 +835,136 @@ export class ServiceMakerPull {
     }
     makerPullLastData.makerPull = lastMakePull
     OPTIMISM_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  /**
+   * pull loopring
+   * @prarm api
+   */
+  async loopring(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = LOOPRING_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let netWorkID = this.chainId == 9 ? 1 : 5
+    const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
+    const userApi = new UserAPI({ chainId: netWorkID })
+    let accountInfo: AccountInfo
+    let GetAccountRequest = {
+      owner: this.makerAddress,
+    }
+    let AccountResult = await exchangeApi.getAccount(GetAccountRequest)
+    if (!AccountResult.accInfo || !AccountResult.raw_data) {
+      errorLogger.error('account unlocked')
+      return
+    }
+    accountInfo = AccountResult.accInfo
+    const { exchangeInfo } = await exchangeApi.getExchangeInfo()
+    const provider = new PrivateKeyProvider(
+      makerConfig.privateKeys[this.makerAddress],
+      this.chainId == 9
+        ? makerConfig['mainnet'].httpEndPoint
+        : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
+    )
+    const localWeb3 = new Web3(provider)
+    let options = {
+      web3: localWeb3,
+      address: this.makerAddress,
+      keySeed:
+        accountInfo.keySeed && accountInfo.keySeed !== ''
+          ? accountInfo.keySeed
+          : GlobalAPI.KEY_MESSAGE.replace(
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+      walletType: ConnectorNames.WalletLink,
+      chainId: this.chainId == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+    }
+    const eddsaKey = await generateKeyPair(options)
+    let GetUserApiKeyRequest = {
+      accountId: accountInfo.accountId,
+    }
+    const { apiKey } = await userApi.getUserApiKey(
+      GetUserApiKeyRequest,
+      eddsaKey.sk
+    )
+    if (!apiKey) {
+      errorLogger.error('Get Loopring ApiKey Error')
+      return
+    }
+    const GetUserTransferListRequest = {
+      accountId: accountInfo.accountId,
+      start: 0,
+      end: lastMakePull ? <any>lastMakePull.txTime : 9999999999999,
+      status: 'processed,received',
+      limit: 50,
+      tokenSymbol: 'ETH',
+      transferTypes: 'transfer',
+    }
+    let LPTransferResult
+    try {
+      LPTransferResult = await userApi.getUserTransferList(
+        GetUserTransferListRequest,
+        apiKey
+      )
+    } catch (error) {
+      accessLogger.warn('Get loopring txlist faild: ', error)
+    }
+    // parse data
+    if (!LPTransferResult.totalNum || !LPTransferResult.userTransfers.length) {
+      return
+    }
+    let transacionts = LPTransferResult.userTransfers
+    for (let index = 0; index < transacionts.length; index++) {
+      let lpTransaction = transacionts[index]
+      if (lpTransaction.status != 'processed') {
+        continue
+      }
+      if (lpTransaction.txType != 'TRANSFER') {
+        continue
+      }
+      if (lpTransaction.symbol != 'ETH') {
+        continue
+      }
+      if (!lpTransaction.memo || lpTransaction.memo == '') {
+        continue
+      }
+      const amount_flag = (<any>lpTransaction.memo % 9000) + ''
+      let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2 + ''
+
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: this.tokenAddress,
+        data: JSON.stringify(lpTransaction),
+        amount: lpTransaction.amount,
+        amount_flag,
+        nonce: nonce,
+        fromAddress: lpTransaction.senderAddress,
+        toAddress: lpTransaction.receiverAddress,
+        txBlock: lpTransaction['blockId']
+          ? lpTransaction['blockId'] + '-' + lpTransaction['indexInBlock']
+          : '0',
+        txHash: lpTransaction.hash,
+        txTime: new Date(lpTransaction.timestamp),
+        gasCurrency: lpTransaction.symbol,
+        gasAmount: lpTransaction.feeAmount || '',
+        tx_status:
+          lpTransaction.status == 'processed' ||
+          lpTransaction.status == 'received'
+            ? 'finalized'
+            : 'committed',
+      })
+      await savePull(makerPull)
+      await this.compareData(makerPull, lpTransaction.hash)
+    }
+    // set LOOPRING_LAST
+    if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    LOOPRING_LAST[makerPullLastKey] = makerPullLastData
   }
 }
