@@ -36,10 +36,6 @@ import {
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
-import Axios from '../../util/Axios'
-
-Axios.axios()
-
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
 let loopringStartTime: number = 0
