@@ -24,6 +24,7 @@ import {
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { makerConfig } from '../config'
 import Web3 from 'web3'
+import { getTxHash } from 'zksync/build/utils'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -227,6 +228,8 @@ export class ServiceMakerPull {
     if (last.roundTotal > 0) {
       startTime = nowTime - makerPullStart.incrementPull
     }
+
+    let test = last.makerPull?.txTime.getTime()
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
       (last.makerPull && startTime > last.makerPull.txTime.getTime())
@@ -265,7 +268,6 @@ export class ServiceMakerPull {
         nonce: makerPull.amount_flag,
         tx_status: Not('rejected'),
       })
-
       if (targetMP) {
         const transactionID = makeTransactionID(
           targetMP.fromAddress,
@@ -301,7 +303,6 @@ export class ServiceMakerPull {
         makerPull.chainId,
         makerPull.nonce
       )
-
       // find pool and calculate needToAmount
       const targetMakerPool = await getTargetMakerPool(
         this.makerAddress,
@@ -341,10 +342,8 @@ export class ServiceMakerPull {
         otherData['gasAmount'] = _mp.gasAmount
         otherData['state'] = _mp.tx_status == 'finalized' ? 3 : 2
       }
-
       try {
         const makerNode = await repositoryMakerNode().findOne({ transactionID })
-
         // update or insert
         if (makerNode) {
           await repositoryMakerNode().update({ transactionID }, otherData)
@@ -679,7 +678,6 @@ export class ServiceMakerPull {
         },
       }
     )
-
     // parse data
     const { data } = resp
     if (data.status != 'success' || !data.result?.list) {
@@ -713,7 +711,6 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, _op.amount)
-
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -804,7 +801,6 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
-
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -901,17 +897,22 @@ export class ServiceMakerPull {
     }
     const GetUserTransferListRequest = {
       accountId: accountInfo.accountId,
-      start: lastMakePull ? <any>lastMakePull.txTime : 0,
-      end: 99999999999999,
+      start: 0,
+      end: lastMakePull ? <any>lastMakePull.txTime : 9999999999999,
       status: 'processed,received',
       limit: 50,
       tokenSymbol: 'ETH',
       transferTypes: 'transfer',
     }
-    const LPTransferResult = await userApi.getUserTransferList(
-      GetUserTransferListRequest,
-      apiKey
-    )
+    let LPTransferResult
+    try {
+      LPTransferResult = await userApi.getUserTransferList(
+        GetUserTransferListRequest,
+        apiKey
+      )
+    } catch (error) {
+      accessLogger.warn('Get loopring txlist faild: ', error)
+    }
     // parse data
     if (!LPTransferResult.totalNum || !LPTransferResult.userTransfers.length) {
       return
@@ -945,9 +946,7 @@ export class ServiceMakerPull {
         fromAddress: lpTransaction.senderAddress,
         toAddress: lpTransaction.receiverAddress,
         txBlock: lpTransaction['blockId']
-          ? lpTransaction['blockId']
-          : '0' + '-' + lpTransaction['indexInBlock']
-          ? lpTransaction['indexInBlock']
+          ? lpTransaction['blockId'] + '-' + lpTransaction['indexInBlock']
           : '0',
         txHash: lpTransaction.hash,
         txTime: new Date(lpTransaction.timestamp),

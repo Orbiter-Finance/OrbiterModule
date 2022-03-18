@@ -172,7 +172,6 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json(rst)
   })
 
-
   router.get('maker/get_last_status', async ({ restful }) => {
     const lastStatus = getLastStatus()
 

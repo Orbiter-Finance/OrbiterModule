@@ -691,10 +691,13 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         LPTransferResult.totalNum !== 0 &&
         LPTransferResult.userTransfers.length !== 0
       ) {
-        let transacionts = LPTransferResult.userTransfers
+        let transacionts = LPTransferResult.userTransfers.reverse()
         for (let index = 0; index < transacionts.length; index++) {
           const lpTransaction = transacionts[index]
-          loopringStartTime = lpTransaction.timestamp
+          if (loopringStartTime < lpTransaction.timestamp) {
+            loopringStartTime = lpTransaction.timestamp + 1
+          }
+
           if (
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
@@ -703,7 +706,6 @@ function confirmLPTransaction(pool, tokenAddress, state) {
             lpTransaction.symbol == 'ETH' &&
             lpTransaction.hash !== loopringLastHash
           ) {
-            loopringLastHash = lpTransaction.hash
             const pText = lpTransaction.memo
             const rAmount = lpTransaction.amount
             if (
@@ -722,14 +724,15 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               // donothing
             } else {
               if (pText == validPText) {
+                loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
                 accessLogger.info('match one transaction')
-                let nonce = lpTransaction['storageInfo'].storageId
+                let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
                 accessLogger.info(
                   'Transaction with hash ' +
                     lpTransaction.hash +
                     'storageID ' +
-                    nonce +
+                    (nonce * 2 + 1) +
                     ' has found'
                 )
                 var transactionID =
@@ -760,7 +763,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                         lpTransaction.timestamp ? lpTransaction.timestamp : '0'
                       ),
                       fromAmount: lpTransaction.amount,
-                      formNonce: nonce,
+                      formNonce: nonce + '',
                       txToken: tokenAddress,
                       state: 1,
                     })
@@ -778,7 +781,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                         lpTransaction.amount,
                         lpTransaction.senderAddress,
                         pool,
-                        (nonce - 1) / 2
+                        nonce
                       )
                     })
                     .catch((error) => {
@@ -1172,9 +1175,12 @@ function confirmToLPTransaction(
               txID +
               ' has been successfully confirmed'
           )
+          var timestamp = orbiterCore.transferTimeStampToTime(
+            lpTransaction.timestamp ? lpTransaction.timestamp : '0'
+          )
           accessLogger.info(
             'update maker_node =',
-            `state = 3 WHERE transactionID = '${transactionID}'`
+            `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
           )
           try {
             await repositoryMakerNode().update(

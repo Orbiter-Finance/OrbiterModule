@@ -39,6 +39,13 @@ function isZKChain(chain: string | number) {
   return false
 }
 
+function isLPChain(chain) {
+  if (chain === 9 || chain === 99 || chain === 'loopring') {
+    return true
+  }
+  return false
+}
+
 function isAmountValid(chain, amount) {
   if (!isChainSupport(chain)) {
     return {
@@ -160,6 +167,11 @@ function getTAmountFromRAmount(chain, amount, pText) {
     return {
       state: true,
       tAmount: tAmount,
+    }
+  } else if (isLPChain(chain)) {
+    return {
+      state: true,
+      tAmount: amount + '',
     }
   } else {
     let tAmount =
