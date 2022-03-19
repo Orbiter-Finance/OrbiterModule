@@ -1,6 +1,4 @@
-import {
-  AccountInfo, ExchangeAPI, UserAPI
-} from '@loopring-web/loopring-sdk'
+import { AccountInfo, ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { Not, Repository } from 'typeorm'
@@ -175,6 +173,7 @@ export function getLastStatus() {
     POLYGON_LAST,
     ZKSYNC_LAST,
     OPTIMISM_LAST,
+    LOOPRING_LAST,
   }
 }
 
