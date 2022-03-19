@@ -1,3 +1,6 @@
+import {
+  AccountInfo, ExchangeAPI, UserAPI
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { Not, Repository } from 'typeorm'
@@ -11,20 +14,6 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  AccountInfo,
-  UserTransferRecord,
-} from '@loopring-web/loopring-sdk'
-const PrivateKeyProvider = require('truffle-privatekey-provider')
-import { makerConfig } from '../config'
-import Web3 from 'web3'
-import { getTxHash } from 'zksync/build/utils'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
