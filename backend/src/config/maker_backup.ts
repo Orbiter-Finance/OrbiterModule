@@ -133,9 +133,9 @@ export default {
   },
   loopring: {
     wsEndPoint: null,
-    httpEndPoint: 'https://api3.loopring.io',
+    httpEndPoint: 'https://api3.loopring.io/api/v3',
     api: {
-      endPoint: 'https://api3.loopring.io',
+      endPoint: 'https://api3.loopring.io/api/v3',
       key: '',
     },
     gasPrice: 2,
