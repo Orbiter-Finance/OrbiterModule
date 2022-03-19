@@ -338,10 +338,6 @@ async function sendConsumer(value: any) {
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
-<<<<<<< HEAD
-
-=======
->>>>>>> eth_lr
       let GetUserApiKeyRequest = {
         accountId: accountInfo.accountId,
       }
