@@ -690,7 +690,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         loopringStartTime = new Date().getTime()
       }
       let netWorkID = fromChainID == 9 ? 1 : 5
-      const userApi = new UserAPI(<any>netWorkID)
+      const userApi = new UserAPI({ chainId: netWorkID })
       try {
         await checkLoopringAccountKey(makerAddress, fromChainID)
       } catch (error) {
@@ -711,7 +711,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       )
       if (
         LPTransferResult.totalNum !== 0 &&
-        LPTransferResult.userTransfers.length !== 0
+        LPTransferResult.userTransfers?.length !== 0
       ) {
         let transacionts = LPTransferResult.userTransfers.reverse()
         for (let index = 0; index < transacionts.length; index++) {
@@ -1255,7 +1255,7 @@ function confirmToLPTransaction(
         hashes: txID,
       }
       let netWorkID = toChainId == 9 ? 1 : 5
-      const userApi = new UserAPI(<any>netWorkID)
+      const userApi = new UserAPI({ chainId: netWorkID })
       const LPTransferResult = await userApi.getUserTransferList(
         GetUserTransferListRequest,
         lpKey
@@ -1515,7 +1515,7 @@ export async function sendTransaction(
       } else if (toChainID === 8 || toChainID === 88) {
         console.warn({ toChainID, toChain, txID, transactionID })
         // confirmToSNTransaction(txID, transactionID, toChainID)
-      } else if (toChain === 9 || toChainID === 99) {
+      } else if (toChainID === 9 || toChainID === 99) {
         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)

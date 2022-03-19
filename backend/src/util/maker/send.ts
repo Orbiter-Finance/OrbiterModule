@@ -410,15 +410,13 @@ async function sendConsumer(value: any) {
         throw Error('account unlocked')
       }
       const { exchangeInfo } = await exchangeApi.getExchangeInfo()
-
       const provider = new PrivateKeyProvider(
         makerConfig.privateKeys[makerAddress],
         chainID == 9
-          ? makerConfig[toChain].httpEndPoint
+          ? makerConfig['mainnet'].httpEndPoint
           : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
       )
       const localWeb3 = new Web3(provider)
-
       let options = {
         web3: localWeb3,
         address: accountInfo.owner,
@@ -432,10 +430,7 @@ async function sendConsumer(value: any) {
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
-
       const eddsaKey = await generateKeyPair(options)
-
-      console.log('eddsaKey =', eddsaKey)
       let GetUserApiKeyRequest = {
         accountId: accountInfo.accountId,
       }
