@@ -855,7 +855,7 @@ export class ServiceMakerPull {
     const GetUserTransferListRequest = {
       accountId: accountInfo.accountId,
       start: 0,
-      end: lastMakePull ? <any>lastMakePull.txTime : 9999999999999,
+      end: lastMakePull ? lastMakePull.txTime.getTime() : 9999999999999,
       status: 'processed,received',
       limit: 50,
       tokenSymbol: 'ETH',
