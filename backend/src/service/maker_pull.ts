@@ -862,39 +862,7 @@ export class ServiceMakerPull {
       return
     }
     accountInfo = AccountResult.accInfo
-    const { exchangeInfo } = await exchangeApi.getExchangeInfo()
-    const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[this.makerAddress],
-      this.chainId == 9
-        ? makerConfig['mainnet'].httpEndPoint
-        : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
-    )
-    const localWeb3 = new Web3(provider)
-    let options = {
-      web3: localWeb3,
-      address: this.makerAddress,
-      keySeed:
-        accountInfo.keySeed && accountInfo.keySeed !== ''
-          ? accountInfo.keySeed
-          : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-      walletType: ConnectorNames.WalletLink,
-      chainId: this.chainId == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-    }
-    const eddsaKey = await generateKeyPair(options)
-    let GetUserApiKeyRequest = {
-      accountId: accountInfo.accountId,
-    }
-    const { apiKey } = await userApi.getUserApiKey(
-      GetUserApiKeyRequest,
-      eddsaKey.sk
-    )
-    if (!apiKey) {
-      errorLogger.error('Get Loopring ApiKey Error')
-      return
-    }
+    let apiKey = api.key
     const GetUserTransferListRequest = {
       accountId: accountInfo.accountId,
       start: 0,
