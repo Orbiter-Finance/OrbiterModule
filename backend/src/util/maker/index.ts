@@ -1157,7 +1157,7 @@ function confirmToLPTransaction(
       )
       if (
         LPTransferResult.totalNum === 1 &&
-        LPTransferResult.userTransfers.length === 1
+        LPTransferResult.userTransfers?.length === 1
       ) {
         let lpTransaction = LPTransferResult.userTransfers[0]
         if (
