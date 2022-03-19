@@ -2,7 +2,7 @@
 FROM node:14-alpine
 
 # For @dydxprotocol/starkex-lib
-RUN apk add g++ make python3
+RUN apk add g++ make python3 git
 
 WORKDIR /app
 COPY . .
