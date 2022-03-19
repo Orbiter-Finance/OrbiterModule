@@ -914,7 +914,7 @@ export class ServiceMakerPull {
       accessLogger.warn('Get loopring txlist faild: ', error)
     }
     // parse data
-    if (!LPTransferResult.totalNum || !LPTransferResult.userTransfers.length) {
+    if (!LPTransferResult.totalNum || !LPTransferResult.userTransfers?.length) {
       return
     }
     let transacionts = LPTransferResult.userTransfers
