@@ -13,6 +13,7 @@
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
     "@dydxprotocol/starkex-lib": "^1.1.6",
+    "@imtbl/imx-sdk": "^1.6.0",
     "@loopring-web/loopring-sdk": "1.8.17",
     "@metamask/eth-sig-util": "^4.0.0",
     "axios": "^0.21.1",
@@ -33,7 +34,7 @@
     "node-cache": "^5.1.2",
     "node-schedule": "^2.1.0",
     "reflect-metadata": "^0.1.13",
-    "starknet": "^2.5.1",
+    "starknet": "2.5.1",
     "truffle-privatekey-provider": "^1.5.0",
     "tunnel": "0.0.6",
     "typeorm": "^0.2.37",

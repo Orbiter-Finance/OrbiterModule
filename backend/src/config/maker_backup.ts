@@ -113,11 +113,29 @@ export default {
     gasPrice: 2,
     customChainId: 69,
   },
+  immutableX: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.x.immutable.com/v1',
+    api: {
+      endPoint: 'https://api.x.immutable.com/v1',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  immutableX_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.ropsten.x.immutable.com/v1',
+    api: {
+      endPoint: 'https://api.ropsten.x.immutable.com/v1',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   loopring: {
     wsEndPoint: null,
-    httpEndPoint: 'https://api3.loopring.io',
+    httpEndPoint: 'https://api3.loopring.io/api/v3',
     api: {
-      endPoint: 'https://api3.loopring.io',
+      endPoint: 'https://api3.loopring.io/api/v3',
       key: '',
     },
     gasPrice: 2,
