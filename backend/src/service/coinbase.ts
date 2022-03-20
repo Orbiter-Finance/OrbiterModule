@@ -3,7 +3,7 @@ import { BigNumber } from 'bignumber.js'
 import { equalsIgnoreCase } from '../util'
 import { errorLogger } from '../util/logger'
 
-let exchangeRates: any
+let exchangeRates: { [key: string]: string } | undefined
 
 /**
  * @param sourceCurrency
@@ -23,7 +23,7 @@ export async function getExchangeToUsdRate(
       exchangeRates = await cacheExchangeRates(currency)
     }
     if (exchangeRates?.[sourceCurrency]) {
-      rate = exchangeRates[sourceCurrency]
+      rate = Number(exchangeRates[sourceCurrency])
     }
   } catch (error) {
     errorLogger.error(error)
@@ -73,4 +73,21 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   exchangeRates = data.rates
 
   return data.rates
+}
+
+/**
+ *
+ * @param currency
+ * @returns
+ */
+export async function getExchangeRates(currency = 'USD') {
+  try {
+    if (!exchangeRates) {
+      exchangeRates = await cacheExchangeRates(currency)
+    }
+  } catch (error) {
+    errorLogger.error(error)
+  }
+
+  return exchangeRates
 }
