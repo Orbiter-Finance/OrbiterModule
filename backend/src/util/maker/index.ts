@@ -10,6 +10,7 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
+import { factoryIMXListen } from '../../service/immutablex/imx_listen'
 import {
   getL1AddressByL2,
   getL2AddressByL1,
@@ -310,7 +311,28 @@ async function watchTransfers(pool, state) {
       })
     return
   }
+  // immutablex || immutablex_test
+  if (fromChainID == 8 || fromChainID == 88) {
+    accessLogger.info(
+      `Immutablex transfer listen: ${makerAddress}, toChainId: ${toChainID}`
+    )
+    const imxListen = factoryIMXListen(fromChainID, makerAddress)
+    imxListen.transfer(
+      { to: makerAddress },
+      {
+        onConfirmation: (transaction: any) => {
+          if (!transaction.hash) {
+            return
+          }
 
+          if (checkData(transaction.value + '', transaction.hash) === true) {
+            confirmIMXTransaction(pool, state, transaction)
+          }
+        },
+      }
+    )
+    return
+  }
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
@@ -886,6 +908,85 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
   )
 }
 
+async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
+  const makerAddress = pool.makerAddress
+  const toChain = state ? pool.c1Name : pool.c2Name
+  const tokenAddress = state ? pool.t2Address : pool.t1Address
+  const toChainID = state ? pool.c1ID : pool.c2ID
+  const fromChainID = state ? pool.c2ID : pool.c1ID
+  const { hash, from, nonce, timeStamp, value, txreceipt_status } = transaction
+
+  accessLogger.info(
+    'ImmutableX Transaction with hash ' + hash + ', status: ' + txreceipt_status
+  )
+
+  const transactionID = from.toLowerCase() + fromChainID + nonce
+
+  let makerNode: MakerNode | undefined
+  try {
+    makerNode = await repositoryMakerNode().findOne({
+      transactionID: transactionID,
+    })
+  } catch (error) {
+    errorLogger.error('isHaveSqlError =', error)
+    return
+  }
+
+  if (!makerNode) {
+    try {
+      await repositoryMakerNode().insert({
+        transactionID: transactionID,
+        userAddress: from,
+        makerAddress,
+        fromChain: fromChainID,
+        toChain: toChainID,
+        formTx: hash,
+        fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
+        fromAmount: value,
+        formNonce: nonce,
+        txToken: tokenAddress,
+        state: 0,
+      })
+      accessLogger.info('add success')
+    } catch (error) {
+      errorLogger.error('newTransactionSqlError =', error)
+    }
+  }
+
+  accessLogger.info(
+    'Transaction with hash ' + hash + ' has been successfully confirmed'
+  )
+  accessLogger.info(
+    'updateFromSql =',
+    `state = 1 WHERE transactionID = '${transactionID}'`
+  )
+  try {
+    await repositoryMakerNode().update(
+      { transactionID: transactionID },
+      { state: 1 }
+    )
+    accessLogger.info('update success')
+  } catch (error) {
+    errorLogger.error('updateFromError =', error)
+    return
+  }
+
+  const toTokenAddress = state ? pool.t1Address : pool.t2Address
+
+  sendTransaction(
+    makerAddress,
+    transactionID,
+    fromChainID,
+    toChainID,
+    toChain,
+    toTokenAddress,
+    value,
+    from,
+    pool,
+    nonce
+  )
+}
+
 function confirmFromTransaction(
   pool,
   state,
@@ -1407,6 +1508,9 @@ export async function sendTransaction(
         confirmToZKTransaction(syncProvider, txID, transactionID)
       } else if (toChainID === 4 || toChainID === 44) {
         confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 8 || toChainID === 88) {
+        console.warn({ toChainID, toChain, txID, transactionID })
+        // confirmToSNTransaction(txID, transactionID, toChainID)
       } else if (toChainID === 9 || toChainID === 99) {
         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
       } else {

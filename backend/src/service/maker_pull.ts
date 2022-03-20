@@ -1,3 +1,4 @@
+import { AccountInfo, ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { Not, Repository } from 'typeorm'
@@ -11,20 +12,6 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  AccountInfo,
-  UserTransferRecord,
-} from '@loopring-web/loopring-sdk'
-const PrivateKeyProvider = require('truffle-privatekey-provider')
-import { makerConfig } from '../config'
-import Web3 from 'web3'
-import { getTxHash } from 'zksync/build/utils'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -186,6 +173,7 @@ export function getLastStatus() {
     POLYGON_LAST,
     ZKSYNC_LAST,
     OPTIMISM_LAST,
+    LOOPRING_LAST,
   }
 }
 
@@ -861,43 +849,11 @@ export class ServiceMakerPull {
       return
     }
     accountInfo = AccountResult.accInfo
-    const { exchangeInfo } = await exchangeApi.getExchangeInfo()
-    const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[this.makerAddress],
-      this.chainId == 9
-        ? makerConfig['mainnet'].httpEndPoint
-        : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
-    )
-    const localWeb3 = new Web3(provider)
-    let options = {
-      web3: localWeb3,
-      address: this.makerAddress,
-      keySeed:
-        accountInfo.keySeed && accountInfo.keySeed !== ''
-          ? accountInfo.keySeed
-          : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-      walletType: ConnectorNames.WalletLink,
-      chainId: this.chainId == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-    }
-    const eddsaKey = await generateKeyPair(options)
-    let GetUserApiKeyRequest = {
-      accountId: accountInfo.accountId,
-    }
-    const { apiKey } = await userApi.getUserApiKey(
-      GetUserApiKeyRequest,
-      eddsaKey.sk
-    )
-    if (!apiKey) {
-      errorLogger.error('Get Loopring ApiKey Error')
-      return
-    }
+    let apiKey = api.key
     const GetUserTransferListRequest = {
       accountId: accountInfo.accountId,
       start: 0,
-      end: lastMakePull ? <any>lastMakePull.txTime : 9999999999999,
+      end: lastMakePull ? lastMakePull.txTime.getTime() : 9999999999999,
       status: 'processed,received',
       limit: 50,
       tokenSymbol: 'ETH',

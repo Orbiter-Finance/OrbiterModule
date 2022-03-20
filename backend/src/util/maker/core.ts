@@ -8,6 +8,7 @@ const MAX_BITS = {
   starknet: 256,
   polygon: 256,
   optimism: 256,
+  immutablex: 28,
   loopring: 256,
 }
 
@@ -24,6 +25,8 @@ export const CHAIN_INDEX = {
   66: 'polygon',
   7: 'optimism',
   77: 'optimism',
+  8: 'immutablex',
+  88: 'immutablex',
   9: 'loopring',
   99: 'loopring',
 }
@@ -32,8 +35,23 @@ export const SIZE_OP = {
   P_NUMBER: 4,
 }
 
+/**
+ * @deprecated
+ * @param chain
+ * @returns
+ */
 function isZKChain(chain: string | number) {
   if (chain === 3 || chain === 33 || chain === 'zksync') {
+    return true
+  }
+  return false
+}
+
+function isLimitNumber(chain: string | number) {
+  if (chain === 3 || chain === 33 || chain === 'zksync') {
+    return true
+  }
+  if (chain === 8 || chain === 88 || chain === 'immutablex') {
     return true
   }
   return false
@@ -70,7 +88,7 @@ function isAmountValid(chain, amount) {
   }
 
   let rAmount = amount
-  if (isZKChain(chain)) {
+  if (isLimitNumber(chain)) {
     rAmount = removeSidesZero(amount.toString())
   }
   if (!isAmountInRegion(rAmount, chain)) {
@@ -79,7 +97,7 @@ function isAmountValid(chain, amount) {
       error: 'Amount exceeds the spending range',
     }
   }
-  if (isZKChain(chain) && amountLength > validDigit) {
+  if (isLimitNumber(chain) && amountLength > validDigit) {
     let zkAmount = amount.toString().slice(0, validDigit)
     let op_text = zkAmount.slice(-SIZE_OP.P_NUMBER)
     if (Number(op_text) === 0) {
@@ -159,7 +177,7 @@ function getTAmountFromRAmount(chain, amount, pText) {
       error: 'Amount size must be greater than pNumberSize',
     }
   }
-  if (isZKChain(chain) && amountLength > validDigit) {
+  if (isLimitNumber(chain) && amountLength > validDigit) {
     let tAmount =
       amount.toString().slice(0, validDigit - pText.length) +
       pText +
@@ -205,7 +223,7 @@ function getPTextFromTAmount(chain, amount) {
       error: 'Amount size must be greater than pNumberSize',
     }
   }
-  if (isZKChain(chain) && amountLength > validDigit) {
+  if (isLimitNumber(chain) && amountLength > validDigit) {
     let zkAmount = amount.toString().slice(0, validDigit)
     let op_text = zkAmount.slice(-SIZE_OP.P_NUMBER)
     return {
@@ -247,7 +265,7 @@ function getRAmountFromTAmount(chain, amount) {
       error: 'Amount size must be greater than pNumberSize',
     }
   }
-  if (isZKChain(chain) && amountLength > validDigit) {
+  if (isLimitNumber(chain) && amountLength > validDigit) {
     let rAmount =
       amount.slice(0, validDigit - SIZE_OP.P_NUMBER) +
       pText +
@@ -395,5 +413,6 @@ export {
   getPTextFromTAmount,
   pTextFormatZero,
   isZKChain,
+  isLimitNumber,
   getToAmountFromUserAmount,
 }
