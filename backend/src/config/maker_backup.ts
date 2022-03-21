@@ -5,8 +5,8 @@ export default {
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key', // limit
-      gasKey: 'Your Key',
     },
+    gasKey: 'Your Key',
     gasPrice: 0,
   },
   rinkeby: {
