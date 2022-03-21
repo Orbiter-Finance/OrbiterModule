@@ -535,7 +535,10 @@ async function sendConsumer(value: any) {
     return
   }
 
-  const web3Net = makerConfig[toChain].httpEndPoint
+  let web3Net = makerConfig[toChain].httpEndPointInfura
+  if (!web3Net) {
+    web3Net = makerConfig[toChain].httpEndPoint
+  }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
 
