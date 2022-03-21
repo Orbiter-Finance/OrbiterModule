@@ -61,6 +61,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
     } catch (error) {
+      maxGwei = 80
       return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
