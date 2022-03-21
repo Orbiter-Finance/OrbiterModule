@@ -4,7 +4,8 @@ export default {
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
-      key: 'Your Key',
+      key: 'Your Key', // limit
+      gasKey: 'Your Key',
     },
     gasPrice: 0,
   },

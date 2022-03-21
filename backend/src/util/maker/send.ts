@@ -36,7 +36,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
-      const apiKey = makerConfig[toChain].api.key
+      const apiKey = makerConfig[toChain].api.gasKey
+        ? makerConfig[toChain].api.gasKey
+        : makerConfig[toChain].api.key
       const url =
         httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
       const response = await axios.get(url)
