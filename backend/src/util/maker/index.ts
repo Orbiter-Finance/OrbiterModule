@@ -694,7 +694,6 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       } catch (error) {
         errorLogger.error('checkLoopringAccountKeyError =', error)
       }
-      accessLogger.info('loopringStartTime =', loopringStartTime)
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
         start: loopringStartTime,
@@ -717,8 +716,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
           const lpTransaction = transacionts[index]
           if (loopringStartTime < lpTransaction.timestamp) {
             loopringStartTime = lpTransaction.timestamp + 1
+            accessLogger.info('loopringStartTime =', loopringStartTime)
           }
-
           if (
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
