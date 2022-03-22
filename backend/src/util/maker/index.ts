@@ -36,6 +36,7 @@ import {
   AccountInfo,
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
+import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -668,6 +669,7 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
       eddsaKey.sk
     )
     lpKey = apiKey
+    provider.engine.stop()
     if (!apiKey) {
       throw Error('Get Loopring ApiKey Error')
     }
@@ -692,6 +694,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       } catch (error) {
         errorLogger.error('checkLoopringAccountKeyError =', error)
       }
+      accessLogger.info('loopringStartTime =', loopringStartTime)
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
         start: loopringStartTime,
@@ -1566,6 +1569,12 @@ export async function sendTransaction(
       } catch (error) {
         errorLogger.error('updateErrorSqlError =', error)
         return
+      }
+      let alert = 'Send Transaction Error ' + transactionID
+      try {
+        doSms(alert)
+      } catch (error) {
+        errorLogger.error('sendTransactionErrorMessage =', error)
       }
     }
   })
