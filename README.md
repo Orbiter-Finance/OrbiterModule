@@ -74,6 +74,21 @@ vim ~/.bash_history
 history -r
 ```
 
+#### Also, you can run `privatekey_input.py` set privatekey
+
+```
+./privatekey_input.py
+```
+
+##### When you need it run in backend, use `screen`
+```
+screen -S privatekey_input
+```
+```
+./privatekey_input.py
+```
+##### End do it and input keys, close privatekey_input screen. In vscode terminal, you can close tab
+
 ## Licence
 
 Orbiter Module is open source software licensed as
