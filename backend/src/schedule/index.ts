@@ -1,6 +1,6 @@
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
-import { accessLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
 import {
   jobBalanceAlarm,
@@ -9,6 +9,9 @@ import {
   // jobMakerNodeTodo,
   jobMakerPull,
 } from './jobs'
+import { doSms } from '../sms/smsSchinese'
+
+let smsTimeStamp = 0
 
 async function waittingStartMaker() {
   const makerList = await getMakerList()
@@ -39,6 +42,29 @@ async function waittingStartMaker() {
         continue
       }
 
+      var myDate = new Date()
+      let nowTime = myDate.valueOf()
+
+      let alert =
+        'Waitting for the privateKey ' +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
+
+      if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
+        try {
+          doSms(alert)
+          accessLogger.info(
+            'sendNeedPrivateKeyMessage,   smsTimeStamp =',
+            nowTime
+          )
+        } catch (error) {
+          errorLogger.error('sendPrivateSMSError =', error)
+        }
+        smsTimeStamp = nowTime
+      }
       if (startedIndexs.indexOf(index) === -1) {
         missPrivateKeyMakerAddresses.push(makerAddress)
       }

@@ -443,6 +443,7 @@ async function sendConsumer(value: any) {
         GetUserApiKeyRequest,
         eddsaKey.sk
       )
+      provider.engine.stop()
       if (!apiKey) {
         throw Error('Get Loopring ApiKey Error')
       }

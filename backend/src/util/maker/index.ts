@@ -37,6 +37,8 @@ import {
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
+import { doSms } from '../../sms/smsSchinese'
+
 // import Axios from '../../util/Axios'
 
 // Axios.axios()
@@ -672,6 +674,7 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
       eddsaKey.sk
     )
     lpKey = apiKey
+    provider.engine.stop()
     if (!apiKey) {
       throw Error('Get Loopring ApiKey Error')
     }
@@ -718,6 +721,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
           const lpTransaction = transacionts[index]
           if (loopringStartTime < lpTransaction.timestamp) {
             loopringStartTime = lpTransaction.timestamp + 1
+            accessLogger.info('loopringStartTime =', loopringStartTime)
           }
 
           if (
@@ -1570,6 +1574,12 @@ export async function sendTransaction(
       } catch (error) {
         errorLogger.error('updateErrorSqlError =', error)
         return
+      }
+      let alert = 'Send Transaction Error ' + transactionID
+      try {
+        doSms(alert)
+      } catch (error) {
+        errorLogger.error('sendTransactionErrorMessage =', error)
       }
     }
   })
