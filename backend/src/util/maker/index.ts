@@ -649,31 +649,39 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
-    const localWeb3 = new Web3(provider)
-    let options = {
-      web3: localWeb3,
-      address: makerAddress,
-      keySeed:
-        accountInfo.keySeed && accountInfo.keySeed !== ''
-          ? accountInfo.keySeed
-          : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-      walletType: ConnectorNames.WalletLink,
-      chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-    }
-    const eddsaKey = await generateKeyPair(options)
-    let GetUserApiKeyRequest = {
-      accountId: accountInfo.accountId,
-    }
-    const { apiKey } = await userApi.getUserApiKey(
-      GetUserApiKeyRequest,
-      eddsaKey.sk
-    )
-    lpKey = apiKey
-    if (!apiKey) {
-      throw Error('Get Loopring ApiKey Error')
+
+    try {
+      const localWeb3 = new Web3(provider)
+      let options = {
+        web3: localWeb3,
+        address: makerAddress,
+        keySeed:
+          accountInfo.keySeed && accountInfo.keySeed !== ''
+            ? accountInfo.keySeed
+            : GlobalAPI.KEY_MESSAGE.replace(
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.WalletLink,
+        chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+      }
+      const eddsaKey = await generateKeyPair(options)
+      let GetUserApiKeyRequest = {
+        accountId: accountInfo.accountId,
+      }
+      const { apiKey } = await userApi.getUserApiKey(
+        GetUserApiKeyRequest,
+        eddsaKey.sk
+      )
+      lpKey = apiKey
+      if (!apiKey) {
+        throw Error('Get Loopring ApiKey Error')
+      }
+    } catch (err) {
+      throw err
+    } finally {
+      // Stop web3-provider-engine. Prevent data from being pulled all the time
+      provider.engine.stop()
     }
   }
 }
