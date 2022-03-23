@@ -1,4 +1,6 @@
 import schedule from 'node-schedule'
+import axios from "axios"
+import { Base64 } from "js-base64";
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
 import * as coinbase from '../service/coinbase'
@@ -8,7 +10,9 @@ import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
-
+import { makerList, makerListHistory } from '../util/maker/maker_list';
+const apiUrl = "https://api.github.com"
+const githubToken = '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'
 class MJob {
   protected rule:
     | string
@@ -225,4 +229,29 @@ export function jobBalanceAlarm() {
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
+}
+
+export function jobGetMakerList() {
+  const callback = async () => {
+    const res = await axios({
+      url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
+      method: "get",
+      headers: {
+        Accept: "*/*",
+        Authorization: `token ${githubToken}`,
+      },
+    });
+    const base64MakerListWrap = res.data.content;
+    const makerListWrapString = Base64.decode(base64MakerListWrap);
+    const makerListWrap: any = JSON.parse(makerListWrapString);
+    makerList.length = 0
+    makerList.push(...makerListWrap.makerList)
+    makerListHistory.length = 0
+    makerListHistory.push(...makerListWrap.historyMakerList)
+  }
+  new MJobPessimism(
+    '*/10 * * * * *',
+    callback,
+    jobGetMakerList.name
+  ).schedule()
 }

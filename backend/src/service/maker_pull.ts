@@ -91,8 +91,7 @@ export async function getMakerPulls(
   })
   queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
-    `${ALIAS_MP}.${
-      fromOrToMaker ? 'fromAddress' : 'toAddress'
+    `${ALIAS_MP}.${fromOrToMaker ? 'fromAddress' : 'toAddress'
     } = :makerAddress`,
     { makerAddress }
   )
@@ -388,7 +387,7 @@ export class ServiceMakerPull {
       },
       timeout: 16000,
     })
-
+    console.log(api, 111111)
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
@@ -909,7 +908,7 @@ export class ServiceMakerPull {
         gasAmount: lpTransaction.feeAmount || '',
         tx_status:
           lpTransaction.status == 'processed' ||
-          lpTransaction.status == 'received'
+            lpTransaction.status == 'received'
             ? 'finalized'
             : 'committed',
       })
