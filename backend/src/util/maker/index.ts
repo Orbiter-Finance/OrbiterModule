@@ -1584,7 +1584,7 @@ export async function sendTransaction(
       }
       let alert = 'Send Transaction Error ' + transactionID
       try {
-        doSms(alert)
+        // doSms(alert)
       } catch (error) {
         errorLogger.error('sendTransactionErrorMessage =', error)
       }
