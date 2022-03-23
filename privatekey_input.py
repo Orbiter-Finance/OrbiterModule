@@ -44,4 +44,4 @@ while True:
         postPrivateKeys(privateKeys)
     except Exception as err:
         print(err)
-    time.sleep(8)
+    time.sleep(60)
