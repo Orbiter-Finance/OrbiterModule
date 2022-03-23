@@ -73,13 +73,16 @@ export default defineComponent({
       navActive: '/',
       makerAddresses: [] as string[],
       makerAddressSelected: '',
+      exchangeRates: {} as { [key: string]: string },
     })
 
     provide('makerAddressSelected', toRefs(state).makerAddressSelected)
+    provide('exchangeRates', toRefs(state).exchangeRates)
 
     const getGlobalInfo = async () => {
-      const resp = await $axios.get<{ makerAddresses: string[] }>('global')
+      const resp = await $axios.get('global')
       state.makerAddresses = resp.data.makerAddresses
+      state.exchangeRates = resp.data.exchangeRates
 
       state.makerAddressSelected = state.makerAddresses?.[0] || ''
 

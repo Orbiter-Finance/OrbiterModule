@@ -3,7 +3,6 @@ import koaBodyparser from 'koa-bodyparser'
 import cors from 'koa2-cors'
 import NodeCache from 'node-cache'
 import 'reflect-metadata'
-import { number } from 'starknet'
 import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
@@ -12,6 +11,8 @@ import { startJobs } from './schedule'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
+// import Axios from './util/Axios'
+// // Axios.axios()
 
 const main = async () => {
   try {
