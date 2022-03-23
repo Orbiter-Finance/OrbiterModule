@@ -39,10 +39,6 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 import { doSms } from '../../sms/smsSchinese'
 
-// import Axios from '../../util/Axios'
-
-// Axios.axios()
-
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
 let loopringStartTime: {} = {}
