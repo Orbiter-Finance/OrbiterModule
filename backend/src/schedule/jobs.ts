@@ -12,7 +12,7 @@ import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
 import { makerList, makerListHistory } from '../util/maker/maker_list';
 const apiUrl = "https://api.github.com"
-const githubToken = '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'
+const githubToken = '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'
 class MJob {
   protected rule:
     | string
