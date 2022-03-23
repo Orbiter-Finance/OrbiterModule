@@ -12,6 +12,7 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
+import { PromisePool } from '@supercharge/promise-pool'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -359,6 +360,15 @@ export class ServiceMakerPull {
   }
 
   /**
+   * @param promiseMethods
+   */
+  private async doPromisePool(promiseMethods: (() => Promise<unknown>)[]) {
+    await PromisePool.for(promiseMethods)
+      .withConcurrency(10)
+      .process(async (item) => await item())
+  }
+
+  /**
    * pull etherscan
    * @param api
    */
@@ -398,6 +408,7 @@ export class ServiceMakerPull {
       return
     }
 
+    const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data.result) {
       // contractAddress = 0x0...0
       let contractAddress = item.contractAddress
@@ -435,11 +446,16 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull)
 
-      // compare
-      await this.compareData(makerPull, item.hash)
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+
+        // compare
+        await this.compareData(makerPull, item.hash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
 
     // set ETHERSCAN_LAST
     if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
@@ -489,6 +505,7 @@ export class ServiceMakerPull {
       return
     }
 
+    const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data.result) {
       // contractAddress = 0x0...0
       let contractAddress = item.contractAddress
@@ -526,11 +543,16 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull)
 
-      // compare
-      await this.compareData(makerPull, item.hash)
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+
+        // compare
+        await this.compareData(makerPull, item.hash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
 
     // set ARBITRUM_LAST
     if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
@@ -580,6 +602,7 @@ export class ServiceMakerPull {
       return
     }
 
+    const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data.result) {
       // contractAddress = 0x0...0
       let contractAddress = item.contractAddress
@@ -617,11 +640,16 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull)
 
-      // compare
-      await this.compareData(makerPull, item.hash)
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+
+        // compare
+        await this.compareData(makerPull, item.hash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
 
     // set POLYGON_LAST
     if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
@@ -675,6 +703,7 @@ export class ServiceMakerPull {
     }
 
     const transactions = data.result.list
+    const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of transactions) {
       const _op = item.op
       if (!_op) {
@@ -716,16 +745,21 @@ export class ServiceMakerPull {
         gasAmount: _op.fee || '',
         tx_status,
       })
-      await savePull(makerPull)
 
-      // skip compare if failReason != null or status == 'Rejected'
-      if (item.failReason != null || tx_status == 'rejected') {
-        continue
-      }
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
 
-      // compare
-      await this.compareData(makerPull, item.txHash)
+        // skip compare if failReason != null or status == 'Rejected'
+        if (item.failReason != null || tx_status == 'rejected') {
+          return
+        }
+
+        // compare
+        await this.compareData(makerPull, item.txHash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
 
     // set ZKSYNC_LAST
     if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
@@ -775,6 +809,7 @@ export class ServiceMakerPull {
       return
     }
 
+    const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data.result) {
       // contractAddress = 0x0...0
       let contractAddress = item.contractAddress
@@ -811,11 +846,16 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull)
 
-      // compare
-      await this.compareData(makerPull, item.hash)
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+
+        // compare
+        await this.compareData(makerPull, item.hash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
 
     // set OPTIMISM_LAST
     if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
@@ -859,7 +899,7 @@ export class ServiceMakerPull {
       tokenSymbol: 'ETH',
       transferTypes: 'transfer',
     }
-    let LPTransferResult
+    let LPTransferResult: any
     try {
       LPTransferResult = await userApi.getUserTransferList(
         GetUserTransferListRequest,
@@ -872,9 +912,9 @@ export class ServiceMakerPull {
     if (!LPTransferResult.totalNum || !LPTransferResult.userTransfers?.length) {
       return
     }
-    let transacionts = LPTransferResult.userTransfers
-    for (let index = 0; index < transacionts.length; index++) {
-      let lpTransaction = transacionts[index]
+
+    const promiseMethods: (() => Promise<unknown>)[] = []
+    for (const lpTransaction of LPTransferResult.userTransfers) {
       if (lpTransaction.status != 'processed') {
         continue
       }
@@ -913,9 +953,15 @@ export class ServiceMakerPull {
             ? 'finalized'
             : 'committed',
       })
-      await savePull(makerPull)
-      await this.compareData(makerPull, lpTransaction.hash)
+
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+        await this.compareData(makerPull, lpTransaction.hash)
+      })
     }
+
+    await this.doPromisePool(promiseMethods)
+
     // set LOOPRING_LAST
     if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
       makerPullLastData.pullCount++
