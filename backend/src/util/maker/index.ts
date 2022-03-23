@@ -45,7 +45,7 @@ import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
-let loopringStartTime: number = 0
+let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
@@ -689,8 +689,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       let toChainID = state ? pool.c1ID : pool.c2ID
       let toChain = state ? pool.c1Name : pool.c2Name
       let validPText = (9000 + Number(toChainID)).toString()
-      if (!loopringStartTime) {
-        loopringStartTime = new Date().getTime()
+      if (!loopringStartTime[toChain]) {
+        loopringStartTime[toChain] = new Date().getTime()
       }
       let netWorkID = fromChainID == 9 ? 1 : 5
       const userApi = new UserAPI({ chainId: netWorkID })
@@ -701,7 +701,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       }
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
-        start: loopringStartTime,
+        start: loopringStartTime[toChain],
         end: 99999999999999,
         status: 'processed',
         limit: 50,
@@ -719,9 +719,14 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         let transacionts = LPTransferResult.userTransfers.reverse()
         for (let index = 0; index < transacionts.length; index++) {
           const lpTransaction = transacionts[index]
-          if (loopringStartTime < lpTransaction.timestamp) {
-            loopringStartTime = lpTransaction.timestamp + 1
-            accessLogger.info('loopringStartTime =', loopringStartTime)
+          if (loopringStartTime[toChain] < lpTransaction.timestamp) {
+            loopringStartTime[toChain] = lpTransaction.timestamp + 1
+            accessLogger.info(
+              'loopringStartTime[',
+              toChain,
+              '] =',
+              loopringStartTime[toChain]
+            )
           }
 
           if (
