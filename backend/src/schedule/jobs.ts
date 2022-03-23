@@ -150,13 +150,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.optimism(apiOptimism)
           break
-        case 'loopring':
-          let apiLoopring = makerConfig.loopring.api
-          if (toChain == 99) {
-            apiLoopring = makerConfig.loopring_test.api
-          }
-          await serviceMakerPull.loopring(apiLoopring)
-          break
+        // case 'loopring':
+        //   let apiLoopring = makerConfig.loopring.api
+        //   if (toChain == 99) {
+        //     apiLoopring = makerConfig.loopring_test.api
+        //   }
+        //   await serviceMakerPull.loopring(apiLoopring)
+        //   break
       }
     } catch (error) {
       errorLogger.error(
