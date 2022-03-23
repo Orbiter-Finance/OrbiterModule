@@ -45,7 +45,9 @@
       </el-aside> -->
       <el-container>
         <el-main>
-          <router-view />
+          <Suspense>
+            <router-view />
+          </Suspense>
         </el-main>
         <!-- <el-footer>Footer</el-footer> -->
       </el-container>
