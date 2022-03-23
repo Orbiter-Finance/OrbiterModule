@@ -387,7 +387,6 @@ export class ServiceMakerPull {
       },
       timeout: 16000,
     })
-    console.log(api, 111111)
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
