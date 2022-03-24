@@ -230,10 +230,10 @@ export function jobBalanceAlarm() {
   const callback = async () => {
     await doBalanceAlarm.do()
   }
-
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
 
+let makerListSha = '';
 export function jobGetMakerList() {
   const getNewMakerList = async () => {
     const res = await axios({
@@ -247,13 +247,14 @@ export function jobGetMakerList() {
     const base64MakerListWrap = res.data.content;
     const makerListWrapString = Base64.decode(base64MakerListWrap);
     const makerListWrap: any = JSON.parse(makerListWrapString);
+    makerListWrap.sha = res.data.sha;
     return makerListWrap
   }
   const callback = async () => {
     try {
       const makerListWrap = await getNewMakerList()
-      if (makerListHistory.length != makerListWrap.historyMakerList.length) {
-        console.warn('makerListWrap is new', 111)
+      if (!makerListSha || (makerListSha != makerListWrap.sha)) {
+        makerListSha = makerListWrap.sha
         makerList.length = 0
         makerList.push(...makerListWrap.makerList)
         makerListHistory.length = 0

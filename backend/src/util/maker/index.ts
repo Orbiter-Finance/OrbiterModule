@@ -1623,6 +1623,6 @@ export async function sendTransaction(
       }
     }
   }).catch((error) => {
-    console.log(error, 1111)
+    errorLogger.warn(error)
   })
 }
