@@ -24,9 +24,7 @@ import {
   getNetworkIdByChainId,
   getProviderByChainId,
 } from './starknet/helper'
-// import Axios from '../util/Axios'
 
-// Axios.axios()
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {

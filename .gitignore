@@ -12,7 +12,7 @@ run/
 *.un~
 .nyc_output/
 dist/
-mysql/
+mysql*/
 local.*
 .vscode/
 backend/src/config/maker.ts
