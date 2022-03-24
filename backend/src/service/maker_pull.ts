@@ -894,7 +894,7 @@ export class ServiceMakerPull {
         receiver,
         cursor: lastMakePull?.['currentCursor'] || '',
         direction: <any>'desc',
-        page_size: 10,
+        page_size: 100,
       })
       if (!resp?.result || resp.result.length < 1) {
         return
