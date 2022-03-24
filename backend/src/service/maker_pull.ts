@@ -909,6 +909,16 @@ export class ServiceMakerPull {
         }
 
         const amount_flag = getAmountFlag(this.chainId, transaction.value)
+
+        let tx_status = transaction.txreceipt_status
+        if (
+          tx_status == 'success' ||
+          tx_status == 'confirmed' ||
+          tx_status == 'accepted'
+        ) {
+          tx_status = 'finalized'
+        }
+
         // save
         const makerPull = (lastMakePull = <MakerPull>{
           chainId: this.chainId,
@@ -925,7 +935,7 @@ export class ServiceMakerPull {
           txTime: new Date(transaction.timeStamp * 1000),
           gasCurrency: 'ETH',
           gasAmount: '0',
-          tx_status: transaction.txreceipt_status,
+          tx_status,
         })
 
         promiseMethods.push(async () => {
