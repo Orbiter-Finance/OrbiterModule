@@ -561,18 +561,23 @@ export default defineComponent({
             }
         }
         onMounted(async () => {
+            getMakerList()
+        })
+        async function getMakerList() {
             try {
+                delLoading.value = true
                 const { makerList, historyMakerList } = await getData()
                 tradeInfo.tableData = makerList
                 tradeInfo.historyTableData = historyMakerList
+                delLoading.value = false
             } catch (error) {
+                delLoading.value = false
                 if (error.message === "Request failed with status code 401") {
                     alert("auth not right,input again")
                 }
             }
 
-        })
-
+        }
         //get tradeIfno
         async function getData() {
             const res: any = await axios({
@@ -663,6 +668,7 @@ export default defineComponent({
             const accessToken = AES.encrypt(authInfo.auth.githubAccessToken, 'github').toString();
             localStorage.setItem("token", accessToken);
             authInfo.showAuth = false
+            await getMakerList()
         }
         return {
             githubAccessToken,

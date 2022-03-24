@@ -4,7 +4,6 @@ import Maker from '../views/Maker.vue'
 import Setting from '../views/Setting/index.vue'
 import Config from '../views/config/index.vue'
 import MakerHistory from '../views/MakerHistory.vue'
-import LinkMetamask from '../views/link-metamask/index.vue'
 const routes: Array<RouteRecordRaw> = [
   {
     path: '/',
@@ -27,12 +26,6 @@ const routes: Array<RouteRecordRaw> = [
     path: '/config',
     name: 'Config',
     component: Config,
-    meta: { navShow: true },
-  },
-  {
-    path: '/link-metamask',
-    name: 'LinkMetamask',
-    component: LinkMetamask,
     meta: { navShow: true },
   },
   {
