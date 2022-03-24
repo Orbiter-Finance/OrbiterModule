@@ -1257,7 +1257,7 @@ function confirmToLPTransaction(
   accessLogger.info('confirmToLPTransaction =', getTime())
   setTimeout(async () => {
     try {
-      checkLoopringAccountKey(makerAddress, toChainId)
+      await checkLoopringAccountKey(makerAddress, toChainId)
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
         hashes: txID,
