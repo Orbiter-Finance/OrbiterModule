@@ -1,8 +1,10 @@
 import axios from 'axios'
+import { nanoid } from 'nanoid'
 import * as starknet from 'starknet'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { equalsIgnoreCase, sleep } from '..'
 import { accessLogger, errorLogger } from '../logger'
+import { startMakerEvent } from "../../schedule/index"
 
 type Api = { endPoint: string; key: string }
 type Transaction = {
@@ -108,8 +110,11 @@ class StarknetListen {
       this.isFirstTicker = false
     }
     ticker()
-
-    setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
+    const uuid = nanoid()
+    startMakerEvent[uuid] = {
+      type: "interval"
+    }
+    startMakerEvent[uuid].watcher = setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
   }
 
   async getTransaction(hash: string, retryCount = 0) {

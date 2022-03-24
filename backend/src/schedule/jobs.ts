@@ -12,7 +12,10 @@ import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
 import { makerList, makerListHistory } from '../util/maker/maker_list';
 const apiUrl = "https://api.github.com"
-const githubToken = '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'
+const githubToken = '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'
+import { startMakerEvent, waittingStartMaker } from './index'
+import { sleep } from '../util';
+
 class MJob {
   protected rule:
     | string
@@ -232,7 +235,7 @@ export function jobBalanceAlarm() {
 }
 
 export function jobGetMakerList() {
-  const callback = async () => {
+  const getNewMakerList = async () => {
     const res = await axios({
       url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
       method: "get",
@@ -244,13 +247,44 @@ export function jobGetMakerList() {
     const base64MakerListWrap = res.data.content;
     const makerListWrapString = Base64.decode(base64MakerListWrap);
     const makerListWrap: any = JSON.parse(makerListWrapString);
-    makerList.length = 0
-    makerList.push(...makerListWrap.makerList)
-    makerListHistory.length = 0
-    makerListHistory.push(...makerListWrap.historyMakerList)
+    return makerListWrap
+  }
+  const callback = async () => {
+    try {
+      const makerListWrap = await getNewMakerList()
+      if (makerListHistory.length != makerListWrap.historyMakerList.length) {
+        console.warn('makerListWrap is new', 111)
+        makerList.length = 0
+        makerList.push(...makerListWrap.makerList)
+        makerListHistory.length = 0
+        makerListHistory.push(...makerListWrap.historyMakerList)
+        for (let key in startMakerEvent) {
+          if (startMakerEvent[key].type == 'condition') {
+            startMakerEvent[key].watcher = false
+          }
+          else if (startMakerEvent[key].type == 'timeout') {
+            clearTimeout(startMakerEvent[key].watcher)
+          } else if (startMakerEvent[key].type == 'interval') {
+            clearInterval(startMakerEvent[key].watcher)
+          } else if (startMakerEvent[key].type == 'web3') {
+            startMakerEvent[key].watcher.eth.clearSubscriptions();
+          }
+        }
+        await sleep(10 * 1000)
+        for (let key in startMakerEvent) {
+          delete startMakerEvent[key]
+        }
+        await waittingStartMaker()
+      }
+    } catch (error) {
+      errorLogger.error(
+        `getMakerListError: ${error.message},try again`
+      )
+      callback()
+    }
   }
   new MJobPessimism(
-    '*/10 * * * * *',
+    '*/20 * * * * *',
     callback,
     jobGetMakerList.name
   ).schedule()
