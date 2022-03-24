@@ -12,7 +12,7 @@ import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
 import { makerList, makerListHistory } from '../util/maker/maker_list';
 const apiUrl = "https://api.github.com"
-const githubToken = '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'
+const githubToken = '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'
 import { startMakerEvent, waittingStartMaker } from './index'
 import { sleep } from '../util';
 
