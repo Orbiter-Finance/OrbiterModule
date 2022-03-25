@@ -896,57 +896,62 @@ export class ServiceMakerPull {
         direction: <any>'desc',
         page_size: 100,
       })
-      if (!resp?.result || resp.result.length < 1) {
+      if (!resp?.result) {
         return
       }
 
-      const promiseMethods: (() => Promise<unknown>)[] = []
-      for (const item of resp.result) {
-        const transaction = imxHelper.toTransaction(item)
+      if (resp.result.length > 0) {
+        const promiseMethods: (() => Promise<unknown>)[] = []
+        for (const item of resp.result) {
+          const transaction = imxHelper.toTransaction(item)
 
-        if (equalsIgnoreCase(transaction.txreceipt_status, 'rejected')) {
-          continue
+          if (equalsIgnoreCase(transaction.txreceipt_status, 'rejected')) {
+            continue
+          }
+
+          const amount_flag = getAmountFlag(this.chainId, transaction.value)
+
+          let tx_status = transaction.txreceipt_status
+          if (
+            tx_status == 'success' ||
+            tx_status == 'confirmed' ||
+            tx_status == 'accepted'
+          ) {
+            tx_status = 'finalized'
+          }
+
+          // save
+          const makerPull = (lastMakePull = <MakerPull>{
+            chainId: this.chainId,
+            makerAddress: this.makerAddress,
+            tokenAddress: transaction.contractAddress,
+            data: JSON.stringify(item),
+            amount: transaction.value,
+            amount_flag,
+            nonce: transaction.nonce,
+            fromAddress: transaction.from,
+            toAddress: transaction.to,
+            txBlock: transaction.blockHash,
+            txHash: transaction.hash,
+            txTime: new Date(transaction.timeStamp * 1000),
+            gasCurrency: 'ETH',
+            gasAmount: '0',
+            tx_status,
+          })
+
+          promiseMethods.push(async () => {
+            await savePull(makerPull)
+
+            // compare
+            await this.compareData(makerPull, String(transaction.hash))
+          })
         }
 
-        const amount_flag = getAmountFlag(this.chainId, transaction.value)
-
-        let tx_status = transaction.txreceipt_status
-        if (
-          tx_status == 'success' ||
-          tx_status == 'confirmed' ||
-          tx_status == 'accepted'
-        ) {
-          tx_status = 'finalized'
-        }
-
-        // save
-        const makerPull = (lastMakePull = <MakerPull>{
-          chainId: this.chainId,
-          makerAddress: this.makerAddress,
-          tokenAddress: transaction.contractAddress,
-          data: JSON.stringify(item),
-          amount: transaction.value,
-          amount_flag,
-          nonce: transaction.nonce,
-          fromAddress: transaction.from,
-          toAddress: transaction.to,
-          txBlock: transaction.blockHash,
-          txHash: transaction.hash,
-          txTime: new Date(transaction.timeStamp * 1000),
-          gasCurrency: 'ETH',
-          gasAmount: '0',
-          tx_status,
-        })
-
-        promiseMethods.push(async () => {
-          await savePull(makerPull)
-
-          // compare
-          await this.compareData(makerPull, String(transaction.hash))
-        })
+        await this.doPromisePool(promiseMethods)
+      } else {
+        // When result.length <= 0. The end!
+        lastMakePull = undefined
       }
-
-      await this.doPromisePool(promiseMethods)
 
       // set IMMUTABLEX_USER_LAST/IMMUTABLEX_RECEIVER_LAST
       if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
