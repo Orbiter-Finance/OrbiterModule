@@ -1,22 +1,21 @@
-import cluster from 'cluster'
+
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
 import cors from 'koa2-cors'
 import NodeCache from 'node-cache'
 import 'reflect-metadata'
-import semver from 'semver'
 import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
-import { startJobs } from './schedule'
+import { deployKoaWithChild } from './service/maker'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
 // import Axios from './util/Axios'
 // // Axios.axios()
 
-const startKoa = () => {
+export const startKoa = () => {
   const koa = new Koa()
 
   // onerror
@@ -81,37 +80,11 @@ const main = async () => {
         await sleep(1500)
       }
     }
+    // todo把数据漏下来
 
-    const clusterIsPrimary = () => {
-      if (semver.gte(process.version, 'v16.0.0')) {
-        return cluster.isPrimary
-      }
-      return cluster.isMaster
-    }
 
-    if (clusterIsPrimary()) {
-      // StarkKoa in master only
-      startKoa()
+    await deployKoaWithChild()
 
-      // Manage child process
-      let childProcessId: number | undefined
-      cluster.on('exit', (worker, code, signal) => {
-        // Refork
-        if (worker.process.pid == childProcessId) {
-          accessLogger.info(
-            `Child process exited, code: ${code}, signal: ${signal}, refork it!`
-          )
-          cluster.fork()
-        }
-      })
-      cluster.on('fork', (worker) => {
-        childProcessId = worker.process.pid
-      })
-      cluster.fork()
-    } else {
-      // StartJobs in child process
-      startJobs()
-    }
   } catch (error) {
     accessLogger.info(error)
   }

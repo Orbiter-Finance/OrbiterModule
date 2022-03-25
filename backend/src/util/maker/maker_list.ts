@@ -866,7 +866,7 @@ export const makerList = [
   // },
   // usdc
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 1,
     c2ID: 2,
     c1Name: 'mainnet',

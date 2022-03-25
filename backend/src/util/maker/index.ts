@@ -670,9 +670,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }

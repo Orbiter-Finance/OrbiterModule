@@ -1,7 +1,11 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
+import cluster from 'cluster'
+import semver from 'semver'
+import { startJobs } from '../schedule'
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
+import { startKoa } from '../index'
 import { Repository } from 'typeorm'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
@@ -488,6 +492,39 @@ export async function getWealths(
   await Promise.all(promises)
 
   return wealthsChains
+}
+export async function deployKoaWithChild() {
+
+  const clusterIsPrimary = () => {
+    if (semver.gte(process.version, 'v16.0.0')) {
+      return cluster.isPrimary
+    }
+    return cluster.isMaster
+  }
+
+  if (clusterIsPrimary()) {
+    // StarkKoa in master only
+    startKoa()
+
+    // Manage child process
+    let childProcessId: number | undefined
+    cluster.on('exit', (worker, code, signal) => {
+      // Refork
+      if (worker.process.pid == childProcessId) {
+        accessLogger.info(
+          `Child process exited, code: ${code}, signal: ${signal}, refork it!`
+        )
+        cluster.fork()
+      }
+    })
+    cluster.on('fork', (worker) => {
+      childProcessId = worker.process.pid
+    })
+    cluster.fork()
+  } else {
+    // StartJobs in child process
+    startJobs()
+  }
 }
 
 /**
