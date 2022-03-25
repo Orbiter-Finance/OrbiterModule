@@ -18,14 +18,13 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
+import { IMXHelper } from './immutablex/imx_helper'
 import {
   getErc20BalanceByL1,
   getNetworkIdByChainId,
   getProviderByChainId,
 } from './starknet/helper'
-// import Axios from '../util/Axios'
 
-// Axios.axios()
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -313,6 +312,12 @@ async function getTokenBalance(
         value = String(
           await getErc20BalanceByL1(makerAddress, tokenAddress, networkId)
         )
+        break
+      case 'immutablex':
+        const imxHelper = new IMXHelper(chainId)
+        value = (
+          await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
+        ).toString()
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint

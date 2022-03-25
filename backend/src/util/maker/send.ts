@@ -400,6 +400,13 @@ async function sendConsumer(value: any) {
   }
 
   if (chainID == 9 || chainID == 99) {
+    const provider = new PrivateKeyProvider(
+      makerConfig.privateKeys[makerAddress],
+      chainID == 9
+        ? makerConfig['mainnet'].httpEndPoint
+        : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
+    )
+
     try {
       let netWorkID = chainID == 9 ? 1 : 5
       const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
@@ -415,12 +422,6 @@ async function sendConsumer(value: any) {
         throw Error('account unlocked')
       }
       const { exchangeInfo } = await exchangeApi.getExchangeInfo()
-      const provider = new PrivateKeyProvider(
-        makerConfig.privateKeys[makerAddress],
-        chainID == 9
-          ? makerConfig['mainnet'].httpEndPoint
-          : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
-      )
       const localWeb3 = new Web3(provider)
       let options = {
         web3: localWeb3,
@@ -443,7 +444,6 @@ async function sendConsumer(value: any) {
         GetUserApiKeyRequest,
         eddsaKey.sk
       )
-      provider.engine.stop()
       if (!apiKey) {
         throw Error('Get Loopring ApiKey Error')
       }
@@ -531,6 +531,9 @@ async function sendConsumer(value: any) {
         txid: 'loopring transfer error: ' + error.message,
         result_nonce,
       }
+    } finally {
+      // Stop web3-provider-engine. Prevent data from being pulled all the time
+      provider.engine.stop()
     }
     return
   }
