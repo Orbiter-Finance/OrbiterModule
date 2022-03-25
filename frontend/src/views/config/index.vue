@@ -214,7 +214,7 @@
                 <vxe-form-item align="center" title-align="left" :span="24">
                     <template #default>
                         <vxe-button type="submit">submit</vxe-button>
-                        <vxe-button type="reset">reset</vxe-button>
+                        <vxe-button @click="tradeInfo.showEdit = false">cancel</vxe-button>
                     </template>
                 </vxe-form-item>
             </vxe-form>
@@ -382,14 +382,14 @@ export default defineComponent({
             } as VxeFormPropTypes.Rules,
         })
 
-        //把时间戳转成正常阅读的时间
+        //transform timeStamp to normal 
         const formatterDate: VxeColumnPropTypes.Formatter = ({ cellValue }) => {
             if (cellValue > 99999999999) {
                 return '∞'
             }
             return dayjs.unix(cellValue).format('YYYY-MM-DD HH:mm:ss')
         }
-        //新建表单
+        //add form
         const insertEvent = () => {
             if (!store.state.githubAccessToken) {
                 alert("please auth first")
@@ -421,7 +421,7 @@ export default defineComponent({
             tradeInfo.selectRow = null
             tradeInfo.showEdit = true
         }
-        //编辑表单
+        //edit form
         const editEvent = (row: any) => {
             if (!store.state.githubAccessToken) {
                 alert("please auth first")
@@ -613,7 +613,7 @@ export default defineComponent({
             });
         }
         function realFormData(formData) {
-            const theFormData = formData
+            const theFormData = JSON.parse(JSON.stringify(formData))
             const c1StartTime = theFormData.c1StartTime
             const c2StartTime = theFormData.c2StartTime
             delete theFormData.c1StartTime
