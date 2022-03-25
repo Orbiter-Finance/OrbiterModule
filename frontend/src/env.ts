@@ -58,7 +58,7 @@ export const $env = {
     66: 'https://mumbai.polygonscan.com/address/',
     7: 'https://optimistic.etherscan.io/address/',
     77: 'https://kovan-optimistic.etherscan.io/address/',
-    8: 'https://immutascan.io/address/account/',
+    8: 'https://immutascan.io/address/',
     88: '',
     9: 'https://explorer.loopring.io/account/',
     99: 'https://explorer.loopring.io/account/',
