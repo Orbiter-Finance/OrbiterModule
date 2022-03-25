@@ -468,7 +468,7 @@ export default defineComponent({
                 try {
                     let theOldMaker;
                     delLoading.value = true
-                    const { sha, makerList, historyMakerList } = await getData();
+                    const { sha, makerList, historyMakerList } = await getMakerListData();
                     for (let i = 0; i < makerList.length; i++) {
                         if (
                             makerList[i].c1ID === row.c1ID &&
@@ -513,7 +513,7 @@ export default defineComponent({
             }
             try {
                 tradeInfo.submitLoading = true
-                const { sha, makerList, historyMakerList } = await getData();
+                const { sha, makerList, historyMakerList } = await getMakerListData();
                 const filterFormData = realFormData(formData)
                 if (tradeInfo.selectRow) {
                     let historyMaker;
@@ -524,7 +524,7 @@ export default defineComponent({
                             makerList[i].tName === filterFormData.tName
                         ) {
                             let timeStamp = Date.parse(new Date().toString()) / 1000
-                            historyMaker = JSON.parse(JSON.stringify(makerList[i]))
+                            historyMaker = JSON.parse(JSON.stringify(makerList[i], null, " "))
 
                             filterFormData.c1AvalibleTimes[0].startTime = timeStamp
                             filterFormData.c2AvalibleTimes[0].startTime = timeStamp
@@ -566,7 +566,7 @@ export default defineComponent({
         async function getMakerList() {
             try {
                 delLoading.value = true
-                const { makerList, historyMakerList } = await getData()
+                const { makerList, historyMakerList } = await getMakerListData()
                 tradeInfo.tableData = makerList
                 tradeInfo.historyTableData = historyMakerList
                 delLoading.value = false
@@ -579,7 +579,7 @@ export default defineComponent({
 
         }
         //get tradeIfno
-        async function getData() {
+        async function getMakerListData() {
             const res: any = await axios({
                 url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
                 method: "get",
@@ -607,13 +607,13 @@ export default defineComponent({
                 },
                 data: {
                     message: "update from vue",
-                    content: Base64.encode(JSON.stringify(data)),
+                    content: Base64.encode(JSON.stringify(data, null, " ")),
                     sha: sha,
                 },
             });
         }
         function realFormData(formData) {
-            const theFormData = JSON.parse(JSON.stringify(formData))
+            const theFormData = JSON.parse(JSON.stringify(formData, null, " "))
             const c1StartTime = theFormData.c1StartTime
             const c2StartTime = theFormData.c2StartTime
             delete theFormData.c1StartTime
