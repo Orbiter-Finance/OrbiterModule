@@ -315,7 +315,6 @@ async function watchTransfers(pool, state) {
       })
     return
   }
-
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
     accessLogger.info(
@@ -650,31 +649,39 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
-    const localWeb3 = new Web3(provider)
-    let options = {
-      web3: localWeb3,
-      address: makerAddress,
-      keySeed:
-        accountInfo.keySeed && accountInfo.keySeed !== ''
-          ? accountInfo.keySeed
-          : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-      walletType: ConnectorNames.WalletLink,
-      chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-    }
-    const eddsaKey = await generateKeyPair(options)
-    let GetUserApiKeyRequest = {
-      accountId: accountInfo.accountId,
-    }
-    const { apiKey } = await userApi.getUserApiKey(
-      GetUserApiKeyRequest,
-      eddsaKey.sk
-    )
-    lpKey = apiKey
-    if (!apiKey) {
-      throw Error('Get Loopring ApiKey Error')
+
+    try {
+      const localWeb3 = new Web3(provider)
+      let options = {
+        web3: localWeb3,
+        address: makerAddress,
+        keySeed:
+          accountInfo.keySeed && accountInfo.keySeed !== ''
+            ? accountInfo.keySeed
+            : GlobalAPI.KEY_MESSAGE.replace(
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.WalletLink,
+        chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
+      }
+      const eddsaKey = await generateKeyPair(options)
+      let GetUserApiKeyRequest = {
+        accountId: accountInfo.accountId,
+      }
+      const { apiKey } = await userApi.getUserApiKey(
+        GetUserApiKeyRequest,
+        eddsaKey.sk
+      )
+      lpKey = apiKey
+      if (!apiKey) {
+        throw Error('Get Loopring ApiKey Error')
+      }
+    } catch (err) {
+      throw err
+    } finally {
+      // Stop web3-provider-engine. Prevent data from being pulled all the time
+      provider.engine.stop()
     }
   }
 }
@@ -691,7 +698,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         loopringStartTime = new Date().getTime()
       }
       let netWorkID = fromChainID == 9 ? 1 : 5
-      const userApi = new UserAPI(<any>netWorkID)
+      const userApi = new UserAPI({ chainId: netWorkID })
       try {
         await checkLoopringAccountKey(makerAddress, fromChainID)
       } catch (error) {
@@ -712,7 +719,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       )
       if (
         LPTransferResult.totalNum !== 0 &&
-        LPTransferResult.userTransfers.length !== 0
+        LPTransferResult.userTransfers?.length !== 0
       ) {
         let transacionts = LPTransferResult.userTransfers.reverse()
         for (let index = 0; index < transacionts.length; index++) {
@@ -1250,20 +1257,20 @@ function confirmToLPTransaction(
   accessLogger.info('confirmToLPTransaction =', getTime())
   setTimeout(async () => {
     try {
-      checkLoopringAccountKey(makerAddress, toChainId)
+      await checkLoopringAccountKey(makerAddress, toChainId)
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
         hashes: txID,
       }
       let netWorkID = toChainId == 9 ? 1 : 5
-      const userApi = new UserAPI(<any>netWorkID)
+      const userApi = new UserAPI({ chainId: netWorkID })
       const LPTransferResult = await userApi.getUserTransferList(
         GetUserTransferListRequest,
         lpKey
       )
       if (
         LPTransferResult.totalNum === 1 &&
-        LPTransferResult.userTransfers.length === 1
+        LPTransferResult.userTransfers?.length === 1
       ) {
         let lpTransaction = LPTransferResult.userTransfers[0]
         if (
@@ -1516,7 +1523,7 @@ export async function sendTransaction(
       } else if (toChainID === 8 || toChainID === 88) {
         console.warn({ toChainID, toChain, txID, transactionID })
         // confirmToSNTransaction(txID, transactionID, toChainID)
-      } else if (toChain === 9 || toChainID === 99) {
+      } else if (toChainID === 9 || toChainID === 99) {
         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)

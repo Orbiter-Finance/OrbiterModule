@@ -150,6 +150,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.optimism(apiOptimism)
           break
+        case 'immutablex':
+          let apiImmutableX = makerConfig.immutableX.api
+          if (toChain == 88) {
+            apiImmutableX = makerConfig.immutableX_test.api
+          }
+          await serviceMakerPull.immutableX(apiImmutableX)
+          break
         case 'loopring':
           let apiLoopring = makerConfig.loopring.api
           if (toChain == 99) {

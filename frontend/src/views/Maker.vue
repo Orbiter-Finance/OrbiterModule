@@ -126,7 +126,15 @@
       </div>
       <div>FromAmountTotal: {{ fromAmountTotal }}</div>
       <div>ToAmountTotal: {{ toAmountTotal }}</div>
-      <div style="color: #67c23a">+{{ diffAmountTotal }}</div>
+      <div style="color: #67c23a; font-weight: 600">
+        +{{ diffAmountTotal }} USD
+      </div>
+      <div style="color: #409eff; font-weight: 600">
+        +{{ diffAmountTotalETH }} ETH
+      </div>
+      <div style="color: #f56c6c; font-weight: 600">
+        +{{ diffAmountTotalCNY }} CNY
+      </div>
       <div style="margin-left: auto">
         <router-link
           :to="`/maker/history?makerAddress=${makerAddressSelected}`"
@@ -324,6 +332,7 @@ export default defineComponent({
   },
   setup() {
     const makerAddressSelected: any = inject('makerAddressSelected')
+    const exchangeRates: any = inject('exchangeRates')
 
     const state = reactive({
       rangeDate: [] as Date[],
@@ -377,14 +386,14 @@ export default defineComponent({
       for (const item of list.value) {
         num = num.plus(item.fromAmountFormat)
       }
-      return num
+      return num.toFixed(5)
     })
     const toAmountTotal = computed(() => {
       let num = new BigNumber(0)
       for (const item of list.value) {
         num = num.plus(item.toAmountFormat)
       }
-      return num
+      return num.toFixed(5)
     })
     const diffAmountTotal = computed(() => {
       let num = new BigNumber(0)
@@ -395,7 +404,19 @@ export default defineComponent({
 
         num = num.plus(item.profitUSD)
       }
-      return num.toString() + ' USD'
+      return num.toNumber().toFixed(2)
+    })
+    const diffAmountTotalETH = computed(() => {
+      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+        exchangeRates?.value?.ETH || 0
+      )
+      return num.toFixed(5)
+    })
+    const diffAmountTotalCNY = computed(() => {
+      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+        exchangeRates?.value?.CNY || 0
+      )
+      return num.toFixed(2)
     })
 
     makerInfo.get()
@@ -462,6 +483,8 @@ export default defineComponent({
       fromAmountTotal,
       toAmountTotal,
       diffAmountTotal,
+      diffAmountTotalETH,
+      diffAmountTotalCNY,
 
       mappingChainName,
     }

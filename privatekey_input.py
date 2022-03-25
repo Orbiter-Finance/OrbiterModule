@@ -2,6 +2,7 @@
 # -*- coding: UTF-8 -*-
 
 import json
+import time
 from getpass import getpass
 from urllib import request
 from urllib.request import urlopen
@@ -35,4 +36,12 @@ for item in getMakerAddresses():
     pk = getpass('Please input [' + item + '] private key!\r\n:')
     privateKeys[item] = pk
 
-postPrivateKeys(privateKeys)
+postCount = 0
+while True:
+    try:
+        postCount += 1
+        print('postPrivateKeys count: ' + str(postCount) + ', time: ' + time.ctime())
+        postPrivateKeys(privateKeys)
+    except Exception as err:
+        print(err)
+    time.sleep(8)
