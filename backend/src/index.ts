@@ -9,7 +9,7 @@ import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
-import { startJobs } from './schedule'
+import { startMasterJobs, startWorkerJobs } from './schedule'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
@@ -91,6 +91,9 @@ const main = async () => {
       // StarkKoa in master only
       startKoa()
 
+      // Start MasterJobs in child process
+      startMasterJobs()
+
       // Manage child process
       let childProcessId: number | undefined
       cluster.on('exit', (worker, code, signal) => {
@@ -107,8 +110,8 @@ const main = async () => {
       })
       cluster.fork()
     } else {
-      // StartJobs in child process
-      startJobs()
+      // Start WorkerJobs in child process
+      startWorkerJobs()
     }
   } catch (error) {
     accessLogger.info(error)

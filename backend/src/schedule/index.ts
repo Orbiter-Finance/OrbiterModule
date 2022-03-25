@@ -67,7 +67,10 @@ async function waittingStartMaker() {
   }
 }
 
-export const startJobs = async () => {
+export const startMasterJobs = async () => {
+}
+
+export const startWorkerJobs = async () => {
   const scene = process.env.ORBITER_SCENE
 
   // cache coinbase
