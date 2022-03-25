@@ -10,9 +10,10 @@ import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
+import maker from "../config/maker"
 import { makerList, makerListHistory } from '../util/maker/maker_list';
 const apiUrl = "https://api.github.com"
-const githubToken = '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'
+
 import { startMakerEvent, waittingStartMaker } from './index'
 import { sleep } from '../util';
 
@@ -241,7 +242,7 @@ export function jobGetMakerList() {
       method: "get",
       headers: {
         Accept: "*/*",
-        Authorization: `token ${githubToken}`,
+        Authorization: `token ${maker.githubToken}`,
       },
     });
     const base64MakerListWrap = res.data.content;
