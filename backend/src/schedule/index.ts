@@ -1,4 +1,4 @@
-import { nanoid } from 'nanoid'
+
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
@@ -12,7 +12,6 @@ import {
   jobMakerPull,
 } from './jobs'
 import { doSms } from '../sms/smsSchinese'
-export const startMakerEvent = new Object();
 
 let smsTimeStamp = 0
 
@@ -25,13 +24,8 @@ export async function waittingStartMaker() {
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "condition",
-    watcher: true
-  }
 
-  while (startedIndexs.length < makerList.length && startMakerEvent[uuid].watcher) {
+  while (startedIndexs.length < makerList.length ) {
     const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]

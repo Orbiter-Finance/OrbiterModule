@@ -1,12 +1,12 @@
 import schedule from 'node-schedule'
 import axios from "axios"
-import { Base64 } from "js-base64";
+import { clusterIsPrimary } from '../service/maker'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
 import * as coinbase from '../service/coinbase'
 import { ServiceMakerPull } from '../service/maker_pull'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
@@ -14,7 +14,6 @@ import maker from "../config/maker"
 import { makerList, makerListHistory } from '../util/maker/maker_list';
 const apiUrl = "https://api.github.com"
 
-import { startMakerEvent, waittingStartMaker } from './index'
 import { sleep } from '../util';
 
 class MJob {
@@ -240,50 +239,46 @@ export function jobBalanceAlarm() {
   }
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
-
-let makerListSha = '';
-export function jobGetMakerList() {
-  const getNewMakerList = async () => {
-    const res = await axios({
-      url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
-      method: "get",
-      headers: {
-        Accept: "*/*",
-        Authorization: `token ${maker.githubToken}`,
-      },
-    });
-    const base64MakerListWrap = res.data.content;
-    const makerListWrapString = Base64.decode(base64MakerListWrap);
-    const makerListWrap: any = JSON.parse(makerListWrapString);
-    makerListWrap.sha = res.data.sha;
-    return makerListWrap
+export const getNewMakerList = async (count = 0) => {
+  try {
+    return await getNewMakerListOnce()
+  } catch (error) {
+    errorLogger.error(`getNewMakerList error=${error.message},try again ${count}`)
+    count++
+    if (count < 20) {
+      return await getNewMakerList(count)
+    } else {
+      await sleep(2000)
+      return await getNewMakerList()
+    }
   }
+}
+const getNewMakerListOnce = async () => {
+  const res = await axios({
+    url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
+    method: "get",
+    headers: {
+      Accept: "*/*",
+      Authorization: `token ${maker.githubToken}`,
+    },
+  });
+  const base64Data = res.data.content;
+  const makerListBuffer = Buffer.from(base64Data, 'base64')
+  const makerListString = makerListBuffer.toString()
+  const makerListWrap: any = JSON.parse(makerListString);
+  makerListWrap.sha = res.data.sha;
+  return makerListWrap
+}
+export const makerListSha = {
+  sha: ''
+}
+export function jobGetMakerList() {
+
   const callback = async () => {
     try {
       const makerListWrap = await getNewMakerList()
-      if (!makerListSha || (makerListSha != makerListWrap.sha)) {
-        makerListSha = makerListWrap.sha
-        makerList.length = 0
-        makerList.push(...makerListWrap.makerList)
-        makerListHistory.length = 0
-        makerListHistory.push(...makerListWrap.historyMakerList)
-        for (let key in startMakerEvent) {
-          if (startMakerEvent[key].type == 'condition') {
-            startMakerEvent[key].watcher = false
-          }
-          else if (startMakerEvent[key].type == 'timeout') {
-            clearTimeout(startMakerEvent[key].watcher)
-          } else if (startMakerEvent[key].type == 'interval') {
-            clearInterval(startMakerEvent[key].watcher)
-          } else if (startMakerEvent[key].type == 'web3') {
-            startMakerEvent[key].watcher.eth.clearSubscriptions();
-          }
-        }
-        await sleep(10 * 1000)
-        for (let key in startMakerEvent) {
-          delete startMakerEvent[key]
-        }
-        await waittingStartMaker()
+      if (makerListSha.sha != makerListWrap.sha && !clusterIsPrimary()) {
+        process.exit(0)
       }
     } catch (error) {
       errorLogger.error(

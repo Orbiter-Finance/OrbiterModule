@@ -1,7 +1,5 @@
 import axios from 'axios'
-import { nanoid } from 'nanoid';
 import { accessLogger, errorLogger } from '../logger'
-import { startMakerEvent } from "../../schedule/index"
 
 type Api = { endPoint: string; key: string }
 type Transaction = {
@@ -82,11 +80,7 @@ export class EthListen {
     }
 
     let isFirstTicker = true
-    const uuid = nanoid()
-    startMakerEvent[uuid] = {
-      type: "interval"
-    }
-    const timer = startMakerEvent[uuid].watcher = setInterval(() => ticker(), ETHLISTEN_TRANSFER_DURATION)
+    const timer = setInterval(() => ticker(), ETHLISTEN_TRANSFER_DURATION)
     const ticker = async () => {
       try {
         if (this.transferBreaker && this.transferBreaker() === false) {

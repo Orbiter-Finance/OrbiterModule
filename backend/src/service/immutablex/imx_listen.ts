@@ -1,8 +1,7 @@
-import { nanoid } from 'nanoid'
+
 import { equalsIgnoreCase, sleep } from '../../util'
 import { accessLogger, errorLogger } from '../../util/logger'
 import { IMXHelper, Transaction } from './imx_helper'
-import { startMakerEvent } from '../../schedule/index'
 type Filter = {
   from?: string
   to?: string
@@ -76,11 +75,7 @@ class IMXListen {
       this.isFirstTicker = false
     }
     ticker()
-    const uuid = nanoid()
-    startMakerEvent[uuid] = {
-      type: "interval"
-    }
-    startMakerEvent[uuid].watcher = this.tickerTimer = setInterval(ticker, IMX_LISTEN_TRANSFER_DURATION)
+    this.tickerTimer = setInterval(ticker, IMX_LISTEN_TRANSFER_DURATION)
   }
 
   /**
@@ -89,11 +84,7 @@ class IMXListen {
    * @returns
    */
   private async doTransfer(transfer: any, retryCount = 0) {
-    const uuid = nanoid()
-    startMakerEvent[uuid] = {
-      type: "condition",
-      watcher: true
-    }
+
     const { transaction_id } = transfer
     if (!transaction_id) {
       return
@@ -163,9 +154,8 @@ class IMXListen {
 
     if (isConfirmed) {
       this.transferConfirmationedHashs[transaction.hash] = true
-    } else if (!isRejected && startMakerEvent[uuid] && startMakerEvent[uuid].watcher) {
+    } else if (!isRejected) {
       await sleep(2000)
-      delete startMakerEvent[uuid]
       this.doTransfer(transfer)
     }
   }

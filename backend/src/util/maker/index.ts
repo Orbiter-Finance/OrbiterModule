@@ -1,6 +1,5 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
-import { nanoid } from 'nanoid'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
@@ -39,7 +38,6 @@ import {
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 import { doSms } from '../../sms/smsSchinese'
-import { startMakerEvent } from '../../schedule/index'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -74,12 +72,7 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
       const account = await getStarknetAccount(makerAddress, networkId)
       accessLogger.info(`Deploying starknet, l1: ${makerAddress}`)
 
-      const uuid = nanoid()
-      startMakerEvent[uuid] = {
-        type: "condition",
-        watcher: true
-      }
-      while (true && startMakerEvent[uuid].watcher) {
+      while (true) {
         try {
           const provider = getProviderByChainId(chainId)
           const resp = await provider.callContract({
@@ -354,11 +347,7 @@ async function watchTransfers(pool, state) {
   }
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "web3",
-    watcher: web3
-  }
+
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
@@ -630,11 +619,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
         errorLogger.error('error3 = getZKTransactionListError')
       })
   }
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "interval"
-  }
-  startMakerEvent[uuid].watcher = setInterval(ticker, 10 * 1000)
+  setInterval(ticker, 10 * 1000)
 }
 
 async function checkLoopringAccountKey(makerAddress, fromChainID) {
@@ -845,11 +830,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       errorLogger.error('loopringError =', error)
     }
   }
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "interval"
-  }
-  startMakerEvent[uuid].watcher = setInterval(ticker, 10 * 1000)
+  setInterval(ticker, 10 * 1000)
 }
 
 async function confirmSNTransaction(pool: any, state: any, transaction: any) {
@@ -1158,14 +1139,10 @@ function confirmToTransaction(
   confirmations = 3
 ) {
   accessLogger.info('confirmToTransaction =', getTime())
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "timeout"
-  }
-  startMakerEvent[uuid].watcher = setTimeout(async () => {
+
+  setTimeout(async () => {
     const trxConfirmations = await getConfirmations(Chain, txHash)
     if (!trxConfirmations) {
-      delete startMakerEvent[uuid]
       return confirmToTransaction(
         ChainID,
         Chain,
@@ -1213,7 +1190,6 @@ function confirmToTransaction(
       }
       return
     }
-    delete startMakerEvent[uuid]
     return confirmToTransaction(
       ChainID,
       Chain,
@@ -1225,18 +1201,14 @@ function confirmToTransaction(
 }
 
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "timeout"
-  }
+
   accessLogger.info('confirmToZKTransaction =', getTime())
-  startMakerEvent[uuid].watcher = setTimeout(async () => {
+  setTimeout(async () => {
     let transferReceipt: any
     try {
       transferReceipt = await syncProvider.getTxReceipt(txID)
     } catch (err) {
       errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
-      delete startMakerEvent[uuid]
       return confirmToZKTransaction(syncProvider, txID)
     }
 
@@ -1275,7 +1247,6 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
     if (!transferReceipt.success && transferReceipt.failReason) {
       return
     }
-    delete startMakerEvent[uuid]
     return confirmToZKTransaction(syncProvider, txID)
   }, 8 * 1000)
 }
@@ -1287,12 +1258,7 @@ function confirmToLPTransaction(
   makerAddress: string
 ) {
   accessLogger.info('confirmToLPTransaction =', getTime())
-
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "timeout"
-  }
-  startMakerEvent[uuid].watcher = setTimeout(async () => {
+  setTimeout(async () => {
     try {
       await checkLoopringAccountKey(makerAddress, toChainId)
       const GetUserTransferListRequest = {
@@ -1358,13 +1324,8 @@ async function confirmToSNTransaction(
   chainId: number
 ) {
   accessLogger.info('confirmToSNTransaction =', getTime())
-  const uuid = nanoid()
-  startMakerEvent[uuid] = {
-    type: "condition",
-    watcher: true
-  }
 
-  while (true && startMakerEvent[uuid].watcher) {
+  while (true) {
     try {
       const provider = getProviderByChainId(chainId)
       const transaction = await provider.getTransaction(txID)
