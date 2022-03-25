@@ -899,7 +899,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 1,
     c2ID: 3,
     c1Name: 'mainnet',
@@ -932,7 +932,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 2,
     c2ID: 3,
     c1Name: 'arbitrum',
@@ -965,7 +965,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 1,
     c2ID: 6,
     c1Name: 'mainnet',
@@ -998,7 +998,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 3,
     c2ID: 6,
     c1Name: 'zksync',
@@ -1031,7 +1031,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 2,
     c2ID: 6,
     c1Name: 'arbitrum',
@@ -1064,7 +1064,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 2,
     c2ID: 7,
     c1Name: 'arbitrum',
@@ -1097,7 +1097,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 1,
     c2ID: 7,
     c1Name: 'mainnet',
@@ -1130,7 +1130,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 3,
     c2ID: 7,
     c1Name: 'zksync',
@@ -1163,7 +1163,7 @@ export const makerList = [
     ],
   },
   {
-    makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
     c1ID: 7,
     c2ID: 6,
     c1Name: 'optimism',
@@ -1197,4 +1197,4 @@ export const makerList = [
   },
 ]
 
-export const makerListHistory = []
+export const makerListHistory = new Array()

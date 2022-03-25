@@ -274,37 +274,38 @@ async function getTokenBalance(
         }
         break
       case 'loopring':
-        {
-          let api = makerConfig.loopring.api
-          let accountID: Number | undefined
-          if (chainId === 99) {
-            api = makerConfig.loopring_test.api
-          }
-          // getAccountID first
-          const accountInfo = await axios(
-            `${api.endPoint}/account?owner=${makerAddress}`
-          )
-          if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
-            accountID = accountInfo.data.accountId
-          }
+        // {
+        //   let api = makerConfig.loopring.api
+        //   console.log(api, 'api')
+        //   let accountID: Number | undefined
+        //   if (chainId === 99) {
+        //     api = makerConfig.loopring_test.api
+        //   }
+        //   // getAccountID first
+        //   const accountInfo = await axios(
+        //     `${api.endPoint}/account?owner=${makerAddress}`
+        //   )
+        //   if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
+        //     accountID = accountInfo.data.accountId
+        //   }
 
-          const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=0`
-          )
-          if (balanceData.status == 200 && balanceData.statusText == 'OK') {
-            if (!Array.isArray(balanceData.data)) {
-              value = '0'
-            }
-            if (balanceData.data.length == 0) {
-              value = '0'
-            }
-            let balanceMap = balanceData.data[0]
-            let totalBalance = balanceMap.total ? balanceMap.total : 0
-            let locked = balanceMap.locked ? balanceMap.locked : 0
-            let withDraw = balanceMap.withDraw ? balanceMap.withDraw : 0
-            value = totalBalance - locked - withDraw + ''
-          }
-        }
+        //   const balanceData = await axios.get(
+        //     `${api.endPoint}/user/balances?accountId=${accountID}&tokens=0`
+        //   )
+        //   if (balanceData.status == 200 && balanceData.statusText == 'OK') {
+        //     if (!Array.isArray(balanceData.data)) {
+        //       value = '0'
+        //     }
+        //     if (balanceData.data.length == 0) {
+        //       value = '0'
+        //     }
+        //     let balanceMap = balanceData.data[0]
+        //     let totalBalance = balanceMap.total ? balanceMap.total : 0
+        //     let locked = balanceMap.locked ? balanceMap.locked : 0
+        //     let withDraw = balanceMap.withDraw ? balanceMap.withDraw : 0
+        //     value = totalBalance - locked - withDraw + ''
+        //   }
+        // }
         break
       case 'starknet':
         const networkId = getNetworkIdByChainId(chainId)
@@ -348,6 +349,7 @@ async function getTokenBalance(
         break
     }
   } catch (error) {
+    console.log(CHAIN_INDEX[chainId], 'CHAIN_INDEX[chainId]')
     errorLogger.error(
       `GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
       error.message

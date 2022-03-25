@@ -1,3 +1,4 @@
+import { nanoid } from 'nanoid'
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
@@ -7,29 +8,34 @@ import {
   jobCacheCoinbase,
   jobGetWealths,
   // jobMakerNodeTodo,
+  jobGetMakerList,
   jobMakerPull,
 } from './jobs'
 import { doSms } from '../sms/smsSchinese'
+export const startMakerEvent = new Object();
 
 let smsTimeStamp = 0
 
-async function waittingStartMaker() {
+export async function waittingStartMaker() {
   const makerList = await getMakerList()
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
   }
-
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
-  while (startedIndexs.length < makerList.length) {
-    const missPrivateKeyMakerAddresses: string[] = []
+  const uuid = nanoid()
+  startMakerEvent[uuid] = {
+    type: "condition",
+    watcher: true
+  }
 
+  while (startedIndexs.length < makerList.length && startMakerEvent[uuid].watcher) {
+    const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
       const makerAddress = item.makerAddress
-
       if (
         makerConfig.privateKeys[makerAddress] &&
         startedIndexs.indexOf(index) === -1
@@ -81,8 +87,7 @@ async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${
-          appConfig.options.port
+        )}' http://${appConfig.options.host}:${appConfig.options.port
         }/maker/privatekeys] set it`
       )
 
@@ -98,6 +103,9 @@ export const startJobs = async () => {
 
   // cache coinbase
   jobCacheCoinbase()
+
+  // pull makerList
+  jobGetMakerList()
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
