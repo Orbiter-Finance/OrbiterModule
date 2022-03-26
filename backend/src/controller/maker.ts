@@ -162,12 +162,15 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker/wealths', async ({ request, restful }) => {
     const makerAddress = String(request.query.makerAddress || '')
 
-    let rst = Core.memoryCache.get(
-      `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
-    )
-    if (!rst) {
-      rst = await serviceMaker.getWealths(makerAddress)
-    }
+    // let rst = Core.memoryCache.get(
+    //   `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
+    // )
+    // if (!rst) {
+    //   rst = await serviceMaker.getWealths(makerAddress)
+    // }
+
+    // No need to cache temporarily, get real-time
+    const rst = await serviceMaker.getWealths(makerAddress)
 
     restful.json(rst)
   })
