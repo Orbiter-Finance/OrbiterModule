@@ -1,6 +1,5 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
 import axios from 'axios'
-import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'

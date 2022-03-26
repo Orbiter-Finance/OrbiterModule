@@ -1,4 +1,6 @@
+import cluster from 'cluster'
 import dayjs from 'dayjs'
+import semver from 'semver'
 
 export async function sleep(ms: number) {
   return new Promise((resolve) => {
@@ -51,4 +53,11 @@ export function equalsIgnoreCase(value1: string, value2: string): boolean {
  */
 export function isEthTokenAddress(tokenAddress: string) {
   return /^0x0+$/i.test(tokenAddress)
+}
+
+export function clusterIsPrimary() {
+  if (semver.gte(process.version, 'v16.0.0')) {
+    return cluster.isPrimary
+  }
+  return cluster.isMaster
 }

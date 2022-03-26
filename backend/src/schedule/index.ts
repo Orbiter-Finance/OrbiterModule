@@ -1,4 +1,3 @@
-
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
@@ -11,7 +10,7 @@ import {
   jobGetMakerList,
   jobMakerPull,
 } from './jobs'
-import { doSms } from '../sms/smsSchinese'
+// import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
@@ -25,7 +24,7 @@ export async function waittingStartMaker() {
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
 
-  while (startedIndexs.length < makerList.length ) {
+  while (startedIndexs.length < makerList.length) {
     const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
@@ -81,7 +80,8 @@ export async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${appConfig.options.port
+        )}' http://${appConfig.options.host}:${
+          appConfig.options.port
         }/maker/privatekeys] set it`
       )
 

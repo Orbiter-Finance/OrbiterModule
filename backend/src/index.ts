@@ -1,21 +1,19 @@
-
+import cluster from 'cluster'
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
-import cluster from 'cluster'
 import cors from 'koa2-cors'
 import NodeCache from 'node-cache'
 import 'reflect-metadata'
 import { createConnection } from 'typeorm'
-import { startJobs } from './schedule'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
-import { clusterIsPrimary } from './service/maker'
-import { sleep } from './util'
+import { startJobs } from './schedule'
+import { getNewMakerList, makerListSha } from './schedule/jobs'
+import { clusterIsPrimary, sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
-import { getNewMakerList, makerListSha } from './schedule/jobs'
-import { makerList, makerListHistory } from './util/maker/maker_list';
+import { makerList, makerListHistory } from './util/maker/maker_list'
 // import Axios from './util/Axios'
 // // Axios.axios()
 

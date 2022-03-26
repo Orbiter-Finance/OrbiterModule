@@ -6,10 +6,17 @@
           <img src="./assets/logo.png" alt="logo" />
           <div>Orbiter Dashboard</div>
         </div>
-        <el-menu :default-active="navActive" class="header-navs" mode="horizontal" :router="true">
+        <el-menu
+          :default-active="navActive"
+          class="header-navs"
+          mode="horizontal"
+          :router="true"
+        >
           <template v-for="(item, index) in navs" :key="index">
             <!-- If route.meta.navHide is undefined or navHide == false, display -->
-            <el-menu-item v-if="!item.meta.navHide" :index="item.path">{{ item.name }}</el-menu-item>
+            <el-menu-item v-if="item.meta.navShow" :index="item.path">{{
+              item.name
+            }}</el-menu-item>
           </template>
         </el-menu>
         <div class="header-maker" v-if="makerAddressSelected">
@@ -22,7 +29,12 @@
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item v-for="(item, index) in makerAddresses" :key="index" @click="onClickMakerAddressItem(item)">{{ item }}</el-dropdown-item>
+                <el-dropdown-item
+                  v-for="(item, index) in makerAddresses"
+                  :key="index"
+                  @click="onClickMakerAddressItem(item)"
+                  >{{ item }}</el-dropdown-item
+                >
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -46,11 +58,18 @@
 
 <script lang="ts">
 import { ArrowDown } from '@element-plus/icons'
-import { defineComponent, provide, reactive, toRefs, watch, onMounted } from 'vue'
+import {
+  defineComponent,
+  provide,
+  reactive,
+  toRefs,
+  watch,
+  onMounted,
+} from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 import store from './store'
-import * as CryptoJS from "crypto-js"
+import * as CryptoJS from 'crypto-js'
 
 export default defineComponent({
   components: {
@@ -92,14 +111,13 @@ export default defineComponent({
       state.makerAddressSelected = makerAddress
     }
     onMounted(() => {
-      const cipherToken = localStorage.getItem("token");
+      const cipherToken = localStorage.getItem('token')
       if (cipherToken) {
-        const bytes = CryptoJS.AES.decrypt(cipherToken, 'github');
-        const originalText = bytes.toString(CryptoJS.enc.Utf8);
-        store.commit("setAccessToken", originalText)
+        const bytes = CryptoJS.AES.decrypt(cipherToken, 'github')
+        const originalText = bytes.toString(CryptoJS.enc.Utf8)
+        store.commit('setAccessToken', originalText)
       }
     }),
-
       // watch
       watch(
         () => route.path,

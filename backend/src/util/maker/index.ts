@@ -37,7 +37,7 @@ import {
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
-import { doSms } from '../../sms/smsSchinese'
+// import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -91,7 +91,7 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
 
             break
           }
-        } catch (err) { }
+        } catch (err) {}
 
         await sleep(1000)
       }
@@ -504,7 +504,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.txHash !== lastHash &&
                       element.op.type === 'Transfer' &&
                       element.op.to.toLowerCase() ===
-                      makerAddress.toLowerCase() &&
+                        makerAddress.toLowerCase() &&
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
@@ -513,10 +513,10 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       let nonce = element.op.nonce
                       accessLogger.info(
                         'Transaction with hash ' +
-                        element.txHash +
-                        'nonce ' +
-                        nonce +
-                        ' has found'
+                          element.txHash +
+                          'nonce ' +
+                          nonce +
+                          ' has found'
                       )
                       var transactionID =
                         element.op.from.toLowerCase() + fromChainID + nonce
@@ -655,9 +655,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -734,7 +734,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
             lpTransaction.receiverAddress.toLowerCase() ==
-            makerAddress.toLowerCase() &&
+              makerAddress.toLowerCase() &&
             lpTransaction.symbol == 'ETH' &&
             lpTransaction.hash !== loopringLastHash
           ) {
@@ -762,10 +762,10 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
                 accessLogger.info(
                   'Transaction with hash ' +
-                  lpTransaction.hash +
-                  'storageID ' +
-                  (nonce * 2 + 1) +
-                  ' has found'
+                    lpTransaction.hash +
+                    'storageID ' +
+                    (nonce * 2 + 1) +
+                    ' has found'
                 )
                 var transactionID =
                   lpTransaction.senderAddress.toLowerCase() +
@@ -848,7 +848,7 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
   let fromL1Address = ''
   try {
     fromL1Address = await getL1AddressByL2(from, networkId)
-  } catch (err) { }
+  } catch (err) {}
 
   // check
   if (!fromL1Address) {
@@ -1028,10 +1028,10 @@ function confirmFromTransaction(
 
     accessLogger.info(
       'Transaction with hash ' +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
@@ -1153,10 +1153,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       'Transaction with hash ' +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -1201,7 +1201,6 @@ function confirmToTransaction(
 }
 
 function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
-
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
     let transferReceipt: any
@@ -1284,8 +1283,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
+              txID +
+              ' has been successfully confirmed'
           )
           var timestamp = orbiterCore.transferTimeStampToTime(
             lpTransaction.timestamp ? lpTransaction.timestamp : '0'
@@ -1345,8 +1344,8 @@ async function confirmToSNTransaction(
       ) {
         accessLogger.info(
           'sn_Transaction with hash ' +
-          txID +
-          ' has been successfully confirmed'
+            txID +
+            ' has been successfully confirmed'
         )
         accessLogger.info(
           'update maker_node =',
@@ -1497,100 +1496,102 @@ export async function sendTransaction(
     result_nonce,
     fromChainID,
     nonce
-  ).then(async (response) => {
-    accessLogger.info('response =', response)
-    if (!response.code) {
-      var txID = response.txid
+  )
+    .then(async (response) => {
+      accessLogger.info('response =', response)
+      if (!response.code) {
+        var txID = response.txid
 
-      accessLogger.info(
-        `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
-      )
-      try {
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          {
-            toTx: txID,
-            toAmount: tAmount,
-            state: 2,
-          }
+        accessLogger.info(
+          `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
         )
-        accessLogger.info('update success')
-      } catch (error) {
-        errorLogger.error('updateToSqlError =', error)
-        return
-      }
-      if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
-        let syncProvider = response.zkProvider
-        confirmToZKTransaction(syncProvider, txID, transactionID)
-      } else if (toChainID === 4 || toChainID === 44) {
-        confirmToSNTransaction(txID, transactionID, toChainID)
-      } else if (toChainID === 8 || toChainID === 88) {
-        console.warn({ toChainID, toChain, txID, transactionID })
-        // confirmToSNTransaction(txID, transactionID, toChainID)
-      } else if (toChainID === 9 || toChainID === 99) {
-        confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+        try {
+          await repositoryMakerNode().update(
+            { transactionID: transactionID },
+            {
+              toTx: txID,
+              toAmount: tAmount,
+              state: 2,
+            }
+          )
+          accessLogger.info('update success')
+        } catch (error) {
+          errorLogger.error('updateToSqlError =', error)
+          return
+        }
+        if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
+          let syncProvider = response.zkProvider
+          confirmToZKTransaction(syncProvider, txID, transactionID)
+        } else if (toChainID === 4 || toChainID === 44) {
+          confirmToSNTransaction(txID, transactionID, toChainID)
+        } else if (toChainID === 8 || toChainID === 88) {
+          console.warn({ toChainID, toChain, txID, transactionID })
+          // confirmToSNTransaction(txID, transactionID, toChainID)
+        } else if (toChainID === 9 || toChainID === 99) {
+          confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+        } else {
+          confirmToTransaction(toChainID, toChain, txID, transactionID)
+        }
+
+        // update todo
+        await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
       } else {
-        confirmToTransaction(toChainID, toChain, txID, transactionID)
-      }
-
-      // update todo
-      await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
-    } else {
-      errorLogger.error(
-        'updateError maker_node =',
-        `state = 20 WHERE transactionID = '${transactionID}'`
-      )
-      try {
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          { state: 20 }
+        errorLogger.error(
+          'updateError maker_node =',
+          `state = 20 WHERE transactionID = '${transactionID}'`
         )
-        accessLogger.info('update success')
+        try {
+          await repositoryMakerNode().update(
+            { transactionID: transactionID },
+            { state: 20 }
+          )
+          accessLogger.info('update success')
 
-        // todo need result_nonce
-        // if (response.result_nonce > 0) {
-        //   // insert or update todo
-        //   const todo = await repositoryMakerNodeTodo().findOne({
-        //     transactionID,
-        //   })
-        //   if (todo) {
-        //     await repositoryMakerNodeTodo().increment(
-        //       { transactionID },
-        //       'do_current',
-        //       1
-        //     )
-        //   } else {
-        //     await repositoryMakerNodeTodo().insert({
-        //       transactionID,
-        //       makerAddress,
-        //       data: JSON.stringify({
-        //         transactionID,
-        //         fromChainID,
-        //         toChainID,
-        //         toChain,
-        //         tokenAddress,
-        //         amountStr,
-        //         fromAddress,
-        //         pool,
-        //         nonce,
-        //         result_nonce: response.result_nonce,
-        //       }),
-        //       do_state: 20,
-        //     })
-        //   }
-        // }
-      } catch (error) {
-        errorLogger.error('updateErrorSqlError =', error)
-        return
+          // todo need result_nonce
+          // if (response.result_nonce > 0) {
+          //   // insert or update todo
+          //   const todo = await repositoryMakerNodeTodo().findOne({
+          //     transactionID,
+          //   })
+          //   if (todo) {
+          //     await repositoryMakerNodeTodo().increment(
+          //       { transactionID },
+          //       'do_current',
+          //       1
+          //     )
+          //   } else {
+          //     await repositoryMakerNodeTodo().insert({
+          //       transactionID,
+          //       makerAddress,
+          //       data: JSON.stringify({
+          //         transactionID,
+          //         fromChainID,
+          //         toChainID,
+          //         toChain,
+          //         tokenAddress,
+          //         amountStr,
+          //         fromAddress,
+          //         pool,
+          //         nonce,
+          //         result_nonce: response.result_nonce,
+          //       }),
+          //       do_state: 20,
+          //     })
+          //   }
+          // }
+        } catch (error) {
+          errorLogger.error('updateErrorSqlError =', error)
+          return
+        }
+        let alert = 'Send Transaction Error ' + transactionID
+        try {
+          // doSms(alert)
+        } catch (error) {
+          errorLogger.error('sendTransactionErrorMessage =', error)
+        }
       }
-      let alert = 'Send Transaction Error ' + transactionID
-      try {
-        // doSms(alert)
-      } catch (error) {
-        errorLogger.error('sendTransactionErrorMessage =', error)
-      }
-    }
-  }).catch((error) => {
-    errorLogger.warn(error)
-  })
+    })
+    .catch((error) => {
+      errorLogger.warn(error)
+    })
 }
