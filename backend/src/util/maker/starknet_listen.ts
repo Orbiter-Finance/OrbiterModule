@@ -108,7 +108,6 @@ class StarknetListen {
       this.isFirstTicker = false
     }
     ticker()
-
     setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
   }
 

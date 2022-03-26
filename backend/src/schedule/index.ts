@@ -1,32 +1,35 @@
+
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
-import { accessLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
 import {
   jobBalanceAlarm,
   jobCacheCoinbase,
   jobGetWealths,
   // jobMakerNodeTodo,
+  jobGetMakerList,
   jobMakerPull,
 } from './jobs'
+import { doSms } from '../sms/smsSchinese'
 
-async function waittingStartMaker() {
+let smsTimeStamp = 0
+
+export async function waittingStartMaker() {
   const makerList = await getMakerList()
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
   }
-
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
-  while (startedIndexs.length < makerList.length) {
-    const missPrivateKeyMakerAddresses: string[] = []
 
+  while (startedIndexs.length < makerList.length ) {
+    const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
       const makerAddress = item.makerAddress
-
       if (
         makerConfig.privateKeys[makerAddress] &&
         startedIndexs.indexOf(index) === -1
@@ -39,6 +42,29 @@ async function waittingStartMaker() {
         continue
       }
 
+      var myDate = new Date()
+      let nowTime = myDate.valueOf()
+
+      let alert =
+        'Waitting for the privateKey ' +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
+
+      if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
+        try {
+          // doSms(alert)
+          accessLogger.info(
+            'sendNeedPrivateKeyMessage,   smsTimeStamp =',
+            nowTime
+          )
+        } catch (error) {
+          errorLogger.error('sendPrivateSMSError =', error)
+        }
+        smsTimeStamp = nowTime
+      }
       if (startedIndexs.indexOf(index) === -1) {
         missPrivateKeyMakerAddresses.push(makerAddress)
       }
@@ -55,8 +81,7 @@ async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${
-          appConfig.options.port
+        )}' http://${appConfig.options.host}:${appConfig.options.port
         }/maker/privatekeys] set it`
       )
 
@@ -72,6 +97,9 @@ export const startJobs = async () => {
 
   // cache coinbase
   jobCacheCoinbase()
+
+  // pull makerList
+  jobGetMakerList()
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {

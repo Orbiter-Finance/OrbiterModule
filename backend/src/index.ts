@@ -1,20 +1,25 @@
-import cluster from 'cluster'
+
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
+import cluster from 'cluster'
 import cors from 'koa2-cors'
 import NodeCache from 'node-cache'
 import 'reflect-metadata'
-import semver from 'semver'
 import { createConnection } from 'typeorm'
+import { startJobs } from './schedule'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
-import { startJobs } from './schedule'
+import { clusterIsPrimary } from './service/maker'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
+import { getNewMakerList, makerListSha } from './schedule/jobs'
+import { makerList, makerListHistory } from './util/maker/maker_list';
+// import Axios from './util/Axios'
+// // Axios.axios()
 
-const startKoa = () => {
+export const startKoa = () => {
   const koa = new Koa()
 
   // onerror
@@ -79,13 +84,13 @@ const main = async () => {
         await sleep(1500)
       }
     }
-
-    const clusterIsPrimary = () => {
-      if (semver.gte(process.version, 'v16.0.0')) {
-        return cluster.isPrimary
-      }
-      return cluster.isMaster
-    }
+    // todo把数据漏下来
+    const makerListWrap = await getNewMakerList()
+    makerListSha.sha = makerListWrap.sha
+    makerList.length = 0
+    makerList.push(...makerListWrap.makerList)
+    makerListHistory.length = 0
+    makerListHistory.push(...makerListWrap.historyMakerList)
 
     if (clusterIsPrimary()) {
       // StarkKoa in master only

@@ -1,13 +1,20 @@
 import schedule from 'node-schedule'
+import axios from "axios"
+import { clusterIsPrimary } from '../service/maker'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
 import * as coinbase from '../service/coinbase'
 import { ServiceMakerPull } from '../service/maker_pull'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { doBalanceAlarm } from '../service/setting'
+import maker from "../config/maker"
+import { makerList, makerListHistory } from '../util/maker/maker_list';
+const apiUrl = "https://api.github.com"
+
+import { sleep } from '../util';
 
 class MJob {
   protected rule:
@@ -230,6 +237,59 @@ export function jobBalanceAlarm() {
   const callback = async () => {
     await doBalanceAlarm.do()
   }
-
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
+}
+export const getNewMakerList = async (count = 0) => {
+  try {
+    return await getNewMakerListOnce()
+  } catch (error) {
+    errorLogger.error(`getNewMakerList error=${error.message},try again ${count}`)
+    count++
+    if (count < 20) {
+      return await getNewMakerList(count)
+    } else {
+      await sleep(2000)
+      return await getNewMakerList()
+    }
+  }
+}
+const getNewMakerListOnce = async () => {
+  const res = await axios({
+    url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
+    method: "get",
+    headers: {
+      Accept: "*/*",
+      Authorization: `token ${maker.githubToken}`,
+    },
+  });
+  const base64Data = res.data.content;
+  const makerListBuffer = Buffer.from(base64Data, 'base64')
+  const makerListString = makerListBuffer.toString()
+  const makerListWrap: any = JSON.parse(makerListString);
+  makerListWrap.sha = res.data.sha;
+  return makerListWrap
+}
+export const makerListSha = {
+  sha: ''
+}
+export function jobGetMakerList() {
+
+  const callback = async () => {
+    try {
+      const makerListWrap = await getNewMakerList()
+      if (makerListSha.sha != makerListWrap.sha && !clusterIsPrimary()) {
+        process.exit(0)
+      }
+    } catch (error) {
+      errorLogger.error(
+        `getMakerListError: ${error.message},try again`
+      )
+      callback()
+    }
+  }
+  new MJobPessimism(
+    '*/20 * * * * *',
+    callback,
+    jobGetMakerList.name
+  ).schedule()
 }

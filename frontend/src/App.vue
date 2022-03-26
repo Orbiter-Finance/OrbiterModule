@@ -6,34 +6,23 @@
           <img src="./assets/logo.png" alt="logo" />
           <div>Orbiter Dashboard</div>
         </div>
-        <el-menu
-          :default-active="navActive"
-          class="header-navs"
-          mode="horizontal"
-          :router="true"
-        >
+        <el-menu :default-active="navActive" class="header-navs" mode="horizontal" :router="true">
           <template v-for="(item, index) in navs" :key="index">
             <!-- If route.meta.navHide is undefined or navHide == false, display -->
-            <el-menu-item v-if="!item.meta.navHide" :index="item.path">
-              {{ item.name }}
-            </el-menu-item>
+            <el-menu-item v-if="!item.meta.navHide" :index="item.path">{{ item.name }}</el-menu-item>
           </template>
         </el-menu>
         <div class="header-maker" v-if="makerAddressSelected">
           <el-dropdown trigger="click">
             <div class="header-maker__text">
               {{ makerAddressSelected }}
-              <el-icon class="el-icon--right"><arrow-down /></el-icon>
+              <el-icon class="el-icon--right">
+                <arrow-down />
+              </el-icon>
             </div>
             <template #dropdown>
               <el-dropdown-menu>
-                <el-dropdown-item
-                  v-for="(item, index) in makerAddresses"
-                  :key="index"
-                  @click="onClickMakerAddressItem(item)"
-                >
-                  {{ item }}
-                </el-dropdown-item>
+                <el-dropdown-item v-for="(item, index) in makerAddresses" :key="index" @click="onClickMakerAddressItem(item)">{{ item }}</el-dropdown-item>
               </el-dropdown-menu>
             </template>
           </el-dropdown>
@@ -42,10 +31,12 @@
     </el-header>
     <el-container>
       <!-- <el-aside>
-      </el-aside> -->
+      </el-aside>-->
       <el-container>
         <el-main>
-          <router-view />
+          <Suspense>
+            <router-view />
+          </Suspense>
         </el-main>
         <!-- <el-footer>Footer</el-footer> -->
       </el-container>
@@ -55,9 +46,11 @@
 
 <script lang="ts">
 import { ArrowDown } from '@element-plus/icons'
-import { defineComponent, provide, reactive, toRefs, watch } from 'vue'
+import { defineComponent, provide, reactive, toRefs, watch, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
+import store from './store'
+import * as CryptoJS from "crypto-js"
 
 export default defineComponent({
   components: {
@@ -98,14 +91,22 @@ export default defineComponent({
     const onClickMakerAddressItem = (makerAddress: string) => {
       state.makerAddressSelected = makerAddress
     }
-
-    // watch
-    watch(
-      () => route.path,
-      (nv) => {
-        state.navActive = nv
+    onMounted(() => {
+      const cipherToken = localStorage.getItem("token");
+      if (cipherToken) {
+        const bytes = CryptoJS.AES.decrypt(cipherToken, 'github');
+        const originalText = bytes.toString(CryptoJS.enc.Utf8);
+        store.commit("setAccessToken", originalText)
       }
-    )
+    }),
+
+      // watch
+      watch(
+        () => route.path,
+        (nv) => {
+          state.navActive = nv
+        }
+      )
 
     return {
       ...toRefs(state),
@@ -130,7 +131,7 @@ $max-width: 1600px;
   background: white;
   border-bottom: 1px solid #{var(--el-border-color-base)};
   padding: 0;
-  z-index: var(--el-index-popper);
+  z-index: 100;
 
   .el-header__container {
     max-width: $max-width;
