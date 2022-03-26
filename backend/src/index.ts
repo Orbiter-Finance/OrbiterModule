@@ -60,6 +60,9 @@ const main = async () => {
       try {
         // db bind
         Core.db = await createConnection(ormConfig.options)
+        accessLogger.info(
+          `process: ${process.pid}. Connect to the database succeed!`
+        )
 
         // memoryCache bind
         Core.memoryCache = new NodeCache()
@@ -68,7 +71,7 @@ const main = async () => {
         break
       } catch (err) {
         accessLogger.warn(
-          `process: ${process.pid}. Connect to database failed: ${index}`
+          `process: ${process.pid}. Connect to database failed: ${index}. Error: ${err.message}`
         )
 
         if (index == reconnectTotal) {

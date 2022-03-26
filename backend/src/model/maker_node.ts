@@ -1,6 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm'
 import { CommonEntity } from './common'
 
+@Index('get_maker_nodes', [
+  'makerAddress',
+  'fromChain',
+  'toChain',
+  'fromTimeStamp',
+])
+@Index('get_maker_pulls_formTx', ['makerAddress', 'formTx'])
+@Index('get_maker_pulls_toTx', ['makerAddress', 'toTx'])
 @Entity()
 export class MakerNode extends CommonEntity {
   @PrimaryGeneratedColumn()
