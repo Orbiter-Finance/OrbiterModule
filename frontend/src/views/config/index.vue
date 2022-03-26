@@ -581,7 +581,7 @@ export default defineComponent({
         //get tradeIfno
         async function getMakerListData() {
             const res: any = await axios({
-                url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
+                url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
                 method: "get",
                 headers: {
                     Accept: "*/*",
@@ -599,7 +599,7 @@ export default defineComponent({
         //edit tradeIfno
         async function updateData(data, sha: string) {
             await axios({
-                url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
+                url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
                 method: "put",
                 headers: {
                     Accept: "*/*",

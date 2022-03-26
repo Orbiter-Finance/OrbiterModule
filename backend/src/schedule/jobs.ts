@@ -255,7 +255,7 @@ export const getNewMakerList = async (count = 0) => {
 }
 const getNewMakerListOnce = async () => {
   const res = await axios({
-    url: `${apiUrl}/repos/anengzend/block-chain-demo/contents/data-dev.json`,
+    url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
     method: "get",
     headers: {
       Accept: "*/*",

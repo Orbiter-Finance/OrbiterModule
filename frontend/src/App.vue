@@ -93,9 +93,11 @@ export default defineComponent({
     }
     onMounted(() => {
       const cipherToken = localStorage.getItem("token");
-      const bytes = CryptoJS.AES.decrypt(cipherToken, 'github');
-      const originalText = bytes.toString(CryptoJS.enc.Utf8);
-      store.commit("setAccessToken", originalText)
+      if (cipherToken) {
+        const bytes = CryptoJS.AES.decrypt(cipherToken, 'github');
+        const originalText = bytes.toString(CryptoJS.enc.Utf8);
+        store.commit("setAccessToken", originalText)
+      }
     }),
 
       // watch
