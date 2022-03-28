@@ -1,5 +1,4 @@
 import axios from 'axios'
-import dayjs from 'dayjs'
 import { Repository } from 'typeorm'
 import { prometheusConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
@@ -7,7 +6,8 @@ import { SystemSetting } from '../model/system_setting'
 import { sleep } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerAddresses, getWealths } from './maker'
+import { getMakerAddresses } from './maker'
+import { getWealths } from './maker_wealth'
 
 type BalanceAlarm = {
   chainId: number
