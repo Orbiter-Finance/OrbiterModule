@@ -472,7 +472,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (ptext.state === false) {
-                    break
+                    continue
                   }
                   const pText = ptext.pText
 
@@ -481,7 +481,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (realAmount.state === false) {
-                    return
+                    continue
                   }
                   const rAmount = <any>realAmount.rAmount
                   if (
@@ -527,7 +527,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         )
                       } catch (error) {
                         errorLogger.error('zk_isHaveSqlError =', error)
-                        break
+                        continue
                       }
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
