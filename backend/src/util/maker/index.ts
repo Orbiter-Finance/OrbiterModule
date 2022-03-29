@@ -1580,7 +1580,15 @@ export async function sendTransaction(
         errorLogger.error('updateErrorSqlError =', error)
         return
       }
-      let alert = 'Send Transaction Error ' + transactionID
+      var myDate = new Date()
+      let alert =
+        'Send Transaction Error ' +
+        transactionID +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
       try {
         doSms(alert)
       } catch (error) {

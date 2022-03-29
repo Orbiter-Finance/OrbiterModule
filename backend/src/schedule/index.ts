@@ -46,7 +46,8 @@ async function waittingStartMaker() {
       let nowTime = myDate.valueOf()
 
       let alert =
-        'Waitting for the privateKey ' +
+        `${makerAddress}` +
+        ' Waitting for the privateKey ' +
         myDate.getHours() +
         ':' +
         myDate.getMinutes() +
