@@ -507,6 +507,13 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
+                      if (matchHashList.indexOf(element.txHash) > -1) {
+                        accessLogger.info(
+                          'zkEvent.transactionHash exist: ' + element.txHash
+                        )
+                        continue
+                      }
+                      matchHashList.push(element.txHash)
                       accessLogger.info('element =', element)
                       accessLogger.info('match one transaction')
                       let nonce = element.op.nonce
@@ -755,6 +762,13 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               // donothing
             } else {
               if (pText == validPText) {
+                if (matchHashList.indexOf(lpTransaction.hash) > -1) {
+                  accessLogger.info(
+                    'loopEvent.transactionHash exist: ' + lpTransaction.hash
+                  )
+                  continue
+                }
+                matchHashList.push(lpTransaction.hash)
                 loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
                 accessLogger.info('match one transaction')
