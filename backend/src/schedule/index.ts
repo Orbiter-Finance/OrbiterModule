@@ -36,6 +36,10 @@ async function waittingStartMaker() {
 
         startedIndexs.push(index)
         isPrivateKeysChanged = true
+        
+        // Deley run, fixed bug: "Max rate limit reached, rate limit of 5/1sec applied"
+        await sleep(200)
+
         continue
       }
 
