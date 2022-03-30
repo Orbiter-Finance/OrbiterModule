@@ -37,7 +37,7 @@ import {
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
-import { doSms } from '../../sms/smsSchinese'
+// import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -473,7 +473,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (ptext.state === false) {
-                    break
+                    continue
                   }
                   const pText = ptext.pText
 
@@ -482,7 +482,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (realAmount.state === false) {
-                    return
+                    continue
                   }
                   const rAmount = <any>realAmount.rAmount
                   if (
@@ -508,6 +508,13 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
+                      if (matchHashList.indexOf(element.txHash) > -1) {
+                        accessLogger.info(
+                          'zkEvent.transactionHash exist: ' + element.txHash
+                        )
+                        continue
+                      }
+                      matchHashList.push(element.txHash)
                       accessLogger.info('element =', element)
                       accessLogger.info('match one transaction')
                       let nonce = element.op.nonce
@@ -528,7 +535,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         )
                       } catch (error) {
                         errorLogger.error('zk_isHaveSqlError =', error)
-                        break
+                        continue
                       }
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
@@ -730,7 +737,6 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               loopringStartTime[toChain]
             )
           }
-
           if (
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
@@ -757,6 +763,13 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               // donothing
             } else {
               if (pText == validPText) {
+                if (matchHashList.indexOf(lpTransaction.hash) > -1) {
+                  accessLogger.info(
+                    'loopEvent.transactionHash exist: ' + lpTransaction.hash
+                  )
+                  continue
+                }
+                matchHashList.push(lpTransaction.hash)
                 loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
                 accessLogger.info('match one transaction')
