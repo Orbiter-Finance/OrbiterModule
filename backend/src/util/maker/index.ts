@@ -91,7 +91,7 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
 
             break
           }
-        } catch (err) {}
+        } catch (err) { }
 
         await sleep(1000)
       }
@@ -345,8 +345,21 @@ async function watchTransfers(pool, state) {
     }
     return
   }
-
-  const web3 = createAlchemyWeb3(wsEndPoint)
+  let web3;
+  if (fromChainID == 10 || fromChainID == 510) {
+    const options = {
+      // Enable auto reconnection
+      reconnect: {
+        auto: true,
+        delay: 5000, // ms
+        maxAttempts: 5,
+        onTimeout: false
+      }
+    };
+    web3 = new Web3(new Web3.providers.WebsocketProvider(wsEndPoint, options))
+  } else {
+    web3 = createAlchemyWeb3(wsEndPoint)
+  }
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
@@ -504,7 +517,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.txHash !== lastHash &&
                       element.op.type === 'Transfer' &&
                       element.op.to.toLowerCase() ===
-                        makerAddress.toLowerCase() &&
+                    makerAddress.toLowerCase() &&
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
@@ -513,10 +526,10 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       let nonce = element.op.nonce
                       accessLogger.info(
                         'Transaction with hash ' +
-                          element.txHash +
-                          'nonce ' +
-                          nonce +
-                          ' has found'
+                        element.txHash +
+                        'nonce ' +
+                        nonce +
+                        ' has found'
                       )
                       var transactionID =
                         element.op.from.toLowerCase() + fromChainID + nonce
@@ -656,9 +669,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -735,7 +748,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
             lpTransaction.receiverAddress.toLowerCase() ==
-              makerAddress.toLowerCase() &&
+            makerAddress.toLowerCase() &&
             lpTransaction.symbol == 'ETH' &&
             lpTransaction.hash !== loopringLastHash
           ) {
@@ -763,10 +776,10 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
                 accessLogger.info(
                   'Transaction with hash ' +
-                    lpTransaction.hash +
-                    'storageID ' +
-                    (nonce * 2 + 1) +
-                    ' has found'
+                  lpTransaction.hash +
+                  'storageID ' +
+                  (nonce * 2 + 1) +
+                  ' has found'
                 )
                 var transactionID =
                   lpTransaction.senderAddress.toLowerCase() +
@@ -849,7 +862,7 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
   let fromL1Address = ''
   try {
     fromL1Address = await getL1AddressByL2(from, networkId)
-  } catch (err) {}
+  } catch (err) { }
 
   // check
   if (!fromL1Address) {
@@ -1024,15 +1037,14 @@ function confirmFromTransaction(
     if (!trxConfirmations) {
       return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
-
     var trx = trxConfirmations.trx
 
     accessLogger.info(
       'Transaction with hash ' +
-        txHash +
-        ' has ' +
-        trxConfirmations.confirmations +
-        ' confirmation(s)'
+      txHash +
+      ' has ' +
+      trxConfirmations.confirmations +
+      ' confirmation(s)'
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
@@ -1064,7 +1076,12 @@ function confirmFromTransaction(
     if (!makerNode) {
       var info = <any>{}
       try {
-        const fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+        let fromWeb3
+        if (fromChain === 'metis' || fromChain === 'metis_test') {
+          fromWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
+        } else {
+          fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+        }
         info = await fromWeb3.eth.getBlock(trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)
@@ -1123,7 +1140,6 @@ function confirmFromTransaction(
         pool,
         trx.nonce
       )
-
       return
     }
     return confirmFromTransaction(pool, state, txHash, confirmations, false)
@@ -1153,16 +1169,22 @@ function confirmToTransaction(
     }
     accessLogger.info(
       'Transaction with hash ' +
-        txHash +
-        ' has ' +
-        trxConfirmations.confirmations +
-        ' confirmation(s)'
+      txHash +
+      ' has ' +
+      trxConfirmations.confirmations +
+      ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
       let info = <any>{}
       try {
-        const toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
+        let toWeb3;
+        if (Chain === 'metis' || Chain === 'metis_test') {//no use alchemy provider
+          toWeb3 = new Web3(makerConfig[Chain].httpEndPoint)
+        } else {
+          toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
+        }
+
         info = await toWeb3.eth.getBlock(trxConfirmations.trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)
@@ -1284,8 +1306,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-              txID +
-              ' has been successfully confirmed'
+            txID +
+            ' has been successfully confirmed'
           )
           var timestamp = orbiterCore.transferTimeStampToTime(
             lpTransaction.timestamp ? lpTransaction.timestamp : '0'
@@ -1344,8 +1366,8 @@ async function confirmToSNTransaction(
       ) {
         accessLogger.info(
           'sn_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
+          txID +
+          ' has been successfully confirmed'
         )
         accessLogger.info(
           'update maker_node =',
@@ -1368,9 +1390,12 @@ async function confirmToSNTransaction(
 async function getConfirmations(fromChain, txHash): Promise<any> {
   accessLogger.info('getConfirmations =', getTime())
   try {
-    // const web3 = new Web3(config[fromChain].httpEndPoint)
-    const web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
-
+    let web3;
+    if (fromChain === 'metis' || fromChain === 'metis_test') {//no use alchemy provider
+      web3 = new Web3(makerConfig[fromChain].httpEndPoint)
+    } else {
+      web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+    }
     const trx = await web3.eth.getTransaction(txHash)
 
     const currentBlock = await web3.eth.getBlockNumber()

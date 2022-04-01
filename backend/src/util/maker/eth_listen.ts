@@ -93,7 +93,6 @@ export class EthListen {
           startblock = await this.blockProvider(isFirstTicker)
           isFirstTicker = false
         }
-
         const resp = await axios.get(this.api.endPoint, {
           params: {
             apiKey: this.api.key,
@@ -109,7 +108,6 @@ export class EthListen {
           timeout: 16000,
         })
         const { data } = resp
-
         if (data.status != '1' || !data.result || data.result.length <= 0) {
           return
         }

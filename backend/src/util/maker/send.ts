@@ -1,6 +1,5 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
 import axios from 'axios'
-import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
@@ -112,7 +111,6 @@ async function sendConsumer(value: any) {
     fromChainID,
     lpMemo,
   } = value
-
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -430,9 +428,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -642,9 +640,8 @@ async function sendConsumer(value: any) {
     toChain,
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
-
   let gasLimit = 100000
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
+  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'metis' || toChain === 'metis_test') {
     gasLimit = 1000000
   }
 
