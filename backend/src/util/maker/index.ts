@@ -23,7 +23,6 @@ import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
-import { ERC20Listen } from './erc20_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
@@ -38,7 +37,7 @@ import {
 } from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
-import { doSms } from '../../sms/smsSchinese'
+// import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -314,6 +313,7 @@ async function watchTransfers(pool, state) {
       })
     return
   }
+
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
     accessLogger.info(
@@ -336,6 +336,7 @@ async function watchTransfers(pool, state) {
     )
     return
   }
+
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
@@ -346,29 +347,26 @@ async function watchTransfers(pool, state) {
     }
     return
   }
-  if (fromChainID == 10 || fromChainID == 510) {
-    const web3 = new Web3(httpEndPoint)
-    try {
-      confirmMTTransaction(web3, api, tokenAddress, checkData, pool, state)
-    } catch (error) {
-      console.log('error =', error)
-      throw 'getMTTransactionDataError'
-    }
-    return
-  }
-  let web3 = createAlchemyWeb3(wsEndPoint)
-  if (isEthTokenAddress(tokenAddress)) {
+  const web3 = createAlchemyWeb3(wsEndPoint)
+  const isPolygon = fromChainID == 6 || fromChainID == 66
+  const isMetis = fromChainID == 10 || fromChainID == 510
+  if (isEthTokenAddress(tokenAddress) || isPolygon||isMetis) {
     let startBlockNumber = 0
 
-    new EthListen(api, makerAddress, async () => {
-      if (startBlockNumber) {
-        return startBlockNumber + ''
-      } else {
-        // Current block number +1, to prevent restart too fast!!!
-        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
-        return startBlockNumber + ''
+    new EthListen(
+      api,
+      makerAddress,
+      isPolygon||isMetis ? 'tokentx' : 'txlist',
+      async () => {
+        if (startBlockNumber) {
+          return startBlockNumber + ''
+        } else {
+          // Current block number +1, to prevent restart too fast!!!
+          startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+          return startBlockNumber + ''
+        }
       }
-    }).transfer(
+    ).transfer(
       { to: makerAddress },
       {
         onConfirmation: async (transaction) => {
@@ -422,34 +420,6 @@ async function watchTransfers(pool, state) {
         )
       })
   }
-}
-
-function confirmMTTransaction(web3, api, makerAddress, checkData, pool, state) {
-  let startBlockNumber = 0
-  new ERC20Listen(api, makerAddress, async () => {
-    if (startBlockNumber) {
-      return startBlockNumber + ''
-    } else {
-      // Current block number +1, to prevent restart too fast!!!
-      startBlockNumber = (await web3.eth.getBlockNumber()) + 1
-      return startBlockNumber + ''
-    }
-  }).transfer(
-    { to: makerAddress },
-    {
-      onConfirmation: async (transaction) => {
-        if (!transaction.hash) {
-          return
-        }
-
-        startBlockNumber = transaction.blockNumber
-
-        if (checkData(transaction.value + '', transaction.hash) === true) {
-          confirmFromTransaction(pool, state, transaction.hash)
-        }
-      },
-    }
-  )
 }
 
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
@@ -511,7 +481,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (ptext.state === false) {
-                    break
+                    continue
                   }
                   const pText = ptext.pText
 
@@ -520,7 +490,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (realAmount.state === false) {
-                    return
+                    continue
                   }
                   const rAmount = <any>realAmount.rAmount
                   if (
@@ -546,6 +516,13 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
+                      if (matchHashList.indexOf(element.txHash) > -1) {
+                        accessLogger.info(
+                          'zkEvent.transactionHash exist: ' + element.txHash
+                        )
+                        continue
+                      }
+                      matchHashList.push(element.txHash)
                       accessLogger.info('element =', element)
                       accessLogger.info('match one transaction')
                       let nonce = element.op.nonce
@@ -566,7 +543,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         )
                       } catch (error) {
                         errorLogger.error('zk_isHaveSqlError =', error)
-                        break
+                        continue
                       }
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
@@ -768,7 +745,6 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               loopringStartTime[toChain]
             )
           }
-
           if (
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
@@ -795,6 +771,13 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               // donothing
             } else {
               if (pText == validPText) {
+                if (matchHashList.indexOf(lpTransaction.hash) > -1) {
+                  accessLogger.info(
+                    'loopEvent.transactionHash exist: ' + lpTransaction.hash
+                  )
+                  continue
+                }
+                matchHashList.push(lpTransaction.hash)
                 loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
                 accessLogger.info('match one transaction')

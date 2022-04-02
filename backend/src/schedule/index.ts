@@ -9,7 +9,7 @@ import {
   // jobMakerNodeTodo,
   jobMakerPull,
 } from './jobs'
-import { doSms } from '../sms/smsSchinese'
+// import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
@@ -39,6 +39,10 @@ async function waittingStartMaker() {
 
         startedIndexs.push(index)
         isPrivateKeysChanged = true
+
+        // Deley run, fixed bug: "Max rate limit reached, rate limit of 5/1sec applied"
+        await sleep(200)
+        
         continue
       }
 
@@ -46,7 +50,8 @@ async function waittingStartMaker() {
       let nowTime = myDate.valueOf()
 
       let alert =
-        'Waitting for the privateKey ' +
+        `${makerAddress}` +
+        ' Waitting for the privateKey ' +
         myDate.getHours() +
         ':' +
         myDate.getMinutes() +
