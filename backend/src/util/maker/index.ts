@@ -23,6 +23,7 @@ import { Core } from '../core'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
+import { ERC20Listen } from './erc20_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
@@ -201,15 +202,15 @@ async function watchTransfers(pool, state) {
   let wsEndPoint = state
     ? makerConfig[pool.c2Name].wsEndPoint
     : makerConfig[pool.c1Name].wsEndPoint
+  let httpEndPoint = state
+    ? makerConfig[pool.c2Name].httpEndPoint
+    : makerConfig[pool.c1Name].httpEndPoint
   let tokenAddress = state ? pool.t2Address : pool.t1Address
   let fromChainID = state ? pool.c2ID : pool.c1ID
   let toChainID = state ? pool.c1ID : pool.c2ID
 
   // zk || zk_test
   if (fromChainID == 3 || fromChainID == 33) {
-    let httpEndPoint = state
-      ? makerConfig[pool.c2Name].httpEndPoint
-      : makerConfig[pool.c1Name].httpEndPoint
     const zkTokenInfoUrl = httpEndPoint + '/tokens/' + tokenAddress
     axios
       .get(zkTokenInfoUrl)
@@ -345,21 +346,17 @@ async function watchTransfers(pool, state) {
     }
     return
   }
-  let web3;
   if (fromChainID == 10 || fromChainID == 510) {
-    const options = {
-      // Enable auto reconnection
-      reconnect: {
-        auto: true,
-        delay: 5000, // ms
-        maxAttempts: 5,
-        onTimeout: false
-      }
-    };
-    web3 = new Web3(new Web3.providers.WebsocketProvider(wsEndPoint, options))
-  } else {
-    web3 = createAlchemyWeb3(wsEndPoint)
+    const web3 = new Web3(httpEndPoint)
+    try {
+      confirmMTTransaction(web3, api, tokenAddress, checkData, pool, state)
+    } catch (error) {
+      console.log('error =', error)
+      throw 'getMTTransactionDataError'
+    }
+    return
   }
+  let web3 = createAlchemyWeb3(wsEndPoint)
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
@@ -425,6 +422,34 @@ async function watchTransfers(pool, state) {
         )
       })
   }
+}
+
+function confirmMTTransaction(web3, api, makerAddress, checkData, pool, state) {
+  let startBlockNumber = 0
+  new ERC20Listen(api, makerAddress, async () => {
+    if (startBlockNumber) {
+      return startBlockNumber + ''
+    } else {
+      // Current block number +1, to prevent restart too fast!!!
+      startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+      return startBlockNumber + ''
+    }
+  }).transfer(
+    { to: makerAddress },
+    {
+      onConfirmation: async (transaction) => {
+        if (!transaction.hash) {
+          return
+        }
+
+        startBlockNumber = transaction.blockNumber
+
+        if (checkData(transaction.value + '', transaction.hash) === true) {
+          confirmFromTransaction(pool, state, transaction.hash)
+        }
+      },
+    }
+  )
 }
 
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
@@ -517,7 +542,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.txHash !== lastHash &&
                       element.op.type === 'Transfer' &&
                       element.op.to.toLowerCase() ===
-                    makerAddress.toLowerCase() &&
+                      makerAddress.toLowerCase() &&
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
@@ -527,7 +552,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       accessLogger.info(
                         'Transaction with hash ' +
                         element.txHash +
-                        'nonce ' +
+                        ' nonce ' +
                         nonce +
                         ' has found'
                       )
@@ -715,7 +740,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         errorLogger.error('checkLoopringAccountKeyError =', error)
       }
       const GetUserTransferListRequest = {
-        accountId: accountInfo.accountId,
+        accountId: accountInfo?.accountId,
         start: loopringStartTime[toChain],
         end: 99999999999999,
         status: 'processed',
@@ -777,7 +802,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 accessLogger.info(
                   'Transaction with hash ' +
                   lpTransaction.hash +
-                  'storageID ' +
+                  ' storageID ' +
                   (nonce * 2 + 1) +
                   ' has found'
                 )
