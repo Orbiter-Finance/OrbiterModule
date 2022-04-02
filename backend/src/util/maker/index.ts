@@ -38,6 +38,7 @@ import {
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 import Axios from '../../util/Axios'
+import { CrossAddress, CrossAddressExt } from '../cross_address'
 
 Axios.axios()
 
@@ -1033,12 +1034,21 @@ function confirmFromTransaction(
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
+    // ERC20's transfer input length is 138(include 0x), when the length > 138, it is cross address transfer
     let amountStr = '0'
-    if (isEthTokenAddress(tokenAddress)) {
-      amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
+    let transferExt: CrossAddressExt | undefined = undefined
+    if (trx.input.length <= 138) {
+      if (isEthTokenAddress(tokenAddress)) {
+        amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
+      } else {
+        const amountHex = '0x' + trx.input.slice(74)
+        amountStr = Web3.utils.hexToNumberString(amountHex)
+      }
     } else {
-      const amountHex = '0x' + trx.input.slice(74)
-      amountStr = Web3.utils.hexToNumberString(amountHex)
+      // Parse input data
+      const inputData = CrossAddress.parseTransferERC20Input(trx.input)
+      amountStr = inputData.amount.toNumber() + ''
+      transferExt = inputData.ext
     }
 
     let makerNode: MakerNode | undefined
@@ -1080,6 +1090,7 @@ function confirmFromTransaction(
           ),
           fromAmount: amountStr,
           formNonce: trx.nonce,
+          fromExt: transferExt,
           txToken: tokenAddress,
           state: 0,
         })
@@ -1108,6 +1119,12 @@ function confirmFromTransaction(
       }
 
       const toTokenAddress = state ? pool.t1Address : pool.t2Address
+      let fromAddress = trx.from
+      if (transferExt?.value) {
+        // When transferExt has value, fromAddress is transferExt.value
+        fromAddress = transferExt.value
+      }
+
       sendTransaction(
         makerAddress,
         transactionID,
@@ -1116,7 +1133,7 @@ function confirmFromTransaction(
         toChain,
         toTokenAddress,
         amountStr,
-        trx.from,
+        fromAddress,
         pool,
         trx.nonce
       )

@@ -52,3 +52,11 @@ export function equalsIgnoreCase(value1: string, value2: string): boolean {
 export function isEthTokenAddress(tokenAddress: string) {
   return /^0x0+$/i.test(tokenAddress)
 }
+
+/**
+ * @param chainId
+ * @returns
+ */
+export function isSupportEVM(chainId: number) {
+  return [1, 2, 6, 7, 5, 22, 66, 77].indexOf(Number(chainId)) > -1
+}
