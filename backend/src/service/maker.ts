@@ -393,12 +393,7 @@ export async function getWealthsChains(makerAddress: string) {
   const makerList = await getMakerList()
   const wealthsChains: WealthsChain[] = []
 
-  const pushToChainBalances = (
-    wChain: WealthsChain,
-    tokenAddress: string,
-    tokenName: string,
-    decimals: number
-  ) => {
+  const pushToChainBalances = (wChain: WealthsChain, tokenAddress: string, tokenName: string, decimals: number) => {
     const find = wChain.balances.find(
       (item) => item.tokenAddress == tokenAddress
     )
@@ -408,11 +403,7 @@ export async function getWealthsChains(makerAddress: string) {
 
     wChain.balances.push({ tokenAddress, tokenName, decimals, value: '' })
   }
-  const pushToChains = (
-    makerAddress: string,
-    chainId: number,
-    chainName: string
-  ): WealthsChain => {
+  const pushToChains = (makerAddress: string, chainId: number, chainName: string): WealthsChain => {
     const find = wealthsChains.find((item) => item.chainId === chainId)
     if (find) {
       return find
