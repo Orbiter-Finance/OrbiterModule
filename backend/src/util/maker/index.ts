@@ -237,15 +237,12 @@ async function watchTransfers(pool, state) {
   // checkData
   const checkData = (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
-
     if (ptext.state === false) {
       return false
     }
     const pText = ptext.pText
     let validPText = (9000 + Number(toChainID)).toString()
-
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
-
     if (realAmount.state === false) {
       return false
     }
@@ -350,13 +347,13 @@ async function watchTransfers(pool, state) {
   const web3 = createAlchemyWeb3(wsEndPoint)
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
-  if (isEthTokenAddress(tokenAddress) || isPolygon||isMetis) {
+  if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
     let startBlockNumber = 0
 
     new EthListen(
       api,
       makerAddress,
-      isPolygon||isMetis ? 'tokentx' : 'txlist',
+      isPolygon || isMetis ? 'tokentx' : 'txlist',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
@@ -375,7 +372,6 @@ async function watchTransfers(pool, state) {
           }
 
           startBlockNumber = transaction.blockNumber
-
           if (checkData(transaction.value + '', transaction.hash) === true) {
             confirmFromTransaction(pool, state, transaction.hash)
           }
@@ -631,7 +627,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
         isFirst = false
       })
       .catch(function (error) {
-        errorLogger.error('error3 = getZKTransactionListError')
+        errorLogger.error('error3 = getZKTransactionListError', error)
       })
   }
 
@@ -769,7 +765,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               pText !== validPText
             ) {
               // donothing
-            } else {
+            }
+            else {
               if (pText == validPText) {
                 if (matchHashList.indexOf(lpTransaction.hash) > -1) {
                   accessLogger.info(
