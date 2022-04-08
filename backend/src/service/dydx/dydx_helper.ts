@@ -14,10 +14,17 @@ const HOSTS = {
 }
 
 const DYDX_MAKERS = {
+  // Testnet
   '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5': {
     starkKey:
       '04e69175389829db733f41ae75e7ba59ea2b2849690c734fcd291c94d6ec6017',
     positionId: '60620',
+  },
+
+  // Mainnet
+  '0x41d3D33156aE7c62c094AAe2995003aE63f587B3': {
+    starkKey: '',
+    positionId: '',
   },
 }
 
