@@ -38,6 +38,10 @@ export async function waittingStartMaker() {
 
         startedIndexs.push(index)
         isPrivateKeysChanged = true
+
+        // Deley run, fixed bug: "Max rate limit reached, rate limit of 5/1sec applied"
+        await sleep(200)
+        
         continue
       }
 
@@ -45,7 +49,8 @@ export async function waittingStartMaker() {
       let nowTime = myDate.valueOf()
 
       let alert =
-        'Waitting for the privateKey ' +
+        `${makerAddress}` +
+        ' Waitting for the privateKey ' +
         myDate.getHours() +
         ':' +
         myDate.getMinutes() +

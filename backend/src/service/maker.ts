@@ -2,6 +2,7 @@ import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
+import Web3 from 'web3'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
@@ -313,29 +314,34 @@ async function getTokenBalance(
           await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
         ).toString()
         break
+      case 'metis':
+        const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (tokenAddress) {
+          value = await getBalanceByMetis(web3, makerAddress, tokenAddress)
+        } else {
+          value = await web3.eth.getBalance(
+            makerAddress
+          )
+        }
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
           break
         }
-
         // when empty tokenAddress or 0x00...000, get eth balances
         if (!tokenAddress || isEthTokenAddress(tokenAddress)) {
           value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
             makerAddress
           )
         } else {
-          const resp = await createAlchemyWeb3(
-            alchemyUrl
-          ).alchemy.getTokenBalances(makerAddress, [tokenAddress])
+          const resp = await createAlchemyWeb3(alchemyUrl).alchemy.getTokenBalances(makerAddress, [tokenAddress])
 
           for (const item of resp.tokenBalances) {
             if (item.error) {
               continue
             }
-
             value = String(item.tokenBalance)
-
             // Now only one
             break
           }
@@ -344,14 +350,21 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `${CHAIN_INDEX[chainId]} GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }
-
   return value
 }
-
+async function getBalanceByMetis(web3, makerAddress, tokenAddress) {
+  const tokenContract = new web3.eth.Contract(makerConfig.ABI, tokenAddress)
+  const tokenBalanceWei = await tokenContract.methods
+    .balanceOf(makerAddress)
+    .call({
+      from: makerAddress,
+    })
+  return tokenBalanceWei
+}
 type WealthsChain = {
   chainId: number
   chainName: string
@@ -375,12 +388,7 @@ export async function getWealthsChains(makerAddress: string) {
   const makerList = await getMakerList()
   const wealthsChains: WealthsChain[] = []
 
-  const pushToChainBalances = (
-    wChain: WealthsChain,
-    tokenAddress: string,
-    tokenName: string,
-    decimals: number
-  ) => {
+  const pushToChainBalances = (wChain: WealthsChain, tokenAddress: string, tokenName: string, decimals: number) => {
     const find = wChain.balances.find(
       (item) => item.tokenAddress == tokenAddress
     )
@@ -390,11 +398,7 @@ export async function getWealthsChains(makerAddress: string) {
 
     wChain.balances.push({ tokenAddress, tokenName, decimals, value: '' })
   }
-  const pushToChains = (
-    makerAddress: string,
-    chainId: number,
-    chainName: string
-  ): WealthsChain => {
+  const pushToChains = (makerAddress: string, chainId: number, chainName: string): WealthsChain => {
     const find = wealthsChains.find((item) => item.chainId === chainId)
     if (find) {
       return find
@@ -424,7 +428,6 @@ export async function getWealthsChains(makerAddress: string) {
       item.precision
     )
   }
-
   // get tokan balance
   for (const item of wealthsChains) {
     // add eth
@@ -438,7 +441,7 @@ export async function getWealthsChains(makerAddress: string) {
       // add eth balances item
       item.balances.unshift({
         tokenAddress: '',
-        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : 'ETH',
+        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : CHAIN_INDEX[item.chainId] == 'metis' ? 'METIS' : 'ETH',
         decimals: 18,
         value: '',
       })
@@ -451,7 +454,6 @@ export async function getWealths(
   makerAddress: string
 ): Promise<WealthsChain[]> {
   const wealthsChains = await getWealthsChains(makerAddress)
-
   // get tokan balance
   const promises: Promise<void>[] = []
   for (const item of wealthsChains) {

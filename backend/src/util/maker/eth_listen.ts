@@ -30,12 +30,14 @@ type TransferCallbacks = {
   onConfirmation?: (transaction: Transaction) => any
   onReceived?: (transaction: Transaction) => any
 }
+type Action = 'txlist' | 'tokentx'
 
 const ETHLISTEN_TRANSFER_DURATION = 5 * 1000
 
 export class EthListen {
   private api: Api
   private address: string
+  private action: Action
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
@@ -44,11 +46,13 @@ export class EthListen {
   constructor(
     api: Api,
     address: string,
+    action: Action = 'txlist',
     blockProvider?: (isFirst: boolean) => Promise<string>
   ) {
     this.api = api
     this.address = address
     this.blockProvider = blockProvider
+    this.action = action
 
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
@@ -93,12 +97,11 @@ export class EthListen {
           startblock = await this.blockProvider(isFirstTicker)
           isFirstTicker = false
         }
-
         const resp = await axios.get(this.api.endPoint, {
           params: {
             apiKey: this.api.key,
             module: 'account',
-            action: 'txlist',
+            action: this.action,
             address: this.address,
             page: 1,
             offset: 100,
@@ -109,7 +112,6 @@ export class EthListen {
           timeout: 16000,
         })
         const { data } = resp
-
         if (data.status != '1' || !data.result || data.result.length <= 0) {
           return
         }

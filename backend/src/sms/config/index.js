@@ -1,4 +1,4 @@
-const RECEIVER_PHONE = '18612555980'
+const RECEIVER_PHONE = '18612555980,18611521773'
 
 module.exports = {
   schinese: {

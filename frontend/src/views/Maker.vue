@@ -1,42 +1,27 @@
 <template>
   <div class="maker">
-    <div
-      class="maker-block maker-header maker-header--balances"
-      v-loading="loadingWealths"
-      element-loading-text="Loading Balances"
-    >
+    <div class="maker-block maker-header maker-header--balances" v-loading="loadingWealths" element-loading-text="Loading Balances">
       <template v-if="wealths.length > 0">
-        <el-card
-          v-for="(item, index) in wealths"
-          :key="index"
-          :header="mappingChainName(item.chainName)"
-          shadow="hover"
-        >
+        <el-card v-for="(item, index) in wealths" :key="index" :header="mappingChainName(item.chainName)" shadow="hover">
           <el-tabs class="maker-header--balances__names">
-            <el-tab-pane
-              v-for="(item1, index1) in item.balances"
-              :key="index1"
-              :label="item1.tokenName"
-              :name="index1 + ''"
-            >
-              <div
-                v-if="item1.tokenAddress"
-                class="maker-header--balances__info"
-              >
+            <el-tab-pane v-for="(item1, index1) in item.balances" :key="index1" :label="item1.tokenName" :name="index1 + ''">
+              <div v-if="item1.tokenAddress" class="maker-header--balances__info">
                 TokenAddress:&nbsp;
-                <a
-                  :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
-                  target="_blank"
-                >
-                  <TextLong :content="item1.tokenAddress">{{
-                    item1.tokenAddress
-                  }}</TextLong>
+                <a :href="`${item.tokenExploreUrl}${item1.tokenAddress}`" target="_blank">
+                  <TextLong :content="item1.tokenAddress">
+                    {{
+                      item1.tokenAddress
+                    }}
+                  </TextLong>
                 </a>
               </div>
               <div class="maker-header--balances__info">
-                Balances:&nbsp;<span class="maker-header--balances__value">{{
-                  item1.value || 'Faild Get'
-                }}</span>
+                Balances:&nbsp;
+                <span class="maker-header--balances__value">
+                  {{
+                    item1.value || 'Faild Get'
+                  }}
+                </span>
               </div>
             </el-tab-pane>
           </el-tabs>
@@ -44,33 +29,18 @@
       </template>
       <el-empty v-else description="Empty balances"></el-empty>
     </div>
-    <div
-      class="maker-block maker-header maker-header--search"
-      v-loading="loadingNodes"
-    >
+    <div class="maker-block maker-header maker-header--search" v-loading="loadingNodes">
       <el-row :gutter="20">
         <el-col :span="4" class="maker-search__item">
           <div class="title">From chain</div>
           <el-select v-model="fromChainId" placeholder="Select">
-            <el-option
-              v-for="(item, index) in chains"
-              :key="index"
-              :label="mappingChainName(item.chainName)"
-              :value="item.chainId"
-            >
-            </el-option>
+            <el-option v-for="(item, index) in chains" :key="index" :label="mappingChainName(item.chainName)" :value="item.chainId"></el-option>
           </el-select>
         </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">To chain</div>
           <el-select v-model="toChainId" placeholder="Select">
-            <el-option
-              v-for="(item, index) in chains"
-              :key="index"
-              :label="mappingChainName(item.chainName)"
-              :value="item.chainId"
-            >
-            </el-option>
+            <el-option v-for="(item, index) in chains" :key="index" :label="mappingChainName(item.chainName)" :value="item.chainId"></el-option>
           </el-select>
         </el-col>
         <el-col :span="10" class="maker-search__item">
@@ -78,19 +48,9 @@
             From date range
             <!-- <span style="font-size: 12px"
               >(Earliest: 2017-10-11 10:20:30, updating...)</span
-            > -->
+            >-->
           </div>
-          <el-date-picker
-            v-model="rangeDate"
-            type="datetimerange"
-            range-separator="To"
-            start-placeholder="Start date"
-            end-placeholder="End date"
-            :clearable="false"
-            :offset="-110"
-            :show-arrow="false"
-          >
-          </el-date-picker>
+          <el-date-picker v-model="rangeDate" type="datetimerange" range-separator="To" start-placeholder="Start date" end-placeholder="End date" :clearable="false" :offset="-110" :show-arrow="false"></el-date-picker>
         </el-col>
         <el-col :span="6" class="maker-search__item">
           <div class="title">Reset | Apply</div>
@@ -99,9 +59,7 @@
         </el-col>
       </el-row>
       <el-row v-if="userAddressSelected">
-        <el-tag closable @close="userAddressSelected = ''">
-          UserAddress: {{ userAddressSelected }}
-        </el-tag>
+        <el-tag closable @close="userAddressSelected = ''">UserAddress: {{ userAddressSelected }}</el-tag>
       </el-row>
     </div>
     <div class="maker-block maker-header maker-header__statistics">
@@ -110,12 +68,9 @@
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
             <div class="user-addresses">
-              <div
-                v-for="(item, index) in userAddressList"
-                :key="index"
-                @click="userAddressSelected = item.address"
-              >
-                {{ item.address }}<span>&nbsp;({{ item.count }})</span>
+              <div v-for="(item, index) in userAddressList" :key="index" @click="userAddressSelected = item.address">
+                {{ item.address }}
+                <span>&nbsp;({{ item.count }})</span>
               </div>
             </div>
           </template>
@@ -126,20 +81,11 @@
       </div>
       <div>FromAmountTotal: {{ fromAmountTotal }}</div>
       <div>ToAmountTotal: {{ toAmountTotal }}</div>
-      <div style="color: #67c23a; font-weight: 600">
-        +{{ diffAmountTotal }} USD
-      </div>
-      <div style="color: #409eff; font-weight: 600">
-        +{{ diffAmountTotalETH }} ETH
-      </div>
-      <div style="color: #f56c6c; font-weight: 600">
-        +{{ diffAmountTotalCNY }} CNY
-      </div>
+      <div style="color: #67c23a; font-weight: 600">+{{ diffAmountTotal }} USD</div>
+      <div style="color: #409eff; font-weight: 600">+{{ diffAmountTotalETH }} ETH</div>
+      <div style="color: #f56c6c; font-weight: 600">+{{ diffAmountTotalCNY }} CNY</div>
       <div style="margin-left: auto">
-        <router-link
-          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
-          target="_blank"
-        >
+        <router-link :to="`/maker/history?makerAddress=${makerAddressSelected}`" target="_blank">
           <el-button size="small" round>All transactions</el-button>
         </router-link>
       </div>
@@ -150,90 +96,72 @@
           <el-table-column label="TransactionID">
             <template #default="scope">
               <div>
-                <el-tag
-                  v-if="scope.row.txTokenName"
-                  type="info"
-                  effect="plain"
-                  size="mini"
-                  >{{ scope.row.txTokenName }}</el-tag
-                >
-                <el-tag v-else type="danger" effect="plain" size="mini">
-                  Invalid
-                </el-tag>
+                <el-tag v-if="scope.row.txTokenName" type="info" effect="plain" size="mini">{{ scope.row.txTokenName }}</el-tag>
+                <el-tag v-else type="danger" effect="plain" size="mini">Invalid</el-tag>
               </div>
               <div>
-                <TextLong :content="scope.row.transactionID">{{
-                  scope.row.transactionID
-                }}</TextLong>
+                <TextLong :content="scope.row.transactionID">
+                  {{
+                    scope.row.transactionID
+                  }}
+                </TextLong>
               </div>
             </template>
           </el-table-column>
           <el-table-column width="90">
             <template #header>
-              From <br />
-              To
+              From
+              <br />To
             </template>
             <template #default="scope">
-              <el-tag
-                class="maker__chain-tag"
-                type="success"
-                effect="light"
-                size="mini"
-              >
-                + {{ scope.row.fromChainName }}
-              </el-tag>
-              <el-tag
-                class="maker__chain-tag"
-                type="danger"
-                effect="light"
-                size="mini"
-              >
-                - {{ scope.row.toChainName }}
-              </el-tag>
+              <el-tag class="maker__chain-tag" type="success" effect="light" size="mini">+ {{ scope.row.fromChainName }}</el-tag>
+              <el-tag class="maker__chain-tag" type="danger" effect="light" size="mini">- {{ scope.row.toChainName }}</el-tag>
             </template>
           </el-table-column>
           <el-table-column style="min-width: 120px">
             <template #header>
-              Maker <br />
-              User
+              Maker
+              <br />User
             </template>
             <template #default="scope">
               <a :href="scope.row.makerAddressHref" target="_blank">
-                <TextLong :content="scope.row.makerAddress">{{
-                  scope.row.makerAddress
-                }}</TextLong>
+                <TextLong :content="scope.row.makerAddress">
+                  {{
+                    scope.row.makerAddress
+                  }}
+                </TextLong>
               </a>
               <a :href="scope.row.userAddressHref" target="_blank">
-                <TextLong :content="scope.row.userAddress" placement="bottom">{{
-                  scope.row.userAddress
-                }}</TextLong>
+                <TextLong :content="scope.row.userAddress" placement="bottom">
+                  {{
+                    scope.row.userAddress
+                  }}
+                </TextLong>
               </a>
             </template>
           </el-table-column>
           <el-table-column width="145">
             <template #header>
-              FromTx <br />
-              FromTime
+              FromTx
+              <br />FromTime
             </template>
             <template #default="scope">
               <a :href="scope.row.fromTxHref" target="_blank">
-                <TextLong :content="scope.row.formTx">{{
-                  scope.row.formTx
-                }}</TextLong>
+                <TextLong :content="scope.row.formTx">
+                  {{
+                    scope.row.formTx
+                  }}
+                </TextLong>
               </a>
               <div class="table-timestamp">
-                <TextLong
-                  :content="scope.row.fromTimeStamp"
-                  placement="bottom"
-                  >{{ scope.row.fromTimeStampAgo }}</TextLong
-                >
+                <TextLong :content="scope.row.fromTimeStamp" placement="bottom">{{ scope.row.fromTimeStampAgo }}</TextLong>
               </div>
             </template>
           </el-table-column>
           <el-table-column width="145">
             <template #header>
-              ToTx <br />
-              ToTime
+              ToTx
+              <br />ToTime
             </template>
             <template #default="{ row }">
               <a v-if="row.toTxHref" :href="row.toTxHref" target="_blank">
@@ -241,15 +169,9 @@
               </a>
               <TextLong v-else :content="row.toTx">{{ row.toTx }}</TextLong>
               <div class="table-timestamp">
-                <TextLong
-                  v-if="row.toTimeStamp && row.toTimeStamp != '0'"
-                  :content="row.toTimeStamp"
-                  placement="bottom"
-                >
+                <TextLong v-if="row.toTimeStamp && row.toTimeStamp != '0'" :content="row.toTimeStamp" placement="bottom">
                   {{ row.toTimeStampAgo }}
-                  <span v-if="row.tradeDuration >= 0">
-                    ({{ row.tradeDuration }}s)
-                  </span>
+                  <span v-if="row.tradeDuration >= 0">({{ row.tradeDuration }}s)</span>
                 </TextLong>
                 <span v-else>{{ row.toTimeStampAgo }}</span>
               </div>
@@ -257,14 +179,14 @@
           </el-table-column>
           <el-table-column width="120">
             <template #header>
-              FromAmount <br />
-              ToAmount
+              FromAmount
+              <br />ToAmount
             </template>
             <template #default="{ row }">
-              <TextLong :content="row.fromAmountFormat"
-                ><span class="amount-operator--plus">+</span>
-                {{ row.fromAmountFormat }}</TextLong
-              >
+              <TextLong :content="row.fromAmountFormat">
+                <span class="amount-operator--plus">+</span>
+                {{ row.fromAmountFormat }}
+              </TextLong>
               <TextLong
                 :content="
                   row.toAmountFormat +
@@ -273,26 +195,21 @@
                     : '')
                 "
                 placement="bottom"
-                ><span class="amount-operator--minus">-</span>
-                {{ row.toAmountFormat }}</TextLong
               >
+                <span class="amount-operator--minus">-</span>
+                {{ row.toAmountFormat }}
+              </TextLong>
             </template>
           </el-table-column>
           <el-table-column label="Profit" width="150">
             <template #default="{ row }">
-              <div v-if="row.profitUSD > 0" class="amount-operator--plus">
-                +{{ row.profitUSD }} USD
-              </div>
-              <div v-else class="amount-operator--minus">
-                {{ row.profitUSD }} USD
-              </div>
+              <div v-if="row.profitUSD > 0" class="amount-operator--plus">+{{ row.profitUSD }} USD</div>
+              <div v-else class="amount-operator--minus">{{ row.profitUSD }} USD</div>
             </template>
           </el-table-column>
           <el-table-column prop="state" label="State" width="140">
             <template #default="scope">
-              <el-tag :type="stateTags[scope.row.state]?.type" effect="dark">
-                {{ stateTags[scope.row.state]?.label }}
-              </el-tag>
+              <el-tag :type="stateTags[scope.row.state]?.type" effect="dark">{{ stateTags[scope.row.state]?.label }}</el-tag>
             </template>
           </el-table-column>
         </el-table>
@@ -340,7 +257,6 @@ export default defineComponent({
       toChainId: '',
       userAddressSelected: '',
     })
-
     const stateTags = {
       0: { label: 'From: check', type: 'info' },
       1: { label: 'From: okay', type: 'warning' },
@@ -444,6 +360,7 @@ export default defineComponent({
         state.rangeDate
       )
     }
+
     getMakerNodes()
 
     // When makerAddressSelected changed, get maker's data

@@ -10,6 +10,7 @@ const MAX_BITS = {
   optimism: 256,
   immutablex: 28,
   loopring: 256,
+  metis: 256,
 }
 
 export const CHAIN_INDEX = {
@@ -29,6 +30,8 @@ export const CHAIN_INDEX = {
   88: 'immutablex',
   9: 'loopring',
   99: 'loopring',
+  10: 'metis',
+  510: 'metis',
 }
 
 export const SIZE_OP = {
