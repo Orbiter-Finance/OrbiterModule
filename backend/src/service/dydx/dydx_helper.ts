@@ -1,17 +1,12 @@
 import {
   AccountResponseObject,
   DydxClient,
-  SigningMethod,
+  SigningMethod
 } from '@dydxprotocol/v3-client'
 import { getAccountId } from '@dydxprotocol/v3-client/build/src/lib/db'
 import { ethers, utils } from 'ethers'
 import Web3 from 'web3'
-// import util from '../util'
-
-const HOSTS = {
-  ropsten: 'https://api.stage.dydx.exchange',
-  mainnet: 'https://api.dydx.exchange',
-}
+import { makerConfig } from '../../config'
 
 const DYDX_MAKERS = {
   // Testnet
@@ -50,11 +45,11 @@ export class DydxHelper {
   ) {
     if (chainId == 11) {
       this.networkId = 1
-      this.host = HOSTS.mainnet
+      this.host = makerConfig.dydx.api.endPoint
     }
     if (chainId == 511) {
       this.networkId = 3
-      this.host = HOSTS.ropsten
+      this.host = makerConfig.dydx_test.api.endPoint
     }
 
     this.chainId = chainId
@@ -96,9 +91,6 @@ export class DydxHelper {
     if (!this.web3) {
       throw new Error('Sorry, miss param [web3]')
     }
-
-    // Ensure network
-    // await util.ensureMetamaskNetwork(this.chainId)
 
     const client = <any>new DydxClient(this.host, {
       networkId: this.networkId,

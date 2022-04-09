@@ -316,6 +316,7 @@ async function watchTransfers(pool, state) {
       })
     return
   }
+
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
     accessLogger.info(
@@ -338,6 +339,7 @@ async function watchTransfers(pool, state) {
     )
     return
   }
+
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
@@ -346,6 +348,11 @@ async function watchTransfers(pool, state) {
       console.log('error =', error)
       throw 'getLPTransactionDataError'
     }
+    return
+  }
+
+  // dydx || dydx_test (Can't transfer out now!)
+  if (fromChainID == 11 || fromChainID == 511) {
     return
   }
 
@@ -1119,10 +1126,10 @@ function confirmFromTransaction(
       }
 
       const toTokenAddress = state ? pool.t1Address : pool.t2Address
-      let fromAddress = trx.from
+      let toAddress = trx.from
       if (transferExt?.value) {
         // When transferExt has value, fromAddress is transferExt.value
-        fromAddress = transferExt.value
+        toAddress = transferExt.value
       }
 
       sendTransaction(
@@ -1133,9 +1140,11 @@ function confirmFromTransaction(
         toChain,
         toTokenAddress,
         amountStr,
-        fromAddress,
+        toAddress,
         pool,
-        trx.nonce
+        trx.nonce,
+        0,
+        trx.from
       )
 
       return
@@ -1463,10 +1472,11 @@ export function getAmountToSend(
  * @param toChain
  * @param tokenAddress
  * @param amountStr
- * @param fromAddress
+ * @param toAddress
  * @param pool
  * @param nonce
  * @param result_nonce
+ * @param ownerAddress // Cross address ownerAddress
  * @returns
  */
 export async function sendTransaction(
@@ -1477,10 +1487,11 @@ export async function sendTransaction(
   toChain,
   tokenAddress,
   amountStr,
-  fromAddress,
+  toAddress,
   pool,
   nonce,
-  result_nonce = 0
+  result_nonce = 0,
+  ownerAddress = ''
 ) {
   const amountToSend = getAmountToSend(
     fromChainID,
@@ -1501,7 +1512,7 @@ export async function sendTransaction(
   accessLogger.info('toChain =', toChain)
   await send(
     makerAddress,
-    fromAddress,
+    toAddress,
     toChain,
     toChainID,
     getZKTokenID(tokenAddress),
@@ -1509,7 +1520,8 @@ export async function sendTransaction(
     tAmount,
     result_nonce,
     fromChainID,
-    nonce
+    nonce,
+    ownerAddress
   ).then(async (response) => {
     accessLogger.info('response =', response)
     if (!response.code) {
@@ -1542,6 +1554,9 @@ export async function sendTransaction(
         // confirmToSNTransaction(txID, transactionID, toChainID)
       } else if (toChainID === 9 || toChainID === 99) {
         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+      } else if (toChainID === 11 || toChainID === 511) {
+        accessLogger.info(`dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`)
+        // confirmToSNTransaction(txID, transactionID, toChainID)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)
       }
