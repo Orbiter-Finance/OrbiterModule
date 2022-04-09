@@ -17,6 +17,7 @@
     "@imtbl/imx-sdk": "^1.6.0",
     "@loopring-web/loopring-sdk": "1.8.17",
     "@metamask/eth-sig-util": "^4.0.0",
+    "@supercharge/promise-pool": "^2.1.0",
     "axios": "^0.21.1",
     "bignumber.js": "^9.0.1",
     "class-transformer": "^0.5.1",
