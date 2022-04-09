@@ -8,7 +8,7 @@ import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
 import * as serviceMaker from '../service/maker'
 import { getLastStatus, getMakerPulls } from '../service/maker_pull'
-import { Core } from '../util/core'
+import * as serviceMakerWealth from '../service/maker_wealth'
 import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
@@ -162,12 +162,15 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker/wealths', async ({ request, restful }) => {
     const makerAddress = String(request.query.makerAddress || '')
 
-    let rst = Core.memoryCache.get(
-      `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
-    )
-    if (!rst) {
-      rst = await serviceMaker.getWealths(makerAddress)
-    }
+    // let rst = Core.memoryCache.get(
+    //   `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
+    // )
+    // if (!rst) {
+    //   rst = await serviceMakerWealth.getWealths(makerAddress)
+    // }
+
+    // No need to cache temporarily, get real-time
+    const rst = await serviceMakerWealth.getWealths(makerAddress)
 
     restful.json(rst)
   })

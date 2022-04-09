@@ -55,9 +55,20 @@ export function isEthTokenAddress(tokenAddress: string) {
   return /^0x0+$/i.test(tokenAddress)
 }
 
+/**
+ * @returns 
+ */
 export function clusterIsPrimary() {
   if (semver.gte(process.version, 'v16.0.0')) {
     return cluster.isPrimary
   }
   return cluster.isMaster
+}
+
+/**
+ * @param chainId
+ * @returns
+ */
+export function isSupportEVM(chainId: number) {
+  return [1, 2, 6, 7, 5, 22, 66, 77].indexOf(Number(chainId)) > -1
 }

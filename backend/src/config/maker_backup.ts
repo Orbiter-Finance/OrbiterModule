@@ -170,8 +170,27 @@ export default {
     gasPrice: 2,
     customChainId: 588,
   },
+  dydx: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.dydx.exchange',
+    api: {
+      endPoint: 'https://api.dydx.exchange',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  dydx_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.stage.dydx.exchange',
+    api: {
+      endPoint: 'https://api.stage.dydx.exchange',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   githubToken: '',
+  crossAddressContracts: {},
   ABI: [
     {
       inputs: [

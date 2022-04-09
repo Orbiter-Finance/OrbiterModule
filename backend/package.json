@@ -14,6 +14,7 @@
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
     "@dydxprotocol/starkex-lib": "^1.1.6",
+    "@dydxprotocol/v3-client": "^1.8.2",
     "@imtbl/imx-sdk": "^1.6.0",
     "@loopring-web/loopring-sdk": "1.8.17",
     "@metamask/eth-sig-util": "^4.0.0",
