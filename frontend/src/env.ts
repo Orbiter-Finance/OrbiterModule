@@ -30,6 +30,8 @@ export const $env = {
     44: '4', // starknet(R)
     66: '80001', // polygon(R)
     99: '5', // loopring(G)
+    10:'1088',
+    510:'588' // metis(G)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -44,6 +46,8 @@ export const $env = {
     77: 'https://kovan-optimistic.etherscan.io/tx/',
     9: 'https://explorer.loopring.io/tx/',
     99: 'https://explorer.loopring.io/tx/',
+    10: 'https://andromeda-explorer.metis.io/tx/',
+    510: 'https://stardust-explorer.metis.io/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -58,6 +62,8 @@ export const $env = {
     77: 'https://kovan-optimistic.etherscan.io/address/',
     9: 'https://explorer.loopring.io/account/',
     99: 'https://explorer.loopring.io/account/',
+    10: 'https://andromeda-explorer.metis.io/address/',
+    510: 'https://stardust-explorer.metis.io/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -70,5 +76,7 @@ export const $env = {
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
     77: 'https://kovan-optimistic.etherscan.io/token/',
+    10: 'https://andromeda-explorer.metis.io/token/',
+    510: 'https://stardust-explorer.metis.io/token/',
   },
 }
