@@ -1063,6 +1063,73 @@ export const makerList = [
       },
     ],
   },
+  {
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 511,
+    c2ID: 22,
+    c1Name: 'dydx_test',
+    c2Name: 'arbitrum_test',
+    t1Address: '0x8707a5bf4c2842d46b31a405ba41b858c0f876c4',
+    t2Address: '0x6079Dd4565cb1852D6c4190DB7af6C8A69f73Eae',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 1000,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 1000,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1,
+    c2TradingFee: 2,
+    c1GasFee: 3,
+    c2GasFee: 4,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 511,
+    c2ID: 5,
+    c1Name: 'dydx_test',
+    c2Name: 'rinkeby',
+    t1Address: '0x8707a5bf4c2842d46b31a405ba41b858c0f876c4',
+    t2Address: '0xeb8f08a975ab53e34d8a0330e0d34de942c95926',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 1000,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 1000,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1,
+    c2TradingFee: 2,
+    c1GasFee: 3,
+    c2GasFee: 4,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+
   // MCO
   {
     makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
