@@ -146,7 +146,7 @@ export default {
     httpEndPoint: 'https://uat2.loopring.io',
     api: {
       endPoint: 'https://uat2.loopring.io',
-      key: '',
+      key: '35vBhSaHoYuUodTk2pFzuOLNeeVXtWyvsEUunNp0TRTph28gNFBecX9XRodrMUda',
     },
     gasPrice: 2,
   },
