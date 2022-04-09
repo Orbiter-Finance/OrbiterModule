@@ -1112,13 +1112,12 @@ export class ServiceMakerPull {
 
     // check data
     const { data } = resp
-    if (data.status != '1' || !data.result || data.result.length <= 0) {
+    if (data.status != '1' || !data.result) {
       accessLogger.warn(
         'Get metis tokentx/txlist faild: ' + JSON.stringify(data)
       )
       return
     }
-
     const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data.result) {
       // contractAddress = 0x0...0
