@@ -142,10 +142,10 @@ export default {
     gasPrice: 2,
   },
   loopring_test: {
-    wsEndPoint: null,
-    httpEndPoint: 'https://uat2.loopring.io',
+    wsEndPoint: 'wss://ws.uat2.loopring.io/v3/ws',
+    httpEndPoint: 'https://uat2.loopring.io/api/v3',
     api: {
-      endPoint: 'https://uat2.loopring.io',
+      endPoint: 'https://uat2.loopring.io/api/v3',
       key: '',
     },
     gasPrice: 2,
