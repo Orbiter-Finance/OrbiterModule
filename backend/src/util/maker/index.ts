@@ -312,6 +312,7 @@ async function watchTransfers(pool, state) {
       })
     return
   }
+
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
     accessLogger.info(
@@ -334,6 +335,7 @@ async function watchTransfers(pool, state) {
     )
     return
   }
+
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
@@ -346,18 +348,24 @@ async function watchTransfers(pool, state) {
   }
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-  if (isEthTokenAddress(tokenAddress)) {
+  const isPolygon = fromChainID == 6 || fromChainID == 66
+  if (isEthTokenAddress(tokenAddress) || isPolygon) {
     let startBlockNumber = 0
 
-    new EthListen(api, makerAddress, async () => {
-      if (startBlockNumber) {
-        return startBlockNumber + ''
-      } else {
-        // Current block number +1, to prevent restart too fast!!!
-        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
-        return startBlockNumber + ''
+    new EthListen(
+      api,
+      makerAddress,
+      isPolygon ? 'tokentx' : 'txlist',
+      async () => {
+        if (startBlockNumber) {
+          return startBlockNumber + ''
+        } else {
+          // Current block number +1, to prevent restart too fast!!!
+          startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+          return startBlockNumber + ''
+        }
       }
-    }).transfer(
+    ).transfer(
       { to: makerAddress },
       {
         onConfirmation: async (transaction) => {
