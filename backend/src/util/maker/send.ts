@@ -1,5 +1,10 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
+import {
+  ChainId, ConnectorNames, ExchangeAPI, generateKeyPair, GlobalAPI, UserAPI,
+  VALID_UNTIL
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
+import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
@@ -7,27 +12,17 @@ import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
 import { getTargetMakerPool } from '../../service/maker'
 import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  sendTransaction,
+  sendTransaction
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  VALID_UNTIL,
-} from '@loopring-web/loopring-sdk'
-import { DydxHelper } from '../../service/dydx/dydx_helper'
-import BigNumber from 'bignumber.js'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -37,7 +32,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
-      const apiKey = makerConfig[toChain].api.key
+      const apiKey = makerConfig[toChain].gasKey
+        ? makerConfig[toChain].gasKey
+        : makerConfig[toChain].api.key
       const url =
         httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
       const response = await axios.get(url)
@@ -55,6 +52,8 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         accessLogger.info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
+        accessLogger.info('main_gasPriceError =', response)
+        maxGwei = 80
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
     } catch (error) {
@@ -131,6 +130,25 @@ async function sendConsumer(value: any) {
         ethWallet,
         syncProvider
       )
+      let tokenBalanceWei = await syncWallet.getBalance(
+        isEthTokenAddress(tokenAddress) ? 'ETH' : tokenAddress,
+        'committed'
+      )
+      if (!tokenBalanceWei) {
+        errorLogger.error('zk Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZK Insufficient balance 0',
+        }
+      }
+      accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zk Insufficient balance')
+        return {
+          code: 1,
+          txid: 'Insufficient balance',
+        }
+      }
 
       if (!(await syncWallet.isSigningKeySet())) {
         if ((await syncWallet.getAccountId()) == undefined) {
@@ -717,6 +735,12 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 180
+    }
+    if (
+      (fromChainID == 9 || fromChainID == 99) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 160
     }
   } else {
     // USDC

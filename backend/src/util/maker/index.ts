@@ -1,4 +1,7 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
+import {
+  AccountInfo, ChainId, ConnectorNames, ExchangeAPI, generateKeyPair, GlobalAPI, UserAPI
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
@@ -17,34 +20,21 @@ import {
   getNetworkIdByChainId,
   getProviderByChainId,
   getStarknetAccount,
-  saveMappingL1AndL2,
+  saveMappingL1AndL2
 } from '../../service/starknet/helper'
 import { Core } from '../core'
+import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  AccountInfo,
-} from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
-
-import Axios from '../../util/Axios'
-import { CrossAddress, CrossAddressExt } from '../cross_address'
-
-Axios.axios()
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
-let loopringStartTime: number = 0
+let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
@@ -357,18 +347,24 @@ async function watchTransfers(pool, state) {
   }
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-  if (isEthTokenAddress(tokenAddress)) {
+  const isPolygon = fromChainID == 6 || fromChainID == 66
+  if (isEthTokenAddress(tokenAddress) || isPolygon) {
     let startBlockNumber = 0
 
-    new EthListen(api, makerAddress, async () => {
-      if (startBlockNumber) {
-        return startBlockNumber + ''
-      } else {
-        // Current block number +1, to prevent restart too fast!!!
-        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
-        return startBlockNumber + ''
+    new EthListen(
+      api,
+      makerAddress,
+      isPolygon ? 'tokentx' : 'txlist',
+      async () => {
+        if (startBlockNumber) {
+          return startBlockNumber + ''
+        } else {
+          // Current block number +1, to prevent restart too fast!!!
+          startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+          return startBlockNumber + ''
+        }
       }
-    }).transfer(
+    ).transfer(
       { to: makerAddress },
       {
         onConfirmation: async (transaction) => {
@@ -483,7 +479,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (ptext.state === false) {
-                    break
+                    continue
                   }
                   const pText = ptext.pText
 
@@ -492,7 +488,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     element.op.amount
                   )
                   if (realAmount.state === false) {
-                    return
+                    continue
                   }
                   const rAmount = <any>realAmount.rAmount
                   if (
@@ -518,6 +514,13 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
+                      if (matchHashList.indexOf(element.txHash) > -1) {
+                        accessLogger.info(
+                          'zkEvent.transactionHash exist: ' + element.txHash
+                        )
+                        continue
+                      }
+                      matchHashList.push(element.txHash)
                       accessLogger.info('element =', element)
                       accessLogger.info('match one transaction')
                       let nonce = element.op.nonce
@@ -538,7 +541,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         )
                       } catch (error) {
                         errorLogger.error('zk_isHaveSqlError =', error)
-                        break
+                        continue
                       }
                       if (!makerNode && !isFirst) {
                         accessLogger.info('newTransacioonID =', transactionID)
@@ -657,7 +660,6 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
-
     try {
       const localWeb3 = new Web3(provider)
       let options = {
@@ -702,8 +704,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       let toChainID = state ? pool.c1ID : pool.c2ID
       let toChain = state ? pool.c1Name : pool.c2Name
       let validPText = (9000 + Number(toChainID)).toString()
-      if (!loopringStartTime) {
-        loopringStartTime = new Date().getTime()
+      if (!loopringStartTime[toChain]) {
+        loopringStartTime[toChain] = new Date().getTime()
       }
       let netWorkID = fromChainID == 9 ? 1 : 5
       const userApi = new UserAPI({ chainId: netWorkID })
@@ -714,7 +716,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       }
       const GetUserTransferListRequest = {
         accountId: accountInfo.accountId,
-        start: loopringStartTime,
+        start: loopringStartTime[toChain],
         end: 99999999999999,
         status: 'processed',
         limit: 50,
@@ -732,10 +734,15 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         let transacionts = LPTransferResult.userTransfers.reverse()
         for (let index = 0; index < transacionts.length; index++) {
           const lpTransaction = transacionts[index]
-          if (loopringStartTime < lpTransaction.timestamp) {
-            loopringStartTime = lpTransaction.timestamp + 1
+          if (loopringStartTime[toChain] < lpTransaction.timestamp) {
+            loopringStartTime[toChain] = lpTransaction.timestamp + 1
+            accessLogger.info(
+              'loopringStartTime[',
+              toChain,
+              '] =',
+              loopringStartTime[toChain]
+            )
           }
-
           if (
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
@@ -762,6 +769,13 @@ function confirmLPTransaction(pool, tokenAddress, state) {
               // donothing
             } else {
               if (pText == validPText) {
+                if (matchHashList.indexOf(lpTransaction.hash) > -1) {
+                  accessLogger.info(
+                    'loopEvent.transactionHash exist: ' + lpTransaction.hash
+                  )
+                  continue
+                }
+                matchHashList.push(lpTransaction.hash)
                 loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
                 accessLogger.info('match one transaction')
@@ -1610,6 +1624,12 @@ export async function sendTransaction(
       } catch (error) {
         errorLogger.error('updateErrorSqlError =', error)
         return
+      }
+      let alert = 'Send Transaction Error ' + transactionID
+      try {
+        // doSms(alert)
+      } catch (error) {
+        errorLogger.error('sendTransactionErrorMessage =', error)
       }
     }
   })
