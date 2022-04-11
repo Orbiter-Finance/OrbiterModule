@@ -9,6 +9,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
 
@@ -97,6 +98,17 @@ async function getTokenBalance(
           await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
         ).toString()
         break
+      case 'dydx':
+        const apiKeyCredentials = DydxHelper.getApiKeyCredentials(makerAddress)
+        if (!apiKeyCredentials) {
+          break
+        }
+        const dydxHelper = new DydxHelper(chainId)
+        const dydxClient = await dydxHelper.getDydxClient(makerAddress)
+        dydxClient.apiKeyCredentials = apiKeyCredentials
+
+        value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
@@ -128,7 +140,7 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }

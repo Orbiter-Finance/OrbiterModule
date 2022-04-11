@@ -47,6 +47,9 @@ export class MakerNode extends CommonEntity {
   @Column('varchar', { length: 40, default: '0' })
   needToAmount: string
 
+  @Column('json', { default: null })
+  fromExt: { type: string; value: string }
+
   @Column('varchar', { length: 40, default: '0' })
   fromTimeStamp: string
 

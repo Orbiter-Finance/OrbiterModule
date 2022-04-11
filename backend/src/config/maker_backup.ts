@@ -4,8 +4,9 @@ export default {
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
-      key: 'Your Key',
+      key: 'Your Key', // limit
     },
+    gasKey: 'Your Key',
     gasPrice: 0,
   },
   rinkeby: {
@@ -149,7 +150,26 @@ export default {
     },
     gasPrice: 2,
   },
+  dydx: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.dydx.exchange',
+    api: {
+      endPoint: 'https://api.dydx.exchange',
+      key: '',
+    },
+    gasPrice: 2,
+  },
+  dydx_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.stage.dydx.exchange',
+    api: {
+      endPoint: 'https://api.stage.dydx.exchange',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
+  crossAddressContracts: {},
   ABI: [
     {
       inputs: [

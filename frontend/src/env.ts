@@ -16,7 +16,9 @@ export const $env = {
     6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
-  supportLocalNetWorksIDs: [1, 2, 3, 5, 6, 22, 33, 66],
+  supportLocalNetWorksIDs: [
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511,
+  ],
   localChainID_netChainID: {
     1: '1', // mainnet
     2: '42161', // Arbitrum
@@ -24,12 +26,18 @@ export const $env = {
     4: '1', // starknet
     5: '4', // rinkeby
     6: '137', // polygon
-    9: '1',
+    7: '10', // optimism
+    8: '1', // mainnet
+    9: '1', // loopring
+    11: '1', // loopring
     22: '421611', // arbitrum test
     33: '4', // zktest
-    44: '4', // starknet(R)
+    44: '5', // starknet(R)
     66: '80001', // polygon(R)
+    77: '69', // optimism(K)
+    88: '3', // ropsten
     99: '5', // loopring(G)
+    511: '3', // dydx(R)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -46,6 +54,8 @@ export const $env = {
     88: '',
     9: 'https://explorer.loopring.io/tx/',
     99: 'https://explorer.loopring.io/tx/',
+    11: 'https://trade.dydx.exchange/',
+    511: 'https://trade.stage.dydx.exchange/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -62,6 +72,8 @@ export const $env = {
     88: '',
     9: 'https://explorer.loopring.io/account/',
     99: 'https://explorer.loopring.io/account/',
+    11: 'https://trade.dydx.exchange/',
+    511: 'https://trade.stage.dydx.exchange/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -74,5 +86,7 @@ export const $env = {
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
     77: 'https://kovan-optimistic.etherscan.io/token/',
+    11: 'https://trade.dydx.exchange/',
+    511: 'https://trade.stage.dydx.exchange/',
   },
 }
