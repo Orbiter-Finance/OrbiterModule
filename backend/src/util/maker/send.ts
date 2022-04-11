@@ -134,6 +134,25 @@ async function sendConsumer(value: any) {
         ethWallet,
         syncProvider
       )
+      let tokenBalanceWei = await syncWallet.getBalance(
+        isEthTokenAddress(tokenAddress) ? 'ETH' : tokenAddress,
+        'committed'
+      )
+      if (!tokenBalanceWei) {
+        errorLogger.error('zk Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZK Insufficient balance 0',
+        }
+      }
+      accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zk Insufficient balance')
+        return {
+          code: 1,
+          txid: 'Insufficient balance',
+        }
+      }
 
       if (!(await syncWallet.isSigningKeySet())) {
         if ((await syncWallet.getAccountId()) == undefined) {
