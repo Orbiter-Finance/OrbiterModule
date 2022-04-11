@@ -705,17 +705,33 @@ async function sendConsumer(value: any) {
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
   let maxPrice = 230
-  if (
-    (fromChainID == 3 || fromChainID == 33) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
-  }
-  if (
-    (fromChainID == 7 || fromChainID == 77) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
+  if (isEthTokenAddress(tokenAddress)) {
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+  } else {
+    // USDC
+    if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
@@ -806,18 +822,18 @@ async function sendConsumer(value: any) {
 
 /**
  * This is the process that will run when you execute the program.
- * @param makerAddress 
- * @param toAddress 
- * @param toChain 
- * @param chainID 
- * @param tokenID 
- * @param tokenAddress 
- * @param amountToSend 
- * @param result_nonce 
- * @param fromChainID 
- * @param lpMemo 
+ * @param makerAddress
+ * @param toAddress
+ * @param toChain
+ * @param chainID
+ * @param tokenID
+ * @param tokenAddress
+ * @param amountToSend
+ * @param result_nonce
+ * @param fromChainID
+ * @param lpMemo
  * @param ownerAddress // When cross address transfer will ownerAddress != toAddress, else ownerAddress == toAddress
- * @returns 
+ * @returns
  */
 async function send(
   makerAddress: string,
