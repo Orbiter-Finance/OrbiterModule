@@ -1,4 +1,13 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
+import {
+  AccountInfo,
+  ChainId,
+  ConnectorNames,
+  ExchangeAPI,
+  generateKeyPair,
+  GlobalAPI,
+  UserAPI,
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
@@ -20,21 +29,13 @@ import {
   saveMappingL1AndL2,
 } from '../../service/starknet/helper'
 import { Core } from '../core'
+import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  AccountInfo,
-} from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 
@@ -344,6 +345,11 @@ async function watchTransfers(pool, state) {
       console.log('error =', error)
       throw 'getLPTransactionDataError'
     }
+    return
+  }
+
+  // dydx || dydx_test (Can't transfer out now!)
+  if (fromChainID == 11 || fromChainID == 511) {
     return
   }
 
@@ -1056,12 +1062,21 @@ function confirmFromTransaction(
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
+    // ERC20's transfer input length is 138(include 0x), when the length > 138, it is cross address transfer
     let amountStr = '0'
-    if (isEthTokenAddress(tokenAddress)) {
-      amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
+    let transferExt: CrossAddressExt | undefined = undefined
+    if (trx.input.length <= 138) {
+      if (isEthTokenAddress(tokenAddress)) {
+        amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
+      } else {
+        const amountHex = '0x' + trx.input.slice(74)
+        amountStr = Web3.utils.hexToNumberString(amountHex)
+      }
     } else {
-      const amountHex = '0x' + trx.input.slice(74)
-      amountStr = Web3.utils.hexToNumberString(amountHex)
+      // Parse input data
+      const inputData = CrossAddress.parseTransferERC20Input(trx.input)
+      amountStr = inputData.amount.toNumber() + ''
+      transferExt = inputData.ext
     }
 
     let makerNode: MakerNode | undefined
@@ -1103,6 +1118,7 @@ function confirmFromTransaction(
           ),
           fromAmount: amountStr,
           formNonce: trx.nonce,
+          fromExt: transferExt,
           txToken: tokenAddress,
           state: 0,
         })
@@ -1131,6 +1147,12 @@ function confirmFromTransaction(
       }
 
       const toTokenAddress = state ? pool.t1Address : pool.t2Address
+      let toAddress = trx.from
+      if (transferExt?.value) {
+        // When transferExt has value, fromAddress is transferExt.value
+        toAddress = transferExt.value
+      }
+
       sendTransaction(
         makerAddress,
         transactionID,
@@ -1139,9 +1161,11 @@ function confirmFromTransaction(
         toChain,
         toTokenAddress,
         amountStr,
-        trx.from,
+        toAddress,
         pool,
-        trx.nonce
+        trx.nonce,
+        0,
+        trx.from
       )
 
       return
@@ -1469,10 +1493,11 @@ export function getAmountToSend(
  * @param toChain
  * @param tokenAddress
  * @param amountStr
- * @param fromAddress
+ * @param toAddress
  * @param pool
  * @param nonce
  * @param result_nonce
+ * @param ownerAddress // Cross address ownerAddress
  * @returns
  */
 export async function sendTransaction(
@@ -1483,10 +1508,11 @@ export async function sendTransaction(
   toChain,
   tokenAddress,
   amountStr,
-  fromAddress,
+  toAddress,
   pool,
   nonce,
-  result_nonce = 0
+  result_nonce = 0,
+  ownerAddress = ''
 ) {
   const amountToSend = getAmountToSend(
     fromChainID,
@@ -1507,7 +1533,7 @@ export async function sendTransaction(
   accessLogger.info('toChain =', toChain)
   await send(
     makerAddress,
-    fromAddress,
+    toAddress,
     toChain,
     toChainID,
     getZKTokenID(tokenAddress),
@@ -1515,7 +1541,8 @@ export async function sendTransaction(
     tAmount,
     result_nonce,
     fromChainID,
-    nonce
+    nonce,
+    ownerAddress
   ).then(async (response) => {
     accessLogger.info('response =', response)
     if (!response.code) {
@@ -1548,6 +1575,11 @@ export async function sendTransaction(
         // confirmToSNTransaction(txID, transactionID, toChainID)
       } else if (toChainID === 9 || toChainID === 99) {
         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+      } else if (toChainID === 11 || toChainID === 511) {
+        accessLogger.info(
+          `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
+        )
+        // confirmToSNTransaction(txID, transactionID, toChainID)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)
       }

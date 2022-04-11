@@ -1,4 +1,5 @@
 import { AccountInfo, ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
+import { PromisePool } from '@supercharge/promise-pool'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import { Not, Repository } from 'typeorm'
@@ -10,10 +11,10 @@ import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+import { DydxHelper } from './dydx/dydx_helper'
+import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-import { PromisePool } from '@supercharge/promise-pool'
-import { IMXHelper } from './immutablex/imx_helper'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -168,6 +169,7 @@ const OPTIMISM_LAST: { [key: string]: MakerPullLastData } = {}
 const IMMUTABLEX_USER_LAST: { [key: string]: MakerPullLastData } = {}
 const IMMUTABLEX_RECEIVER_LAST: { [key: string]: MakerPullLastData } = {}
 const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
+const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -894,49 +896,64 @@ export class ServiceMakerPull {
         receiver,
         cursor: lastMakePull?.['currentCursor'] || '',
         direction: <any>'desc',
-        page_size: 10,
+        page_size: 100,
       })
-      if (!resp?.result || resp.result.length < 1) {
+      if (!resp?.result) {
         return
       }
 
-      const promiseMethods: (() => Promise<unknown>)[] = []
-      for (const item of resp.result) {
-        const transaction = imxHelper.toTransaction(item)
+      if (resp.result.length > 0) {
+        const promiseMethods: (() => Promise<unknown>)[] = []
+        for (const item of resp.result) {
+          const transaction = imxHelper.toTransaction(item)
 
-        if (equalsIgnoreCase(transaction.txreceipt_status, 'rejected')) {
-          continue
+          if (equalsIgnoreCase(transaction.txreceipt_status, 'rejected')) {
+            continue
+          }
+
+          const amount_flag = getAmountFlag(this.chainId, transaction.value)
+
+          let tx_status = transaction.txreceipt_status
+          if (
+            tx_status == 'success' ||
+            tx_status == 'confirmed' ||
+            tx_status == 'accepted'
+          ) {
+            tx_status = 'finalized'
+          }
+
+          // save
+          const makerPull = (lastMakePull = <MakerPull>{
+            chainId: this.chainId,
+            makerAddress: this.makerAddress,
+            tokenAddress: transaction.contractAddress,
+            data: JSON.stringify(item),
+            amount: transaction.value,
+            amount_flag,
+            nonce: transaction.nonce,
+            fromAddress: transaction.from,
+            toAddress: transaction.to,
+            txBlock: transaction.blockHash,
+            txHash: transaction.hash,
+            txTime: new Date(transaction.timeStamp * 1000),
+            gasCurrency: 'ETH',
+            gasAmount: '0',
+            tx_status,
+          })
+
+          promiseMethods.push(async () => {
+            await savePull(makerPull)
+
+            // compare
+            await this.compareData(makerPull, String(transaction.hash))
+          })
         }
 
-        const amount_flag = getAmountFlag(this.chainId, transaction.value)
-        // save
-        const makerPull = (lastMakePull = <MakerPull>{
-          chainId: this.chainId,
-          makerAddress: this.makerAddress,
-          tokenAddress: transaction.contractAddress,
-          data: JSON.stringify(item),
-          amount: transaction.value,
-          amount_flag,
-          nonce: transaction.nonce,
-          fromAddress: transaction.from,
-          toAddress: transaction.to,
-          txBlock: transaction.blockHash,
-          txHash: transaction.hash,
-          txTime: new Date(transaction.timeStamp * 1000),
-          gasCurrency: 'ETH',
-          gasAmount: '0',
-          tx_status: transaction.txreceipt_status,
-        })
-
-        promiseMethods.push(async () => {
-          await savePull(makerPull)
-
-          // compare
-          await this.compareData(makerPull, String(transaction.hash))
-        })
+        await this.doPromisePool(promiseMethods)
+      } else {
+        // When result.length <= 0. The end!
+        lastMakePull = undefined
       }
-
-      await this.doPromisePool(promiseMethods)
 
       // set IMMUTABLEX_USER_LAST/IMMUTABLEX_RECEIVER_LAST
       if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
@@ -1062,5 +1079,118 @@ export class ServiceMakerPull {
     }
     makerPullLastData.makerPull = lastMakePull
     LOOPRING_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  /**
+   * pull dydx
+   * @prarm api
+   */
+  async dydx(api: { endPoint: string; key: string }) {
+    const apiKeyCredentials = DydxHelper.getApiKeyCredentials(this.makerAddress)
+    if (!apiKeyCredentials) {
+      return
+    }
+    const dydxHelper = new DydxHelper(this.chainId)
+    const dydxClient = await dydxHelper.getDydxClient(this.makerAddress)
+    dydxClient.apiKeyCredentials = apiKeyCredentials
+
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = DYDX_LAST[makerPullLastKey]
+
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+
+    let createdBeforeOrAt: string | undefined
+    if (lastMakePull?.txTime) {
+      createdBeforeOrAt = lastMakePull.txTime.toISOString()
+    }
+
+    const { transfers } = await dydxClient.private.getTransfers({
+      limit: 100,
+      createdBeforeOrAt,
+    })
+
+    if (transfers.length > 0) {
+      const promiseMethods: (() => Promise<unknown>)[] = []
+      for (const item of transfers) {
+        const transaction = DydxHelper.toTransaction(item, this.makerAddress)
+
+        if (equalsIgnoreCase(transaction.txreceipt_status, 'rejected')) {
+          continue
+        }
+
+        const amount_flag = getAmountFlag(this.chainId, transaction.value)
+
+        let tx_status = transaction.txreceipt_status
+        if (tx_status == 'CONFIRMED') {
+          tx_status = 'finalized'
+        }
+
+        // Parse userAddress from clientId
+        let toAddress = transaction.to
+        if (
+          !toAddress &&
+          item.clientId &&
+          equalsIgnoreCase(item.type, 'TRANSFER_OUT')
+        ) {
+          try {
+            const ethereumAddress = dydxHelper.getEthereumAddressFromClientId(
+              item.clientId
+            )
+            if (ethereumAddress) {
+              toAddress = ethereumAddress
+            }
+          } catch (err) {
+            errorLogger.error(
+              `GetEthereumAddressFromClientId faild: ${err.message}`
+            )
+          }
+        }
+
+        // save
+        const makerPull = (lastMakePull = <MakerPull>{
+          chainId: this.chainId,
+          makerAddress: this.makerAddress,
+          tokenAddress: this.tokenAddress, // Only usdc now!
+          data: JSON.stringify(item),
+          amount: transaction.value,
+          amount_flag,
+          nonce: transaction.nonce,
+          fromAddress: transaction.from,
+          toAddress,
+          txBlock: transaction.blockHash,
+          txHash: transaction.hash,
+          txTime: new Date(transaction.timeStamp * 1000),
+          gasCurrency: 'ETH',
+          gasAmount: '0',
+          tx_status,
+        })
+
+        promiseMethods.push(async () => {
+          await savePull(makerPull)
+
+          // compare
+          await this.compareData(makerPull, String(transaction.hash))
+        })
+      }
+
+      await this.doPromisePool(promiseMethods)
+    } else {
+      // When transfers.length <= 0. The end!
+      lastMakePull = undefined
+    }
+
+    // set DYDX_LAST
+    if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    if (makerPullLastData.makerPull) {
+      // makerPullLastData.makerPull['currentCursor'] = resp.cursor
+    }
+
+    DYDX_LAST[makerPullLastKey] = makerPullLastData
   }
 }

@@ -1,4 +1,5 @@
 export const makerList = [
+  // eth able
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
@@ -688,6 +689,173 @@ export const makerList = [
     c2AvalibleTimes: [
       {
         startTime: 1646114401,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+
+  //usdc able
+  {
+    makerAddress: '0x41d3D33156aE7c62c094AAe2995003aE63f587B3',
+    c1ID: 1,
+    c2ID: 2,
+    c1Name: 'mainnet',
+    c2Name: 'arbitrum',
+    t1Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // SIM
+    t2Address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 200,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 200,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 5.5,
+    c2TradingFee: 35,
+    c1GasFee: 3,
+    c2GasFee: 3,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x41d3D33156aE7c62c094AAe2995003aE63f587B3',
+    c1ID: 1,
+    c2ID: 3,
+    c1Name: 'mainnet',
+    c2Name: 'zksync',
+    t1Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48', // SIM
+    t2Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 200,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 200,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1.5,
+    c2TradingFee: 35,
+    c1GasFee: 3,
+    c2GasFee: 3,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x41d3D33156aE7c62c094AAe2995003aE63f587B3',
+    c1ID: 2,
+    c2ID: 3,
+    c1Name: 'arbitrum',
+    c2Name: 'zksync',
+    t1Address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8', // SIM
+    t2Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 200,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 200,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1.5,
+    c2TradingFee: 5.5,
+    c1GasFee: 3,
+    c2GasFee: 3,
+    c1AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1636019587,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x41d3D33156aE7c62c094AAe2995003aE63f587B3',
+    c1ID: 1,
+    c2ID: 11,
+    c1Name: 'mainnet',
+    c2Name: 'dydx',
+    t1Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    t2Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 500,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 500,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1.2,
+    c2TradingFee: 35,
+    c1GasFee: 1,
+    c2GasFee: 3,
+    c1AvalibleTimes: [
+      {
+        startTime: 1642393801,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1642393801,
+        endTime: 99999999999999,
+      },
+    ],
+  },
+  {
+    makerAddress: '0x41d3D33156aE7c62c094AAe2995003aE63f587B3',
+    c1ID: 2,
+    c2ID: 11,
+    c1Name: 'arbitrum',
+    c2Name: 'dydx',
+    t1Address: '0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8',
+    t2Address: '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48',
+    tName: 'USDC',
+    c1MinPrice: 0.1,
+    c1MaxPrice: 500,
+    c2MinPrice: 0.1,
+    c2MaxPrice: 500,
+    precision: 6,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 1.2,
+    c2TradingFee: 5.5,
+    c1GasFee: 1,
+    c2GasFee: 3,
+    c1AvalibleTimes: [
+      {
+        startTime: 1642393801,
+        endTime: 99999999999999,
+      },
+    ],
+    c2AvalibleTimes: [
+      {
+        startTime: 1642393801,
         endTime: 99999999999999,
       },
     ],

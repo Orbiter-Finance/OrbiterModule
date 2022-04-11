@@ -6,9 +6,10 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
+import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
 import { getLastStatus, getMakerPulls } from '../service/maker_pull'
-import { Core } from '../util/core'
+import * as serviceMakerWealth from '../service/maker_wealth'
 import { getAmountToSend, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
@@ -162,12 +163,15 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker/wealths', async ({ request, restful }) => {
     const makerAddress = String(request.query.makerAddress || '')
 
-    let rst = Core.memoryCache.get(
-      `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
-    )
-    if (!rst) {
-      rst = await serviceMaker.getWealths(makerAddress)
-    }
+    // let rst = Core.memoryCache.get(
+    //   `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${makerAddress}`
+    // )
+    // if (!rst) {
+    //   rst = await serviceMakerWealth.getWealths(makerAddress)
+    // }
+
+    // No need to cache temporarily, get real-time
+    const rst = await serviceMakerWealth.getWealths(makerAddress)
 
     restful.json(rst)
   })
@@ -209,6 +213,26 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         makerAddresses.push(makerAddress)
 
         makerConfig.privateKeys[makerAddress] = body[makerAddress]
+      }
+    }
+
+    restful.json(makerAddresses.join(','))
+  })
+
+  // set dydx's ApiKeyCredentials
+  router.post('maker/dydx_api_key_credentials', async ({ request, restful }) => {
+    const { body } = request
+    
+    const makerAddresses: string[] = []
+    for (const makerAddress in body) {
+      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
+        if (!isEthereumAddress(makerAddress)) {
+          continue
+        }
+
+        makerAddresses.push(makerAddress)
+
+        DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
       }
     }
 

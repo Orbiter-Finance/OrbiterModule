@@ -10,6 +10,7 @@ const MAX_BITS = {
   optimism: 256,
   immutablex: 28,
   loopring: 256,
+  dydx: 28,
 }
 
 export const CHAIN_INDEX = {
@@ -29,6 +30,8 @@ export const CHAIN_INDEX = {
   88: 'immutablex',
   9: 'loopring',
   99: 'loopring',
+  11: 'dydx',
+  511: 'dydx',
 }
 
 export const SIZE_OP = {
@@ -52,6 +55,9 @@ function isLimitNumber(chain: string | number) {
     return true
   }
   if (chain === 8 || chain === 88 || chain === 'immutablex') {
+    return true
+  }
+  if (chain === 11 || chain === 511 || chain === 'dydx') {
     return true
   }
   return false
