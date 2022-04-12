@@ -201,15 +201,15 @@ async function watchTransfers(pool, state) {
   let wsEndPoint = state
     ? makerConfig[pool.c2Name].wsEndPoint
     : makerConfig[pool.c1Name].wsEndPoint
+  let httpEndPoint = state
+    ? makerConfig[pool.c2Name].httpEndPoint
+    : makerConfig[pool.c1Name].httpEndPoint
   let tokenAddress = state ? pool.t2Address : pool.t1Address
   let fromChainID = state ? pool.c2ID : pool.c1ID
   let toChainID = state ? pool.c1ID : pool.c2ID
 
   // zk || zk_test
   if (fromChainID == 3 || fromChainID == 33) {
-    let httpEndPoint = state
-      ? makerConfig[pool.c2Name].httpEndPoint
-      : makerConfig[pool.c1Name].httpEndPoint
     const zkTokenInfoUrl = httpEndPoint + '/tokens/' + tokenAddress
     axios
       .get(zkTokenInfoUrl)
@@ -237,15 +237,12 @@ async function watchTransfers(pool, state) {
   // checkData
   const checkData = (amount: string, transactionHash: string) => {
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
-
     if (ptext.state === false) {
       return false
     }
     const pText = ptext.pText
     let validPText = (9000 + Number(toChainID)).toString()
-
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
-
     if (realAmount.state === false) {
       return false
     }
@@ -355,13 +352,14 @@ async function watchTransfers(pool, state) {
 
   const web3 = createAlchemyWeb3(wsEndPoint)
   const isPolygon = fromChainID == 6 || fromChainID == 66
-  if (isEthTokenAddress(tokenAddress) || isPolygon) {
+  const isMetis = fromChainID == 10 || fromChainID == 510
+  if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
     let startBlockNumber = 0
 
     new EthListen(
       api,
       makerAddress,
-      isPolygon ? 'tokentx' : 'txlist',
+      isPolygon || isMetis ? 'tokentx' : 'txlist',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
@@ -380,7 +378,6 @@ async function watchTransfers(pool, state) {
           }
 
           startBlockNumber = transaction.blockNumber
-
           if (checkData(transaction.value + '', transaction.hash) === true) {
             confirmFromTransaction(pool, state, transaction.hash)
           }
@@ -534,7 +531,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       accessLogger.info(
                         'Transaction with hash ' +
                           element.txHash +
-                          'nonce ' +
+                          ' nonce ' +
                           nonce +
                           ' has found'
                       )
@@ -636,7 +633,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
         isFirst = false
       })
       .catch(function (error) {
-        errorLogger.error('error3 = getZKTransactionListError')
+        errorLogger.error('error3 = getZKTransactionListError', error)
       })
   }
 
@@ -722,7 +719,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
         errorLogger.error('checkLoopringAccountKeyError =', error)
       }
       const GetUserTransferListRequest = {
-        accountId: accountInfo.accountId,
+        accountId: accountInfo?.accountId,
         start: loopringStartTime[toChain],
         end: 99999999999999,
         status: 'processed',
@@ -790,7 +787,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 accessLogger.info(
                   'Transaction with hash ' +
                     lpTransaction.hash +
-                    'storageID ' +
+                    ' storageID ' +
                     (nonce * 2 + 1) +
                     ' has found'
                 )
@@ -1050,7 +1047,6 @@ function confirmFromTransaction(
     if (!trxConfirmations) {
       return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
-
     var trx = trxConfirmations.trx
 
     accessLogger.info(
@@ -1099,7 +1095,12 @@ function confirmFromTransaction(
     if (!makerNode) {
       var info = <any>{}
       try {
-        const fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+        let fromWeb3
+        if (fromChain === 'metis' || fromChain === 'metis_test') {
+          fromWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
+        } else {
+          fromWeb3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+        }
         info = await fromWeb3.eth.getBlock(trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)
@@ -1167,7 +1168,6 @@ function confirmFromTransaction(
         0,
         trx.from
       )
-
       return
     }
     return confirmFromTransaction(pool, state, txHash, confirmations, false)
@@ -1206,7 +1206,14 @@ function confirmToTransaction(
     if (trxConfirmations.confirmations >= confirmations) {
       let info = <any>{}
       try {
-        const toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
+        let toWeb3
+        if (Chain === 'metis' || Chain === 'metis_test') {
+          //no use alchemy provider
+          toWeb3 = new Web3(makerConfig[Chain].httpEndPoint)
+        } else {
+          toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
+        }
+
         info = await toWeb3.eth.getBlock(trxConfirmations.trx.blockNumber)
       } catch (error) {
         errorLogger.error('getBlockError =', error)
@@ -1412,9 +1419,13 @@ async function confirmToSNTransaction(
 async function getConfirmations(fromChain, txHash): Promise<any> {
   accessLogger.info('getConfirmations =', getTime())
   try {
-    // const web3 = new Web3(config[fromChain].httpEndPoint)
-    const web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
-
+    let web3
+    if (fromChain === 'metis' || fromChain === 'metis_test') {
+      //no use alchemy provider
+      web3 = new Web3(makerConfig[fromChain].httpEndPoint)
+    } else {
+      web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+    }
     const trx = await web3.eth.getTransaction(txHash)
 
     const currentBlock = await web3.eth.getBlockNumber()

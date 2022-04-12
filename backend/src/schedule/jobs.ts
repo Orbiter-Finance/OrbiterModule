@@ -168,6 +168,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.loopring(apiLoopring)
           break
+        case 'metis':
+          let apiMetis = makerConfig.metis.api
+          if (toChain == 510) {
+            apiMetis = makerConfig.metis_test.api
+          }
+          await serviceMakerPull.metis(apiMetis)
+          break
         case 'dydx':
           let apiDydx = makerConfig.dydx.api
           if (toChain == 511) {
@@ -187,7 +194,6 @@ export function jobMakerPull() {
     const makerList = await getMakerList()
     for (const item of makerList) {
       const { pool1, pool2 } = expanPool(item)
-
       await startPull(
         pool1.c1ID,
         pool1.makerAddress,

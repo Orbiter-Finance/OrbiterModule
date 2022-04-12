@@ -115,7 +115,6 @@ async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
   } = value
-
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -757,6 +756,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 160
     }
+    if (
+      (fromChainID == 10 || fromChainID == 510) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 130
+    }
   } else {
     // USDC
     if (
@@ -776,9 +781,13 @@ async function sendConsumer(value: any) {
     toChain,
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
-
   let gasLimit = 100000
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
+  if (
+    toChain === 'arbitrum_test' ||
+    toChain === 'arbitrum' ||
+    toChain === 'metis' ||
+    toChain === 'metis_test'
+  ) {
     gasLimit = 1000000
   }
 

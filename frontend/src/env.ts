@@ -29,6 +29,7 @@ export const $env = {
     7: '10', // optimism
     8: '1', // mainnet
     9: '1', // loopring
+    10: '1088',
     11: '1', // loopring
     22: '421611', // arbitrum test
     33: '4', // zktest
@@ -37,6 +38,7 @@ export const $env = {
     77: '69', // optimism(K)
     88: '3', // ropsten
     99: '5', // loopring(G)
+    510: '588', // metis(G)
     511: '3', // dydx(R)
   },
   txExploreUrl: {
@@ -54,6 +56,8 @@ export const $env = {
     88: '',
     9: 'https://explorer.loopring.io/tx/',
     99: 'https://explorer.loopring.io/tx/',
+    10: 'https://andromeda-explorer.metis.io/tx/',
+    510: 'https://stardust-explorer.metis.io/tx/',
     11: 'https://trade.dydx.exchange/',
     511: 'https://trade.stage.dydx.exchange/',
   },
@@ -72,6 +76,8 @@ export const $env = {
     88: '',
     9: 'https://explorer.loopring.io/account/',
     99: 'https://explorer.loopring.io/account/',
+    10: 'https://andromeda-explorer.metis.io/address/',
+    510: 'https://stardust-explorer.metis.io/address/',
     11: 'https://trade.dydx.exchange/',
     511: 'https://trade.stage.dydx.exchange/',
   },
@@ -86,6 +92,8 @@ export const $env = {
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
     77: 'https://kovan-optimistic.etherscan.io/token/',
+    10: 'https://andromeda-explorer.metis.io/token/',
+    510: 'https://stardust-explorer.metis.io/token/',
     11: 'https://trade.dydx.exchange/',
     511: 'https://trade.stage.dydx.exchange/',
   },
