@@ -1,5 +1,7 @@
+import { isEthereumAddress } from 'class-validator'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
+import { DydxHelper } from '../service/dydx/dydx_helper'
 import {
   DEFAULT_BALANCE_ALARM_BASELINE,
   getBalanceAlarms,
@@ -21,5 +23,25 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     await saveBalanceAlarms(makerAddress, value)
 
     restful.json('')
+  })
+
+  // set dydx's ApiKeyCredentials
+  router.post('setting/dydx_api_key_credentials', async ({ request, restful }) => {
+    const { body } = request
+    
+    const makerAddresses: string[] = []
+    for (const makerAddress in body) {
+      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
+        if (!isEthereumAddress(makerAddress)) {
+          continue
+        }
+
+        makerAddresses.push(makerAddress)
+
+        DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
+      }
+    }
+
+    restful.json(makerAddresses.join(','))
   })
 }
