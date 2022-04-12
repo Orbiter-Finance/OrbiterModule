@@ -1,13 +1,14 @@
 import schedule from 'node-schedule'
 import { makerConfig } from '../config'
-import * as serviceMaker from '../service/maker'
 import * as coinbase from '../service/coinbase'
+import * as serviceMaker from '../service/maker'
 import { ServiceMakerPull } from '../service/maker_pull'
+import * as serviceMakerWealth from '../service/maker_wealth'
+import { doBalanceAlarm } from '../service/setting'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { doBalanceAlarm } from '../service/setting'
 
 class MJob {
   protected rule:
@@ -87,16 +88,19 @@ export function jobGetWealths() {
   const callback = async () => {
     const makerAddresses = await serviceMaker.getMakerAddresses()
     for (const item of makerAddresses) {
-      const wealths = await serviceMaker.getWealths(item)
+      const wealths = await serviceMakerWealth.getWealths(item)
+
       Core.memoryCache.set(
-        `${serviceMaker.CACHE_KEY_GET_WEALTHS}:${item}`,
+        `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${item}`,
         wealths,
         100000
       )
+
+      await serviceMakerWealth.saveWealths(wealths)
     }
   }
 
-  new MJobPessimism('* */5 * * * *', callback, jobGetWealths.name).schedule()
+  new MJobPessimism('* */60 * * * *', callback, jobGetWealths.name).schedule()
 }
 
 export function jobMakerPull() {
@@ -170,6 +174,13 @@ export function jobMakerPull() {
             apiMetis = makerConfig.metis_test.api
           }
           await serviceMakerPull.metis(apiMetis)
+          break
+        case 'dydx':
+          let apiDydx = makerConfig.dydx.api
+          if (toChain == 511) {
+            apiDydx = makerConfig.dydx_test.api
+          }
+          await serviceMakerPull.dydx(apiDydx)
           break
       }
     } catch (error) {

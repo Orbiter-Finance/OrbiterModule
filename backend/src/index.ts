@@ -9,7 +9,7 @@ import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
-import { startJobs } from './schedule'
+import { startMasterJobs, startWorkerJobs } from './schedule'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
@@ -62,6 +62,9 @@ const main = async () => {
       try {
         // db bind
         Core.db = await createConnection(ormConfig.options)
+        accessLogger.info(
+          `process: ${process.pid}. Connect to the database succeed!`
+        )
 
         // memoryCache bind
         Core.memoryCache = new NodeCache()
@@ -70,7 +73,7 @@ const main = async () => {
         break
       } catch (err) {
         accessLogger.warn(
-          `process: ${process.pid}. Connect to database failed: ${index}`
+          `process: ${process.pid}. Connect to database failed: ${index}. Error: ${err.message}`
         )
 
         if (index == reconnectTotal) {
@@ -93,6 +96,9 @@ const main = async () => {
       // StarkKoa in master only
       startKoa()
 
+      // Start MasterJobs in child process
+      startMasterJobs()
+
       // Manage child process
       let childProcessId: number | undefined
       cluster.on('exit', (worker, code, signal) => {
@@ -109,8 +115,8 @@ const main = async () => {
       })
       cluster.fork()
     } else {
-      // StartJobs in child process
-      startJobs()
+      // Start WorkerJobs in child process
+      startWorkerJobs()
     }
   } catch (error) {
     accessLogger.info(error)

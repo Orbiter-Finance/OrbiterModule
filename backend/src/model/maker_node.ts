@@ -1,6 +1,14 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm'
 import { CommonEntity } from './common'
 
+@Index('get_maker_nodes', [
+  'makerAddress',
+  'fromChain',
+  'toChain',
+  'fromTimeStamp',
+])
+@Index('get_maker_pulls_formTx', ['makerAddress', 'formTx'])
+@Index('get_maker_pulls_toTx', ['makerAddress', 'toTx'])
 @Entity()
 export class MakerNode extends CommonEntity {
   @PrimaryGeneratedColumn()
@@ -38,6 +46,9 @@ export class MakerNode extends CommonEntity {
 
   @Column('varchar', { length: 40, default: '0' })
   needToAmount: string
+
+  @Column('json', { default: null })
+  fromExt: { type: string; value: string }
 
   @Column('varchar', { length: 40, default: '0' })
   fromTimeStamp: string

@@ -1,4 +1,8 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
+import {
+  ChainId, ConnectorNames, ExchangeAPI, generateKeyPair, GlobalAPI, UserAPI,
+  VALID_UNTIL
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
@@ -7,25 +11,17 @@ import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
 import { getTargetMakerPool } from '../../service/maker'
 import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  sendTransaction,
+  sendTransaction
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  VALID_UNTIL,
-} from '@loopring-web/loopring-sdk'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -110,6 +106,7 @@ async function sendConsumer(value: any) {
     result_nonce,
     fromChainID,
     lpMemo,
+    ownerAddress,
   } = value
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
@@ -131,6 +128,25 @@ async function sendConsumer(value: any) {
         ethWallet,
         syncProvider
       )
+      let tokenBalanceWei = await syncWallet.getBalance(
+        isEthTokenAddress(tokenAddress) ? 'ETH' : tokenAddress,
+        'committed'
+      )
+      if (!tokenBalanceWei) {
+        errorLogger.error('zk Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZK Insufficient balance 0',
+        }
+      }
+      accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zk Insufficient balance')
+        return {
+          code: 1,
+          txid: 'Insufficient balance',
+        }
+      }
 
       if (!(await syncWallet.isSigningKeySet())) {
         if ((await syncWallet.getAccountId()) == undefined) {
@@ -536,6 +552,93 @@ async function sendConsumer(value: any) {
     return
   }
 
+  // dydx || dydx_test
+  if (chainID == 11 || chainID == 511) {
+    try {
+      const dydxWeb3 = new Web3()
+      dydxWeb3.eth.accounts.wallet.add(makerConfig.privateKeys[makerAddress])
+      const dydxHelper = new DydxHelper(chainID, dydxWeb3)
+      const dydxClient = await dydxHelper.getDydxClient(
+        makerAddress,
+        true,
+        true
+      )
+      const dydxAccount = await dydxHelper.getAccount(makerAddress)
+
+      // Warnning: The nonce value of dydx currently has no substantial effect
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        const dydx_nonce = 0
+        let dydx_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!dydx_sql_nonce) {
+          result_nonce = dydx_nonce
+        } else {
+          if (dydx_nonce > dydx_sql_nonce) {
+            result_nonce = dydx_nonce
+          } else {
+            result_nonce = dydx_sql_nonce + 1
+          }
+        }
+        accessLogger.info('dydx_nonce =', dydx_nonce)
+        accessLogger.info('dydx_sql_nonce =', dydx_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
+
+      const dydxToInfo = dydxHelper.splitStarkKeyPositionId(toAddress)
+
+      if (!dydxToInfo.starkKey || !dydxToInfo.positionId) {
+        throw new Error(
+          `dYdX can't split starkKey positionId from toAddress: ${toAddress}`
+        )
+      }
+
+      const params = {
+        clientId: dydxHelper.generateClientId(ownerAddress),
+        amount: new BigNumber(amountToSend).dividedBy(10 ** 6).toString(), // Only usdc now!
+        expiration: new Date(
+          new Date().getTime() + 86400000 * 30
+        ).toISOString(),
+        receiverAccountId: dydxHelper.getAccountId(ownerAddress),
+        receiverPublicKey: dydxToInfo.starkKey,
+        receiverPositionId: String(dydxToInfo.positionId),
+      }
+      const dydxResult = await dydxClient.private.createTransfer(
+        params,
+        dydxAccount.positionId
+      )
+
+      const dydxHash = dydxResult.transfer.id
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+
+      if (dydxHash) {
+        return {
+          code: 0,
+          txid: dydxHash,
+          chainID: chainID,
+          dydxNonce: result_nonce,
+        }
+      } else {
+        return {
+          code: 1,
+          error: 'dYdX transfer error',
+          result_nonce,
+        }
+      }
+      return
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'dYdX transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -618,23 +721,39 @@ async function sendConsumer(value: any) {
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
   let maxPrice = 230
-  if (
-    (fromChainID == 3 || fromChainID == 33) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
-  }
-  if (
-    (fromChainID == 7 || fromChainID == 77) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
-  }
-  if (
-    (fromChainID == 9 || fromChainID == 99) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 160
+  if (isEthTokenAddress(tokenAddress)) {
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 9 || fromChainID == 99) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 160
+    }
+  } else {
+    // USDC
+    if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
@@ -724,6 +843,18 @@ async function sendConsumer(value: any) {
 
 /**
  * This is the process that will run when you execute the program.
+ * @param makerAddress
+ * @param toAddress
+ * @param toChain
+ * @param chainID
+ * @param tokenID
+ * @param tokenAddress
+ * @param amountToSend
+ * @param result_nonce
+ * @param fromChainID
+ * @param lpMemo
+ * @param ownerAddress // When cross address transfer will ownerAddress != toAddress, else ownerAddress == toAddress
+ * @returns
  */
 async function send(
   makerAddress: string,
@@ -735,7 +866,8 @@ async function send(
   amountToSend,
   result_nonce = 0,
   fromChainID,
-  lpMemo
+  lpMemo,
+  ownerAddress = ''
 ): Promise<any> {
   sendQueue.registerConsumer(chainID, sendConsumer)
 
@@ -751,6 +883,7 @@ async function send(
       result_nonce,
       fromChainID,
       lpMemo,
+      ownerAddress,
     }
     sendQueue.produce(chainID, {
       value,
