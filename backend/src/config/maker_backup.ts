@@ -94,6 +94,26 @@ export default {
     gasPrice: 2,
     customChainId: 80001,
   },
+  metis: {
+    wsEndPoint: 'wss://andromeda-ws.metis.io',
+    httpEndPoint: 'https://andromeda.metis.io/?owner=1088',
+    api: {
+      endPoint: 'https://andromeda-explorer.metis.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 1088,
+  },
+  metis_test: {
+    wsEndPoint: 'wss://stardust-ws.metis.io',
+    httpEndPoint: 'https://stardust.metis.io/?owner=588',
+    api: {
+      endPoint: 'https://stardust-explorer.metis.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 588,
+  },
   optimism: {
     wsEndPoint: 'wss://opt.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://opt.g.alchemy.com/v2/Your Key',

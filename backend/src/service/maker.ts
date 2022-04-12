@@ -10,7 +10,7 @@ import {
   expanPool,
   getAllMakerList,
   getMakerList,
-  sendTransaction
+  sendTransaction,
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'

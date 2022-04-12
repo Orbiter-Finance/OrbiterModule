@@ -1,6 +1,7 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
+import Web3 from 'web3'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerWealth } from '../model/maker_wealth'
@@ -98,6 +99,16 @@ async function getTokenBalance(
           await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
         ).toString()
         break
+      case 'metis':
+        const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (tokenAddress) {
+          value = await getBalanceByMetis(web3, makerAddress, tokenAddress)
+        } else {
+          value = await web3.eth.getBalance(
+            makerAddress
+          )
+        }
+        break
       case 'dydx':
         const apiKeyCredentials = DydxHelper.getApiKeyCredentials(makerAddress)
         if (!apiKeyCredentials) {
@@ -146,6 +157,29 @@ async function getTokenBalance(
   }
 
   return value
+}
+
+/**
+ * @param web3
+ * @param makerAddress
+ * @param tokenAddress
+ * @returns
+ */
+async function getBalanceByMetis(
+  web3: Web3,
+  makerAddress: string,
+  tokenAddress: string
+) {
+  const tokenContract = new web3.eth.Contract(
+    <any>makerConfig.ABI,
+    tokenAddress
+  )
+  const tokenBalanceWei = await tokenContract.methods
+    .balanceOf(makerAddress)
+    .call({
+      from: makerAddress,
+    })
+  return tokenBalanceWei
 }
 
 type WealthsChain = {

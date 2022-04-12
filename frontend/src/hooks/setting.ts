@@ -53,7 +53,6 @@ export const balanceAlarms = {
     try {
       const data = { makerAddress, value: balanceAlarms.state.list }
       await $axios.post<BalanceAlarms>('setting/balance_alarms/save', data)
-
       ElNotification({
         title: 'Success',
         message: 'Setting - BalanceAlarms saved.',
