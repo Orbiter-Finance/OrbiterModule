@@ -1,7 +1,12 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
 import {
-  ChainId, ConnectorNames, ExchangeAPI, generateKeyPair, GlobalAPI, UserAPI,
-  VALID_UNTIL
+  ChainId,
+  ConnectorNames,
+  ExchangeAPI,
+  generateKeyPair,
+  GlobalAPI,
+  UserAPI,
+  VALID_UNTIL,
 } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import Common from 'ethereumjs-common'
@@ -18,7 +23,7 @@ import {
   getAccountNonce,
   getL2AddressByL1,
   getNetworkIdByChainId,
-  sendTransaction
+  sendTransaction,
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
@@ -444,9 +449,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -740,6 +745,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 160
     }
+    if (
+      (fromChainID == 10 || fromChainID == 510) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 130
+    }
   } else {
     // USDC
     if (
@@ -760,7 +771,12 @@ async function sendConsumer(value: any) {
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
   let gasLimit = 100000
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'metis' || toChain === 'metis_test') {
+  if (
+    toChain === 'arbitrum_test' ||
+    toChain === 'arbitrum' ||
+    toChain === 'metis' ||
+    toChain === 'metis_test'
+  ) {
     gasLimit = 1000000
   }
 
