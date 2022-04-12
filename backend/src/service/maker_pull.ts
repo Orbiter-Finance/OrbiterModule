@@ -1151,7 +1151,7 @@ export class ServiceMakerPull {
         txBlock: item.blockNumber,
         txHash: item.hash,
         txTime: new Date(item.timeStamp * 1000),
-        gasCurrency: 'MATIC',
+        gasCurrency: 'METIS',
         gasAmount: new BigNumber(item.gasUsed)
           .multipliedBy(item.gasPrice)
           .toString(),
