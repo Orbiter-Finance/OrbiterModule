@@ -104,9 +104,7 @@ async function getTokenBalance(
         if (tokenAddress) {
           value = await getBalanceByMetis(web3, makerAddress, tokenAddress)
         } else {
-          value = await web3.eth.getBalance(
-            makerAddress
-          )
+          value = await web3.eth.getBalance(makerAddress)
         }
         break
       case 'dydx':
@@ -268,7 +266,12 @@ export async function getWealthsChains(makerAddress: string) {
       // add eth balances item
       item.balances.unshift({
         tokenAddress: '',
-        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : 'ETH',
+        tokenName:
+          CHAIN_INDEX[item.chainId] == 'polygon'
+            ? 'MATIC'
+            : CHAIN_INDEX[item.chainId] == 'metis'
+            ? 'METIS'
+            : 'ETH',
         decimals: 18,
         value: '',
       })
