@@ -11,6 +11,7 @@ import {
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
+import { waitForDebugger } from 'inspector'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
@@ -349,7 +350,13 @@ async function watchTransfers(pool, state) {
     return
   }
 
-  const web3 = createAlchemyWeb3(wsEndPoint)
+  let fromChain = state ? pool.c2Name : pool.c1Name
+  let web3
+  if (fromChainID == 10 || fromChainID == 510) {
+    web3 = new Web3(wsEndPoint)
+  } else {
+    web3 = createAlchemyWeb3(wsEndPoint)
+  }
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
