@@ -7,10 +7,10 @@ export class MakerWealth extends CommonEntity {
   @PrimaryGeneratedColumn()
   id: number
 
-  @Column('varchar', { length: 255, default: '0x' })
+  @Column('varchar', { length: 128, default: '0x' })
   makerAddress: string
 
-  @Column('varchar', { length: 255, default: '0x' })
+  @Column('varchar', { length: 128, default: '0x' })
   tokenAddress: string
 
   @Column('int', { width: 11, default: 0 })
