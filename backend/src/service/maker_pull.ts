@@ -181,7 +181,10 @@ export function getLastStatus() {
     METIS_LAST,
     ZKSYNC_LAST,
     OPTIMISM_LAST,
+    IMMUTABLEX_USER_LAST,
+    IMMUTABLEX_RECEIVER_LAST,
     LOOPRING_LAST,
+    DYDX_LAST,
   }
 }
 
