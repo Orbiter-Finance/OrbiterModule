@@ -6,7 +6,11 @@ import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
-import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
+import {
+  dateFormatNormal,
+  equalsIgnoreCase,
+  isEthTokenAddress
+} from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
@@ -189,10 +193,19 @@ export function getLastStatus() {
 }
 
 export class ServiceMakerPull {
+  private static compareDataPromise = Promise.resolve()
+
   private chainId: number
   private makerAddress: string
   private tokenAddress: string
   private tokenSymbol: string // for makerList[x].tName
+
+  /**
+   * Reset compareDataPromise
+   */
+  public static resetCompareDataPromise() {
+    ServiceMakerPull.compareDataPromise = Promise.resolve()
+  }
 
   /**
    * @param chainId
@@ -245,17 +258,14 @@ export class ServiceMakerPull {
   }
 
   /**
-   *
    * @param makerPull
-   * @param hash
    * @returns
    */
-  private async compareData(makerPull: MakerPull, hash: string) {
+  private async compareData(makerPull: MakerPull) {
     // to lower
     const makerAddress = this.makerAddress.toLowerCase()
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
-    hash = hash.toLowerCase()
 
     // if maker out
     if (fromAddress == makerAddress) {
@@ -353,7 +363,7 @@ export class ServiceMakerPull {
             userAddress: fromAddress,
             fromChain: String(makerPull.chainId),
             toChain: makerPull.amount_flag,
-            formTx: hash,
+            formTx: makerPull.txHash,
             fromAmount: makerPull.amount,
             formNonce: makerPull.nonce,
             needToAmount,
@@ -368,6 +378,18 @@ export class ServiceMakerPull {
         errorLogger.error(e)
       }
     }
+  }
+
+  /**
+   * @param makerPull
+   */
+  private async singleCompareData(makerPull: MakerPull) {
+    await (ServiceMakerPull.compareDataPromise =
+      ServiceMakerPull.compareDataPromise
+        .catch(() => {
+          // Catch prev promise error.
+        })
+        .then(() => this.compareData(makerPull)))
   }
 
   /**
@@ -462,7 +484,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -559,7 +581,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -656,7 +678,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -766,7 +788,7 @@ export class ServiceMakerPull {
         }
 
         // compare
-        await this.compareData(makerPull, item.txHash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -862,7 +884,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -939,7 +961,7 @@ export class ServiceMakerPull {
             fromAddress: transaction.from,
             toAddress: transaction.to,
             txBlock: transaction.blockHash,
-            txHash: transaction.hash,
+            txHash: String(transaction.hash),
             txTime: new Date(transaction.timeStamp * 1000),
             gasCurrency: 'ETH',
             gasAmount: '0',
@@ -950,7 +972,7 @@ export class ServiceMakerPull {
             await savePull(makerPull)
 
             // compare
-            await this.compareData(makerPull, String(transaction.hash))
+            await this.singleCompareData(makerPull)
           })
         }
 
@@ -1072,7 +1094,7 @@ export class ServiceMakerPull {
 
       promiseMethods.push(async () => {
         await savePull(makerPull)
-        await this.compareData(makerPull, lpTransaction.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -1168,7 +1190,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -1262,7 +1284,7 @@ export class ServiceMakerPull {
           fromAddress: transaction.from,
           toAddress,
           txBlock: transaction.blockHash,
-          txHash: transaction.hash,
+          txHash: String(transaction.hash),
           txTime: new Date(transaction.timeStamp * 1000),
           gasCurrency: 'ETH',
           gasAmount: '0',
@@ -1273,7 +1295,7 @@ export class ServiceMakerPull {
           await savePull(makerPull)
 
           // compare
-          await this.compareData(makerPull, String(transaction.hash))
+          await this.singleCompareData(makerPull)
         })
       }
 
@@ -1288,9 +1310,6 @@ export class ServiceMakerPull {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    if (makerPullLastData.makerPull) {
-      // makerPullLastData.makerPull['currentCursor'] = resp.cursor
-    }
 
     DYDX_LAST[makerPullLastKey] = makerPullLastData
   }
