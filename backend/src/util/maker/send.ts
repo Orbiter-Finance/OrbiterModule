@@ -1,5 +1,4 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
-import BigNumber from "bignumber.js"
 import {
   ChainId,
   ConnectorNames,
