@@ -59,22 +59,30 @@ export async function exchangeToUsd(
  * @returns
  */
 export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
+  // cache
+  exchangeRates = await getRates(currency)
+  if (exchangeRates) {
+    let metisExchangeRates = await getRates('metis')
+    if (metisExchangeRates && metisExchangeRates["USD"]) {
+      let usdToMetis = 1 / Number(metisExchangeRates["USD"])
+      exchangeRates["METIS"] = String(usdToMetis)
+    }
+    return exchangeRates
+  } else {
+    return undefined
+  }
+}
+async function getRates(currency) {
   const resp = await axios.get(
     `https://api.coinbase.com/v2/exchange-rates?currency=${currency}`
   )
   const data = resp.data?.data
-
   // check
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
-
-  // cache
-  exchangeRates = data.rates
-
   return data.rates
 }
-
 /**
  *
  * @param currency
