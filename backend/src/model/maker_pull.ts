@@ -18,6 +18,7 @@ import { CommonEntity } from './common'
   'amount_flag',
   'tx_status',
 ])
+@Index('save_pull_find', ['chainId', 'makerAddress', 'tokenAddress', 'txHash'])
 @Entity()
 export class MakerPull extends CommonEntity {
   @PrimaryGeneratedColumn()
