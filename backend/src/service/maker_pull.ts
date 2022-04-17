@@ -6,11 +6,7 @@ import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
-import {
-  dateFormatNormal,
-  equalsIgnoreCase,
-  isEthTokenAddress
-} from '../util'
+import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
@@ -384,12 +380,14 @@ export class ServiceMakerPull {
    * @param makerPull
    */
   private async singleCompareData(makerPull: MakerPull) {
-    await (ServiceMakerPull.compareDataPromise =
-      ServiceMakerPull.compareDataPromise
-        .catch(() => {
-          // Catch prev promise error.
-        })
-        .then(() => this.compareData(makerPull)))
+    // Todo: Single compareData has "stuck still" bug. Execute synchronously first
+    // await (ServiceMakerPull.compareDataPromise =
+    //   ServiceMakerPull.compareDataPromise
+    //     .catch(() => {
+    //       // Catch prev promise error.
+    //     })
+    //     .then(() => this.compareData(makerPull)))
+    return this.compareData(makerPull)
   }
 
   /**
