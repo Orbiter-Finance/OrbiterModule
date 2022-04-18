@@ -383,12 +383,14 @@ export class ServiceMakerPull {
    * @param makerPull
    */
   private async singleCompareData(makerPull: MakerPull) {
-    await (ServiceMakerPull.compareDataPromise =
-      ServiceMakerPull.compareDataPromise
-        .catch(() => {
-          // Catch prev promise error.
-        })
-        .then(() => this.compareData(makerPull)))
+    // Todo: Single compareData has "stuck still" bug. Execute synchronously first
+    // await (ServiceMakerPull.compareDataPromise =
+    //   ServiceMakerPull.compareDataPromise
+    //     .catch(() => {
+    //       // Catch prev promise error.
+    //     })
+    //     .then(() => this.compareData(makerPull)))
+    return this.compareData(makerPull)
   }
 
   /**
