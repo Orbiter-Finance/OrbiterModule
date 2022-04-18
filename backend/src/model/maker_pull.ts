@@ -57,6 +57,9 @@ export class MakerPull extends CommonEntity {
   @Column('varchar', { length: 255, default: '' })
   txHash: string
 
+  @Column('json', { default: null })
+  txExt: { type: string; value: string }
+
   @Column('timestamp', { default: null })
   txTime: Date
 
