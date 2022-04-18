@@ -6,12 +6,9 @@ import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
-import {
-  dateFormatNormal,
-  equalsIgnoreCase,
-  isEthTokenAddress
-} from '../util'
+import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
+import { CrossAddress } from '../util/cross_address'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
@@ -342,7 +339,9 @@ export class ServiceMakerPull {
         amount_flag: makerPull.nonce,
         tx_status: Not('rejected'),
       })
-      const otherData = {}
+      const otherData = {
+        state: makerPull.tx_status == 'finalized' ? 1 : 0,
+      }
       if (_mp) {
         otherData['toTx'] = _mp.txHash
         otherData['toAmount'] = _mp.amount
@@ -368,8 +367,8 @@ export class ServiceMakerPull {
             formNonce: makerPull.nonce,
             needToAmount,
             fromTimeStamp: dateFormatNormal(makerPull.txTime),
-            state: makerPull.tx_status == 'finalized' ? 1 : 0,
             txToken: makerPull.tokenAddress,
+            fromExt: makerPull.txExt,
             ...otherData,
           })
         }
@@ -399,6 +398,20 @@ export class ServiceMakerPull {
     await PromisePool.for(promiseMethods)
       .withConcurrency(10)
       .process(async (item) => await item())
+  }
+
+  /**
+   * @param input
+   */
+  private getTxExtFromInput(input: string) {
+    if (input.length > 138) {
+      const inputData = CrossAddress.parseTransferERC20Input(input)
+      if (inputData.ext) {
+        return inputData.ext
+      }
+    }
+
+    return undefined
   }
 
   /**
@@ -469,6 +482,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -566,6 +580,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -663,6 +678,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'MATIC',
         gasAmount: new BigNumber(item.gasUsed)
@@ -869,6 +885,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
