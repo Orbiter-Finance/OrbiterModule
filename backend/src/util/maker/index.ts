@@ -1,7 +1,17 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
+import {
+  AccountInfo,
+  ChainId,
+  ConnectorNames,
+  ExchangeAPI,
+  generateKeyPair,
+  GlobalAPI,
+  UserAPI,
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
+import { waitForDebugger } from 'inspector'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
@@ -20,27 +30,17 @@ import {
   saveMappingL1AndL2,
 } from '../../service/starknet/helper'
 import { Core } from '../core'
+import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  AccountInfo,
-} from '@loopring-web/loopring-sdk'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 // import { doSms } from '../../sms/smsSchinese'
 import Axios from '../../util/Axios'
-import { CrossAddress, CrossAddressExt } from '../cross_address'
-
 Axios.axios()
 
 const zkTokenInfo: any[] = []
@@ -355,6 +355,7 @@ async function watchTransfers(pool, state) {
   }
   const fromChain = state ? pool.c2Name : pool.c1Name
   const web3 = createAlchemyWeb3(wsEndPoint)
+
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
@@ -1603,7 +1604,7 @@ export async function sendTransaction(
         } else {
           confirmToTransaction(toChainID, toChain, txID, transactionID)
         }
-
+        accessLogger.info('update success')
         // update todo
         await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
       } else {

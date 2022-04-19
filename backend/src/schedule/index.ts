@@ -41,7 +41,7 @@ export async function waittingStartMaker() {
 
         // Deley run, fixed bug: "Max rate limit reached, rate limit of 5/1sec applied"
         await sleep(200)
-        
+
         continue
       }
 
@@ -98,9 +98,6 @@ export async function waittingStartMaker() {
 }
 
 export const startMasterJobs = async () => {
-}
-
-export const startWorkerJobs = async () => {
   const scene = process.env.ORBITER_SCENE
 
   // cache coinbase
@@ -119,8 +116,15 @@ export const startWorkerJobs = async () => {
     jobBalanceAlarm()
   }
 
-  // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
   }
+}
+
+export const startWorkerJobs = async () => {
+  // const scene = process.env.ORBITER_SCENE
+  // // maker
+  // if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
+  //   waittingStartMaker()
+  // }
 }

@@ -180,6 +180,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.metis(apiMetis)
           break
+        case 'dydx':
+          let apiDydx = makerConfig.dydx.api
+          if (toChain == 511) {
+            apiDydx = makerConfig.dydx_test.api
+          }
+          await serviceMakerPull.dydx(apiDydx)
+          break
       }
     } catch (error) {
       errorLogger.error(

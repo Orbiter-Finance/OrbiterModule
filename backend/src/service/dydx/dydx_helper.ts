@@ -1,12 +1,16 @@
 import {
   AccountResponseObject,
+  ApiKeyCredentials,
   DydxClient,
-  SigningMethod
+  SigningMethod,
+  TransferResponseObject
 } from '@dydxprotocol/v3-client'
 import { getAccountId } from '@dydxprotocol/v3-client/build/src/lib/db'
+import BigNumber from 'bignumber.js'
 import { ethers, utils } from 'ethers'
 import Web3 from 'web3'
 import { makerConfig } from '../../config'
+import { equalsIgnoreCase } from '../../util'
 
 const DYDX_MAKERS = {
   // Testnet
@@ -25,6 +29,7 @@ const DYDX_MAKERS = {
 
 const DYDX_CLIENTS = {}
 const DYDX_ACCOUNTS = {}
+const DYDX_API_KEY_CREDENTIALS: { [key: string]: ApiKeyCredentials } = {}
 
 export class DydxHelper {
   private chainId: number
@@ -40,7 +45,7 @@ export class DydxHelper {
    */
   constructor(
     chainId: number,
-    web3: Web3,
+    web3?: Web3,
     signingMethod = SigningMethod.TypedData
   ) {
     if (chainId == 11) {
@@ -263,45 +268,76 @@ export class DydxHelper {
     return utils.hexDataSlice('0x' + sourceStr, 0, 20)
   }
 
-  // /**
-  //  * IMX transfer => Eth transaction
-  //  * @param {any} transfer IMX transfer
-  //  * @returns
-  //  */
-  // toTransaction(transfer) {
-  //   const timeStampMs = transfer.timestamp.getTime()
-  //   const nonce = this.timestampToNonce(timeStampMs)
+  /**
+   * @param ethereumAddress
+   * @param apiKeyCredentials
+   */
+  static setApiKeyCredentials(
+    ethereumAddress: string,
+    apiKeyCredentials: ApiKeyCredentials
+  ) {
+    DYDX_API_KEY_CREDENTIALS[ethereumAddress] = apiKeyCredentials
+  }
 
-  //   // When it is ETH
-  //   let contractAddress = transfer.token.data.token_address
-  //   if (transfer.token.type == ETHTokenType.ETH) {
-  //     contractAddress = '0x0000000000000000000000000000000000000000'
-  //   }
+  /**
+   * @param ethereumAddress
+   * @returns
+   */
+  static getApiKeyCredentials(ethereumAddress: string): ApiKeyCredentials | undefined {
+    return DYDX_API_KEY_CREDENTIALS[ethereumAddress]
+  }
 
-  //   const transaction = {
-  //     timeStamp: parseInt(timeStampMs / 1000),
-  //     hash: transfer.transaction_id,
-  //     nonce,
-  //     blockHash: '',
-  //     transactionIndex: 0,
-  //     from: transfer.user,
-  //     to: transfer.receiver,
-  //     value: transfer.token.data.quantity + '',
-  //     txreceipt_status: transfer.status,
-  //     contractAddress,
-  //     confirmations: 0,
-  //   }
+  /**
+   * DYDX transfer => Eth transaction
+   * @param transfer dYdX transfer
+   * @param ethereumAddress 0x...
+   * @returns
+   */
+  static toTransaction(
+    transfer: TransferResponseObject,
+    ethereumAddress: string
+  ) {
+    const timeStampMs = new Date(transfer.createdAt).getTime()
+    const nonce = DydxHelper.timestampToNonce(timeStampMs)
 
-  //   return transaction
-  // }
+    const isTransferIn = equalsIgnoreCase('TRANSFER_IN', transfer.type)
+    const isTransferOut = equalsIgnoreCase('TRANSFER_OUT', transfer.type)
+
+    const transaction = {
+      timeStamp: parseInt(timeStampMs / 1000 + ''),
+      hash: transfer.id,
+      nonce,
+      blockHash: '',
+      transactionIndex: 0,
+      from: '',
+      to: '',
+      value: new BigNumber(
+        isTransferIn ? transfer.creditAmount : transfer.debitAmount
+      )
+        .multipliedBy(10 ** 6)
+        .toString(), // Only usdc
+      txreceipt_status: transfer.status,
+      contractAddress: '', // Only usdc
+      confirmations: 0,
+    }
+
+    if (isTransferIn) {
+      transaction.to = ethereumAddress
+    }
+    if (isTransferOut) {
+      transaction.from = ethereumAddress
+    }
+
+    return transaction
+  }
 
   /**
    * The api does not return the nonce value, timestamp(ms) last three number is the nonce
    *  (warnning: there is a possibility of conflict)
-   * @param timestamp ms
+   * @param  timestamp ms
    * @returns
    */
-  timestampToNonce(timestamp: number | string) {
+  static timestampToNonce(timestamp: number | string) {
     let nonce = 0
 
     if (timestamp) {

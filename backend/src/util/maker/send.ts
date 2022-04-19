@@ -1,5 +1,15 @@
 import { ERC20TokenType, ETHTokenType } from '@imtbl/imx-sdk'
+import {
+  ChainId,
+  ConnectorNames,
+  ExchangeAPI,
+  generateKeyPair,
+  GlobalAPI,
+  UserAPI,
+  VALID_UNTIL,
+} from '@loopring-web/loopring-sdk'
 import axios from 'axios'
+import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
@@ -7,6 +17,7 @@ import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
+import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
 import { getTargetMakerPool } from '../../service/maker'
 import {
@@ -17,17 +28,6 @@ import {
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
-import {
-  ExchangeAPI,
-  GlobalAPI,
-  ConnectorNames,
-  ChainId,
-  generateKeyPair,
-  UserAPI,
-  VALID_UNTIL,
-} from '@loopring-web/loopring-sdk'
-import { DydxHelper } from '../../service/dydx/dydx_helper'
-import BigNumber from 'bignumber.js'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -62,6 +62,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
     } catch (error) {
+      maxGwei = 80
       return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
@@ -449,9 +450,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -644,7 +645,10 @@ async function sendConsumer(value: any) {
     }
   }
 
-  const web3Net = makerConfig[toChain].httpEndPoint
+  let web3Net = makerConfig[toChain].httpEndPointInfura
+  if (!web3Net) {
+    web3Net = makerConfig[toChain].httpEndPoint
+  }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
 
@@ -726,30 +730,63 @@ async function sendConsumer(value: any) {
    * Fetch the current transaction gas prices from https://ethgasstation.info/
    */
   let maxPrice = 230
-  if (
-    (fromChainID == 3 || fromChainID == 33) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
-  }
-  if (
-    (fromChainID == 7 || fromChainID == 77) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 180
-  }
-  if (
-    (fromChainID == 9 || fromChainID == 99) &&
-    (chainID == 1 || chainID == 5)
-  ) {
-    maxPrice = 160
+  if (isEthTokenAddress(tokenAddress)) {
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 8 || fromChainID == 88) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 130
+    }
+    if (
+      (fromChainID == 9 || fromChainID == 99) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 160
+    }
+    if (
+      (fromChainID == 10 || fromChainID == 510) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 130
+    }
+  } else {
+    // USDC
+    if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
+    if (
+      (fromChainID == 3 || fromChainID == 33) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 110
+    }
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
   let gasLimit = 100000
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'metis' || toChain === 'metis_test') {
+  if (
+    toChain === 'arbitrum_test' ||
+    toChain === 'arbitrum' ||
+    toChain === 'metis' ||
+    toChain === 'metis_test'
+  ) {
     gasLimit = 1000000
   }
 
@@ -832,18 +869,18 @@ async function sendConsumer(value: any) {
 
 /**
  * This is the process that will run when you execute the program.
- * @param makerAddress 
- * @param toAddress 
- * @param toChain 
- * @param chainID 
- * @param tokenID 
- * @param tokenAddress 
- * @param amountToSend 
- * @param result_nonce 
- * @param fromChainID 
- * @param lpMemo 
+ * @param makerAddress
+ * @param toAddress
+ * @param toChain
+ * @param chainID
+ * @param tokenID
+ * @param tokenAddress
+ * @param amountToSend
+ * @param result_nonce
+ * @param fromChainID
+ * @param lpMemo
  * @param ownerAddress // When cross address transfer will ownerAddress != toAddress, else ownerAddress == toAddress
- * @returns 
+ * @returns
  */
 async function send(
   makerAddress: string,
