@@ -635,7 +635,6 @@ async function sendConsumer(value: any) {
           result_nonce,
         }
       }
-      return
     } catch (error) {
       return {
         code: 1,

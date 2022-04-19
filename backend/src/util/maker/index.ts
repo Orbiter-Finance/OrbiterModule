@@ -360,7 +360,6 @@ async function watchTransfers(pool, state) {
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
     let startBlockNumber = 0
-
     new EthListen(
       api,
       makerAddress,
