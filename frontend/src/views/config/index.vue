@@ -460,7 +460,8 @@ export default defineComponent({
                 try {
                     let theOldMaker;
                     delLoading.value = true
-                    const { makerList, historyMakerList } = await getMakerListData();
+                    const makerList = tradeInfo.tableData
+                    const historyMakerList = tradeInfo.historyTableData
                     const oldMakerList = JSON.parse(JSON.stringify(makerList, null, ''))
                     const oldHistoryMakerList = JSON.parse(JSON.stringify(historyMakerList, null, ''))
                     const oldDataObj = {
@@ -485,7 +486,7 @@ export default defineComponent({
                         makerList: makerList,
                         historyMakerList: historyMakerList
                     }
-                    const newData = JSON.stringify(newDataObj)
+                    const newData = JSON.stringify(newDataObj, null, '')
                     await updateData(oldData, newData);
                     showData(newDataObj)
                     delLoading.value = false
@@ -512,7 +513,9 @@ export default defineComponent({
             }
             try {
                 tradeInfo.submitLoading = true
-                const { makerList, historyMakerList } = await getMakerListData();
+
+                const makerList = tradeInfo.tableData
+                const historyMakerList = tradeInfo.historyTableData
                 const oldDataObj = {
                     makerList: makerList,
                     historyMakerList: historyMakerList

@@ -288,11 +288,9 @@ const getNewMakerListOnce = async () => {
     method: "get"
   });
   if (res.status == 200) {
-    return { ...res.data }
+    const sha = SHA256(JSON.stringify(res.data)).toString()
+    return { sha, ...res.data }
   }
-  const sha = SHA256(JSON.stringify(res.data))
-  res.data.sha = sha
-  return res.data
 }
 export const makerListSha = {
   sha: '',
