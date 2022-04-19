@@ -189,6 +189,7 @@ export function getLastStatus() {
   }
 }
 
+const SERVICE_MAKER_PULL_TIMEOUT = 16000
 export class ServiceMakerPull {
   private static compareDataPromise = Promise.resolve()
 
@@ -417,6 +418,41 @@ export class ServiceMakerPull {
   }
 
   /**
+   * @param transaction
+   * @param api
+   * @returns
+   */
+  private async ensureTransactionInput(
+    transaction: { hash: string; input: string },
+    api: { endPoint: string; key: string }
+  ) {
+    if (!equalsIgnoreCase(transaction.input, 'deprecated')) {
+      return
+    }
+
+    try {
+      const resp = await axios.get(api.endPoint, {
+        params: {
+          apiKey: api.key,
+          module: 'proxy',
+          action: 'eth_getTransactionByHash',
+          txhash: transaction.hash,
+        },
+        timeout: SERVICE_MAKER_PULL_TIMEOUT,
+      })
+
+      // Set input
+      transaction.input = resp.data.result?.input || transaction.input
+    } catch (err) {
+      errorLogger.error(
+        `proxy.eth_getTransactionByHash failed. hash:${
+          transaction.hash
+        }, api: ${JSON.stringify(api)}, error: ${err.message}.`
+      )
+    }
+  }
+
+  /**
    * pull etherscan
    * @param api
    */
@@ -444,7 +480,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -470,6 +506,14 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -542,7 +586,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -568,6 +612,14 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -640,7 +692,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -666,6 +718,14 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
 
       // save
       const makerPull = (lastMakePull = <MakerPull>{
@@ -719,7 +779,7 @@ export class ServiceMakerPull {
     if (!ZKSYNC_TOKEN_MAP[this.tokenAddress]) {
       const respData = (
         await axios.get(`${api.endPoint}\/tokens\/${this.tokenAddress}`, {
-          timeout: 16000,
+          timeout: SERVICE_MAKER_PULL_TIMEOUT,
         })
       ).data
       if (respData.result?.address == this.tokenAddress) {
@@ -848,7 +908,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -874,6 +934,15 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -1155,7 +1224,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -1181,6 +1250,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -1194,6 +1271,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'METIS',
         gasAmount: new BigNumber(item.gasUsed)
