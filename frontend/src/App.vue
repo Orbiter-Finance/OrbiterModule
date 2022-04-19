@@ -68,8 +68,8 @@ import {
 } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
-import store from './store'
-import * as CryptoJS from 'crypto-js'
+// import store from './store'
+// import * as CryptoJS from 'crypto-js'
 
 export default defineComponent({
   components: {
@@ -111,12 +111,12 @@ export default defineComponent({
       state.makerAddressSelected = makerAddress
     }
     onMounted(() => {
-      const cipherToken = localStorage.getItem('token')
-      if (cipherToken) {
-        const bytes = CryptoJS.AES.decrypt(cipherToken, 'github')
-        const originalText = bytes.toString(CryptoJS.enc.Utf8)
-        store.commit('setAccessToken', originalText)
-      }
+      // const cipherS3Proof = localStorage.getItem('s3Proof')
+      // if (cipherS3Proof) {
+      //   const bytes = CryptoJS.AES.decrypt(cipherS3Proof, 'netstate')
+      //   const originalText = bytes.toString(CryptoJS.enc.Utf8)
+      //   store.commit('setS3Proof', originalText)
+      // }
     }),
       // watch
       watch(

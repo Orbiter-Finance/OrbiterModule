@@ -3,7 +3,7 @@
         <template #buttons>
             <div style="display: flex;justify-content: space-between;align-items: center">
                 <vxe-button style="margin-left: 10px;" @click="insertEvent()">add</vxe-button>
-                <vxe-button style="margin-right: 10px;" @click="authInfo.showAuth = true">{{ githubAccessToken ? "authed" : "auth" }}</vxe-button>
+                <vxe-button style="margin-right: 10px;" @click="authInfo.showAuth = true">{{ s3Proof ? "authed" : "auth" }}</vxe-button>
             </div>
         </template>
     </vxe-toolbar>
@@ -88,16 +88,8 @@
     </div>
 
     <!-- 弹窗编辑 -->
-    <vxe-modal
-        v-model="tradeInfo.showEdit"
-        :title="tradeInfo.selectRow ? 'edit&save' : 'add&save'"
-        width="1100"
-        min-width="1100"
-        min-height="300"
-        :loading="tradeInfo.submitLoading"
-        resize
-        destroy-on-close
-    >
+    <vxe-modal v-model="tradeInfo.showEdit" :title="tradeInfo.selectRow ? 'edit&save' : 'add&save'" width="1100" min-width="1100" min-height="300" :loading="tradeInfo.submitLoading" resize
+        destroy-on-close>
         <template #default>
             <vxe-form :data="tradeInfo.formData" :rules="tradeInfo.formRules" title-align="left" title-width="100" @submit="submitEvent">
                 <vxe-form-item field="makerAddress" title="makerAddress" :span="12" :item-render="{}">
@@ -224,9 +216,9 @@
     <vxe-modal title="auth" v-model="authInfo.showAuth" width="500" min-width="400" min-height="300" destroy-on-close>
         <template #default>
             <vxe-form :data="authInfo.auth" title-align="left" title-width="100" @submit="toAuth">
-                <vxe-form-item field="githubAccessToken" title="token" :span="24" :item-render="{}">
+                <vxe-form-item field="s3Proof" title="token" :span="24" :item-render="{}">
                     <template #default="{ data }">
-                        <vxe-input v-model="data.githubAccessToken" placeholder="input AccessToken"></vxe-input>
+                        <vxe-input v-model="data.s3Proof" placeholder="input s3Proof"></vxe-input>
                     </template>
                 </vxe-form-item>
                 <vxe-form-item align="center" title-align="left" :span="24">
@@ -243,9 +235,9 @@
 import { defineComponent, reactive, onMounted, computed, ref } from 'vue'
 import dayjs from 'dayjs'
 import axios from "axios";
-import { Base64 } from "js-base64";
+import { $axios } from '@/plugins/axios'
 import { useStore } from "vuex";
-import { AES } from "crypto-js"
+// import { AES } from "crypto-js"
 import {
     VXETable,
     VxeColumnPropTypes,
@@ -255,14 +247,14 @@ import {
 
 export default defineComponent({
     setup() {
-        const apiUrl = "https://api.github.com"
+        const apiUrl = "https://maker-list.s3.amazonaws.com"
         const store = useStore();
         const delLoading = ref(false)
-        const githubAccessToken = computed(() => {
-            return store.state.githubAccessToken
+        let s3Proof = computed(() => {
+            return store.state.s3Proof
         })
         const authInfo = reactive({
-            auth: { githubAccessToken: '' },
+            auth: { s3Proof: '' },
             showAuth: false
         })
         const tradeInfo = reactive({
@@ -391,7 +383,7 @@ export default defineComponent({
         }
         //add form
         const insertEvent = () => {
-            if (!store.state.githubAccessToken) {
+            if (!store.state.s3Proof) {
                 alert("please auth first")
                 return
             }
@@ -423,7 +415,7 @@ export default defineComponent({
         }
         //edit form
         const editEvent = (row: any) => {
-            if (!store.state.githubAccessToken) {
+            if (!store.state.s3Proof) {
                 alert("please auth first")
                 return
             }
@@ -459,7 +451,7 @@ export default defineComponent({
         }
 
         const removeEvent = async (row: any) => {
-            if (!store.state.githubAccessToken) {
+            if (!store.state.s3Proof) {
                 alert("please auth first")
                 return
             }
@@ -468,7 +460,14 @@ export default defineComponent({
                 try {
                     let theOldMaker;
                     delLoading.value = true
-                    const { sha, makerList, historyMakerList } = await getMakerListData();
+                    const { makerList, historyMakerList } = await getMakerListData();
+                    const oldMakerList = JSON.parse(JSON.stringify(makerList, null, ''))
+                    const oldHistoryMakerList = JSON.parse(JSON.stringify(historyMakerList, null, ''))
+                    const oldDataObj = {
+                        makerList: oldMakerList,
+                        historyMakerList: oldHistoryMakerList
+                    }
+                    const oldData = JSON.stringify(oldDataObj, null, '')
                     for (let i = 0; i < makerList.length; i++) {
                         if (
                             makerList[i].c1ID === row.c1ID &&
@@ -482,24 +481,24 @@ export default defineComponent({
                     theOldMaker[0].c1AvalibleTimes[0].endTime = Date.parse(new Date().toString()) / 1000
                     theOldMaker[0].c2AvalibleTimes[0].endTime = Date.parse(new Date().toString()) / 1000
                     historyMakerList.unshift(theOldMaker[0])
-                    const newData = {
+                    const newDataObj = {
                         makerList: makerList,
                         historyMakerList: historyMakerList
                     }
-                    await updateData(newData, sha);
-                    showData(newData)
+                    const newData = JSON.stringify(newDataObj)
+                    await updateData(oldData, newData);
+                    showData(newDataObj)
                     delLoading.value = false
                     await VXETable.modal.message({ content: 'delete success', status: 'success' })
                 } catch (error: any) {
                     console.log(error)
                     delLoading.value = false
-                    if (error.message === "Request failed with status code 401") {
-                        alert("token not right，input again");
+                    if (error.message === "secret is error") {
+                        alert("s3Proof not right，input again");
                     } else {
                         alert("net error,try again");
                     }
                 }
-
             }
         }
         const submitEvent = async () => {
@@ -513,7 +512,12 @@ export default defineComponent({
             }
             try {
                 tradeInfo.submitLoading = true
-                const { sha, makerList, historyMakerList } = await getMakerListData();
+                const { makerList, historyMakerList } = await getMakerListData();
+                const oldDataObj = {
+                    makerList: makerList,
+                    historyMakerList: historyMakerList
+                }
+                const oldData = JSON.stringify(oldDataObj, null, '')
                 const filterFormData = realFormData(formData)
                 if (tradeInfo.selectRow) {
                     let historyMaker;
@@ -540,12 +544,12 @@ export default defineComponent({
                 } else {
                     makerList.unshift(filterFormData)
                 }
-                const newData = {
+                const newDataObj = {
                     makerList: makerList,
                     historyMakerList: historyMakerList
                 }
-                await updateData(newData, sha);
-                showData(newData)
+                await updateData(oldData, JSON.stringify(newDataObj, null, ''));
+                showData(newDataObj)
                 tradeInfo.submitLoading = false
                 tradeInfo.showEdit = false
                 await VXETable.modal.message({ content: 'save success', status: 'success' })
@@ -576,39 +580,29 @@ export default defineComponent({
                     alert("auth not right,input again")
                 }
             }
-
         }
         //get tradeIfno
         async function getMakerListData() {
             const res: any = await axios({
-                url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
-                method: "get",
-                headers: {
-                    Accept: "*/*",
-                    Authorization: store.state.githubAccessToken ? `token ${store.state.githubAccessToken}` : "",
-                },
+                url: `${apiUrl}/maker_list.json`,
+                method: "get"
             });
-            const base64Data = res.data.content;
-            const dataString = Base64.decode(base64Data);
-            const data = JSON.parse(dataString);
-            const makerList = data.makerList
-            const historyMakerList = data.historyMakerList
-            const sha = res.data.sha;
-            return { sha, makerList, historyMakerList };
+            if (res.status == 200) {
+                return { ...res.data }
+            }
         }
         //edit tradeIfno
-        async function updateData(data, sha: string) {
-            await axios({
-                url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
-                method: "put",
+        async function updateData(oldData, newData) {
+            await $axios({
+                url: `maker/config`,
+                method: "post",
                 headers: {
                     Accept: "*/*",
-                    Authorization: `token ${store.state.githubAccessToken}`,
+                    Authorization: `${store.state.s3Proof}`,
                 },
                 data: {
-                    message: "update from vue",
-                    content: Base64.encode(JSON.stringify(data, null, " ")),
-                    sha: sha,
+                    newData,
+                    oldData
                 },
             });
         }
@@ -660,18 +654,18 @@ export default defineComponent({
             });
         }
         async function toAuth() {
-            if (!authInfo.auth.githubAccessToken) {
-                alert("token can not be empty");
+            if (!authInfo.auth.s3Proof) {
+                alert("s3Proof can not be empty");
                 return;
             }
-            store.commit("setAccessToken", authInfo.auth.githubAccessToken)
-            const accessToken = AES.encrypt(authInfo.auth.githubAccessToken, 'github').toString();
-            localStorage.setItem("token", accessToken);
+            store.commit("setS3Proof", authInfo.auth.s3Proof)
+            // const s3Proof = AES.encrypt(authInfo.auth.s3Proof, 'netstate').toString();
+            // localStorage.setItem("s3Proof", s3Proof);
             authInfo.showAuth = false
             await getMakerList()
         }
         return {
-            githubAccessToken,
+            s3Proof,
             toAuth,
             tradeInfo,
             delLoading,
@@ -687,4 +681,5 @@ export default defineComponent({
 })
 </script>
 
-<style lang="scss"></style>
+<style lang="scss">
+</style>

@@ -2,11 +2,11 @@ import { createStore } from 'vuex'
 
 export default createStore({
   state: {
-    githubAccessToken: '',
+    s3Proof: '',
   },
   mutations: {
-    setAccessToken(state, token) {
-      state.githubAccessToken = token
+    setS3Proof(state, s3Proof) {
+      state.s3Proof = s3Proof
     }
   },
   actions: {

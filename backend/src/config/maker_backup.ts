@@ -189,7 +189,9 @@ export default {
     gasPrice: 2,
   },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
-  githubToken: '',
+  s3AccessKeyId: 'Your Key',
+  s3SecretAccessKey: 'Your Key',
+  s3Proof: 'S3 Proof',
   crossAddressContracts: {},
   ABI: [
     {

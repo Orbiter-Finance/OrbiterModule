@@ -1,7 +1,7 @@
 import axios from 'axios'
 import schedule from 'node-schedule'
+import SHA256 from "crypto-js/sha256";
 import { makerConfig } from '../config'
-import maker from '../config/maker'
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
 import { ServiceMakerPull } from '../service/maker_pull'
@@ -12,7 +12,8 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-const apiUrl = 'https://api.github.com'
+import { doSms } from '../sms/smsSchinese'
+const apiUrl = "https://maker-list.s3.amazonaws.com"
 
 class MJob {
   protected rule:
@@ -246,10 +247,22 @@ export function jobBalanceAlarm() {
   }
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
+let getMakerListTimeStamp = new Date().getTime()
 export const getNewMakerList = async (count = 0) => {
   try {
-    return await getNewMakerListOnce()
+    const res = await getNewMakerListOnce()
+    getMakerListTimeStamp = new Date().getTime()
+    return res
   } catch (error) {
+    const date = new Date()
+    const nowTimeStamp = date.getTime()
+    if (nowTimeStamp - getMakerListTimeStamp > 3600000) {
+      // todo send message
+      let alert =
+        `backend pull makerList from aws s3 failed for one hour.${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+      doSms(alert)
+      getMakerListTimeStamp = nowTimeStamp
+    }
     errorLogger.error(
       `getNewMakerList error=${error.message},try again ${count}`
     )
@@ -263,20 +276,16 @@ export const getNewMakerList = async (count = 0) => {
   }
 }
 const getNewMakerListOnce = async () => {
-  const res = await axios({
-    url: `${apiUrl}/repos/Orbiter-Finance/makerConfiguration/contents/rinkeby/makerList.json`,
-    method: 'get',
-    headers: {
-      Accept: '*/*',
-      Authorization: `token ${maker.githubToken}`,
-    },
-  })
-  const base64Data = res.data.content
-  const makerListBuffer = Buffer.from(base64Data, 'base64')
-  const makerListString = makerListBuffer.toString()
-  const makerListWrap: any = JSON.parse(makerListString)
-  makerListWrap.sha = res.data.sha
-  return makerListWrap
+  const res: any = await axios({
+    url: `${apiUrl}/maker_list.json`,
+    method: "get"
+  });
+  if (res.status == 200) {
+    return { ...res.data }
+  }
+  const sha = SHA256(JSON.stringify(res.data))
+  res.data.sha = sha
+  return res.data
 }
 export const makerListSha = {
   sha: '',
