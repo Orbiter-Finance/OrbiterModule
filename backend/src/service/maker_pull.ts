@@ -171,6 +171,7 @@ const IMMUTABLEX_USER_LAST: { [key: string]: MakerPullLastData } = {}
 const IMMUTABLEX_RECEIVER_LAST: { [key: string]: MakerPullLastData } = {}
 const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
+const ZKSPACE_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -182,6 +183,7 @@ export function getLastStatus() {
     ZKSYNC_LAST,
     OPTIMISM_LAST,
     LOOPRING_LAST,
+    ZKSPACE_LAST,
   }
 }
 
@@ -1181,7 +1183,7 @@ export class ServiceMakerPull {
 
   /**
    * pull dydx
-   * @prarm api
+   * @pararm api
    */
   async dydx(api: { endPoint: string; key: string }) {
     const apiKeyCredentials = DydxHelper.getApiKeyCredentials(this.makerAddress)
@@ -1290,5 +1292,108 @@ export class ServiceMakerPull {
     }
 
     DYDX_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  /**
+   * pull zkspace
+   * @param api
+   */
+  async zkspace(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ZKSPACE_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    const url =
+      api.endPoint +
+      '/txs' +
+      '?types=Transfer&address=' +
+      this.makerAddress +
+      '&token=' +
+      0 +
+      '&start=' +
+      0 +
+      '&limit =' +
+      50
+    let zksResponse: any
+    try {
+      zksResponse = await axios.get(url)
+    } catch (error) {
+      accessLogger.warn('Get zkspace txlist faild: ', error)
+    }
+    if (zksResponse.status === 200 && zksResponse.statusText === 'OK') {
+      var respData = zksResponse.data
+      if (respData.success === true) {
+        let zksList = respData?.data?.data
+        if (!zksList || zksList.length) {
+          return
+        }
+        const promiseMethods: (() => Promise<unknown>)[] = []
+        for (let index = 0; index < zksList.length; index++) {
+          const zksTransaction = zksList[index]
+          if (
+            zksTransaction.status != 'verified' &&
+            zksTransaction.status != 'pending'
+          ) {
+            continue
+          }
+          if (zksTransaction.tx_type != 'TRANSFER') {
+            continue
+          }
+          if (zksTransaction.token.symbol != 'ETH') {
+            continue
+          }
+          if (zksTransaction.succceed != true) {
+            continue
+          }
+          if (zksTransaction.failReason != '') {
+            continue
+          }
+          const amount_flag = getAmountFlag(
+            this.chainId,
+            new BigNumber(zksTransaction.amount)
+              .multipliedBy(new BigNumber(10 ** 18))
+              .toString()
+          )
+
+          const makerPull = (lastMakePull = <MakerPull>{
+            chainId: this.chainId,
+            makerAddress: this.makerAddress,
+            tokenAddress: this.tokenAddress,
+            data: JSON.stringify(zksTransaction),
+            amount: new BigNumber(zksTransaction.amount)
+              .multipliedBy(new BigNumber(10 ** 18))
+              .toString(),
+            amount_flag,
+            nonce: zksTransaction.nonce,
+            fromAddress: zksTransaction.from,
+            toAddress: zksTransaction.to,
+            txBlock: zksTransaction['block_number'],
+            txHash: zksTransaction.tx_hash,
+            txTime: new Date(zksTransaction.created_at),
+            gasCurrency: zksTransaction.token.symbol,
+            gasAmount: zksTransaction.fee || '',
+            tx_status:
+              zksTransaction.status == 'verified' ||
+              zksTransaction.status == 'pending'
+                ? 'finalized'
+                : 'committed',
+          })
+          promiseMethods.push(async () => {
+            await savePull(makerPull)
+            await this.compareData(makerPull, zksTransaction.hash)
+          })
+        }
+        await this.doPromisePool(promiseMethods)
+
+        // set ZKSPACE_LAST
+        if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
+          makerPullLastData.pullCount++
+        }
+        makerPullLastData.makerPull = lastMakePull
+        ZKSPACE_LAST[makerPullLastKey] = makerPullLastData
+      }
+    }
   }
 }
