@@ -19,6 +19,8 @@ import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
 import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
+import zkspace_help from '../../service/zkspace/zkspace_help'
+import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
 import {
   getAccountNonce,
@@ -28,6 +30,7 @@ import {
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
+import maker from '../../controller/maker'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -640,6 +643,195 @@ async function sendConsumer(value: any) {
       return {
         code: 1,
         txid: 'dYdX transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
+  // zkspace || zkspace_test
+  if (chainID == 12 || chainID == 512) {
+    try {
+      const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
+      const msg =
+        'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
+      const signature = await wallet.signMessage(msg)
+      console.warn('signature=', signature)
+      const seed = ethers.utils.arrayify(signature)
+      console.warn('seed=', seed)
+      const privateKey = await zksync.crypto.privateKeyFromSeed(seed)
+      console.warn('privateKey=', privateKey)
+      const pubkeyHash = await zksync.crypto.privateKeyToPubKeyHash(privateKey)
+      console.warn('publicKey=', pubkeyHash)
+
+      let balanceInfo = await zkspace_help.getZKSBalance({
+        account: makerAddress,
+        localChainID: fromChainID,
+      })
+      if (
+        !balanceInfo ||
+        !balanceInfo.length ||
+        balanceInfo.findIndex((item) => item.id == 0) == -1
+      ) {
+        errorLogger.error('zks Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance 0',
+        }
+      }
+      let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
+      const tokenBalanceWei = balanceInfo[defaultIndex].amount * 10 ** 18
+      if (!tokenBalanceWei) {
+        errorLogger.error('zks Insufficient balance 00')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance 00',
+        }
+      }
+      accessLogger.info('zks_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zks Insufficient balance')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance',
+        }
+      }
+
+      const transferValue =
+        zksync.utils.closestPackableTransactionAmount(amountToSend)
+
+      let accountInfo = await zkspace_help.getZKSAccountInfo(
+        fromChainID,
+        makerAddress
+      )
+
+      const tokenId = 0
+      const feeTokenId = 0
+      const zksChainID =
+        fromChainID === 512
+          ? makerConfig.zkspace_test.api.chainID
+          : makerConfig.zkspace.api.chainID
+      let fee = await zkspace_help.getZKSTransferGasFee(
+        fromChainID,
+        makerAddress
+      )
+      const transferFee = zksync.utils.closestPackableTransactionFee(
+        ethers.utils.parseUnits(fee.toString(), 18)
+      )
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        let zks_nonce = accountInfo.nonce
+        let zks_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!zks_sql_nonce) {
+          result_nonce = zks_nonce
+        } else {
+          if (zks_nonce > zks_sql_nonce) {
+            result_nonce = zks_nonce
+          } else {
+            result_nonce = zks_sql_nonce + 1
+          }
+        }
+        accessLogger.info('zks_nonce =', zks_nonce)
+        accessLogger.info('zks_sql_nonce =', zks_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
+      const msgBytes = ethers.utils.concat([
+        '0x05',
+        zksync.utils.numberToBytesBE(accountInfo.id, 4),
+        makerAddress,
+        toAddress,
+        zksync.utils.numberToBytesBE(tokenId, 2),
+        zksync.utils.packAmountChecked(transferValue),
+        zksync.utils.numberToBytesBE(feeTokenId, 1),
+        zksync.utils.packFeeChecked(transferFee),
+        zksync.utils.numberToBytesBE(zksChainID, 1),
+        zksync.utils.numberToBytesBE(result_nonce, 4),
+      ])
+      const signaturePacked = sign_musig(privateKey, msgBytes)
+      const pubKey = ethers.utils
+        .hexlify(signaturePacked.slice(0, 32))
+        .substr(2)
+      const l2Signature = ethers.utils
+        .hexlify(signaturePacked.slice(32))
+        .substr(2)
+      const tx = {
+        accountId: accountInfo.id,
+        to: toAddress,
+        tokenSymbol: 'ETH',
+        tokenAmount: ethers.utils.formatUnits(transferValue, 18),
+        feeSymbol: 'ETH',
+        fee: fee.toString(),
+        zksChainID,
+        nonce: result_nonce,
+      }
+      const l2Msg =
+        `Transfer ${tx.tokenAmount} ${tx.tokenSymbol}\n` +
+        `To: ${tx.to.toLowerCase()}\n` +
+        `Chain Id: ${tx.zksChainID}\n` +
+        `Nonce: ${tx.nonce}\n` +
+        `Fee: ${tx.fee} ${tx.feeSymbol}\n` +
+        `Account Id: ${tx.accountId}`
+      const ethSignature = await wallet.signMessage(l2Msg)
+      const txParams = {
+        type: 'Transfer',
+        accountId: accountInfo.id,
+        from: makerAddress,
+        to: toAddress,
+        token: tokenId,
+        amount: transferValue.toString(),
+        feeToken: feeTokenId,
+        fee: transferFee.toString(),
+        chainId: zksChainID,
+        nonce: result_nonce,
+        signature: {
+          pubKey: pubKey,
+          signature: l2Signature,
+        },
+      }
+      console.warn('txParams =', txParams)
+      const req = {
+        signature: {
+          type: 'EthereumSignature',
+          signature: ethSignature,
+        },
+        fastProcessing: true,
+        tx: txParams,
+        netWorkId: this.$store.state.web3.networkId,
+      }
+      let transferResult = await axios.post(
+        (fromChainID === 512
+          ? makerConfig.zkspace_test.api.endPoint
+          : makerConfig.zkspace.api.endPoint) + '/tx',
+        {
+          signature: req.signature,
+          fastProcessing: req.fastProcessing,
+          tx: req.tx,
+        }
+      )
+      if (
+        transferResult &&
+        transferResult.data &&
+        transferResult.status == 200 &&
+        transferResult.statusText == 'OK' &&
+        transferResult.data.success == true
+      ) {
+        return {
+          code: 0,
+          txid: transferResult?.data?.data,
+          chainID: chainID,
+          zksNonce: result_nonce,
+        }
+      } else {
+        return {
+          code: 1,
+          error: 'zkspace transfer error',
+          result_nonce,
+        }
+      }
+      return
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'zkspace transfer error: ' + error.message,
         result_nonce,
       }
     }
