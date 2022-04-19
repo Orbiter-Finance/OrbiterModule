@@ -6,7 +6,7 @@ RUN apk add g++ make python3 git
 
 COPY ./ /app
 WORKDIR /app
-RUN yarn install --network-timeout 600000 && yarn run build
+RUN yarn install --production --network-timeout 600000 && yarn run build
 
 # Nginx
 FROM nginx:alpine
