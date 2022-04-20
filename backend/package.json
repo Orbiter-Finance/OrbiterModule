@@ -8,7 +8,8 @@
     "dev:maker": "cross-env NODE_ENV=development ORBITER_SCENE=maker nodemon src/index.ts --no-cache",
     "dev:dashboard": "cross-env NODE_ENV=development ORBITER_SCENE=dashboard nodemon src/index.ts --no-cache",
     "start": "node ./dist/index.js",
-    "build": "tsc -p .",
+    "build": "cross-env NODE_OPTIONS=--max-old-space-size=8192 tsc -p .",
+   
     "test": "jest --coverage"
   },
   "dependencies": {
