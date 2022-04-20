@@ -12,7 +12,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { doSms } from '../sms/smsSchinese'
+// import { doSms } from '../sms/smsSchinese'
 const apiUrl = 'https://orbiter-makerlist.s3.ap-northeast-1.amazonaws.com'
 class MJob {
   protected rule:
@@ -265,7 +265,7 @@ export const getNewMakerList = async (count = 0) => {
     if (nowTimeStamp - getMakerListTimeStamp > 3600000) {
       // todo send message
       let alert = `backend pull makerList from aws s3 failed for one hour.${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-      doSms(alert)
+      // doSms(alert)
       getMakerListTimeStamp = nowTimeStamp
     }
     errorLogger.error(
