@@ -11,7 +11,6 @@ import {
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
-import { waitForDebugger } from 'inspector'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
@@ -38,10 +37,7 @@ import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
-
 // import { doSms } from '../../sms/smsSchinese'
-import Axios from '../../util/Axios'
-Axios.axios()
 
 const zkTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
@@ -95,7 +91,7 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
 
             break
           }
-        } catch (err) { }
+        } catch (err) {}
 
         await sleep(1000)
       }
@@ -353,7 +349,9 @@ async function watchTransfers(pool, state) {
   if (fromChainID == 11 || fromChainID == 511) {
     return
   }
-  const fromChain = state ? pool.c2Name : pool.c1Name
+
+  let fromChain = state ? pool.c2Name : pool.c1Name
+
   const web3 = createAlchemyWeb3(wsEndPoint)
 
   const isPolygon = fromChainID == 6 || fromChainID == 66
@@ -522,7 +520,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       element.txHash !== lastHash &&
                       element.op.type === 'Transfer' &&
                       element.op.to.toLowerCase() ===
-                      makerAddress.toLowerCase() &&
+                        makerAddress.toLowerCase() &&
                       element.op.token === tokenID &&
                       pText === validPText
                     ) {
@@ -538,10 +536,10 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       let nonce = element.op.nonce
                       accessLogger.info(
                         'Transaction with hash ' +
-                        element.txHash +
-                        ' nonce ' +
-                        nonce +
-                        ' has found'
+                          element.txHash +
+                          ' nonce ' +
+                          nonce +
+                          ' has found'
                       )
                       var transactionID =
                         element.op.from.toLowerCase() + fromChainID + nonce
@@ -680,9 +678,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -758,7 +756,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
             lpTransaction.status == 'processed' &&
             lpTransaction.txType == 'TRANSFER' &&
             lpTransaction.receiverAddress.toLowerCase() ==
-            makerAddress.toLowerCase() &&
+              makerAddress.toLowerCase() &&
             lpTransaction.symbol == 'ETH' &&
             lpTransaction.hash !== loopringLastHash
           ) {
@@ -793,10 +791,10 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
                 accessLogger.info(
                   'Transaction with hash ' +
-                  lpTransaction.hash +
-                  ' storageID ' +
-                  (nonce * 2 + 1) +
-                  ' has found'
+                    lpTransaction.hash +
+                    ' storageID ' +
+                    (nonce * 2 + 1) +
+                    ' has found'
                 )
                 var transactionID =
                   lpTransaction.senderAddress.toLowerCase() +
@@ -879,7 +877,7 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
   let fromL1Address = ''
   try {
     fromL1Address = await getL1AddressByL2(from, networkId)
-  } catch (err) { }
+  } catch (err) {}
 
   // check
   if (!fromL1Address) {
@@ -1058,10 +1056,10 @@ function confirmFromTransaction(
 
     accessLogger.info(
       'Transaction with hash ' +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
 
@@ -1205,10 +1203,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       'Transaction with hash ' +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -1342,8 +1340,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
+              txID +
+              ' has been successfully confirmed'
           )
           var timestamp = orbiterCore.transferTimeStampToTime(
             lpTransaction.timestamp ? lpTransaction.timestamp : '0'
@@ -1403,8 +1401,8 @@ async function confirmToSNTransaction(
       ) {
         accessLogger.info(
           'sn_Transaction with hash ' +
-          txID +
-          ' has been successfully confirmed'
+            txID +
+            ' has been successfully confirmed'
         )
         accessLogger.info(
           'update maker_node =',
@@ -1603,7 +1601,6 @@ export async function sendTransaction(
         } else {
           confirmToTransaction(toChainID, toChain, txID, transactionID)
         }
-        accessLogger.info('update success')
         // update todo
         await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
       } else {
