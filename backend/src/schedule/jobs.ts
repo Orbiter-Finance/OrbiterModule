@@ -1,6 +1,6 @@
 import axios from 'axios'
 import schedule from 'node-schedule'
-import SHA256 from "crypto-js/sha256";
+import SHA256 from 'crypto-js/sha256'
 import { makerConfig } from '../config'
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
@@ -13,8 +13,7 @@ import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { doSms } from '../sms/smsSchinese'
-const apiUrl = "https://maker-list.s3.amazonaws.com"
-
+const apiUrl = 'https://orbiter-makerlist.s3.ap-northeast-1.amazonaws.com'
 class MJob {
   protected rule:
     | string
@@ -265,8 +264,7 @@ export const getNewMakerList = async (count = 0) => {
     const nowTimeStamp = date.getTime()
     if (nowTimeStamp - getMakerListTimeStamp > 3600000) {
       // todo send message
-      let alert =
-        `backend pull makerList from aws s3 failed for one hour.${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
+      let alert = `backend pull makerList from aws s3 failed for one hour.${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
       doSms(alert)
       getMakerListTimeStamp = nowTimeStamp
     }
@@ -284,9 +282,9 @@ export const getNewMakerList = async (count = 0) => {
 }
 const getNewMakerListOnce = async () => {
   const res: any = await axios({
-    url: `${apiUrl}/maker_list.json`,
-    method: "get"
-  });
+    url: `${apiUrl}/rinkeby/makerList.json`,
+    method: 'get',
+  })
   if (res.status == 200) {
     const sha = SHA256(JSON.stringify(res.data)).toString()
     return { sha, ...res.data }

@@ -1,5 +1,5 @@
 import BigNumber from 'bignumber.js'
-import AWS from 'aws-sdk';
+import AWS from 'aws-sdk'
 import { plainToInstance } from 'class-transformer'
 import { isEthereumAddress } from 'class-validator'
 import dayjs from 'dayjs'
@@ -19,10 +19,10 @@ dayjs.extend(relativeTime)
 AWS.config.update({
   maxRetries: 3,
   httpOptions: { timeout: 30000, connectTimeout: 5000 },
-  region: 'us-east-1',
+  region: 'ap-northeast-1',
   accessKeyId: process.env.s3AccessKeyId,
   secretAccessKey: process.env.s3SecretAccessKey,
-});
+})
 
 const s3 = new AWS.S3()
 
@@ -230,24 +230,27 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   })
 
   // set dydx's ApiKeyCredentials
-  router.post('maker/dydx_api_key_credentials', async ({ request, restful }) => {
-    const { body } = request
-    
-    const makerAddresses: string[] = []
-    for (const makerAddress in body) {
-      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
-        if (!isEthereumAddress(makerAddress)) {
-          continue
+  router.post(
+    'maker/dydx_api_key_credentials',
+    async ({ request, restful }) => {
+      const { body } = request
+
+      const makerAddresses: string[] = []
+      for (const makerAddress in body) {
+        if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
+          if (!isEthereumAddress(makerAddress)) {
+            continue
+          }
+
+          makerAddresses.push(makerAddress)
+
+          DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
         }
-
-        makerAddresses.push(makerAddress)
-
-        DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
       }
-    }
 
-    restful.json(makerAddresses.join(','))
-  })
+      restful.json(makerAddresses.join(','))
+    }
+  )
 
   router.get('maker/pulls', async ({ request, restful }) => {
     // parse query
@@ -298,19 +301,28 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     try {
       if (makerConfig.s3Proof != headers.authorization) {
         ctx.response.status = 401
-        return restful.json({ message: "s3Proof is error" })
+        return restful.json({ message: 's3Proof is error' })
       }
-      const oldData = request.body.oldData;
-      const newData = request.body.newData;
+      const oldData = request.body.oldData
+      const newData = request.body.newData
       if (oldData && newData) {
-        const oldParams = { Bucket: 'maker-list', Key: 'old_maker_list.json', Body: Buffer.from(oldData) };
-        const newParams = { ACL: 'public-read', Bucket: 'maker-list', Key: 'maker_list.json', Body: Buffer.from(newData) };
+        const oldParams = {
+          Bucket: 'maker-list',
+          Key: 'old_maker_list.json',
+          Body: Buffer.from(oldData),
+        }
+        const newParams = {
+          ACL: 'public-read',
+          Bucket: 'maker-list',
+          Key: 'maker_list.json',
+          Body: Buffer.from(newData),
+        }
         await uploadToS3(oldParams)
         await uploadToS3(newParams)
         restful.json({ message: 'ok' })
       } else {
         ctx.response.status = 400
-        restful.json({ message: "param is empty" })
+        restful.json({ message: 'param is empty' })
       }
     } catch (error) {
       ctx.response.status = 500
@@ -326,6 +338,6 @@ function uploadToS3(params) {
         reject(err)
       }
       resolve(data)
-    });
+    })
   })
 }
