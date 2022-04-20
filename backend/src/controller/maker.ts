@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
+import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
 import { getLastStatus, getMakerPulls } from '../service/maker_pull'
 import * as serviceMakerWealth from '../service/maker_wealth'
@@ -212,6 +213,26 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         makerAddresses.push(makerAddress)
 
         makerConfig.privateKeys[makerAddress] = body[makerAddress]
+      }
+    }
+
+    restful.json(makerAddresses.join(','))
+  })
+
+  // set dydx's ApiKeyCredentials
+  router.post('maker/dydx_api_key_credentials', async ({ request, restful }) => {
+    const { body } = request
+    
+    const makerAddresses: string[] = []
+    for (const makerAddress in body) {
+      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
+        if (!isEthereumAddress(makerAddress)) {
+          continue
+        }
+
+        makerAddresses.push(makerAddress)
+
+        DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
       }
     }
 

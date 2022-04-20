@@ -1,6 +1,7 @@
 import { createAlchemyWeb3 } from '@alch/alchemy-web3'
 import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
+import Web3 from 'web3'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerWealth } from '../model/maker_wealth'
@@ -9,6 +10,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
+import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
 
@@ -97,6 +99,25 @@ async function getTokenBalance(
           await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
         ).toString()
         break
+      case 'metis':
+        const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (tokenAddress) {
+          value = await getBalanceByMetis(web3, makerAddress, tokenAddress)
+        } else {
+          value = await web3.eth.getBalance(makerAddress)
+        }
+        break
+      case 'dydx':
+        const apiKeyCredentials = DydxHelper.getApiKeyCredentials(makerAddress)
+        if (!apiKeyCredentials) {
+          break
+        }
+        const dydxHelper = new DydxHelper(chainId)
+        const dydxClient = await dydxHelper.getDydxClient(makerAddress)
+        dydxClient.apiKeyCredentials = apiKeyCredentials
+
+        value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
@@ -128,12 +149,35 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }
 
   return value
+}
+
+/**
+ * @param web3
+ * @param makerAddress
+ * @param tokenAddress
+ * @returns
+ */
+async function getBalanceByMetis(
+  web3: Web3,
+  makerAddress: string,
+  tokenAddress: string
+) {
+  const tokenContract = new web3.eth.Contract(
+    <any>makerConfig.ABI,
+    tokenAddress
+  )
+  const tokenBalanceWei = await tokenContract.methods
+    .balanceOf(makerAddress)
+    .call({
+      from: makerAddress,
+    })
+  return tokenBalanceWei
 }
 
 type WealthsChain = {
@@ -222,7 +266,12 @@ export async function getWealthsChains(makerAddress: string) {
       // add eth balances item
       item.balances.unshift({
         tokenAddress: '',
-        tokenName: CHAIN_INDEX[item.chainId] == 'polygon' ? 'MATIC' : 'ETH',
+        tokenName:
+          CHAIN_INDEX[item.chainId] == 'polygon'
+            ? 'MATIC'
+            : CHAIN_INDEX[item.chainId] == 'metis'
+            ? 'METIS'
+            : 'ETH',
         decimals: 18,
         value: '',
       })
