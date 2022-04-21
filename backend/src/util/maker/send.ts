@@ -453,9 +453,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -650,6 +650,7 @@ async function sendConsumer(value: any) {
 
   // zkspace || zkspace_test
   if (chainID == 12 || chainID == 512) {
+    console.log(value, 'value')
     try {
       const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
       const msg =
@@ -665,7 +666,7 @@ async function sendConsumer(value: any) {
 
       let balanceInfo = await zkspace_help.getZKSBalance({
         account: makerAddress,
-        localChainID: fromChainID,
+        localChainID: chainID,
       })
       if (
         !balanceInfo ||
@@ -706,12 +707,12 @@ async function sendConsumer(value: any) {
 
       const tokenId = 0
       const feeTokenId = 0
-      const zksChainID =
-        fromChainID === 512
+      const zksNetworkID =
+        chainID === 512
           ? makerConfig.zkspace_test.api.chainID
           : makerConfig.zkspace.api.chainID
       let fee = await zkspace_help.getZKSTransferGasFee(
-        fromChainID,
+        chainID,
         makerAddress
       )
       const transferFee = zksync.utils.closestPackableTransactionFee(
@@ -743,7 +744,7 @@ async function sendConsumer(value: any) {
         zksync.utils.packAmountChecked(transferValue),
         zksync.utils.numberToBytesBE(feeTokenId, 1),
         zksync.utils.packFeeChecked(transferFee),
-        zksync.utils.numberToBytesBE(zksChainID, 1),
+        zksync.utils.numberToBytesBE(zksNetworkID, 1),
         zksync.utils.numberToBytesBE(result_nonce, 4),
       ])
       const signaturePacked = sign_musig(privateKey, msgBytes)
@@ -760,13 +761,13 @@ async function sendConsumer(value: any) {
         tokenAmount: ethers.utils.formatUnits(transferValue, 18),
         feeSymbol: 'ETH',
         fee: fee.toString(),
-        zksChainID,
+        zksNetworkID,
         nonce: result_nonce,
       }
       const l2Msg =
         `Transfer ${tx.tokenAmount} ${tx.tokenSymbol}\n` +
         `To: ${tx.to.toLowerCase()}\n` +
-        `Chain Id: ${tx.zksChainID}\n` +
+        `Chain Id: ${tx.zksNetworkID}\n` +
         `Nonce: ${tx.nonce}\n` +
         `Fee: ${tx.fee} ${tx.feeSymbol}\n` +
         `Account Id: ${tx.accountId}`
@@ -780,7 +781,7 @@ async function sendConsumer(value: any) {
         amount: transferValue.toString(),
         feeToken: feeTokenId,
         fee: transferFee.toString(),
-        chainId: zksChainID,
+        chainId: zksNetworkID,
         nonce: result_nonce,
         signature: {
           pubKey: pubKey,
@@ -793,12 +794,11 @@ async function sendConsumer(value: any) {
           type: 'EthereumSignature',
           signature: ethSignature,
         },
-        fastProcessing: true,
-        tx: txParams,
-        netWorkId: this.$store.state.web3.networkId,
+        fastProcessing: false,
+        tx: txParams
       }
       let transferResult = await axios.post(
-        (fromChainID === 512
+        (chainID === 512
           ? makerConfig.zkspace_test.api.endPoint
           : makerConfig.zkspace.api.endPoint) + '/tx',
         {
@@ -807,6 +807,10 @@ async function sendConsumer(value: any) {
           tx: req.tx,
         }
       )
+      console.log(  (chainID === 512
+        ? makerConfig.zkspace_test.api.endPoint
+        : makerConfig.zkspace.api.endPoint) + '/tx',6666666666)
+      console.log(transferResult, '----=transferResult=-------')
       if (
         transferResult &&
         transferResult.data &&
@@ -827,7 +831,6 @@ async function sendConsumer(value: any) {
           result_nonce,
         }
       }
-      return
     } catch (error) {
       return {
         code: 1,

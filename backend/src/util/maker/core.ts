@@ -12,6 +12,7 @@ const MAX_BITS = {
   loopring: 256,
   metis: 256,
   dydx: 28,
+  zkspace: 35,
 }
 
 export const CHAIN_INDEX = {
@@ -35,6 +36,8 @@ export const CHAIN_INDEX = {
   510: 'metis',
   11: 'dydx',
   511: 'dydx',
+  12: 'zkspace',
+  512: 'zkspace',
 }
 
 export const SIZE_OP = {
@@ -241,6 +244,8 @@ function getPTextFromTAmount(chain, amount) {
     }
   } else {
     let op_text = amount.toString().slice(-SIZE_OP.P_NUMBER)
+
+    console.log(op_text, 6666)
     return {
       state: true,
       pText: op_text,
@@ -340,6 +345,7 @@ function AmountMaxDigits(chain) {
 }
 
 function AmountValidDigits(chain, amount) {
+
   let amountMaxDigits = AmountMaxDigits(chain)
   if (amountMaxDigits.error) {
     return amountMaxDigits.error
@@ -351,6 +357,7 @@ function AmountValidDigits(chain, amount) {
   if (ramount.length > amountMaxDigits) {
     return 'amount is inValid'
   }
+  //note:the compare is one by one,not all by all
   if (ramount > amountRegion.max.toFixed()) {
     return amountMaxDigits - 1
   } else {
