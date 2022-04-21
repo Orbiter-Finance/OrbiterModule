@@ -307,14 +307,14 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       const newData = request.body.newData
       if (oldData && newData) {
         const oldParams = {
-          Bucket: 'maker-list',
-          Key: 'old_maker_list.json',
+          Bucket: 'orbiter-makerlist',
+          Key: 'rinkeby/old_makerList.json',
           Body: Buffer.from(oldData),
         }
         const newParams = {
           ACL: 'public-read',
-          Bucket: 'maker-list',
-          Key: 'maker_list.json',
+          Bucket: 'orbiter-makerlist',
+          Key: 'rinkeby/makerList.json',
           Body: Buffer.from(newData),
         }
         await uploadToS3(oldParams)
