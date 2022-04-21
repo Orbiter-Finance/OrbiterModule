@@ -20,8 +20,8 @@ AWS.config.update({
   maxRetries: 3,
   httpOptions: { timeout: 30000, connectTimeout: 5000 },
   region: 'ap-northeast-1',
-  accessKeyId: process.env.s3AccessKeyId,
-  secretAccessKey: process.env.s3SecretAccessKey,
+  accessKeyId: makerConfig.s3AccessKeyId,
+  secretAccessKey: makerConfig.s3SecretAccessKey,
 })
 
 const s3 = new AWS.S3()
