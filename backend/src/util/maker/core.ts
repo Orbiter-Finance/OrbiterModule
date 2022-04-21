@@ -66,6 +66,9 @@ function isLimitNumber(chain: string | number) {
   if (chain === 11 || chain === 511 || chain === 'dydx') {
     return true
   }
+  if (chain === 12|| chain === 512 || chain === 'zkspace') {
+    return true
+  }
   return false
 }
 
@@ -244,15 +247,12 @@ function getPTextFromTAmount(chain, amount) {
     }
   } else {
     let op_text = amount.toString().slice(-SIZE_OP.P_NUMBER)
-
-    console.log(op_text, 6666)
     return {
       state: true,
       pText: op_text,
     }
   }
 }
-
 function getRAmountFromTAmount(chain, amount) {
   let pText = ''
   for (let index = 0; index < SIZE_OP.P_NUMBER; index++) {
@@ -281,15 +281,15 @@ function getRAmountFromTAmount(chain, amount) {
   }
   if (isLimitNumber(chain) && amountLength > validDigit) {
     let rAmount =
-      amount.slice(0, validDigit - SIZE_OP.P_NUMBER) +
+      amount.toString().slice(0, validDigit - SIZE_OP.P_NUMBER) +
       pText +
-      amount.slice(validDigit)
+      amount.toString().slice(validDigit)
     return {
       state: true,
       rAmount: rAmount,
     }
   } else {
-    let rAmount = amount.slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
+    let rAmount = amount.toString().slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
     return {
       state: true,
       rAmount: rAmount,

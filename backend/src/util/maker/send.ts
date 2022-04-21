@@ -30,7 +30,6 @@ import {
 } from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
-import maker from '../../controller/maker'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -650,7 +649,6 @@ async function sendConsumer(value: any) {
 
   // zkspace || zkspace_test
   if (chainID == 12 || chainID == 512) {
-    console.log(value, 'value')
     try {
       const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
       const msg =
@@ -700,11 +698,11 @@ async function sendConsumer(value: any) {
       const transferValue =
         zksync.utils.closestPackableTransactionAmount(amountToSend)
 
+        //here has changed a lager from old
       let accountInfo = await zkspace_help.getZKSAccountInfo(
-        fromChainID,
+        chainID,
         makerAddress
       )
-
       const tokenId = 0
       const feeTokenId = 0
       const zksNetworkID =
@@ -718,23 +716,8 @@ async function sendConsumer(value: any) {
       const transferFee = zksync.utils.closestPackableTransactionFee(
         ethers.utils.parseUnits(fee.toString(), 18)
       )
-      const has_result_nonce = result_nonce > 0
-      if (!has_result_nonce) {
-        let zks_nonce = accountInfo.nonce
-        let zks_sql_nonce = nonceDic[makerAddress]?.[chainID]
-        if (!zks_sql_nonce) {
-          result_nonce = zks_nonce
-        } else {
-          if (zks_nonce > zks_sql_nonce) {
-            result_nonce = zks_nonce
-          } else {
-            result_nonce = zks_sql_nonce + 1
-          }
-        }
-        accessLogger.info('zks_nonce =', zks_nonce)
-        accessLogger.info('zks_sql_nonce =', zks_sql_nonce)
-        accessLogger.info('result_nonde =', result_nonce)
-      }
+      //note:old was changed  here
+      result_nonce = accountInfo.nonce
       const msgBytes = ethers.utils.concat([
         '0x05',
         zksync.utils.numberToBytesBE(accountInfo.id, 4),
@@ -807,10 +790,6 @@ async function sendConsumer(value: any) {
           tx: req.tx,
         }
       )
-      console.log(  (chainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint) + '/tx',6666666666)
-      console.log(transferResult, '----=transferResult=-------')
       if (
         transferResult &&
         transferResult.data &&

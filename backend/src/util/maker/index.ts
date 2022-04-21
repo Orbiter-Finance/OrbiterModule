@@ -446,7 +446,6 @@ async function watchTransfers(pool, state) {
 }
 
 function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
-  console.log(confirmZKTransaction,'confirmZKTransaction')
   let isFirst = true
   const ticker = async () => {
     const makerAddress = pool.makerAddress
@@ -484,7 +483,6 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
       .then(async function (response) {
         if (response.status === 200) {
           var respData = response.data
-          console.log(respData,'respData')
           if (respData.status === 'success') {
             if (respData.result.list.length !== 0) {
               for (
@@ -890,24 +888,17 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
       let fromChain = state ? pool.c2Name : pool.c1Name
       let toChainID = state ? pool.c1ID : pool.c2ID
       let toChain = state ? pool.c1Name : pool.c2Name
-      const url = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer
-        &address=${makerAddress}&token=0&start=${startPoint}&limit =${startPoint + 50}`
+      const url = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
       try {
         let zksResponse = await axios.get(url)
         if (zksResponse.status === 200 && zksResponse.data && zksResponse.data.success) {
           var respData = zksResponse.data
           let zksList = respData.data.data
-          console.log(zksList, 'zksList')
           if (zksList[0] && !zksLastTimeStamp[toChain]) {
             zksLastTimeStamp[toChain] = zksList[0].created_at
             accessLogger.info(`new_zksLastTimeStamp[${toChain}] =${zksLastTimeStamp[toChain]}`)
           }
-          if (zksList.length == 50) {
-            startPoint += zksList.length
-          } else {
-            startPoint = 0
-          }
-
+          startPoint = zksList.length == 50 ? startPoint + 50 : 0
           for (let zksTransaction of zksList) {
             if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
@@ -918,13 +909,13 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                 zksLastTimeStamp[toChain]
               )
             }
+
             if (
               (zksTransaction.status == 'verified' ||
                 zksTransaction.status == 'pending') &&
               zksTransaction.tx_type == 'Transfer' &&
               zksTransaction.token.symbol == 'ETH' &&
-              zksTransaction.success == true &&
-              zksTransaction.to.toLowerCase == makerAddress.toLowerCase()
+              zksTransaction.to.toLowerCase() == makerAddress.toLowerCase()
             ) {
               const amount = new BigNumber(
                 zksTransaction.amount
@@ -963,6 +954,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                 continue
               } else {
                 if (pText == validPText) {
+
                   if (matchHashList.indexOf(transactionHash) > -1) {
                     accessLogger.info(
                       'zks.matchHashList.transactionHash exist: ' + transactionHash
@@ -1030,7 +1022,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                           toChain,
                           toTokenAddress,
                           amount,
-                          zksTransaction.userAddress,
+                          zksTransaction.from,
                           pool,
                           nonce
                         )
@@ -1629,8 +1621,9 @@ function confirmToZKSTransaction(
   accessLogger.info('confirmToZKSTransaction =', getTime())
   setTimeout(async () => {
     let transferReceipt: any
+    const normalTxId = txID.replace('sync-tx:', '0x')
     try {
-      transferReceipt = zkspace_help.getZKSpaceTransactionData(toChainId, txID)
+      transferReceipt = await zkspace_help.getZKSpaceTransactionData(toChainId, normalTxId)
     } catch (err) {
       errorLogger.error('zks getTxReceipt failed: ' + err.message)
       return confirmToZKSTransaction(
@@ -1855,7 +1848,7 @@ export async function sendTransaction(
           `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
         )
         // confirmToSNTransaction(txID, transactionID, toChainID)
-      } else if (toChain === 12 || toChain === 512) {
+      } else if (toChainID === 12 || toChainID === 512) {
         confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
       } else {
         confirmToTransaction(toChainID, toChain, txID, transactionID)

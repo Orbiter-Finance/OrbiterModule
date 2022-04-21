@@ -105,9 +105,10 @@ export default {
       axios
         .get(url)
         .then(function (response) {
-          console.warn('response =', response)
+     
           if (response.status === 200 && response.statusText === 'OK') {
             var respData = response.data
+            console.warn('zks respData =', respData)
             if (respData.success === true) {
               resolve(respData)
             } else {
