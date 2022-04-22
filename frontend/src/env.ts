@@ -60,8 +60,8 @@ export const $env = {
     510: 'https://stardust-explorer.metis.io/tx/',
     11: 'https://trade.dydx.exchange/',
     511: 'https://trade.stage.dydx.exchange/',
-    12: 'https://zkspace.info/transaction',
-    512: 'https://v3-rinkeby.zkswap.info/transaction',
+    12: 'https://zkspace.info/transaction/',
+    512: 'https://v3-rinkeby.zkswap.info/transaction/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -82,8 +82,8 @@ export const $env = {
     510: 'https://stardust-explorer.metis.io/address/',
     11: 'https://trade.dydx.exchange/',
     511: 'https://trade.stage.dydx.exchange/',
-    12: 'https://zkspace.info/account',
-    512: 'https://v3-rinkeby.zkswap.info/account',
+    12: 'https://zkspace.info/account/',
+    512: 'https://v3-rinkeby.zkswap.info/account/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
