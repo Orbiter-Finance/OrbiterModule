@@ -698,7 +698,7 @@ async function sendConsumer(value: any) {
       const transferValue =
         zksync.utils.closestPackableTransactionAmount(amountToSend)
 
-        //here has changed a lager from old
+      //here has changed a lager from old
       let accountInfo = await zkspace_help.getZKSAccountInfo(
         chainID,
         makerAddress
@@ -717,7 +717,25 @@ async function sendConsumer(value: any) {
         ethers.utils.parseUnits(fee.toString(), 18)
       )
       //note:old was changed  here
-      result_nonce = accountInfo.nonce
+      let sql_nonce = nonceDic[makerAddress]?.[chainID]
+      if (!sql_nonce) {
+        result_nonce = accountInfo.nonce
+      } else {
+        if (accountInfo.nonce > sql_nonce) {
+          result_nonce = accountInfo.nonce
+        } else {
+          result_nonce = sql_nonce + 1
+        }
+      }
+
+      if (!nonceDic[makerAddress]) {
+        nonceDic[makerAddress] = {}
+      }
+      nonceDic[makerAddress][chainID] = result_nonce
+      accessLogger.info('nonce =', accountInfo.nonce)
+      accessLogger.info('sql_nonce =', sql_nonce)
+      accessLogger.info('result_nonde =', result_nonce)
+
       const msgBytes = ethers.utils.concat([
         '0x05',
         zksync.utils.numberToBytesBE(accountInfo.id, 4),
