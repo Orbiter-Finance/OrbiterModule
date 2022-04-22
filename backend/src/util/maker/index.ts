@@ -1018,7 +1018,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                           toChainID,
                           toChain,
                           toTokenAddress,
-                          amount,
+                          amount + '',
                           zksTransaction.from,
                           pool,
                           nonce

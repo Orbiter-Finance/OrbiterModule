@@ -281,15 +281,16 @@ function getRAmountFromTAmount(chain, amount) {
   }
   if (isLimitNumber(chain) && amountLength > validDigit) {
     let rAmount =
-      amount.slice(0, validDigit - SIZE_OP.P_NUMBER) +
+      amount.toString().slice(0, validDigit - SIZE_OP.P_NUMBER) +
       pText +
-      amount.slice(validDigit)
+      amount.toString().slice(validDigit)
     return {
       state: true,
       rAmount: rAmount,
     }
   } else {
-    let rAmount = amount.slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
+    let rAmount =
+      amount.toString().slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
     return {
       state: true,
       rAmount: rAmount,
