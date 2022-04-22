@@ -28,6 +28,7 @@ import {
   getStarknetAccount,
   saveMappingL1AndL2,
 } from '../../service/starknet/helper'
+import zkspace_help from '../../service/zkspace/zkspace_help'
 import { Core } from '../core'
 import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
@@ -45,6 +46,8 @@ let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
+
+let zksLastTimeStamp: {} = {}
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -339,7 +342,7 @@ async function watchTransfers(pool, state) {
     try {
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
-      console.log('error =', error)
+      errorLogger.error('error =', error)
       throw 'getLPTransactionDataError'
     }
     return
@@ -347,6 +350,17 @@ async function watchTransfers(pool, state) {
 
   // dydx || dydx_test (Can't transfer out now!)
   if (fromChainID == 11 || fromChainID == 511) {
+    return
+  }
+
+  // zkspace || zkspace_test
+  if (fromChainID == 12 || fromChainID == 512) {
+    try {
+      confirmZKSTransaction(pool, tokenAddress, state)
+    } catch (error) {
+      errorLogger.error('error =', error)
+      throw 'getZKSTransactionDataError'
+    }
     return
   }
 
@@ -857,6 +871,176 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       }
     } catch (error) {
       errorLogger.error('loopringError =', error)
+    }
+  }
+  setInterval(ticker, 10 * 1000)
+}
+
+function confirmZKSTransaction(pool, tokenAddress, state) {
+  let startPoint = 0
+  const ticker = async () => {
+    try {
+      const makerAddress = pool.makerAddress
+      let fromChainID = state ? pool.c2ID : pool.c1ID
+      let fromChain = state ? pool.c2Name : pool.c1Name
+      let toChainID = state ? pool.c1ID : pool.c2ID
+      let toChain = state ? pool.c1Name : pool.c2Name
+      const url = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
+      try {
+        let zksResponse = await axios.get(url)
+        if (
+          zksResponse.status === 200 &&
+          zksResponse.data &&
+          zksResponse.data.success
+        ) {
+          var respData = zksResponse.data
+          let zksList = respData.data.data
+          if (zksList[0] && !zksLastTimeStamp[toChain]) {
+            zksLastTimeStamp[toChain] = zksList[0].created_at
+            accessLogger.info(
+              `new_zksLastTimeStamp[${toChain}] =${zksLastTimeStamp[toChain]}`
+            )
+          }
+          startPoint = zksList.length == 50 ? startPoint + 50 : 0
+          for (let zksTransaction of zksList) {
+            if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
+              zksLastTimeStamp[toChain] = zksTransaction.created_at
+              accessLogger.info(
+                'zksLastTimeStamp[',
+                toChain,
+                '] =',
+                zksLastTimeStamp[toChain]
+              )
+            }
+
+            if (
+              (zksTransaction.status == 'verified' ||
+                zksTransaction.status == 'pending') &&
+              zksTransaction.tx_type == 'Transfer' &&
+              zksTransaction.token.symbol == 'ETH' &&
+              zksTransaction.to.toLowerCase() == makerAddress.toLowerCase()
+            ) {
+              const amount = new BigNumber(zksTransaction.amount).multipliedBy(
+                new BigNumber(10 ** pool.precision)
+              )
+              const transactionHash = zksTransaction.tx_hash
+              const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
+              if (ptext.state === false) {
+                continue
+              }
+              const pText = ptext.pText
+              let validPText = (9000 + Number(toChainID)).toString()
+              const realAmount = orbiterCore.getRAmountFromTAmount(
+                fromChainID,
+                amount.toString()
+              )
+              if (realAmount.state === false) {
+                continue
+              }
+              const rAmount = <any>realAmount.rAmount
+              if (
+                new BigNumber(rAmount).comparedTo(
+                  new BigNumber(pool.maxPrice)
+                    .plus(new BigNumber(pool.tradingFee))
+                    .multipliedBy(new BigNumber(10 ** pool.precision))
+                ) === 1 ||
+                new BigNumber(rAmount).comparedTo(
+                  new BigNumber(pool.minPrice)
+                    .plus(new BigNumber(pool.tradingFee))
+                    .multipliedBy(new BigNumber(10 ** pool.precision))
+                ) === -1 ||
+                pText !== validPText
+              ) {
+                continue
+              } else {
+                if (pText == validPText) {
+                  if (matchHashList.indexOf(transactionHash) > -1) {
+                    accessLogger.info(
+                      'zks.matchHashList.transactionHash exist: ' +
+                        transactionHash
+                    )
+                    continue
+                  }
+                  matchHashList.push(transactionHash)
+                  // Initiate transaction confirmation
+                  accessLogger.info(
+                    'match one zks.transaction >>> ',
+                    transactionHash
+                  )
+                  let nonce = zksTransaction.nonce
+                  accessLogger.info(
+                    'zks.Transaction with hash ' +
+                      transactionHash +
+                      ' storageID ' +
+                      nonce +
+                      ' has found'
+                  )
+                  var transactionID =
+                    zksTransaction.from.toLowerCase() + fromChainID + nonce
+                  let makerNode: MakerNode | undefined
+                  try {
+                    makerNode = await repositoryMakerNode().findOne(
+                      { transactionID: transactionID },
+                      { select: ['id'] }
+                    )
+                  } catch (error) {
+                    errorLogger.error('zks_isHaveSqlError =', error)
+                    break
+                  }
+                  if (!makerNode) {
+                    accessLogger.info('zks.newTransacioonID =', transactionID)
+                    await repositoryMakerNode()
+                      .insert({
+                        transactionID: transactionID,
+                        userAddress: zksTransaction.from,
+                        makerAddress,
+                        fromChain: fromChainID,
+                        toChain: toChainID,
+                        formTx: transactionHash,
+                        fromTimeStamp: orbiterCore.transferTimeStampToTime(
+                          zksTransaction.created_at
+                            ? zksTransaction.created_at
+                            : '0'
+                        ),
+                        fromAmount: amount + '',
+                        formNonce: nonce + '',
+                        txToken: tokenAddress,
+                        state: 1,
+                      })
+                      .then(async () => {
+                        const toTokenAddress = state
+                          ? pool.t1Address
+                          : pool.t2Address
+                        sendTransaction(
+                          makerAddress,
+                          transactionID,
+                          fromChainID,
+                          toChainID,
+                          toChain,
+                          toTokenAddress,
+                          amount,
+                          zksTransaction.from,
+                          pool,
+                          nonce
+                        )
+                      })
+                      .catch((error) => {
+                        errorLogger.error('newTransactionSqlError =', error)
+                        return
+                      })
+                  }
+                }
+              }
+            }
+          }
+        } else {
+          errorLogger.error('zksTxListError1 = NetWorkError')
+        }
+      } catch (error) {
+        errorLogger.error('zksTxListError2 =', error)
+      }
+    } catch (error) {
+      errorLogger.error('zkspaceError =', error)
     }
   }
   setInterval(ticker, 10 * 1000)
@@ -1422,6 +1606,71 @@ async function confirmToSNTransaction(
   }
 }
 
+function confirmToZKSTransaction(
+  txID: string,
+  transactionID: string,
+  toChainId: number,
+  makerAddress: string
+) {
+  accessLogger.info('confirmToZKSTransaction =', getTime())
+  setTimeout(async () => {
+    let transferReceipt: any
+    const normalTxId = txID.replace('sync-tx:', '0x')
+    try {
+      transferReceipt = await zkspace_help.getZKSpaceTransactionData(
+        toChainId,
+        normalTxId
+      )
+    } catch (err) {
+      errorLogger.error('zks getTxReceipt failed: ' + err.message)
+      return confirmToZKSTransaction(
+        txID,
+        transactionID,
+        toChainId,
+        makerAddress
+      )
+    }
+    accessLogger.info(
+      'transactionID =',
+      transactionID,
+      'transferReceipt =',
+      transferReceipt
+    )
+
+    if (
+      transferReceipt.success === true &&
+      transferReceipt.data.success === true &&
+      transferReceipt.data.tx_type === 'Transfer' &&
+      (transferReceipt.data.status === 'verified' ||
+        transferReceipt.data.status === 'pending')
+    ) {
+      accessLogger.info({ transferReceipt })
+      accessLogger.info(
+        'zks_Transaction with hash ' + txID + ' has been successfully confirmed'
+      )
+      accessLogger.info(
+        'update maker_node =',
+        `state = 3 WHERE transactionID = '${transactionID}'`
+      )
+      try {
+        await repositoryMakerNode().update(
+          { transactionID: transactionID },
+          { state: 3 }
+        )
+      } catch (error) {
+        errorLogger.error('updateToSqlError =', error)
+      }
+      return
+    }
+    // When failReason, don't try again
+    if (!transferReceipt.success && transferReceipt.failReason) {
+      return
+    }
+
+    return confirmToZKSTransaction(txID, transactionID, toChainId, makerAddress)
+  }, 8 * 1000)
+}
+
 async function getConfirmations(fromChain, txHash): Promise<any> {
   accessLogger.info('getConfirmations =', getTime())
   try {
@@ -1598,6 +1847,8 @@ export async function sendTransaction(
             `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
           )
           // confirmToSNTransaction(txID, transactionID, toChainID)
+        } else if (toChainID === 12 || toChainID === 512) {
+          confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
         } else {
           confirmToTransaction(toChainID, toChain, txID, transactionID)
         }

@@ -6,7 +6,6 @@ describe('maker', () => {
     it('test makerCore.getPTextFromTAmount', async () => {
       const result = true
       const name = undefined
-      // console.log({ name: String(name) })
 
       const t = {
         state: 0,
