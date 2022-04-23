@@ -881,6 +881,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
 
 function confirmZKSTransaction(pool, tokenAddress, state) {
   let startPoint = 0
+  let allZksList: any[] = []
   const ticker = async () => {
     try {
       const makerAddress = pool.makerAddress
@@ -893,23 +894,32 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
         let zksResponse = await axios.get(url)
         if (zksResponse.status === 200 && zksResponse.data && zksResponse.data.success) {
           var respData = zksResponse.data
-          let zksList = respData.data.data
-          if (zksList[0] && !zksLastTimeStamp[toChain]) {
-            zksLastTimeStamp[toChain] = zksList[0].created_at
-            accessLogger.info(`new_zksLastTimeStamp[${toChain}] =${zksLastTimeStamp[toChain]}`)
+          let originZksList = respData.data.data.reverse()
+          if (originZksList[0] && !zksLastTimeStamp[toChain]) {
+            zksLastTimeStamp[toChain] = originZksList[originZksList.length - 1].created_at
+            accessLogger.info(
+              `new_zksLastTimeStamp[${toChain}] =${zksLastTimeStamp[toChain]}`
+            )
           }
-          startPoint = zksList.length == 50 ? startPoint + 50 : 0
+          //add all latestTxList
+          let zksList: any[] = []
+          // all is new and has more new
+          if (zksLastTimeStamp[toChain] < originZksList[0].created_at && originZksList.length == 50) {
+            startPoint = startPoint + 50
+            allZksList.push(...originZksList)
+            return
+          } else if (startPoint) {//to the last new txs and catch all new tx
+            zksList = allZksList
+            allZksList = []
+            startPoint = 0
+          } else {// new is not full
+            zksList = originZksList
+          }
           for (let zksTransaction of zksList) {
             if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
-              accessLogger.info(
-                'zksLastTimeStamp[',
-                toChain,
-                '] =',
-                zksLastTimeStamp[toChain]
-              )
-            }
-
+              accessLogger.info('zksLastTimeStamp[', toChain, '] =', zksLastTimeStamp[toChain])
+            } else { continue }
             if (
               (zksTransaction.status == 'verified' ||
                 zksTransaction.status == 'pending') &&
@@ -957,7 +967,8 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
 
                   if (matchHashList.indexOf(transactionHash) > -1) {
                     accessLogger.info(
-                      'zks.matchHashList.transactionHash exist: ' + transactionHash
+                      'zks.matchHashList.transactionHash exist: ' +
+                      transactionHash
                     )
                     continue
                   }
@@ -1021,7 +1032,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                           toChainID,
                           toChain,
                           toTokenAddress,
-                          amount,
+                          amount + '',
                           zksTransaction.from,
                           pool,
                           nonce
@@ -1790,6 +1801,7 @@ export async function sendTransaction(
     pool,
     nonce
   )
+  console.log(amountToSend, 'amountToSend')
   if (!amountToSend) {
     return
   }
