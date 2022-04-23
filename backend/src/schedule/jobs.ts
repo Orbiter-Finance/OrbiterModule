@@ -183,13 +183,13 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.dydx(apiDydx)
           break
-          case 'zkspace':
-            let apiZkspace= makerConfig.zkspace.api
-            if (toChain == 511) {
-              apiZkspace = makerConfig.zkspace_test.api
-            }
-            await serviceMakerPull.zkspace(apiZkspace)
-            break
+        case 'zkspace':
+          let apiZkspace = makerConfig.zkspace.api
+          if (toChain == 512) {
+            apiZkspace = makerConfig.zkspace_test.api
+          }
+          await serviceMakerPull.zkspace(apiZkspace)
+          break
       }
     } catch (error) {
       errorLogger.error(

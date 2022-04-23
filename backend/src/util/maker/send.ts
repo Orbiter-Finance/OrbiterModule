@@ -654,13 +654,8 @@ async function sendConsumer(value: any) {
       const msg =
         'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
       const signature = await wallet.signMessage(msg)
-      console.warn('signature=', signature)
       const seed = ethers.utils.arrayify(signature)
-      console.warn('seed=', seed)
       const privateKey = await zksync.crypto.privateKeyFromSeed(seed)
-      console.warn('privateKey=', privateKey)
-      const pubkeyHash = await zksync.crypto.privateKeyToPubKeyHash(privateKey)
-      console.warn('publicKey=', pubkeyHash)
 
       let balanceInfo = await zkspace_help.getZKSBalance({
         account: makerAddress,
@@ -789,7 +784,6 @@ async function sendConsumer(value: any) {
           signature: l2Signature,
         },
       }
-      console.warn('txParams =', txParams)
       const req = {
         signature: {
           type: 'EthereumSignature',
