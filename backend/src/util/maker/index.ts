@@ -878,6 +878,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
 
 function confirmZKSTransaction(pool, tokenAddress, state) {
   let startPoint = 0
+  let allZksList: any[] = []
   const ticker = async () => {
     try {
       const makerAddress = pool.makerAddress
@@ -894,14 +895,52 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           zksResponse.data.success
         ) {
           var respData = zksResponse.data
-          let zksList = respData.data.data
-          if (zksList[0] && !zksLastTimeStamp[toChain]) {
-            zksLastTimeStamp[toChain] = zksList[0].created_at
+          let originZksList = respData.data.data.reverse()
+          if (originZksList[0] && !zksLastTimeStamp[toChain]) {
+            zksLastTimeStamp[toChain] =
+              originZksList[originZksList.length - 1].created_at
             accessLogger.info(
               `new_zksLastTimeStamp[${toChain}] =${zksLastTimeStamp[toChain]}`
             )
           }
-          startPoint = zksList.length == 50 ? startPoint + 50 : 0
+          let zksList: any[] = []
+          allZksList.push(...originZksList)
+          let firstTxTime = originZksList[0].created_at
+            ? originZksList[0].created_at
+            : 0
+          let whileTag = true
+          while (whileTag) {
+            if (
+              zksLastTimeStamp[toChain] < firstTxTime &&
+              originZksList.length == 50
+            ) {
+              startPoint = startPoint + 50
+              const moreUrl = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
+              let moreZksResponse = await axios.get(moreUrl)
+              if (
+                moreZksResponse.status === 200 &&
+                moreZksResponse.data &&
+                moreZksResponse.data.success
+              ) {
+                var moreRespData = moreZksResponse.data
+                let moreOriginZksList = moreRespData.data.data.reverse()
+                firstTxTime = moreOriginZksList[0].created_at
+                allZksList.unshift(...moreOriginZksList)
+              }
+              return
+            } else if (startPoint) {
+              //to the last new txs and catch all new tx
+              zksList = allZksList
+              allZksList = []
+              startPoint = 0
+              whileTag = false
+            } else {
+              // new is not full
+              whileTag = false
+            }
+          }
+
+          zksList = allZksList
           for (let zksTransaction of zksList) {
             if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
@@ -911,8 +950,9 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                 '] =',
                 zksLastTimeStamp[toChain]
               )
+            } else {
+              continue
             }
-
             if (
               (zksTransaction.status == 'verified' ||
                 zksTransaction.status == 'pending') &&
@@ -1814,7 +1854,6 @@ export async function sendTransaction(
       accessLogger.info('response =', response)
       if (!response.code) {
         var txID = response.txid
-
         accessLogger.info(
           `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
         )
@@ -1848,6 +1887,9 @@ export async function sendTransaction(
           )
           // confirmToSNTransaction(txID, transactionID, toChainID)
         } else if (toChainID === 12 || toChainID === 512) {
+          if (txID.indexOf('sync-tx:') != -1) {
+            txID = txID.replace('sync-tx:', '0x')
+          }
           confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
         } else {
           confirmToTransaction(toChainID, toChain, txID, transactionID)

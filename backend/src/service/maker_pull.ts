@@ -94,8 +94,7 @@ export async function getMakerPulls(
   })
   queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
-    `${ALIAS_MP}.${
-      fromOrToMaker ? 'fromAddress' : 'toAddress'
+    `${ALIAS_MP}.${fromOrToMaker ? 'fromAddress' : 'toAddress'
     } = :makerAddress`,
     { makerAddress }
   )
@@ -159,6 +158,7 @@ class MakerPullLastData {
   makerPull: MakerPull | undefined = undefined
   pullCount = 0
   roundTotal = 0 // When it is zero(0) full update, else incremental update
+  startPoint = 0//only for zkspace
 }
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
@@ -217,9 +217,7 @@ export class ServiceMakerPull {
    */
   private async getLastMakerPull(last: MakerPullLastData) {
     const makerPullStart = await getMakerPullStart()
-
     const nowTime = new Date().getTime()
-
     // 1. if last's pullCount >= max pullCount, the last makerPull invalid
     // 2. if roundTotal > 0 and makerPull.txTime before some time, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
@@ -227,7 +225,6 @@ export class ServiceMakerPull {
     if (last.roundTotal > 0) {
       startTime = nowTime - makerPullStart.incrementPull
     }
-
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
       (last.makerPull && startTime > last.makerPull.txTime.getTime())
@@ -235,11 +232,11 @@ export class ServiceMakerPull {
       // update last data
       last.makerPull = undefined
       last.pullCount = 0
+      last.startPoint = 0//only for zkspace
       last.roundTotal++
     } else {
       lastMakePull = last.makerPull
     }
-
     return lastMakePull
   }
 
@@ -1063,7 +1060,7 @@ export class ServiceMakerPull {
         gasAmount: lpTransaction.feeAmount || '',
         tx_status:
           lpTransaction.status == 'processed' ||
-          lpTransaction.status == 'received'
+            lpTransaction.status == 'received'
             ? 'finalized'
             : 'committed',
       })
@@ -1094,6 +1091,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
+
     let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
@@ -1304,95 +1302,76 @@ export class ServiceMakerPull {
       makerPullLastData = new MakerPullLastData()
     }
     let lastMakePull = await this.getLastMakerPull(makerPullLastData)
-    const url =
-      api.endPoint +
-      '/txs' +
-      '?types=Transfer&address=' +
-      this.makerAddress +
-      '&token=' +
-      0 +
-      '&start=' +
-      0 +
-      '&limit =' +
-      50
+    const url = `${api.endPoint}/txs?types=Transfer&address=${this.makerAddress}&token=0&start=${makerPullLastData.startPoint}&limit=50`
     let zksResponse: any
     try {
       zksResponse = await axios.get(url)
     } catch (error) {
-      accessLogger.warn('Get zkspace txlist faild: ', error)
+      accessLogger.warn('Get zkspace txlist faild: ', error.messages)
     }
-    if (zksResponse.status === 200 && zksResponse.statusText === 'OK') {
-      var respData = zksResponse.data
-      if (respData.success === true) {
-        let zksList = respData?.data?.data
-        if (!zksList || zksList.length) {
-          return
-        }
-        const promiseMethods: (() => Promise<unknown>)[] = []
-        for (let index = 0; index < zksList.length; index++) {
-          const zksTransaction = zksList[index]
-          if (
-            zksTransaction.status != 'verified' &&
-            zksTransaction.status != 'pending'
-          ) {
-            continue
-          }
-          if (zksTransaction.tx_type != 'TRANSFER') {
-            continue
-          }
-          if (zksTransaction.token.symbol != 'ETH') {
-            continue
-          }
-          if (zksTransaction.succceed != true) {
-            continue
-          }
-          if (zksTransaction.failReason != '') {
-            continue
-          }
-          const amount_flag = getAmountFlag(
-            this.chainId,
-            new BigNumber(zksTransaction.amount)
-              .multipliedBy(new BigNumber(10 ** 18))
-              .toString()
-          )
 
-          const makerPull = (lastMakePull = <MakerPull>{
-            chainId: this.chainId,
-            makerAddress: this.makerAddress,
-            tokenAddress: this.tokenAddress,
-            data: JSON.stringify(zksTransaction),
-            amount: new BigNumber(zksTransaction.amount)
-              .multipliedBy(new BigNumber(10 ** 18))
-              .toString(),
-            amount_flag,
-            nonce: zksTransaction.nonce,
-            fromAddress: zksTransaction.from,
-            toAddress: zksTransaction.to,
-            txBlock: zksTransaction['block_number'],
-            txHash: zksTransaction.tx_hash,
-            txTime: new Date(zksTransaction.created_at),
-            gasCurrency: zksTransaction.token.symbol,
-            gasAmount: zksTransaction.fee || '',
-            tx_status:
-              zksTransaction.status == 'verified' ||
-              zksTransaction.status == 'pending'
-                ? 'finalized'
-                : 'committed',
-          })
-          promiseMethods.push(async () => {
-            await savePull(makerPull)
-            await this.compareData(makerPull, zksTransaction.hash)
-          })
-        }
-        await this.doPromisePool(promiseMethods)
-
-        // set ZKSPACE_LAST
-        if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
-          makerPullLastData.pullCount++
-        }
-        makerPullLastData.makerPull = lastMakePull
-        ZKSPACE_LAST[makerPullLastKey] = makerPullLastData
+    if (zksResponse.status === 200 && zksResponse.statusText === 'OK' && zksResponse.data.success) {
+      let respData = zksResponse.data
+      let zksList = respData?.data?.data
+      if (!zksList || zksList.length == 0) {
+        return
       }
+      makerPullLastData.startPoint = zksList.length == 50 ? makerPullLastData.startPoint + 50 : 0
+      const promiseMethods: (() => Promise<unknown>)[] = []
+
+      for (let zksTransaction of zksList) {
+        if (
+          (zksTransaction.status != 'verified' &&
+            zksTransaction.status != 'pending') ||
+          zksTransaction.tx_type != 'Transfer' ||
+          zksTransaction.token.symbol != 'ETH' ||
+          !zksTransaction.success ||
+          zksTransaction.fail_reason != ''
+        ) {
+          continue
+        }
+        const amount_flag = getAmountFlag(
+          this.chainId,
+          new BigNumber(zksTransaction.amount)
+            .multipliedBy(new BigNumber(10 ** 18))
+            .toString()
+        )
+        const makerPull = lastMakePull = <MakerPull>{
+          chainId: this.chainId,
+          makerAddress: this.makerAddress,
+          tokenAddress: this.tokenAddress,
+          data: JSON.stringify(zksTransaction),
+          amount: new BigNumber(zksTransaction.amount)
+            .multipliedBy(new BigNumber(10 ** 18))
+            .toString(),
+          amount_flag,
+          nonce: zksTransaction.nonce,
+          fromAddress: zksTransaction.from,
+          toAddress: zksTransaction.to,
+          txBlock: zksTransaction['block_number'],
+          txHash: zksTransaction.tx_hash,
+          txTime: new Date(zksTransaction.created_at * 1000),
+          gasCurrency: zksTransaction.token.symbol,
+          gasAmount: zksTransaction.fee || '',
+          tx_status:
+            zksTransaction.status == 'verified' ||
+              zksTransaction.status == 'pending'
+              ? 'finalized'
+              : 'committed',
+        }
+        promiseMethods.push(async () => {
+          await savePull(makerPull)
+          await this.compareData(makerPull, zksTransaction.hash)
+        })
+      }
+      await this.doPromisePool(promiseMethods)
+
+      // set ZKSPACE_LAST
+      if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+        makerPullLastData.pullCount++
+      }
+      makerPullLastData.makerPull = lastMakePull
+      ZKSPACE_LAST[makerPullLastKey] = makerPullLastData
     }
   }
 }

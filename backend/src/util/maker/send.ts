@@ -655,7 +655,6 @@ async function sendConsumer(value: any) {
       const signature = await wallet.signMessage(msg)
       const seed = ethers.utils.arrayify(signature)
       const privateKey = await zksync.crypto.privateKeyFromSeed(seed)
-      const pubkeyHash = await zksync.crypto.privateKeyToPubKeyHash(privateKey)
 
       let balanceInfo = await zkspace_help.getZKSBalance({
         account: makerAddress,
