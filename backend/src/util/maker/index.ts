@@ -1690,7 +1690,7 @@ function confirmToZKSTransaction(
       return
     }
     // When failReason, don't try again
-    if (!transferReceipt.success && transferReceipt.failReason) {
+    if (!transferReceipt.success || !transferReceipt.data.success || transferReceipt.data.fail_reason) {
       return
     }
 
