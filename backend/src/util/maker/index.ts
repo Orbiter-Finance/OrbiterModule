@@ -903,14 +903,14 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           }
           let zksList: any[] = []
           allZksList.push(...originZksList)
-          let firstTxTime = originZksList[0].created_at
+          let firstTxTime = originZksList[0].created_at?originZksList[0].created_at:0
           let whileTag = true
           while (whileTag) {
             if (zksLastTimeStamp[toChain] < firstTxTime && originZksList.length == 50) {
               startPoint = startPoint + 50
-              const url = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
-              let moreZksResponse = await axios.get(url)
-              if (zksResponse.status === 200 && zksResponse.data && zksResponse.data.success) {
+              const moreUrl = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
+              let moreZksResponse = await axios.get(moreUrl)
+              if (moreZksResponse.status === 200 && moreZksResponse.data && moreZksResponse.data.success) {
                 var moreRespData = moreZksResponse.data
                 let moreOriginZksList = moreRespData.data.data.reverse()
                 firstTxTime = moreOriginZksList[0].created_at
