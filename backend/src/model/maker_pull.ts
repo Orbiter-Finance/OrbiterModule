@@ -1,6 +1,23 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm'
+import { Column, Entity, Index, PrimaryGeneratedColumn } from 'typeorm'
 import { CommonEntity } from './common'
 
+@Index('compare_data_1', [
+  'makerAddress',
+  'fromAddress',
+  'toAddress',
+  'amount_flag',
+  'nonce',
+  'tx_status',
+])
+@Index('compare_data_2', [
+  'chainId',
+  'makerAddress',
+  'fromAddress',
+  'toAddress',
+  'amount',
+  'amount_flag',
+  'tx_status',
+])
 @Entity()
 export class MakerPull extends CommonEntity {
   @PrimaryGeneratedColumn()
@@ -9,10 +26,10 @@ export class MakerPull extends CommonEntity {
   @Column('int', { width: 11, default: 0 })
   chainId: number
 
-  @Column('varchar', { length: 255, default: '0x' })
+  @Column('varchar', { length: 128, default: '0x' })
   makerAddress: string
 
-  @Column('varchar', { length: 255, default: '' })
+  @Column('varchar', { length: 128, default: '' })
   tokenAddress: string
 
   @Column('text')
@@ -27,10 +44,10 @@ export class MakerPull extends CommonEntity {
   @Column('varchar', { length: 10, default: '' })
   nonce: string
 
-  @Column('varchar', { length: 255, default: '' })
+  @Column('varchar', { length: 128, default: '' })
   fromAddress: string
 
-  @Column('varchar', { length: 255, default: '' })
+  @Column('varchar', { length: 128, default: '' })
   toAddress: string
 
   @Column('varchar', { length: 255, default: '' })
@@ -43,7 +60,7 @@ export class MakerPull extends CommonEntity {
   txTime: Date
 
   @Column('varchar', { length: 40, default: '' })
-  gasCurrency: string // ex: USDC、ETH
+  gasCurrency: string // ex: USDC ETH
 
   @Column('varchar', { length: 40, default: '0' })
   gasAmount: string // gas's ether

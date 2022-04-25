@@ -93,15 +93,15 @@ export class DydxHelper {
     if (!this.host) {
       throw new Error('Sorry, miss param [host]')
     }
-    if (!this.web3) {
-      throw new Error('Sorry, miss param [web3]')
-    }
+    // if (!this.web3) {
+    //   throw new Error('Sorry, miss param [web3]')
+    // }
 
     const client = <any>new DydxClient(this.host, {
       networkId: this.networkId,
       web3: this.web3,
     })
-    if (ethereumAddress) {
+    if (ethereumAddress && this.web3) {
       const userExists = await client.public.doesUserExistWithAddress(
         ethereumAddress
       )

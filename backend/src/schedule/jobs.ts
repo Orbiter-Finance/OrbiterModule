@@ -117,9 +117,9 @@ export function jobMakerPull() {
         tokenAddress,
         tokenSymbol
       )
-
+        
       switch (CHAIN_INDEX[toChain]) {
-        case 'eth':
+        case 'eth': 
           let apiEth = makerConfig.mainnet.api
           if (toChain == 4 || toChain == 5) {
             apiEth = makerConfig.rinkeby.api
@@ -182,6 +182,9 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.dydx(apiDydx)
           break
+        case "boba":
+          await serviceMakerPull.boba(toChain === 288 ? makerConfig.boba.api: makerConfig.boba_rinkeby.api)
+          break;
       }
     } catch (error) {
       errorLogger.error(
@@ -191,22 +194,36 @@ export function jobMakerPull() {
   }
 
   const callback = async () => {
+    const promises: Promise<void>[] = []
+
+    // Add promise
+    const runningKeyArr: string[] = []
+    const addPromise = (
+      chainId: number,
+      makerAddress: string,
+      tokenAddress: string,
+      tName: string
+    ) => {
+      const runningKey = `${chainId}:${makerAddress}:${tokenAddress}:${tName}`
+      if (runningKeyArr.indexOf(runningKey) > -1) {
+        return
+      }
+      runningKeyArr.push(runningKey)
+
+      promises.push(startPull(chainId, makerAddress, tokenAddress, tName))
+    }
+
     const makerList = await getMakerList()
     for (const item of makerList) {
       const { pool1, pool2 } = expanPool(item)
-      await startPull(
-        pool1.c1ID,
-        pool1.makerAddress,
-        pool1.t1Address,
-        pool1.tName
-      )
-      await startPull(
-        pool2.c2ID,
-        pool2.makerAddress,
-        pool2.t2Address,
-        pool2.tName
-      )
+      addPromise(pool1.c1ID, pool1.makerAddress, pool1.t1Address, pool1.tName)
+      addPromise(pool2.c2ID, pool2.makerAddress, pool2.t2Address, pool2.tName)
     }
+
+    await Promise.all(promises)
+
+    // Reset ServiceMakerPull.compareDataPromise
+    ServiceMakerPull.resetCompareDataPromise()
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
