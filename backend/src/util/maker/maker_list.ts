@@ -1285,7 +1285,7 @@ export const makerList = [
         "endTime": 99999999999999
       }
     ]
-  }
+  },
   {
     "makerAddress": "0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5",
     "c1ID": 512,
