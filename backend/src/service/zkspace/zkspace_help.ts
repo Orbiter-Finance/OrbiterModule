@@ -61,13 +61,29 @@ export default {
       throw new Error('getZKSTransferGasFee NetWorkError')
     }
   },
+  getFristResult(fromChainID, txHash) {
+    return new Promise((resolve, reject) => {
+      setTimeout(async () => {
+        const firstResult = await this.getZKSpaceTransactionData(fromChainID, txHash)
+        if (firstResult.success && !firstResult.data.fail_reason && !firstResult.data.success && !firstResult.data.amount) {
 
+          resolve(await this.getFristResult(fromChainID, txHash))
+        } else if (firstResult.success && !firstResult.data.fail_reason && firstResult.data.success && firstResult.data.amount) {
+          resolve(firstResult)
+        } else {
+          reject(new Error('zks sendResult is error, do not care'))
+        }
+      }, 300)
+    })
+
+  },
   async getNormalAccountInfo(wallet, privateKey, fromChainID, walletAccount) {
     try {
       const accountInfo = await this.getZKSAccountInfo(fromChainID, walletAccount)
       if (accountInfo.pub_key_hash == 'sync:0000000000000000000000000000000000000000') {
         const new_pub_key_hash = await this.registerAccount(wallet, accountInfo, privateKey, fromChainID, walletAccount)
         accountInfo.pub_key_hash = new_pub_key_hash
+        accountInfo.nonce = accountInfo.nonce + 1
       }
       return accountInfo
     } catch (error) {

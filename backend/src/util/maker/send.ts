@@ -656,7 +656,6 @@ async function sendConsumer(value: any) {
       const signature = await wallet.signMessage(msg)
       const seed = ethers.utils.arrayify(signature)
       const privateKey = await zksync.crypto.privateKeyFromSeed(seed)
-
       let balanceInfo = await zkspace_help.getZKSBalance({
         account: makerAddress,
         localChainID: chainID,
@@ -694,10 +693,12 @@ async function sendConsumer(value: any) {
         zksync.utils.closestPackableTransactionAmount(amountToSend)
 
       //here has changed a lager from old
-      let accountInfo = await zkspace_help.getZKSAccountInfo(
+      let accountInfo = await zkspace_help.getNormalAccountInfo(wallet, privateKey,
         chainID,
         makerAddress
       )
+
+
       const tokenId = 0
       const feeTokenId = 0
       const zksNetworkID =
@@ -712,6 +713,7 @@ async function sendConsumer(value: any) {
         ethers.utils.parseUnits(fee.toString(), 18)
       )
       //note:old was changed  here
+
       let sql_nonce = nonceDic[makerAddress]?.[chainID]
       if (!sql_nonce) {
         result_nonce = accountInfo.nonce
@@ -802,25 +804,15 @@ async function sendConsumer(value: any) {
           tx: req.tx,
         }
       )
-      if (
-        transferResult &&
-        transferResult.data &&
-        transferResult.status == 200 &&
-        transferResult.statusText == 'OK' &&
-        transferResult.data.success == true
-      ) {
-        return {
-          code: 0,
-          txid: transferResult?.data?.data,
-          chainID: chainID,
-          zksNonce: result_nonce,
-        }
-      } else {
-        return {
-          code: 1,
-          error: 'zkspace transfer error',
-          result_nonce,
-        }
+      const txHash = transferResult.data.data.replace('sync-tx:', '0x')
+
+      await zkspace_help.getFristResult(fromChainID, txHash)
+      nonceDic[makerAddress][chainID] = result_nonce
+      return {
+        code: 0,
+        txid: transferResult?.data?.data,
+        chainID: chainID,
+        zksNonce: result_nonce,
       }
     } catch (error) {
       return {
