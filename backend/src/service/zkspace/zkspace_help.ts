@@ -1,7 +1,10 @@
 import BigNumber from 'bignumber.js'
 import { makerConfig } from '../../config'
 import axios from 'axios'
+import * as ethers from "ethers"
+import { private_key_to_pubkey_hash } from "zksync-crypto"
 import { getExchangeRates } from '../coinbase'
+import { errorLogger } from '../../util/logger'
 
 export default {
   getZKSBalance: function (req): Promise<any> {
@@ -59,6 +62,102 @@ export default {
       throw new Error('getZKSTransferGasFee NetWorkError')
     }
   },
+
+  async getNormalAccountInfo(wallet, privateKey, fromChainID, walletAccount) {
+    try {
+      const accountInfo = await this.getZKSAccountInfo(fromChainID, walletAccount)
+      if (accountInfo.pub_key_hash == 'sync:0000000000000000000000000000000000000000') {
+        const new_pub_key_hash = await this.registerAccount(wallet, accountInfo, privateKey, fromChainID, walletAccount)
+        accountInfo.pub_key_hash = new_pub_key_hash
+      }
+      return accountInfo
+    } catch (error) {
+      throw new Error(`getAccountInfo error ${error.message}`)
+    }
+  },
+  async registerAccount(wallet, accountInfo, privateKey, fromChainID, walletAccount) {
+    try {
+      const pubKeyHash = ethers.utils.hexlify(private_key_to_pubkey_hash(privateKey)).substr(2)
+
+      const hexlifiedAccountId = this.toHex(accountInfo.id, 4)
+
+      const hexlifiedNonce = this.toHex(accountInfo.nonce, 4)
+
+      // Don't move here any way and don't format it anyway!!!
+      let resgiterMsg = `Register ZKSwap pubkey:
+
+${pubKeyHash}
+nonce: ${hexlifiedNonce}
+account id: ${hexlifiedAccountId}
+
+Only sign this message for a trusted client!`
+      const registerSignature = await wallet.signMessage(resgiterMsg)
+      let tx = {
+        account: walletAccount,
+        accountId: accountInfo.id,
+        ethSignature: registerSignature,
+        newPkHash: `sync:` + pubKeyHash,
+        nonce: 0,
+        type: "ChangePubKey",
+      }
+      const url = `${fromChainID == 512 ? makerConfig.zkspace_test.api.endPoint : makerConfig.zkspace.api.endPoint}/tx`
+      let transferResult: any = await axios.post(url,
+        {
+          signature: null,
+          fastProcessing: null,
+          extraParams: null,
+          tx: {
+            account: walletAccount,
+            accountId: accountInfo.id,
+            ethSignature: registerSignature,
+            newPkHash: `sync:` + pubKeyHash,
+            nonce: 0,
+            type: "ChangePubKey",
+          }
+        },
+        {
+          headers: {
+            "zk-account": walletAccount
+          },
+        }
+      )
+      if (transferResult.success && transferResult.data.success) {
+        return transferResult.data
+      } else {
+        throw new Error("registerAccount fail")
+      }
+    } catch (error) {
+      throw new Error(`registerAccount error ${error.message}`)
+    }
+
+  },
+  toHex(num, length) {
+    var charArray = ['a', 'b', 'c', 'd', 'e', 'f']
+    let strArr = Array(length * 2).fill("0")
+    var i = length * 2 - 1;
+    while (num > 15) {
+      var yushu = num % 16;
+      if (yushu >= 10) {
+        let index = yushu % 10;
+        strArr[i--] = charArray[index];
+      } else {
+        strArr[i--] = yushu.toString();
+      }
+      num = Math.floor(num / 16);
+    }
+
+    if (num != 0) {
+      if (num >= 10) {
+        let index = num % 10;
+        strArr[i--] = charArray[index];
+      } else {
+        strArr[i--] = num.toString();
+      }
+    }
+    strArr.unshift('0x')
+    var hex = strArr.join('');
+    return hex;
+  },
   getZKSAccountInfo: function (localChainID, account): Promise<any> {
     return new Promise((resolve, reject) => {
       const url =
@@ -105,7 +204,7 @@ export default {
       axios
         .get(url)
         .then(function (response) {
-     
+
           if (response.status === 200 && response.statusText === 'OK') {
             var respData = response.data
             console.warn('zks respData =', respData)
