@@ -117,9 +117,9 @@ export function jobMakerPull() {
         tokenAddress,
         tokenSymbol
       )
-
+        
       switch (CHAIN_INDEX[toChain]) {
-        case 'eth':
+        case 'eth': 
           let apiEth = makerConfig.mainnet.api
           if (toChain == 4 || toChain == 5) {
             apiEth = makerConfig.rinkeby.api
@@ -182,6 +182,9 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.dydx(apiDydx)
           break
+        case "boba":
+          await serviceMakerPull.boba(toChain === 288 ? makerConfig.boba.api: makerConfig.boba_rinkeby.api)
+          break;
       }
     } catch (error) {
       errorLogger.error(

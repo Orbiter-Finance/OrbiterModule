@@ -131,7 +131,7 @@ export class EthListen {
           if (confirmationsTotal > 0) {
             if (
               this.transferConfirmationedHashs[item.hash] === undefined &&
-              item.confirmations >= confirmationsTotal
+              Number(item.confirmations) >= confirmationsTotal
             ) {
               this.transferConfirmationedHashs[item.hash] = true
               accessLogger.info(`Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`)

@@ -6,11 +6,7 @@ import { Not, Repository } from 'typeorm'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
-import {
-  dateFormatNormal,
-  equalsIgnoreCase,
-  isEthTokenAddress
-} from '../util'
+import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
@@ -19,7 +15,7 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-
+import BobaService from './boba/bobaService';
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -175,6 +171,7 @@ const IMMUTABLEX_USER_LAST: { [key: string]: MakerPullLastData } = {}
 const IMMUTABLEX_RECEIVER_LAST: { [key: string]: MakerPullLastData } = {}
 const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
+const BOBA_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -412,7 +409,6 @@ export class ServiceMakerPull {
       makerPullLastData = new MakerPullLastData()
     }
     let lastMakePull = await this.getLastMakerPull(makerPullLastData)
-
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
@@ -1099,7 +1095,6 @@ export class ServiceMakerPull {
     }
 
     await this.doPromisePool(promiseMethods)
-
     // set LOOPRING_LAST
     if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
       makerPullLastData.pullCount++
@@ -1312,5 +1307,107 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
 
     DYDX_LAST[makerPullLastKey] = makerPullLastData
+  }
+  /**
+   * pull boba
+   * @param api
+   */
+  async boba(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = BOBA_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    // when endblock is empty, will end latest
+    const startblock = ''
+    const endblock = lastMakePull ? lastMakePull.txBlock : ''
+    console.log(
+      this.tokenAddress,
+      '===lastMakePull---',
+      endblock,
+      '====',
+      isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx'
+    )
+    const service = new BobaService("https://blockexplorer.rinkeby.boba.network/graphiql")
+    await service.getTransactionByAddress()
+    const resp = await axios.get(api.endPoint, {
+      params: {
+        apikey: api.key,
+        module: 'account',
+        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
+        address: this.makerAddress,
+        page: 1,
+        offset: 100,
+        startblock,
+        endblock,
+        sort: 'desc',
+      },
+      timeout: 16000,
+    })
+    console.log('resp data-------------', resp.data)
+    // check data
+    const { data } = resp
+    if (data.status != '1' || !data.result) {
+      accessLogger.warn(
+        'Get boba tokentx/txlist faild: ' + JSON.stringify(data)
+      )
+      return
+    }
+    const promiseMethods: (() => Promise<unknown>)[] = []
+    for (const item of data.result) {
+      // contractAddress = 0x0...0
+      let contractAddress = item.contractAddress
+      if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
+        contractAddress = this.tokenAddress
+      }
+
+      // checks
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
+        continue
+      }
+
+      const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // save
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: contractAddress,
+        data: JSON.stringify(item),
+        amount: item.value,
+        amount_flag,
+        nonce: item.nonce,
+        fromAddress: item.from,
+        toAddress: item.to,
+        txBlock: item.blockNumber,
+        txHash: item.hash,
+        txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: 'ETH',
+        gasAmount: new BigNumber(item.gasUsed)
+          .multipliedBy(item.gasPrice)
+          .toString(),
+        tx_status:
+          item.confirmations >= FINALIZED_CONFIRMATIONS
+            ? 'finalized'
+            : 'committed',
+      })
+
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+
+        // compare
+        await this.singleCompareData(makerPull)
+      })
+    }
+
+    await this.doPromisePool(promiseMethods)
+
+    // set BOBA_LAST
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    BOBA_LAST[makerPullLastKey] = makerPullLastData
   }
 }
