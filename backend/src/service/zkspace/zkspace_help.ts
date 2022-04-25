@@ -4,7 +4,6 @@ import axios from 'axios'
 import * as ethers from "ethers"
 import { private_key_to_pubkey_hash } from "zksync-crypto"
 import { getExchangeRates } from '../coinbase'
-import { errorLogger } from '../../util/logger'
 
 export default {
   getZKSBalance: function (req): Promise<any> {
