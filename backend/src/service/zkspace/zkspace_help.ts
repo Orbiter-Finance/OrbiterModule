@@ -4,6 +4,7 @@ import axios from 'axios'
 import * as ethers from 'ethers'
 import { private_key_to_pubkey_hash } from 'zksync-crypto'
 import { getExchangeRates } from '../coinbase'
+import { sleep } from "../../util"
 
 export default {
   getZKSBalance: function (req): Promise<any> {
@@ -45,11 +46,10 @@ export default {
     let ethPrice = usdRates && usdRates['ETH'] ? 1 / usdRates['ETH'] : 1000
 
     //get gasfee width eth
-    const url = `${
-      localChainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint
-    }/account/${account}/fee`
+    const url = `${localChainID === 512
+      ? makerConfig.zkspace_test.api.endPoint
+      : makerConfig.zkspace.api.endPoint
+      }/account/${account}/fee`
     const response = await axios.get(url)
     if (response.status === 200 && response.statusText == 'OK') {
       var respData = response.data
@@ -66,33 +66,31 @@ export default {
       throw new Error('getZKSTransferGasFee NetWorkError')
     }
   },
-  getFristResult(fromChainID, txHash) {
-    return new Promise((resolve, reject) => {
-      setTimeout(async () => {
-        const firstResult = await this.getZKSpaceTransactionData(
-          fromChainID,
-          txHash
-        )
-        if (
-          firstResult.success &&
-          !firstResult.data.fail_reason &&
-          !firstResult.data.success &&
-          !firstResult.data.amount
-        ) {
-          //tip todo
-          resolve(await this.getFristResult(fromChainID, txHash))
-        } else if (
-          firstResult.success &&
-          !firstResult.data.fail_reason &&
-          firstResult.data.success &&
-          firstResult.data.amount
-        ) {
-          resolve(firstResult)
-        } else {
-          reject(new Error('zks sendResult is error, do not care'))
-        }
-      }, 300)
-    })
+  async getFristResult(chainID, txHash) {
+
+    const firstResult = await this.getZKSpaceTransactionData(
+      chainID,
+      txHash
+    )
+    if (
+      firstResult.success &&
+      !firstResult.data.fail_reason &&
+      !firstResult.data.success &&
+      !firstResult.data.amount
+    ) {
+      //tip todo
+      await sleep(300)
+      await this.getFristResult(chainID, txHash)
+    } else if (
+      firstResult.success &&
+      !firstResult.data.fail_reason &&
+      firstResult.data.success &&
+      firstResult.data.amount
+    ) {
+      return firstResult
+    } else {
+      throw new Error('zks sendResult is error, do not care')
+    }
   },
   async getNormalAccountInfo(wallet, privateKey, fromChainID, walletAccount) {
     try {
@@ -152,11 +150,10 @@ Only sign this message for a trusted client!`
         nonce: 0,
         type: 'ChangePubKey',
       }
-      const url = `${
-        fromChainID == 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint
-      }/tx`
+      const url = `${fromChainID == 512
+        ? makerConfig.zkspace_test.api.endPoint
+        : makerConfig.zkspace.api.endPoint
+        }/tx`
       let transferResult: any = await axios.post(
         url,
         {
@@ -244,37 +241,28 @@ Only sign this message for a trusted client!`
     })
   },
   getZKSpaceTransactionData: async function (localChainID, txHash) {
-    return new Promise((resolve, reject) => {
-      if (localChainID !== 12 && localChainID !== 512) {
-        reject({
-          errorCode: 1,
-          errMsg: 'getZKTransactionDataError_wrongChainID',
-        })
+
+    if (localChainID !== 12 && localChainID !== 512) {
+      throw new Error("getZKTransactionDataError_wrongChainID")
+    }
+    const url =
+      (localChainID === 512
+        ? makerConfig.zkspace_test.api.endPoint
+        : makerConfig.zkspace.api.endPoint) +
+      '/tx/' +
+      txHash
+    const response = await axios.get(url)
+
+    if (response.status === 200 && response.statusText === 'OK') {
+      var respData = response.data
+      console.warn('zks respData =', respData)
+      if (respData.success === true) {
+        return respData
+      } else {
+        throw new Error(respData)
       }
-      const url =
-        (localChainID === 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint) +
-        '/tx/' +
-        txHash
-      axios
-        .get(url)
-        .then(function (response) {
-          if (response.status === 200 && response.statusText === 'OK') {
-            var respData = response.data
-            console.warn('zks respData =', respData)
-            if (respData.success === true) {
-              resolve(respData)
-            } else {
-              reject(respData)
-            }
-          } else {
-            reject('NetWorkError')
-          }
-        })
-        .catch(function (error) {
-          reject(error)
-        })
-    })
+    } else {
+      throw new Error('getZKSpaceTransactionData NetWorkError')
+    }
   },
 }

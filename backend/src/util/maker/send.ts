@@ -153,7 +153,7 @@ async function sendConsumer(value: any) {
         errorLogger.error('zk Insufficient balance')
         return {
           code: 1,
-          txid: 'Insufficient balance',
+          txid: 'zk Insufficient balance',
         }
       }
 
@@ -452,9 +452,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -803,7 +803,7 @@ async function sendConsumer(value: any) {
       nonceDic[makerAddress][chainID] = result_nonce
       try {
         const txHash = transferResult.data.data.replace('sync-tx:', '0x')
-        await zkspace_help.getFristResult(fromChainID, txHash)
+        await zkspace_help.getFristResult(chainID, txHash)
       } catch (error) {
         nonceDic[makerAddress][chainID] = result_nonce - 1
         throw new Error(error.message)
@@ -823,7 +823,6 @@ async function sendConsumer(value: any) {
       }
     }
   }
-
   let web3Net = makerConfig[toChain].httpEndPointInfura
   if (!web3Net) {
     web3Net = makerConfig[toChain].httpEndPoint
@@ -849,20 +848,19 @@ async function sendConsumer(value: any) {
   } catch (error) {
     errorLogger.error('tokenBalanceWeiError =', error)
   }
-
   if (!tokenBalanceWei) {
-    errorLogger.error('Insufficient balance')
+    errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
     return {
       code: 1,
-      txid: 'Insufficient balance',
+      txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
     }
   }
   accessLogger.info('tokenBalance =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error('Insufficient balance')
+    errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
     return {
       code: 1,
-      txid: 'Insufficient balance',
+      txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
     }
   }
 

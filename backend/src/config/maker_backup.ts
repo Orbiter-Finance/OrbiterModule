@@ -34,7 +34,7 @@ export default {
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
+    // httpEndPointInfura: 'https://arbitrum-rinkeby.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://testnet.arbiscan.io/api',
       key: '',
@@ -92,7 +92,7 @@ export default {
   polygon_test: {
     wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
+    // httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
