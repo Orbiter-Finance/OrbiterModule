@@ -136,7 +136,7 @@ Only sign this message for a trusted client!`
           },
         }
       )
-      if (transferResult.success && transferResult.data.success) {
+      if (transferResult.status == 200 && transferResult.data.success) {
         return transferResult.data
       } else {
         throw new Error("registerAccount fail")
