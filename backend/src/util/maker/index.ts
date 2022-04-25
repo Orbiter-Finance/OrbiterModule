@@ -933,17 +933,15 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
               return
             } else if (startPoint) {
               //to the last new txs and catch all new tx
-              zksList = allZksList
-              allZksList = []
               startPoint = 0
               whileTag = false
             } else {
-              // new is not full
+              // new is not fullA
               whileTag = false
             }
           }
-
           zksList = allZksList
+          allZksList = []
           for (let zksTransaction of zksList) {
             if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
