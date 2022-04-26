@@ -19,6 +19,7 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
+import { BobaListen } from '../../service/boba/boba_listen'
 import { factoryIMXListen } from '../../service/immutablex/imx_listen'
 import {
   getL1AddressByL2,
@@ -350,6 +351,38 @@ async function watchTransfers(pool, state) {
     return
   }
   const web3 = createAlchemyWeb3(wsEndPoint)
+    // boba 
+    if (fromChainID == 28 || fromChainID === 288) {
+      let startBlockNumber = 0
+      new BobaListen(
+        api,
+        makerAddress,
+        "txlist",
+        async () => {
+          if (startBlockNumber) {
+            return startBlockNumber + ''
+          } else {
+            // Current block number +1, to prevent restart too fast!!!
+            startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+            return startBlockNumber + ''
+          }
+        }
+      ).transfer(
+        { to: makerAddress },
+        {
+          onConfirmation: async (transaction) => {
+            if (!transaction.hash) {
+              return
+            }
+            startBlockNumber = transaction.blockNumber
+            if (checkData(transaction.value + '', transaction.hash) === true) {
+              confirmFromTransaction(pool, state, transaction.hash)
+            }
+          },
+        }
+      )
+      return
+    }
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {

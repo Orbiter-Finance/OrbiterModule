@@ -412,7 +412,6 @@ export class ServiceMakerPull {
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
-
     const resp = await axios.get(api.endPoint, {
       params: {
         apiKey: api.key,
@@ -1322,40 +1321,13 @@ export class ServiceMakerPull {
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
-    console.log(
-      this.tokenAddress,
-      '===lastMakePull---',
-      endblock,
-      '====',
-      isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx'
-    )
-    const service = new BobaService("https://blockexplorer.rinkeby.boba.network/graphiql")
-    await service.getTransactionByAddress()
-    const resp = await axios.get(api.endPoint, {
-      params: {
-        apikey: api.key,
-        module: 'account',
-        action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
-        address: this.makerAddress,
-        page: 1,
-        offset: 100,
-        startblock,
-        endblock,
-        sort: 'desc',
-      },
-      timeout: 16000,
-    })
-    console.log('resp data-------------', resp.data)
-    // check data
-    const { data } = resp
-    if (data.status != '1' || !data.result) {
-      accessLogger.warn(
-        'Get boba tokentx/txlist faild: ' + JSON.stringify(data)
-      )
+    const bobaService = new BobaService();
+    const result = await bobaService.getTransactionByAddress(this.makerAddress);
+    if (!result || !Array.isArray(result) ) {
       return
     }
     const promiseMethods: (() => Promise<unknown>)[] = []
-    for (const item of data.result) {
+    for (const item of result) {
       // contractAddress = 0x0...0
       let contractAddress = item.contractAddress
       if (isEthTokenAddress(this.tokenAddress) && !item.contractAddress) {
