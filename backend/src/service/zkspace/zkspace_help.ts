@@ -2,9 +2,9 @@ import BigNumber from 'bignumber.js'
 import { makerConfig } from '../../config'
 import axios from 'axios'
 import * as ethers from 'ethers'
+import { sleep } from '../../util'
 import { private_key_to_pubkey_hash } from 'zksync-crypto'
 import { getExchangeRates } from '../coinbase'
-import { sleep } from "../../util"
 
 export default {
   getZKSBalance: function (req): Promise<any> {
@@ -43,13 +43,14 @@ export default {
   ): Promise<Number> {
     //get usd to eth rat
     const usdRates: any = await getExchangeRates()
-    let ethPrice = usdRates && usdRates['ETH'] ? 1 / usdRates['ETH'] : 1000
+    let ethPrice = usdRates && usdRates['ETH'] ? 1 / usdRates['ETH'] : 2000
 
     //get gasfee width eth
-    const url = `${localChainID === 512
-      ? makerConfig.zkspace_test.api.endPoint
-      : makerConfig.zkspace.api.endPoint
-      }/account/${account}/fee`
+    const url = `${
+      localChainID === 512
+        ? makerConfig.zkspace_test.api.endPoint
+        : makerConfig.zkspace.api.endPoint
+    }/account/${account}/fee`
     const response = await axios.get(url)
     if (response.status === 200 && response.statusText == 'OK') {
       var respData = response.data
@@ -67,11 +68,7 @@ export default {
     }
   },
   async getFristResult(chainID, txHash) {
-
-    const firstResult = await this.getZKSpaceTransactionData(
-      chainID,
-      txHash
-    )
+    const firstResult = await this.getZKSpaceTransactionData(chainID, txHash)
     if (
       firstResult.success &&
       !firstResult.data.fail_reason &&
@@ -150,10 +147,11 @@ Only sign this message for a trusted client!`
         nonce: 0,
         type: 'ChangePubKey',
       }
-      const url = `${fromChainID == 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint
-        }/tx`
+      const url = `${
+        fromChainID == 512
+          ? makerConfig.zkspace_test.api.endPoint
+          : makerConfig.zkspace.api.endPoint
+      }/tx`
       let transferResult: any = await axios.post(
         url,
         {
@@ -241,9 +239,8 @@ Only sign this message for a trusted client!`
     })
   },
   getZKSpaceTransactionData: async function (localChainID, txHash) {
-
     if (localChainID !== 12 && localChainID !== 512) {
-      throw new Error("getZKTransactionDataError_wrongChainID")
+      throw new Error('getZKTransactionDataError_wrongChainID')
     }
     const url =
       (localChainID === 512
@@ -255,7 +252,6 @@ Only sign this message for a trusted client!`
 
     if (response.status === 200 && response.statusText === 'OK') {
       var respData = response.data
-      console.warn('zks respData =', respData)
       if (respData.success === true) {
         return respData
       } else {
