@@ -938,6 +938,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 130
     }
+    if (
+      (fromChainID == 12 || fromChainID == 512) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 100
+    }
   } else {
     // USDC
     if (
