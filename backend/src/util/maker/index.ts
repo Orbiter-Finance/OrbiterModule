@@ -927,7 +927,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                 firstTxTime = moreOriginZksList[0].created_at
                 allZksList.unshift(...moreOriginZksList)
               }
-              return
+              continue
             } else if (startPoint) {
               //to the last new txs and catch all new tx
               startPoint = 0
