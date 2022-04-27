@@ -9465,10 +9465,10 @@ ora@^3.4.0:
     strip-ansi "^5.2.0"
     wcwidth "^1.0.1"
 
-orbiter-sdk@^0.0.6:
-  version "0.0.6"
-  resolved "https://registry.yarnpkg.com/orbiter-sdk/-/orbiter-sdk-0.0.6.tgz#8a5b5e3626e84372c152313a658234e8abd6d3c2"
-  integrity sha512-KaVlv0SDLo9WVk93Tuz6xQpEg8Nrihalk7nblBFTBnQlWfqCJQS9ENYMwRW/GNFIKPJVZ6WKix6rAx/ujFdUhw==
+orbiter-sdk@^0.0.8:
+  version "0.0.8"
+  resolved "https://registry.yarnpkg.com/orbiter-sdk/-/orbiter-sdk-0.0.8.tgz#ca9110b07e46013d848176902ecf89ffce18774e"
+  integrity sha512-TVeEWY3jTl7FqWZKZCwgAl3Msl/0GFBWWJcNMJG8BBGA9pcEpNZ0Glc0FQPis1/3PzNCI5JodXWOpspbjfzTdg==
   dependencies:
     "@dydxprotocol/v3-client" "^1.8.2"
     "@imtbl/imx-sdk" "^1.15.0"
