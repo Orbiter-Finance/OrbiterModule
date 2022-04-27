@@ -19,6 +19,8 @@ import { isEthTokenAddress, sleep } from '..'
 import { makerConfig } from '../../config'
 import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
+import zkspace_help from '../../service/zkspace/zkspace_help'
+import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
 import {
   getAccountNonce,
@@ -150,7 +152,7 @@ async function sendConsumer(value: any) {
         errorLogger.error('zk Insufficient balance')
         return {
           code: 1,
-          txid: 'Insufficient balance',
+          txid: 'zk Insufficient balance',
         }
       }
 
@@ -450,9 +452,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -645,6 +647,182 @@ async function sendConsumer(value: any) {
     }
   }
 
+  // zkspace || zkspace_test
+  if (chainID == 12 || chainID == 512) {
+    try {
+      const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
+      const msg =
+        'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
+      const signature = await wallet.signMessage(msg)
+      const seed = ethers.utils.arrayify(signature)
+      const privateKey = await zksync.crypto.privateKeyFromSeed(seed)
+      let balanceInfo = await zkspace_help.getZKSBalance({
+        account: makerAddress,
+        localChainID: chainID,
+      })
+      if (
+        !balanceInfo ||
+        !balanceInfo.length ||
+        balanceInfo.findIndex((item) => item.id == 0) == -1
+      ) {
+        errorLogger.error('zks Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance 0',
+        }
+      }
+      let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
+      const tokenBalanceWei = balanceInfo[defaultIndex].amount * 10 ** 18
+      if (!tokenBalanceWei) {
+        errorLogger.error('zks Insufficient balance 00')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance 00',
+        }
+      }
+      accessLogger.info('zks_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zks Insufficient balance')
+        return {
+          code: 1,
+          txid: 'ZKS Insufficient balance',
+        }
+      }
+
+      const transferValue =
+        zksync.utils.closestPackableTransactionAmount(amountToSend)
+
+      //here has changed a lager from old
+      let accountInfo = await zkspace_help.getNormalAccountInfo(wallet, privateKey,
+        chainID,
+        makerAddress
+      )
+
+
+      const tokenId = 0
+      const feeTokenId = 0
+      const zksNetworkID =
+        chainID === 512
+          ? makerConfig.zkspace_test.api.chainID
+          : makerConfig.zkspace.api.chainID
+      let fee = await zkspace_help.getZKSTransferGasFee(
+        chainID,
+        makerAddress
+      )
+      const transferFee = zksync.utils.closestPackableTransactionFee(
+        ethers.utils.parseUnits(fee.toString(), 18)
+      )
+      //note:old was changed  here
+
+      let sql_nonce = nonceDic[makerAddress]?.[chainID]
+      if (!sql_nonce) {
+        result_nonce = accountInfo.nonce
+      } else {
+        if (accountInfo.nonce > sql_nonce) {
+          result_nonce = accountInfo.nonce
+        } else {
+          result_nonce = sql_nonce + 1
+        }
+      }
+
+      if (!nonceDic[makerAddress]) {
+        nonceDic[makerAddress] = {}
+      }
+      nonceDic[makerAddress][chainID] = result_nonce
+      accessLogger.info('nonce =', accountInfo.nonce)
+      accessLogger.info('sql_nonce =', sql_nonce)
+      accessLogger.info('result_nonde =', result_nonce)
+
+      const msgBytes = ethers.utils.concat([
+        '0x05',
+        zksync.utils.numberToBytesBE(accountInfo.id, 4),
+        makerAddress,
+        toAddress,
+        zksync.utils.numberToBytesBE(tokenId, 2),
+        zksync.utils.packAmountChecked(transferValue),
+        zksync.utils.numberToBytesBE(feeTokenId, 1),
+        zksync.utils.packFeeChecked(transferFee),
+        zksync.utils.numberToBytesBE(zksNetworkID, 1),
+        zksync.utils.numberToBytesBE(result_nonce, 4),
+      ])
+      const signaturePacked = sign_musig(privateKey, msgBytes)
+      const pubKey = ethers.utils
+        .hexlify(signaturePacked.slice(0, 32))
+        .substr(2)
+      const l2Signature = ethers.utils
+        .hexlify(signaturePacked.slice(32))
+        .substr(2)
+      const tx = {
+        accountId: accountInfo.id,
+        to: toAddress,
+        tokenSymbol: 'ETH',
+        tokenAmount: ethers.utils.formatUnits(transferValue, 18),
+        feeSymbol: 'ETH',
+        fee: fee.toString(),
+        zksNetworkID,
+        nonce: result_nonce,
+      }
+      const l2Msg =
+        `Transfer ${tx.tokenAmount} ${tx.tokenSymbol}\n` +
+        `To: ${tx.to.toLowerCase()}\n` +
+        `Chain Id: ${tx.zksNetworkID}\n` +
+        `Nonce: ${tx.nonce}\n` +
+        `Fee: ${tx.fee} ${tx.feeSymbol}\n` +
+        `Account Id: ${tx.accountId}`
+      const ethSignature = await wallet.signMessage(l2Msg)
+      const txParams = {
+        type: 'Transfer',
+        accountId: accountInfo.id,
+        from: makerAddress,
+        to: toAddress,
+        token: tokenId,
+        amount: transferValue.toString(),
+        feeToken: feeTokenId,
+        fee: transferFee.toString(),
+        chainId: zksNetworkID,
+        nonce: result_nonce,
+        signature: {
+          pubKey: pubKey,
+          signature: l2Signature,
+        },
+      }
+      const req = {
+        signature: {
+          type: 'EthereumSignature',
+          signature: ethSignature,
+        },
+        fastProcessing: false,
+        tx: txParams
+      }
+      let transferResult = await axios.post(
+        (chainID === 512
+          ? makerConfig.zkspace_test.api.endPoint
+          : makerConfig.zkspace.api.endPoint) + '/tx',
+        {
+          signature: req.signature,
+          fastProcessing: req.fastProcessing,
+          tx: req.tx,
+        }
+      )
+      const txHash = transferResult.data.data.replace('sync-tx:', '0x')
+
+      await zkspace_help.getFristResult(fromChainID, txHash)
+      nonceDic[makerAddress][chainID] = result_nonce
+      return {
+        code: 0,
+        txid: transferResult?.data?.data,
+        chainID: chainID,
+        zksNonce: result_nonce,
+      }
+    } catch (error) {
+      return {
+        code: 1,
+        txid: 'zkspace transfer error: ' + error.message,
+        result_nonce,
+      }
+    }
+  }
+
   const web3Net = makerConfig[toChain].httpEndPoint
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -669,18 +847,18 @@ async function sendConsumer(value: any) {
   }
 
   if (!tokenBalanceWei) {
-    errorLogger.error('Insufficient balance')
+    errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
     return {
       code: 1,
-      txid: 'Insufficient balance',
+      txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
     }
   }
   accessLogger.info('tokenBalance =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error('Insufficient balance')
+    errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
     return {
       code: 1,
-      txid: 'Insufficient balance',
+      txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
     }
   }
 
@@ -751,6 +929,12 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 130
+    }
+    if (
+      (fromChainID == 12 || fromChainID == 512) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 100
     }
   } else {
     // USDC

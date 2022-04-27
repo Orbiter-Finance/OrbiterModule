@@ -10,6 +10,7 @@ import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 
+// import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
     | string
@@ -181,6 +182,13 @@ export function jobMakerPull() {
             apiDydx = makerConfig.dydx_test.api
           }
           await serviceMakerPull.dydx(apiDydx)
+          break
+        case 'zkspace':
+          let apiZkspace = makerConfig.zkspace.api
+          if (toChain == 512) {
+            apiZkspace = makerConfig.zkspace_test.api
+          }
+          await serviceMakerPull.zkspace(apiZkspace)
           break
       }
     } catch (error) {
