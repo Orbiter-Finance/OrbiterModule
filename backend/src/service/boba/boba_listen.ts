@@ -1,6 +1,6 @@
 import axios from 'axios'
 import { accessLogger, errorLogger } from '../../util/logger';
-import BobaService from './bobaService';
+import BobaService from './boba_service';
 
 type Api = { endPoint: string; key: string }
 type Transaction = {
@@ -39,6 +39,7 @@ export class BobaListen {
   private api: Api
   private address: string
   private action: Action
+  private rpcHost: string;
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
@@ -48,7 +49,8 @@ export class BobaListen {
     api: Api,
     address: string,
     action: Action = 'txlist',
-    blockProvider?: (isFirst: boolean) => Promise<string>
+    rpcHost: string,
+    blockProvider?: (isFirst: boolean) => Promise<string>,
   ) {
     this.api = api
     this.address = address
@@ -57,6 +59,7 @@ export class BobaListen {
 
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
+    this.rpcHost = rpcHost;
   }
 
   transfer(
@@ -93,7 +96,8 @@ export class BobaListen {
           startblock = await this.blockProvider(isFirstTicker)
           isFirstTicker = false
         }
-        const service = new BobaService();
+        console.log(this.rpcHost, '======', this.api)
+        const service = new BobaService(this.rpcHost, this.api.endPoint);
         const result:any = await service.getTransactionByAddress(this.address, startblock)
         for (const item of result) {
           if (!checkFilter(item.from, item.to)) {

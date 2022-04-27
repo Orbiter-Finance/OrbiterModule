@@ -183,7 +183,8 @@ export function jobMakerPull() {
           await serviceMakerPull.dydx(apiDydx)
           break
         case "boba":
-          await serviceMakerPull.boba(toChain === 288 ? makerConfig.boba.api: makerConfig.boba_rinkeby.api)
+          const network = toChain === 288 ? makerConfig.boba: makerConfig.boba_rinkeby;
+          await serviceMakerPull.boba(network.api,network.wsEndPoint)
           break;
       }
     } catch (error) {

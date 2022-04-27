@@ -15,7 +15,7 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-import BobaService from './boba/bobaService';
+import BobaService from './boba/boba_service';
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -417,7 +417,7 @@ export class ServiceMakerPull {
         apiKey: api.key,
         module: 'account',
         action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
-        address: this.makerAddress,
+        address:this.makerAddress,
         page: 1,
         offset: 100,
         startblock,
@@ -1311,7 +1311,7 @@ export class ServiceMakerPull {
    * pull boba
    * @param api
    */
-  async boba(api: { endPoint: string; key: string }) {
+  async boba(api: { endPoint: string; key: string }, wsEndPoint: string) {
     const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
     let makerPullLastData = BOBA_LAST[makerPullLastKey]
     if (!makerPullLastData) {
@@ -1321,8 +1321,8 @@ export class ServiceMakerPull {
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
-    const bobaService = new BobaService();
-    const result = await bobaService.getTransactionByAddress(this.makerAddress);
+    const bobaService = new BobaService(wsEndPoint, api.endPoint);
+    const result = await bobaService.getTransactionByAddress(this.makerAddress,startblock, endblock);
     if (!result || !Array.isArray(result) ) {
       return
     }

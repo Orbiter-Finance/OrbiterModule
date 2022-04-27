@@ -14,7 +14,6 @@ import { CHAIN_INDEX } from '../util/maker/core'
 
 // extend relativeTime
 dayjs.extend(relativeTime)
-
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker', async ({ restful }) => {
     const chains = <{ chainId: number; chainName: string }[]>[]
@@ -56,7 +55,6 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       },
       request.query
     )
-
     const list = await serviceMaker.getMakerNodes(
       params.makerAddress,
       params.fromChain,

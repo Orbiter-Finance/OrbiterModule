@@ -358,6 +358,7 @@ async function watchTransfers(pool, state) {
         api,
         makerAddress,
         "txlist",
+        wsEndPoint,
         async () => {
           if (startBlockNumber) {
             return startBlockNumber + ''
@@ -366,7 +367,7 @@ async function watchTransfers(pool, state) {
             startBlockNumber = (await web3.eth.getBlockNumber()) + 1
             return startBlockNumber + ''
           }
-        }
+        },
       ).transfer(
         { to: makerAddress },
         {

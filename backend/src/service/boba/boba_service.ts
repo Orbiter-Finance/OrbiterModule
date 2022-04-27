@@ -3,14 +3,14 @@ import { createAlchemyWeb3, AlchemyWeb3 } from '@alch/alchemy-web3'
 export default class BobaService {
   private grap: GraphQLClient
   private jsonrpc: AlchemyWeb3
-  constructor() {
-    this.jsonrpc = createAlchemyWeb3('https://rinkeby.boba.network')
+  constructor(rpcHost: string,apiHost: string) {
+    this.jsonrpc = createAlchemyWeb3(rpcHost);
     this.grap = new GraphQLClient(
-      'https://blockexplorer.rinkeby.boba.network/graphiql',
+      apiHost,
       { headers: {} }
     )
   }
-  getTransactionByAddress(addrHash: string, startBlock?: string) {
+  getTransactionByAddress(addrHash: string, startBlock?: string, endblock?: string) {
     return new Promise(async (resolve, reject) => {
       const trxList: any[] = []
       try {
