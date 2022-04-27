@@ -194,6 +194,26 @@ export default {
     },
     gasPrice: 2,
   },
+  zkspace: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.zks.app/v3/1',
+    api: {
+      endPoint: 'https://api.zks.app/v3/1',
+      key: '',
+      chainID: 13,
+    },
+    gasPrice: 2,
+  },
+  zkspace_test: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api.zks.app/v3/4',
+    api: {
+      endPoint: 'https://api.zks.app/v3/4',
+      key: '',
+      chainID: 133,
+    },
+    gasPrice: 2,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [
