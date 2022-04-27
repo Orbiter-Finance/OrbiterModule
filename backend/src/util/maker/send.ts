@@ -804,8 +804,7 @@ async function sendConsumer(value: any) {
         }
       )
       const txHash = transferResult.data.data.replace('sync-tx:', '0x')
-
-      await zkspace_help.getFristResult(fromChainID, txHash)
+      await zkspace_help.getFristResult(chainID, txHash)
       nonceDic[makerAddress][chainID] = result_nonce
       return {
         code: 0,
