@@ -376,6 +376,7 @@ async function watchTransfers(pool, state) {
       api,
       makerAddress,
       isPolygon || isMetis ? 'tokentx' : 'txlist',
+      isMetis ? 'desc' : 'asc',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
