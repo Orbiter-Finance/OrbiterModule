@@ -1361,7 +1361,7 @@ export class ServiceMakerPull {
         }
         promiseMethods.push(async () => {
           await savePull(makerPull)
-          await this.compareData(makerPull, zksTransaction.hash)
+          await this.compareData(makerPull, zksTransaction.tx_hash)
         })
       }
       await this.doPromisePool(promiseMethods)
