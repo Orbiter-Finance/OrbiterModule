@@ -95,7 +95,8 @@ export async function getMakerPulls(
   })
   queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
-    `${ALIAS_MP}.${fromOrToMaker ? 'fromAddress' : 'toAddress'
+    `${ALIAS_MP}.${
+      fromOrToMaker ? 'fromAddress' : 'toAddress'
     } = :makerAddress`,
     { makerAddress }
   )
@@ -159,7 +160,7 @@ class MakerPullLastData {
   makerPull: MakerPull | undefined = undefined
   pullCount = 0
   roundTotal = 0 // When it is zero(0) full update, else incremental update
-  startPoint = 0//only for zkspace
+  startPoint = 0 //only for zkspace
 }
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
@@ -246,7 +247,7 @@ export class ServiceMakerPull {
       // update last data
       last.makerPull = undefined
       last.pullCount = 0
-      last.startPoint = 0//only for zkspace
+      last.startPoint = 0 //only for zkspace
       last.roundTotal++
     } else {
       lastMakePull = last.makerPull
@@ -407,8 +408,8 @@ export class ServiceMakerPull {
    */
   private getTxExtFromInput(input: string) {
     if (input.length > 138) {
-      const inputData = CrossAddress.parseTransferERC20Input(input)
-      if (inputData.ext) {
+      const inputData = CrossAddress.safeParseTransferERC20Input(input)
+      if (inputData && inputData.ext) {
         return inputData.ext
       }
     }
@@ -1173,7 +1174,7 @@ export class ServiceMakerPull {
         gasAmount: lpTransaction.feeAmount || '',
         tx_status:
           lpTransaction.status == 'processed' ||
-            lpTransaction.status == 'received'
+          lpTransaction.status == 'received'
             ? 'finalized'
             : 'committed',
       })
@@ -1429,13 +1430,18 @@ export class ServiceMakerPull {
       accessLogger.warn('Get zkspace txlist faild: ', error.messages)
     }
 
-    if (zksResponse.status === 200 && zksResponse.statusText === 'OK' && zksResponse.data.success) {
+    if (
+      zksResponse.status === 200 &&
+      zksResponse.statusText === 'OK' &&
+      zksResponse.data.success
+    ) {
       let respData = zksResponse.data
       let zksList = respData?.data?.data
       if (!zksList || zksList.length == 0) {
         return
       }
-      makerPullLastData.startPoint = zksList.length == 50 ? makerPullLastData.startPoint + 50 : 0
+      makerPullLastData.startPoint =
+        zksList.length == 50 ? makerPullLastData.startPoint + 50 : 0
       const promiseMethods: (() => Promise<unknown>)[] = []
 
       for (let zksTransaction of zksList) {
@@ -1455,7 +1461,7 @@ export class ServiceMakerPull {
             .multipliedBy(new BigNumber(10 ** 18))
             .toString()
         )
-        const makerPull = lastMakePull = <MakerPull>{
+        const makerPull = (lastMakePull = <MakerPull>{
           chainId: this.chainId,
           makerAddress: this.makerAddress,
           tokenAddress: this.tokenAddress,
@@ -1474,10 +1480,10 @@ export class ServiceMakerPull {
           gasAmount: zksTransaction.fee || '',
           tx_status:
             zksTransaction.status == 'verified' ||
-              zksTransaction.status == 'pending'
+            zksTransaction.status == 'pending'
               ? 'finalized'
               : 'committed',
-        }
+        })
         promiseMethods.push(async () => {
           await savePull(makerPull)
           await this.singleCompareData(makerPull)
