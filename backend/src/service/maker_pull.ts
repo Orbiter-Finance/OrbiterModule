@@ -8,6 +8,7 @@ import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
 import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
+import { CrossAddress } from '../util/cross_address'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
@@ -182,16 +183,29 @@ export function getLastStatus() {
     METIS_LAST,
     ZKSYNC_LAST,
     OPTIMISM_LAST,
+    IMMUTABLEX_USER_LAST,
+    IMMUTABLEX_RECEIVER_LAST,
     LOOPRING_LAST,
+    DYDX_LAST,
     ZKSPACE_LAST,
   }
 }
 
+const SERVICE_MAKER_PULL_TIMEOUT = 16000
 export class ServiceMakerPull {
+  private static compareDataPromise = Promise.resolve()
+
   private chainId: number
   private makerAddress: string
   private tokenAddress: string
   private tokenSymbol: string // for makerList[x].tName
+
+  /**
+   * Reset compareDataPromise
+   */
+  public static resetCompareDataPromise() {
+    ServiceMakerPull.compareDataPromise = Promise.resolve()
+  }
 
   /**
    * @param chainId
@@ -241,17 +255,14 @@ export class ServiceMakerPull {
   }
 
   /**
-   *
    * @param makerPull
-   * @param hash
    * @returns
    */
-  private async compareData(makerPull: MakerPull, hash: string) {
+  private async compareData(makerPull: MakerPull) {
     // to lower
     const makerAddress = this.makerAddress.toLowerCase()
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
-    hash = hash.toLowerCase()
 
     // if maker out
     if (fromAddress == makerAddress) {
@@ -328,7 +339,9 @@ export class ServiceMakerPull {
         amount_flag: makerPull.nonce,
         tx_status: Not('rejected'),
       })
-      const otherData = {}
+      const otherData = {
+        state: makerPull.tx_status == 'finalized' ? 1 : 0,
+      }
       if (_mp) {
         otherData['toTx'] = _mp.txHash
         otherData['toAmount'] = _mp.amount
@@ -349,13 +362,13 @@ export class ServiceMakerPull {
             userAddress: fromAddress,
             fromChain: String(makerPull.chainId),
             toChain: makerPull.amount_flag,
-            formTx: hash,
+            formTx: makerPull.txHash,
             fromAmount: makerPull.amount,
             formNonce: makerPull.nonce,
             needToAmount,
             fromTimeStamp: dateFormatNormal(makerPull.txTime),
-            state: makerPull.tx_status == 'finalized' ? 1 : 0,
             txToken: makerPull.tokenAddress,
+            fromExt: makerPull.txExt,
             ...otherData,
           })
         }
@@ -367,12 +380,75 @@ export class ServiceMakerPull {
   }
 
   /**
+   * @param makerPull
+   */
+  private async singleCompareData(makerPull: MakerPull) {
+    // Todo: Single compareData has "stuck still" bug. Execute synchronously first
+    // await (ServiceMakerPull.compareDataPromise =
+    //   ServiceMakerPull.compareDataPromise
+    //     .catch(() => {
+    //       // Catch prev promise error.
+    //     })
+    //     .then(() => this.compareData(makerPull)))
+    return this.compareData(makerPull)
+  }
+
+  /**
    * @param promiseMethods
    */
   private async doPromisePool(promiseMethods: (() => Promise<unknown>)[]) {
     await PromisePool.for(promiseMethods)
       .withConcurrency(10)
       .process(async (item) => await item())
+  }
+
+  /**
+   * @param input
+   */
+  private getTxExtFromInput(input: string) {
+    if (input.length > 138) {
+      const inputData = CrossAddress.parseTransferERC20Input(input)
+      if (inputData.ext) {
+        return inputData.ext
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * @param transaction
+   * @param api
+   * @returns
+   */
+  private async ensureTransactionInput(
+    transaction: { hash: string; input: string },
+    api: { endPoint: string; key: string }
+  ) {
+    if (!equalsIgnoreCase(transaction.input, 'deprecated')) {
+      return
+    }
+
+    try {
+      const resp = await axios.get(api.endPoint, {
+        params: {
+          apiKey: api.key,
+          module: 'proxy',
+          action: 'eth_getTransactionByHash',
+          txhash: transaction.hash,
+        },
+        timeout: SERVICE_MAKER_PULL_TIMEOUT,
+      })
+
+      // Set input
+      transaction.input = resp.data.result?.input || transaction.input
+    } catch (err) {
+      errorLogger.error(
+        `proxy.eth_getTransactionByHash failed. hash:${
+          transaction.hash
+        }, api: ${JSON.stringify(api)}, error: ${err.message}.`
+      )
+    }
   }
 
   /**
@@ -403,7 +479,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
     // check data
     const { data } = resp
@@ -429,6 +505,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -442,6 +526,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -457,7 +542,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -499,7 +584,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -526,6 +611,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -539,6 +632,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -554,7 +648,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -596,7 +690,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -623,6 +717,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -636,6 +738,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'MATIC',
         gasAmount: new BigNumber(item.gasUsed)
@@ -651,7 +754,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -674,7 +777,7 @@ export class ServiceMakerPull {
     if (!ZKSYNC_TOKEN_MAP[this.tokenAddress]) {
       const respData = (
         await axios.get(`${api.endPoint}\/tokens\/${this.tokenAddress}`, {
-          timeout: 16000,
+          timeout: SERVICE_MAKER_PULL_TIMEOUT,
         })
       ).data
       if (respData.result?.address == this.tokenAddress) {
@@ -761,7 +864,7 @@ export class ServiceMakerPull {
         }
 
         // compare
-        await this.compareData(makerPull, item.txHash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -803,7 +906,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -829,6 +932,15 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -842,6 +954,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -857,7 +970,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -934,7 +1047,7 @@ export class ServiceMakerPull {
             fromAddress: transaction.from,
             toAddress: transaction.to,
             txBlock: transaction.blockHash,
-            txHash: transaction.hash,
+            txHash: String(transaction.hash),
             txTime: new Date(transaction.timeStamp * 1000),
             gasCurrency: 'ETH',
             gasAmount: '0',
@@ -945,7 +1058,7 @@ export class ServiceMakerPull {
             await savePull(makerPull)
 
             // compare
-            await this.compareData(makerPull, String(transaction.hash))
+            await this.singleCompareData(makerPull)
           })
         }
 
@@ -1067,7 +1180,7 @@ export class ServiceMakerPull {
 
       promiseMethods.push(async () => {
         await savePull(makerPull)
-        await this.compareData(makerPull, lpTransaction.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -1110,7 +1223,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -1136,6 +1249,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -1149,6 +1270,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'METIS',
         gasAmount: new BigNumber(item.gasUsed)
@@ -1164,7 +1286,7 @@ export class ServiceMakerPull {
         await savePull(makerPull)
 
         // compare
-        await this.compareData(makerPull, item.hash)
+        await this.singleCompareData(makerPull)
       })
     }
 
@@ -1258,7 +1380,7 @@ export class ServiceMakerPull {
           fromAddress: transaction.from,
           toAddress,
           txBlock: transaction.blockHash,
-          txHash: transaction.hash,
+          txHash: String(transaction.hash),
           txTime: new Date(transaction.timeStamp * 1000),
           gasCurrency: 'ETH',
           gasAmount: '0',
@@ -1269,7 +1391,7 @@ export class ServiceMakerPull {
           await savePull(makerPull)
 
           // compare
-          await this.compareData(makerPull, String(transaction.hash))
+          await this.singleCompareData(makerPull)
         })
       }
 
@@ -1284,9 +1406,6 @@ export class ServiceMakerPull {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
-    if (makerPullLastData.makerPull) {
-      // makerPullLastData.makerPull['currentCursor'] = resp.cursor
-    }
 
     DYDX_LAST[makerPullLastKey] = makerPullLastData
   }
@@ -1361,7 +1480,7 @@ export class ServiceMakerPull {
         }
         promiseMethods.push(async () => {
           await savePull(makerPull)
-          await this.compareData(makerPull, zksTransaction.tx_hash)
+          await this.singleCompareData(makerPull)
         })
       }
       await this.doPromisePool(promiseMethods)

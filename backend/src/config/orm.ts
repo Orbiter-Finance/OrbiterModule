@@ -13,6 +13,7 @@ export const options: ConnectionOptions = {
   synchronize: isDevelopment,
   logging: false,
   extra: {},
+  maxQueryExecutionTime: 1000, // Show slow query
 
   entities: [path.resolve(__dirname, '..', 'model', '**', '*.{ts,js}')],
   migrations: [

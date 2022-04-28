@@ -198,6 +198,40 @@ export function jobMakerPull() {
     }
   }
 
+  // Concurrent pull
+  // const callback = async () => {
+  //   const promises: Promise<void>[] = []
+
+  //   // Add promise
+  //   const runningKeyArr: string[] = []
+  //   const addPromise = (
+  //     chainId: number,
+  //     makerAddress: string,
+  //     tokenAddress: string,
+  //     tName: string
+  //   ) => {
+  //     const runningKey = `${chainId}:${makerAddress}:${tokenAddress}:${tName}`
+  //     if (runningKeyArr.indexOf(runningKey) > -1) {
+  //       return
+  //     }
+  //     runningKeyArr.push(runningKey)
+
+  //     promises.push(startPull(chainId, makerAddress, tokenAddress, tName))
+  //   }
+
+  //   const makerList = await getMakerList()
+  //   for (const item of makerList) {
+  //     const { pool1, pool2 } = expanPool(item)
+  //     addPromise(pool1.c1ID, pool1.makerAddress, pool1.t1Address, pool1.tName)
+  //     addPromise(pool2.c2ID, pool2.makerAddress, pool2.t2Address, pool2.tName)
+  //   }
+
+  //   await Promise.all(promises)
+
+  //   // Reset ServiceMakerPull.compareDataPromise
+  //   ServiceMakerPull.resetCompareDataPromise()
+  // }
+
   const callback = async () => {
     const makerList = await getMakerList()
     for (const item of makerList) {
@@ -215,6 +249,7 @@ export function jobMakerPull() {
         pool2.tName
       )
     }
+
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
