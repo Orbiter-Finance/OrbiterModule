@@ -96,7 +96,6 @@ export class BobaListen {
           startblock = await this.blockProvider(isFirstTicker)
           isFirstTicker = false
         }
-        console.log(this.rpcHost, '======', this.api)
         const service = new BobaService(this.rpcHost, this.api.endPoint);
         const result:any = await service.getTransactionByAddress(this.address, startblock)
         for (const item of result) {

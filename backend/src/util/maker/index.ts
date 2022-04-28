@@ -364,7 +364,7 @@ async function watchTransfers(pool, state) {
             return startBlockNumber + ''
           } else {
             // Current block number +1, to prevent restart too fast!!!
-            startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+            startBlockNumber = (await web3.eth.getBlockNumber()) + 1;
             return startBlockNumber + ''
           }
         },

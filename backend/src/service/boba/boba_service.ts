@@ -20,8 +20,8 @@ export default class BobaService {
               transactions(first: 39) {
                 edges {
                   node {
+                    blockNumber,
                     status
-                    error
                     hash
                   }
                 }
@@ -47,25 +47,29 @@ export default class BobaService {
               continue
             }
             const trx: any = await this.jsonrpc.eth.getTransaction(row.hash)
-            trxList.push({
-              blockNumber: trx.blockNumber,
-              timeStamp:Number(trx.l1Timestamp),
-              hash: trx.hash,
-              blockHash: trx.blockHash,
-              transactionIndex: trx.transactionIndex,
-              from: trx.from,
-              to: trx.to,
-              value: trx.value,
-              gas: trx.gas,
-              gasPrice: trx.gasPrice,
-              isError: '0',
-              txreceipt_status: '',
-              input: trx.input,
-              contractAddress: '',
-              cumulativeGasUsed: '',
-              gasUsed: '',
-              confirmations: nowHeight - trx.blockNumber + 1,
-            })
+            var receipt:any = await this.jsonrpc.eth.getTransactionReceipt(row.hash)
+            if (trx && receipt && receipt.status) {
+              trxList.push({
+                blockNumber: trx.blockNumber,
+                timeStamp:Number(trx.l1Timestamp),
+                hash: trx.hash,
+                blockHash: trx.blockHash,
+                transactionIndex: trx.transactionIndex,
+                from: trx.from,
+                to: trx.to,
+                value: trx.value,
+                gas: trx.gas,
+                gasPrice: trx.gasPrice,
+                isError: '0',
+                txreceipt_status: '',
+                input: trx.input,
+                contractAddress: '',
+                cumulativeGasUsed: '',
+                gasUsed: receipt.gasUsed,
+                confirmations: nowHeight - trx.blockNumber + 1,
+              })
+            }
+           
           }
         }
         resolve(trxList)
