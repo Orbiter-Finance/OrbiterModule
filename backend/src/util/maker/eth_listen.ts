@@ -31,7 +31,6 @@ type TransferCallbacks = {
   onReceived?: (transaction: Transaction) => any
 }
 type Action = 'txlist' | 'tokentx'
-type Sort = 'asc' | 'desc'
 
 const ETHLISTEN_TRANSFER_DURATION = 5 * 1000
 
@@ -39,7 +38,6 @@ export class EthListen {
   private api: Api
   private address: string
   private action: Action
-  private sort: Sort
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
@@ -49,14 +47,12 @@ export class EthListen {
     api: Api,
     address: string,
     action: Action = 'txlist',
-    sort: Sort = 'asc',
     blockProvider?: (isFirst: boolean) => Promise<string>
   ) {
     this.api = api
     this.address = address
     this.blockProvider = blockProvider
     this.action = action
-    this.sort = sort
 
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
@@ -111,7 +107,7 @@ export class EthListen {
             offset: 100,
             startblock,
             endblock: 'latest',
-            sort: this.sort,
+            sort: 'asc',
           },
           timeout: 16000,
         })
@@ -138,7 +134,9 @@ export class EthListen {
               item.confirmations >= confirmationsTotal
             ) {
               this.transferConfirmationedHashs[item.hash] = true
-              accessLogger.info(`Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`)
+              accessLogger.info(
+                `Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`
+              )
               callbacks &&
                 callbacks.onConfirmation &&
                 callbacks.onConfirmation(<Transaction>item)

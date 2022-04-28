@@ -376,7 +376,6 @@ async function watchTransfers(pool, state) {
       api,
       makerAddress,
       isPolygon || isMetis ? 'tokentx' : 'txlist',
-      isMetis ? 'desc' : 'asc',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
@@ -909,7 +908,9 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           }
           let zksList: any[] = []
           allZksList.push(...originZksList)
-          let firstTxTime = originZksList[0].created_at?originZksList[0].created_at:0
+          let firstTxTime = originZksList[0].created_at
+            ? originZksList[0].created_at
+            : 0
             ? originZksList[0].created_at
             : 0
           let whileTag = true
@@ -1704,7 +1705,11 @@ function confirmToZKSTransaction(
       return
     }
     // When failReason, don't try again
-    if (!transferReceipt.success || !transferReceipt.data.success || transferReceipt.data.fail_reason) {
+    if (
+      !transferReceipt.success ||
+      !transferReceipt.data.success ||
+      transferReceipt.data.fail_reason
+    ) {
       return
     }
 
