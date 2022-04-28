@@ -8,6 +8,7 @@ import { MakerNode } from '../model/maker_node'
 import { MakerPull } from '../model/maker_pull'
 import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
+import { CrossAddress } from '../util/cross_address'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
@@ -15,7 +16,7 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
-import BobaService from './boba/boba_service';
+import BobaService from './boba/boba_service'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -159,6 +160,7 @@ class MakerPullLastData {
   makerPull: MakerPull | undefined = undefined
   pullCount = 0
   roundTotal = 0 // When it is zero(0) full update, else incremental update
+  startPoint = 0 //only for zkspace
 }
 const LAST_PULL_COUNT_MAX = 3
 const ETHERSCAN_LAST: { [key: string]: MakerPullLastData } = {}
@@ -172,6 +174,7 @@ const IMMUTABLEX_RECEIVER_LAST: { [key: string]: MakerPullLastData } = {}
 const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
 const BOBA_LAST: { [key: string]: MakerPullLastData } = {}
+const ZKSPACE_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -186,9 +189,11 @@ export function getLastStatus() {
     IMMUTABLEX_RECEIVER_LAST,
     LOOPRING_LAST,
     DYDX_LAST,
+    ZKSPACE_LAST,
   }
 }
 
+const SERVICE_MAKER_PULL_TIMEOUT = 16000
 export class ServiceMakerPull {
   private static compareDataPromise = Promise.resolve()
 
@@ -228,9 +233,7 @@ export class ServiceMakerPull {
    */
   private async getLastMakerPull(last: MakerPullLastData) {
     const makerPullStart = await getMakerPullStart()
-
     const nowTime = new Date().getTime()
-
     // 1. if last's pullCount >= max pullCount, the last makerPull invalid
     // 2. if roundTotal > 0 and makerPull.txTime before some time, the last makerPull invalid(Incremental update)
     let lastMakePull: MakerPull | undefined
@@ -238,7 +241,6 @@ export class ServiceMakerPull {
     if (last.roundTotal > 0) {
       startTime = nowTime - makerPullStart.incrementPull
     }
-
     if (
       last.pullCount >= LAST_PULL_COUNT_MAX ||
       (last.makerPull && startTime > last.makerPull.txTime.getTime())
@@ -246,11 +248,11 @@ export class ServiceMakerPull {
       // update last data
       last.makerPull = undefined
       last.pullCount = 0
+      last.startPoint = 0 //only for zkspace
       last.roundTotal++
     } else {
       lastMakePull = last.makerPull
     }
-
     return lastMakePull
   }
 
@@ -339,7 +341,9 @@ export class ServiceMakerPull {
         amount_flag: makerPull.nonce,
         tx_status: Not('rejected'),
       })
-      const otherData = {}
+      const otherData = {
+        state: makerPull.tx_status == 'finalized' ? 1 : 0,
+      }
       if (_mp) {
         otherData['toTx'] = _mp.txHash
         otherData['toAmount'] = _mp.amount
@@ -365,8 +369,8 @@ export class ServiceMakerPull {
             formNonce: makerPull.nonce,
             needToAmount,
             fromTimeStamp: dateFormatNormal(makerPull.txTime),
-            state: makerPull.tx_status == 'finalized' ? 1 : 0,
             txToken: makerPull.tokenAddress,
+            fromExt: makerPull.txExt,
             ...otherData,
           })
         }
@@ -381,12 +385,14 @@ export class ServiceMakerPull {
    * @param makerPull
    */
   private async singleCompareData(makerPull: MakerPull) {
-    await (ServiceMakerPull.compareDataPromise =
-      ServiceMakerPull.compareDataPromise
-        .catch(() => {
-          // Catch prev promise error.
-        })
-        .then(() => this.compareData(makerPull)))
+    // Todo: Single compareData has "stuck still" bug. Execute synchronously first
+    // await (ServiceMakerPull.compareDataPromise =
+    //   ServiceMakerPull.compareDataPromise
+    //     .catch(() => {
+    //       // Catch prev promise error.
+    //     })
+    //     .then(() => this.compareData(makerPull)))
+    return this.compareData(makerPull)
   }
 
   /**
@@ -396,6 +402,55 @@ export class ServiceMakerPull {
     await PromisePool.for(promiseMethods)
       .withConcurrency(10)
       .process(async (item) => await item())
+  }
+
+  /**
+   * @param input
+   */
+  private getTxExtFromInput(input: string) {
+    if (input.length > 138) {
+      const inputData = CrossAddress.parseTransferERC20Input(input)
+      if (inputData.ext) {
+        return inputData.ext
+      }
+    }
+
+    return undefined
+  }
+
+  /**
+   * @param transaction
+   * @param api
+   * @returns
+   */
+  private async ensureTransactionInput(
+    transaction: { hash: string; input: string },
+    api: { endPoint: string; key: string }
+  ) {
+    if (!equalsIgnoreCase(transaction.input, 'deprecated')) {
+      return
+    }
+
+    try {
+      const resp = await axios.get(api.endPoint, {
+        params: {
+          apiKey: api.key,
+          module: 'proxy',
+          action: 'eth_getTransactionByHash',
+          txhash: transaction.hash,
+        },
+        timeout: SERVICE_MAKER_PULL_TIMEOUT,
+      })
+
+      // Set input
+      transaction.input = resp.data.result?.input || transaction.input
+    } catch (err) {
+      errorLogger.error(
+        `proxy.eth_getTransactionByHash failed. hash:${
+          transaction.hash
+        }, api: ${JSON.stringify(api)}, error: ${err.message}.`
+      )
+    }
   }
 
   /**
@@ -417,16 +472,15 @@ export class ServiceMakerPull {
         apiKey: api.key,
         module: 'account',
         action: isEthTokenAddress(this.tokenAddress) ? 'txlist' : 'tokentx',
-        address:this.makerAddress,
+        address: this.makerAddress,
         page: 1,
         offset: 100,
         startblock,
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
-
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
@@ -451,6 +505,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -464,6 +526,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -521,7 +584,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -548,6 +611,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -561,6 +632,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -618,7 +690,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -645,6 +717,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -658,6 +738,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'MATIC',
         gasAmount: new BigNumber(item.gasUsed)
@@ -696,7 +777,7 @@ export class ServiceMakerPull {
     if (!ZKSYNC_TOKEN_MAP[this.tokenAddress]) {
       const respData = (
         await axios.get(`${api.endPoint}\/tokens\/${this.tokenAddress}`, {
-          timeout: 16000,
+          timeout: SERVICE_MAKER_PULL_TIMEOUT,
         })
       ).data
       if (respData.result?.address == this.tokenAddress) {
@@ -825,7 +906,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -851,6 +932,15 @@ export class ServiceMakerPull {
       }
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
+
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -864,6 +954,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -1112,6 +1203,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
+
     let lastMakePull = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
@@ -1130,7 +1222,7 @@ export class ServiceMakerPull {
         endblock,
         sort: 'desc',
       },
-      timeout: 16000,
+      timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
 
     // check data
@@ -1156,6 +1248,14 @@ export class ServiceMakerPull {
 
       const amount_flag = getAmountFlag(this.chainId, item.value)
 
+      // ensureTransactionInput
+      if (
+        equalsIgnoreCase(item.to, this.makerAddress) &&
+        (amount_flag == '11' || amount_flag == '511')
+      ) {
+        await this.ensureTransactionInput(item, api)
+      }
+
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -1169,6 +1269,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
+        txExt: this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'METIS',
         gasAmount: new BigNumber(item.gasUsed)
@@ -1200,7 +1301,7 @@ export class ServiceMakerPull {
 
   /**
    * pull dydx
-   * @prarm api
+   * @pararm api
    */
   async dydx(api: { endPoint: string; key: string }) {
     const apiKeyCredentials = DydxHelper.getApiKeyCredentials(this.makerAddress)
@@ -1308,6 +1409,94 @@ export class ServiceMakerPull {
     DYDX_LAST[makerPullLastKey] = makerPullLastData
   }
   /**
+   * pull zkspace
+   * @param api
+   */
+  async zkspace(api: { endPoint: string; key: string }) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ZKSPACE_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    const url = `${api.endPoint}/txs?types=Transfer&address=${this.makerAddress}&token=0&start=${makerPullLastData.startPoint}&limit=50`
+    let zksResponse: any
+    try {
+      zksResponse = await axios.get(url)
+    } catch (error) {
+      accessLogger.warn('Get zkspace txlist faild: ', error.messages)
+    }
+
+    if (
+      zksResponse.status === 200 &&
+      zksResponse.statusText === 'OK' &&
+      zksResponse.data.success
+    ) {
+      let respData = zksResponse.data
+      let zksList = respData?.data?.data
+      if (!zksList || zksList.length == 0) {
+        return
+      }
+      makerPullLastData.startPoint =
+        zksList.length == 50 ? makerPullLastData.startPoint + 50 : 0
+      const promiseMethods: (() => Promise<unknown>)[] = []
+
+      for (let zksTransaction of zksList) {
+        if (
+          (zksTransaction.status != 'verified' &&
+            zksTransaction.status != 'pending') ||
+          zksTransaction.tx_type != 'Transfer' ||
+          zksTransaction.token.symbol != 'ETH' ||
+          !zksTransaction.success ||
+          zksTransaction.fail_reason != ''
+        ) {
+          continue
+        }
+        const amount_flag = getAmountFlag(
+          this.chainId,
+          new BigNumber(zksTransaction.amount)
+            .multipliedBy(new BigNumber(10 ** 18))
+            .toString()
+        )
+        const makerPull = (lastMakePull = <MakerPull>{
+          chainId: this.chainId,
+          makerAddress: this.makerAddress,
+          tokenAddress: this.tokenAddress,
+          data: JSON.stringify(zksTransaction),
+          amount: new BigNumber(zksTransaction.amount)
+            .multipliedBy(new BigNumber(10 ** 18))
+            .toString(),
+          amount_flag,
+          nonce: zksTransaction.nonce,
+          fromAddress: zksTransaction.from,
+          toAddress: zksTransaction.to,
+          txBlock: zksTransaction['block_number'],
+          txHash: zksTransaction.tx_hash,
+          txTime: new Date(zksTransaction.created_at * 1000),
+          gasCurrency: zksTransaction.token.symbol,
+          gasAmount: zksTransaction.fee || '',
+          tx_status:
+            zksTransaction.status == 'verified' ||
+            zksTransaction.status == 'pending'
+              ? 'finalized'
+              : 'committed',
+        })
+        promiseMethods.push(async () => {
+          await savePull(makerPull)
+          await this.singleCompareData(makerPull)
+        })
+      }
+      await this.doPromisePool(promiseMethods)
+
+      // set ZKSPACE_LAST
+      if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+        makerPullLastData.pullCount++
+      }
+      makerPullLastData.makerPull = lastMakePull
+      ZKSPACE_LAST[makerPullLastKey] = makerPullLastData
+    }
+  }
+  /**
    * pull boba
    * @param api
    */
@@ -1321,9 +1510,13 @@ export class ServiceMakerPull {
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
-    const bobaService = new BobaService(wsEndPoint, api.endPoint);
-    const result = await bobaService.getTransactionByAddress(this.makerAddress,startblock, endblock);
-    if (!result || !Array.isArray(result) ) {
+    const bobaService = new BobaService(wsEndPoint, api.endPoint)
+    const result = await bobaService.getTransactionByAddress(
+      this.makerAddress,
+      startblock,
+      endblock
+    )
+    if (!result || !Array.isArray(result)) {
       return
     }
     const promiseMethods: (() => Promise<unknown>)[] = []

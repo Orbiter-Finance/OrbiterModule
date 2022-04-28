@@ -12,6 +12,7 @@ import { getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
+import ZKSpaceHelper from './zkspace/zkspace_help'
 import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
 
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
@@ -117,6 +118,21 @@ async function getTokenBalance(
         dydxClient.apiKeyCredentials = apiKeyCredentials
 
         value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
+        break
+      case 'zkspace':
+        let balanceInfo = await ZKSpaceHelper.getZKSBalance({
+          account: makerAddress,
+          localChainID: chainId,
+        })
+        if (
+          !balanceInfo ||
+          !balanceInfo.length ||
+          balanceInfo.findIndex((item) => item.id == 0) == -1
+        ) {
+          value = '0'
+        }
+        let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
+        value = balanceInfo[defaultIndex].amount * 10 ** 18 + ''
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint

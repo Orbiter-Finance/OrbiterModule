@@ -34,7 +34,6 @@ export class SendQueue {
           if (!itemData) {
             continue
           }
-
           const promise = async () => {
             try {
               let result: any = undefined

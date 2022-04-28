@@ -4,9 +4,9 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "dev": "cross-env NODE_ENV=development nodemon src/index.ts --no-cache",
-    "dev:maker": "cross-env NODE_ENV=development ORBITER_SCENE=maker nodemon src/index.ts --no-cache",
-    "dev:dashboard": "cross-env NODE_ENV=development ORBITER_SCENE=dashboard nodemon src/index.ts --no-cache",
+    "dev": "cross-env NODE_ENV=development tsnd --respawn src/index.ts",
+    "dev:maker": "cross-env ORBITER_SCENE=maker yarn run dev",
+    "dev:dashboard": "cross-env ORBITER_SCENE=dashboard yarn run dev",
     "start": "node ./dist/index.js",
     "build": "tsc -p .",
     "test": "jest --coverage"
@@ -60,9 +60,10 @@
     "@types/validator": "^13.6.5",
     "cross-env": "^7.0.3",
     "jest": "^27.4.3",
-    "nodemon": "^2.0.13",
     "ts-jest": "^27.1.0",
     "ts-node": "^10.2.1",
-    "typescript": "^4.4.3"
+    "ts-node-dev": "^1.1.8",
+    "typescript": "^4.4.3",
+    "yarn": "^1.22.18"
   }
 }

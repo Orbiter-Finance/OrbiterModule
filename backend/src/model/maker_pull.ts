@@ -18,6 +18,7 @@ import { CommonEntity } from './common'
   'amount_flag',
   'tx_status',
 ])
+@Index('save_pull_find', ['chainId', 'makerAddress', 'tokenAddress', 'txHash'])
 @Entity()
 export class MakerPull extends CommonEntity {
   @PrimaryGeneratedColumn()
@@ -55,6 +56,9 @@ export class MakerPull extends CommonEntity {
 
   @Column('varchar', { length: 255, default: '' })
   txHash: string
+
+  @Column('json', { default: null })
+  txExt: { type: string; value: string }
 
   @Column('timestamp', { default: null })
   txTime: Date

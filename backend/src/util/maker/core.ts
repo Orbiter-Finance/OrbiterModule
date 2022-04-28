@@ -12,7 +12,8 @@ const MAX_BITS = {
   loopring: 256,
   metis: 256,
   dydx: 28,
-  boba: 256
+  boba: 256,
+  zkspace: 35,
 }
 
 export const CHAIN_INDEX = {
@@ -36,8 +37,10 @@ export const CHAIN_INDEX = {
   510: 'metis',
   11: 'dydx',
   511: 'dydx',
+  12: 'zkspace',
+  512: 'zkspace',
   28: 'boba',
-  288: 'boba'
+  288: 'boba',
 }
 
 export const SIZE_OP = {
@@ -64,6 +67,9 @@ function isLimitNumber(chain: string | number) {
     return true
   }
   if (chain === 11 || chain === 511 || chain === 'dydx') {
+    return true
+  }
+  if (chain === 12 || chain === 512 || chain === 'zkspace') {
     return true
   }
   return false
@@ -250,7 +256,6 @@ function getPTextFromTAmount(chain, amount) {
     }
   }
 }
-
 function getRAmountFromTAmount(chain, amount) {
   let pText = ''
   for (let index = 0; index < SIZE_OP.P_NUMBER; index++) {
@@ -279,15 +284,16 @@ function getRAmountFromTAmount(chain, amount) {
   }
   if (isLimitNumber(chain) && amountLength > validDigit) {
     let rAmount =
-      amount.slice(0, validDigit - SIZE_OP.P_NUMBER) +
+      amount.toString().slice(0, validDigit - SIZE_OP.P_NUMBER) +
       pText +
-      amount.slice(validDigit)
+      amount.toString().slice(validDigit)
     return {
       state: true,
       rAmount: rAmount,
     }
   } else {
-    let rAmount = amount.slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
+    let rAmount =
+      amount.toString().slice(0, amountLength - SIZE_OP.P_NUMBER) + pText
     return {
       state: true,
       rAmount: rAmount,
@@ -354,6 +360,7 @@ function AmountValidDigits(chain, amount) {
   if (ramount.length > amountMaxDigits) {
     return 'amount is inValid'
   }
+  //note:the compare is one by one,not all by all
   if (ramount > amountRegion.max.toFixed()) {
     return amountMaxDigits - 1
   } else {
