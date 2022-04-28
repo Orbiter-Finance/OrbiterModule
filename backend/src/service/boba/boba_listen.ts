@@ -1,5 +1,6 @@
 import axios from 'axios'
-import { accessLogger, errorLogger } from '../logger'
+import { accessLogger, errorLogger } from '../../util/logger';
+import BobaService from './boba_service';
 
 type Api = { endPoint: string; key: string }
 type Transaction = {
@@ -34,10 +35,11 @@ type Action = 'txlist' | 'tokentx'
 
 const ETHLISTEN_TRANSFER_DURATION = 5 * 1000
 
-export class EthListen {
+export class BobaListen {
   private api: Api
   private address: string
   private action: Action
+  private rpcHost: string;
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
@@ -47,7 +49,8 @@ export class EthListen {
     api: Api,
     address: string,
     action: Action = 'txlist',
-    blockProvider?: (isFirst: boolean) => Promise<string>
+    rpcHost: string,
+    blockProvider?: (isFirst: boolean) => Promise<string>,
   ) {
     this.api = api
     this.address = address
@@ -56,11 +59,7 @@ export class EthListen {
 
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
-  }
-
-  setTransferBreaker(transferBreaker?: () => boolean): EthListen {
-    this.transferBreaker = transferBreaker
-    return this
+    this.rpcHost = rpcHost;
   }
 
   transfer(
@@ -97,26 +96,9 @@ export class EthListen {
           startblock = await this.blockProvider(isFirstTicker)
           isFirstTicker = false
         }
-        const resp = await axios.get(this.api.endPoint, {
-          params: {
-            apiKey: this.api.key,
-            module: 'account',
-            action: this.action,
-            address: this.address,
-            page: 1,
-            offset: 100,
-            startblock,
-            endblock: 'latest',
-            sort: 'asc',
-          },
-          timeout: 16000,
-        })
-        const { data } = resp
-        if (data.status != '1' || !data.result || data.result.length <= 0) {
-          return
-        }
-
-        for (const item of data.result) {
+        const service = new BobaService(this.rpcHost, this.api.endPoint);
+        const result:any = await service.getTransactionByAddress(this.address, startblock)
+        for (const item of result) {
           if (!checkFilter(item.from, item.to)) {
             continue
           }
@@ -134,9 +116,7 @@ export class EthListen {
               Number(item.confirmations) >= confirmationsTotal
             ) {
               this.transferConfirmationedHashs[item.hash] = true
-              accessLogger.info(
-                `Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`
-              )
+              accessLogger.info(`[Boba listen] Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`)
               callbacks &&
                 callbacks.onConfirmation &&
                 callbacks.onConfirmation(<Transaction>item)
@@ -144,8 +124,9 @@ export class EthListen {
           }
         }
       } catch (error) {
+        console.log(error);
         errorLogger.error(
-          `Eth listen get transfer error: ${error.message}, api.endPoint: ${this.api.endPoint}, address: ${this.address}`
+          `[Boba listen] get transfer error: ${error.message}, api.endPoint: ${this.api.endPoint}, address: ${this.address}`
         )
       }
     }

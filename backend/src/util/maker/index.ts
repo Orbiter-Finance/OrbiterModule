@@ -19,6 +19,7 @@ import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
+import { BobaListen } from '../../service/boba/boba_listen'
 import { factoryIMXListen } from '../../service/immutablex/imx_listen'
 import {
   getL1AddressByL2,
@@ -176,8 +177,8 @@ export function expanPool(pool) {
 
 function watchPool(pool) {
   const expan = expanPool(pool)
-  accessLogger.info('userpool1 =', expan.pool1)
-  accessLogger.info('userpool2 =', expan.pool2)
+  // accessLogger.info('userpool1 =', expan.pool1)
+  // accessLogger.info('userpool2 =', expan.pool2)
 
   watchTransfers(expan.pool1, 0)
   watchTransfers(expan.pool2, 1)
@@ -367,7 +368,33 @@ async function watchTransfers(pool, state) {
   let fromChain = state ? pool.c2Name : pool.c1Name
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-
+  // boba
+  if (fromChainID == 13 || fromChainID === 513) {
+    let startBlockNumber = 0
+    new BobaListen(api, makerAddress, 'txlist', wsEndPoint, async () => {
+      if (startBlockNumber) {
+        return startBlockNumber + ''
+      } else {
+        // Current block number +1, to prevent restart too fast!!!
+        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+        return startBlockNumber + ''
+      }
+    }).transfer(
+      { to: makerAddress },
+      {
+        onConfirmation: async (transaction) => {
+          if (!transaction.hash) {
+            return
+          }
+          startBlockNumber = transaction.blockNumber
+          if (checkData(transaction.value + '', transaction.hash) === true) {
+            confirmFromTransaction(pool, state, transaction.hash)
+          }
+        },
+      }
+    )
+    return
+  }
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
@@ -397,7 +424,6 @@ async function watchTransfers(pool, state) {
           if (!transaction.hash) {
             return
           }
-
           startBlockNumber = transaction.blockNumber
           if (checkData(transaction.value + '', transaction.hash) === true) {
             confirmFromTransaction(pool, state, transaction.hash)
@@ -1380,7 +1406,6 @@ function confirmFromTransaction(
         // When transferExt has value, fromAddress is transferExt.value
         toAddress = transferExt.value
       }
-
       sendTransaction(
         makerAddress,
         transactionID,
@@ -1724,7 +1749,6 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
       web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
     }
     const trx = await web3.eth.getTransaction(txHash)
-
     const currentBlock = await web3.eth.getBlockNumber()
 
     if (!trx) {
@@ -1839,6 +1863,9 @@ export async function sendTransaction(
   const tAmount = amountToSend.tAmount
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
+  accessLogger.info(
+    `makerAddress=${makerAddress}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+  )
   await send(
     makerAddress,
     toAddress,

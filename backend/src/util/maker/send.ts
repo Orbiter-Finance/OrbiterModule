@@ -452,9 +452,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -800,6 +800,8 @@ async function sendConsumer(value: any) {
           tx: req.tx,
         }
       )
+      const txHash = transferResult.data.data.replace('sync-tx:', '0x')
+      await zkspace_help.getFristResult(chainID, txHash)
       nonceDic[makerAddress][chainID] = result_nonce
       try {
         const txHash = transferResult.data.data.replace('sync-tx:', '0x')
@@ -857,7 +859,9 @@ async function sendConsumer(value: any) {
   }
   accessLogger.info('tokenBalance =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
+    errorLogger.error(
+      `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
+    )
     return {
       code: 1,
       txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
