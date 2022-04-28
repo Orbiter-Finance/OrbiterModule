@@ -28,7 +28,7 @@ export const makerInfo = {
   },
 }
 
-type MakerNodes = {
+export type MakerNode = {
   id: number
   transactionID: string
   makerAddress: string
@@ -40,6 +40,14 @@ type MakerNodes = {
   formTx: string
   fromTxHref: string
   fromAmountFormat: string
+  fromExt: {
+    type: string
+    value: string
+    dydxInfo?: {
+      starkKey: string
+      positionId: string
+    }
+  } | null
   toAmountFormat: string
   toTx: string
   toTxHref: string
@@ -52,11 +60,11 @@ type MakerNodes = {
   txTokenName: string
   needTo: any
   profitUSD: string
-}[]
+}
 export const makerNodes = {
   state: reactive({
     loading: false,
-    list: [] as MakerNodes,
+    list: [] as MakerNode[],
   }),
 
   async get(
@@ -79,7 +87,7 @@ export const makerNodes = {
       if (rangeDate?.[1]) {
         params['endTime'] = rangeDate?.[1].getTime()
       }
-      const resp = await $axios.get<MakerNodes>('maker/nodes', {
+      const resp = await $axios.get<MakerNode[]>('maker/nodes', {
         params,
       })
       const list = resp.data

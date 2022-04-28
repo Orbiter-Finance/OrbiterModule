@@ -6,6 +6,7 @@ import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { makerConfig } from '../config'
+import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
 import { getLastStatus, getMakerPulls } from '../service/maker_pull'
 import * as serviceMakerWealth from '../service/maker_wealth'
@@ -111,6 +112,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       let needTo = {
         chainId: 0,
         amount: 0,
+        decimals: 0,
         amountFormat: '',
         tokenAddress: '',
       }
@@ -142,12 +144,21 @@ export default function (router: KoaRouter<DefaultState, Context>) {
               pool,
               item.formNonce
             )?.tAmount || 0
+          needTo.decimals = pool.precision
           needTo.amountFormat = new BigNumber(needTo.amount)
             .dividedBy(10 ** pool.precision)
             .toString()
         }
       }
       item['needTo'] = needTo
+
+      // Parse to dydx txExt
+      if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
+        const dydxHelper = new DydxHelper(Number(item.toChain))
+        item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
+          item.fromExt.value
+        )
+      }
 
       // Profit statistics
       // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate

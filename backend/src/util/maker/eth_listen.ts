@@ -134,7 +134,9 @@ export class EthListen {
               Number(item.confirmations) >= confirmationsTotal
             ) {
               this.transferConfirmationedHashs[item.hash] = true
-              accessLogger.info(`Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`)
+              accessLogger.info(
+                `Transaction [${item.hash}] was confirmed. confirmations: ${item.confirmations}`
+              )
               callbacks &&
                 callbacks.onConfirmation &&
                 callbacks.onConfirmation(<Transaction>item)
