@@ -40,8 +40,8 @@ export const $env = {
     99: '5', // loopring(G)
     510: '588', // metis(G)
     511: '3', // dydx(R)
-    13: '13',// boba
-    513: '513',// boba(R) 
+    13: '288',// boba
+    513: '28',// boba(R) 
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/

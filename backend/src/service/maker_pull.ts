@@ -190,6 +190,7 @@ export function getLastStatus() {
     LOOPRING_LAST,
     DYDX_LAST,
     ZKSPACE_LAST,
+    BOBA_LAST
   }
 }
 
