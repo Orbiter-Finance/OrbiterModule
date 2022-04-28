@@ -60,6 +60,7 @@ export default class BobaService {
                 value: trx.value,
                 gas: trx.gas,
                 gasPrice: trx.gasPrice,
+                nonce: trx.nonce,
                 isError: '0',
                 txreceipt_status: '',
                 input: trx.input,
