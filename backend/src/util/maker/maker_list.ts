@@ -963,7 +963,7 @@ export const makerList = [
     makerAddress: '0x8A3214F28946A797088944396c476f014F88Dd37',
     c1ID: 28,
     c2ID: 5,
-    c1Name: 'boba_rinkeby',
+    c1Name: 'boba_test',
     c2Name: 'rinkeby',
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',

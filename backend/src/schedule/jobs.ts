@@ -185,7 +185,7 @@ export function jobMakerPull() {
           break
         case 'boba':
           const network =
-            toChain === 288 ? makerConfig.boba : makerConfig.boba_rinkeby
+            toChain === 13 ? makerConfig.boba : makerConfig.boba_test
           await serviceMakerPull.boba(network.api, network.wsEndPoint)
           break
         case 'zkspace':

@@ -39,8 +39,8 @@ export const CHAIN_INDEX = {
   511: 'dydx',
   12: 'zkspace',
   512: 'zkspace',
-  28: 'boba',
-  288: 'boba',
+  13: 'boba',
+  513: 'boba',
 }
 
 export const SIZE_OP = {

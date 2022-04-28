@@ -197,7 +197,7 @@ async function watchTransfers(pool, state) {
     accessLogger.warn(`Miss [${pool.c2Name}] maker config!`)
     return
   }
-  
+
   // Instantiate web3 with WebSocketProvider
   const makerAddress = pool.makerAddress
   let api = state ? makerConfig[pool.c2Name].api : makerConfig[pool.c1Name].api
@@ -239,7 +239,6 @@ async function watchTransfers(pool, state) {
 
   // checkData
   const checkData = (amount: string, transactionHash: string) => {
-
     const ptext = orbiterCore.getPTextFromTAmount(fromChainID, amount)
     if (ptext.state === false) {
       return false
@@ -368,39 +367,33 @@ async function watchTransfers(pool, state) {
   let fromChain = state ? pool.c2Name : pool.c1Name
 
   const web3 = createAlchemyWeb3(wsEndPoint)
-    // boba 
-    if (fromChainID == 28 || fromChainID === 288) {
-      let startBlockNumber = 0
-      new BobaListen(
-        api,
-        makerAddress,
-        "txlist",
-        wsEndPoint,
-        async () => {
-          if (startBlockNumber) {
-            return startBlockNumber + ''
-          } else {
-            // Current block number +1, to prevent restart too fast!!!
-            startBlockNumber = (await web3.eth.getBlockNumber()) + 1;
-            return startBlockNumber + ''
+  // boba
+  if (fromChainID == 13 || fromChainID === 513) {
+    let startBlockNumber = 0
+    new BobaListen(api, makerAddress, 'txlist', wsEndPoint, async () => {
+      if (startBlockNumber) {
+        return startBlockNumber + ''
+      } else {
+        // Current block number +1, to prevent restart too fast!!!
+        startBlockNumber = (await web3.eth.getBlockNumber()) + 1
+        return startBlockNumber + ''
+      }
+    }).transfer(
+      { to: makerAddress },
+      {
+        onConfirmation: async (transaction) => {
+          if (!transaction.hash) {
+            return
+          }
+          startBlockNumber = transaction.blockNumber
+          if (checkData(transaction.value + '', transaction.hash) === true) {
+            confirmFromTransaction(pool, state, transaction.hash)
           }
         },
-      ).transfer(
-        { to: makerAddress },
-        {
-          onConfirmation: async (transaction) => {
-            if (!transaction.hash) {
-              return
-            }
-            startBlockNumber = transaction.blockNumber
-            if (checkData(transaction.value + '', transaction.hash) === true) {
-              confirmFromTransaction(pool, state, transaction.hash)
-            }
-          },
-        }
-      )
-      return
-    }
+      }
+    )
+    return
+  }
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
@@ -1868,7 +1861,9 @@ export async function sendTransaction(
   const tAmount = amountToSend.tAmount
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
-  accessLogger.info(`makerAddress=${makerAddress}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`)
+  accessLogger.info(
+    `makerAddress=${makerAddress}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+  )
   await send(
     makerAddress,
     toAddress,
