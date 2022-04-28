@@ -558,6 +558,9 @@ export default defineComponent({
 </script>
 
 <style lang="scss">
+.maker-header--balances__info{
+      white-space: nowrap;
+}
 .maker {
   a {
     color: #{var(--el-table-font-color)};
