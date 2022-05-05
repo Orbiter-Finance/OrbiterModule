@@ -107,8 +107,15 @@ class StarknetListen {
 
       this.isFirstTicker = false
     }
-    ticker()
-    setInterval(ticker, STARKNET_LISTEN_TRANSFER_DURATION)
+    const safeTicker = async () => {
+      try {
+        await ticker()
+      } catch (err) {
+        errorLogger.error(err.message)
+      }
+    }
+    safeTicker()
+    setInterval(safeTicker, STARKNET_LISTEN_TRANSFER_DURATION)
   }
 
   async getTransaction(hash: string, retryCount = 0) {
