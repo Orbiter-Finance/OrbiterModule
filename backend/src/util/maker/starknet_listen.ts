@@ -34,7 +34,7 @@ type TransferCallbacks = {
   onReceived?: (transaction: Transaction) => any
 }
 
-const STARKNET_LISTEN_TRANSFER_DURATION = 5 * 1000
+const STARKNET_LISTEN_TRANSFER_DURATION = 30 * 1000
 
 class StarknetListen {
   private api: Api

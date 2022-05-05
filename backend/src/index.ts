@@ -124,3 +124,6 @@ const main = async () => {
   }
 }
 main()
+process.on('unhandledRejection', (reason, p) => {
+  console.log('unhandledError: ', p, 'Reason: ', reason)
+})
