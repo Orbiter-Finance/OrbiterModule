@@ -1,10 +1,12 @@
 import { GraphQLClient, gql } from 'graphql-request'
 import { createAlchemyWeb3, AlchemyWeb3 } from '@alch/alchemy-web3'
+let jsonrpc:AlchemyWeb3;
 export default class BobaService {
   private grap: GraphQLClient
-  private jsonrpc: AlchemyWeb3
   constructor(rpcHost: string,apiHost: string) {
-    this.jsonrpc = createAlchemyWeb3(rpcHost);
+    if (!jsonrpc) {
+      jsonrpc = createAlchemyWeb3(rpcHost);
+    }
     this.grap = new GraphQLClient(
       apiHost,
       { headers: {} }
@@ -41,13 +43,13 @@ export default class BobaService {
               (row) => row.blockNumber >= Number(startBlock)
             )
           }
-          const nowHeight = await this.jsonrpc.eth.getBlockNumber()
+          const nowHeight = await jsonrpc.eth.getBlockNumber()
           for (const row of transactions) {
             if (row.error || row.status != 'OK') {
               continue
             }
-            const trx: any = await this.jsonrpc.eth.getTransaction(row.hash)
-            var receipt:any = await this.jsonrpc.eth.getTransactionReceipt(row.hash)
+            const trx: any = await jsonrpc.eth.getTransaction(row.hash)
+            var receipt:any = await jsonrpc.eth.getTransactionReceipt(row.hash)
             if (trx && receipt && receipt.status) {
               trxList.push({
                 blockNumber: trx.blockNumber,
