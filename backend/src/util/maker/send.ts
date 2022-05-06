@@ -955,14 +955,13 @@ async function sendConsumer(value: any) {
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
   let gasLimit = 100000
-  if (toChain === 'boba_test' || toChain === 'boba') {
-    gasLimit = 200000
-  }
   if (
     toChain === 'arbitrum_test' ||
     toChain === 'arbitrum' ||
     toChain === 'metis' ||
-    toChain === 'metis_test'
+    toChain === 'metis_test' ||
+    toChain === 'boba_test' ||
+    toChain === 'boba'
   ) {
     gasLimit = 1000000
   }
