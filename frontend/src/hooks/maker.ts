@@ -72,6 +72,7 @@ export const makerNodes = {
     fromChain: number = 0,
     toChain: number = 0,
     rangeDate: Date[] = [],
+    keyword = '',
     userAddress = ''
   ) {
     if (!makerAddress) {
@@ -80,7 +81,7 @@ export const makerNodes = {
 
     makerNodes.state.loading = true
     try {
-      const params = { makerAddress, fromChain, toChain, userAddress }
+      const params = { makerAddress, fromChain, toChain, userAddress, keyword }
       if (rangeDate?.[0]) {
         params['startTime'] = rangeDate?.[0].getTime()
       }

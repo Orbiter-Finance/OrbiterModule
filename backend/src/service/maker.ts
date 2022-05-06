@@ -170,6 +170,7 @@ export function makeTransactionID(
  * @param toChain 0: All
  * @param startTime start time
  * @param endTime end time
+ * @param keyword transactionID | user | fromTx | toTx
  * @param userAddress user's address
  * @returns
  */
@@ -179,6 +180,7 @@ export async function getMakerNodes(
   toChain = 0,
   startTime = 0,
   endTime = 0,
+  keyword = '',
   userAddress = ''
 ): Promise<MakerNode[]> {
   if (!makerAddress) {
@@ -188,31 +190,47 @@ export async function getMakerNodes(
     )
   }
 
+  // Clean keyword
+  if (
+    equalsIgnoreCase(keyword, '0x') ||
+    equalsIgnoreCase(keyword, makerAddress)
+  ) {
+    keyword = ''
+  }
+
   // QueryBuilder
   const queryBuilder = repositoryMakerNode().createQueryBuilder()
 
   // where
+  // When keyword is no empty, only use keyword
   queryBuilder.where('makerAddress = :makerAddress', {
     makerAddress,
   })
-  if (fromChain > 0) {
-    queryBuilder.andWhere('fromChain = :fromChain', { fromChain })
-  }
-  if (toChain > 0) {
-    queryBuilder.andWhere('toChain = :toChain', { toChain })
-  }
-  if (startTime) {
-    queryBuilder.andWhere('fromTimeStamp >= :startTime', {
-      startTime: dateFormatNormal(startTime),
-    })
-  }
-  if (endTime) {
-    queryBuilder.andWhere('fromTimeStamp <= :endTime', {
-      endTime: dateFormatNormal(endTime),
-    })
-  }
-  if (userAddress) {
-    queryBuilder.andWhere('userAddress = :userAddress', { userAddress })
+  if (keyword) {
+    queryBuilder.andWhere(
+      'transactionID like :kw or userAddress like :kw or formTx like :kw or toTx like :kw',
+      { kw: `%${keyword}%` }
+    )
+  } else {
+    if (fromChain > 0) {
+      queryBuilder.andWhere('fromChain = :fromChain', { fromChain })
+    }
+    if (toChain > 0) {
+      queryBuilder.andWhere('toChain = :toChain', { toChain })
+    }
+    if (startTime) {
+      queryBuilder.andWhere('fromTimeStamp >= :startTime', {
+        startTime: dateFormatNormal(startTime),
+      })
+    }
+    if (endTime) {
+      queryBuilder.andWhere('fromTimeStamp <= :endTime', {
+        endTime: dateFormatNormal(endTime),
+      })
+    }
+    if (userAddress) {
+      queryBuilder.andWhere('userAddress = :userAddress', { userAddress })
+    }
   }
 
   // order by
@@ -221,6 +239,8 @@ export async function getMakerNodes(
     .addOrderBy('toTimeStamp', 'DESC')
 
   const list = await queryBuilder.getMany()
+
+  console.warn('list: ', list.length)
 
   return list
 }
