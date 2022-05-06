@@ -945,6 +945,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 100
     }
+    if (
+      (fromChainID == 13 || fromChainID == 513) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 100
+    }
   } else {
     // USDC
     if (
