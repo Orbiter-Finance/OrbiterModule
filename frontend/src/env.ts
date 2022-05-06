@@ -40,6 +40,8 @@ export const $env = {
     99: '5', // loopring(G)
     510: '588', // metis(G)
     511: '3', // dydx(R)
+    13: '288',// boba
+    513: '28',// boba(R) 
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -62,6 +64,8 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/transaction/',
     512: 'https://v3-rinkeby.zkswap.info/transaction/',
+    13: "https://blockexplorer.boba.network/tx/",
+    513: "https://blockexplorer.rinkeby.boba.network/tx/",
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -84,6 +88,8 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/account/',
     512: 'https://v3-rinkeby.zkswap.info/account/',
+    13: "https://blockexplorer.boba.network/address/",
+    513: "https://blockexplorer.rinkeby.boba.network/address/",
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -102,5 +108,7 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/token/',
     512: 'https://v3-rinkeby.zkswap.info/token/',
+    13: "https://blockexplorer.boba.network/",
+    513: "https://blockexplorer.rinkeby.boba.network/",
   },
 }

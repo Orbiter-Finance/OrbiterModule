@@ -183,6 +183,11 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.dydx(apiDydx)
           break
+        case 'boba':
+          const network =
+            toChain === 13 ? makerConfig.boba : makerConfig.boba_test
+          await serviceMakerPull.boba(network.api, network.wsEndPoint)
+          break
         case 'zkspace':
           let apiZkspace = makerConfig.zkspace.api
           if (toChain == 512) {
@@ -249,7 +254,6 @@ export function jobMakerPull() {
         pool2.tName
       )
     }
-
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
