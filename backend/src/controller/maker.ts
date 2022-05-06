@@ -15,7 +15,6 @@ import { CHAIN_INDEX } from '../util/maker/core'
 
 // extend relativeTime
 dayjs.extend(relativeTime)
-
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker', async ({ restful }) => {
     const chains = <{ chainId: number; chainName: string }[]>[]
@@ -57,7 +56,6 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       },
       request.query
     )
-
     const list = await serviceMaker.getMakerNodes(
       params.makerAddress,
       params.fromChain,
@@ -114,6 +112,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       let needTo = {
         chainId: 0,
         amount: 0,
+        decimals: 0,
         amountFormat: '',
         tokenAddress: '',
       }
@@ -145,12 +144,21 @@ export default function (router: KoaRouter<DefaultState, Context>) {
               pool,
               item.formNonce
             )?.tAmount || 0
+          needTo.decimals = pool.precision
           needTo.amountFormat = new BigNumber(needTo.amount)
             .dividedBy(10 ** pool.precision)
             .toString()
         }
       }
       item['needTo'] = needTo
+
+      // Parse to dydx txExt
+      if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
+        const dydxHelper = new DydxHelper(Number(item.toChain))
+        item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
+          item.fromExt.value
+        )
+      }
 
       // Profit statistics
       // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
@@ -213,26 +221,6 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         makerAddresses.push(makerAddress)
 
         makerConfig.privateKeys[makerAddress] = body[makerAddress]
-      }
-    }
-
-    restful.json(makerAddresses.join(','))
-  })
-
-  // set dydx's ApiKeyCredentials
-  router.post('maker/dydx_api_key_credentials', async ({ request, restful }) => {
-    const { body } = request
-    
-    const makerAddresses: string[] = []
-    for (const makerAddress in body) {
-      if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
-        if (!isEthereumAddress(makerAddress)) {
-          continue
-        }
-
-        makerAddresses.push(makerAddress)
-
-        DydxHelper.setApiKeyCredentials(makerAddress, body[makerAddress])
       }
     }
 

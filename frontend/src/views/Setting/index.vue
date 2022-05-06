@@ -5,7 +5,7 @@
         <BalanceAlarm></BalanceAlarm>
       </el-col>
       <el-col :span="12">
-        <MakerPullStart></MakerPullStart>
+        <DydxApiKeyCredentials></DydxApiKeyCredentials>
       </el-col>
     </el-row>
   </div>
@@ -15,10 +15,10 @@
 
 <script lang="ts">
 import BalanceAlarm from './BalanceAlarm.vue'
-import MakerPullStart from './MakerPullStart.vue'
+import DydxApiKeyCredentials from './DydxApiKeyCredentials.vue'
 
 export default {
-  components: { BalanceAlarm, MakerPullStart },
+  components: { BalanceAlarm, DydxApiKeyCredentials },
   setup() {},
 }
 </script>

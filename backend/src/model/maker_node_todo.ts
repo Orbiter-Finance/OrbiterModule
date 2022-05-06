@@ -9,7 +9,7 @@ export class MakerNodeTodo extends CommonEntity {
   @Column('varchar', { length: 255, unique: true })
   transactionID: string
 
-  @Column('varchar', { length: 255, default: '0x' })
+  @Column('varchar', { length: 128, default: '0x' })
   makerAddress: string
 
   @Column('text')
