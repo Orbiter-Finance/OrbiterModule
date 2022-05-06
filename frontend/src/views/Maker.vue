@@ -1,76 +1,139 @@
 <template>
   <div class="maker">
-    <div class="maker-block maker-header maker-header--balances" v-loading="loadingWealths"
-      element-loading-text="Loading Balances">
-      <div class="chain_info_wrap" v-if="wealths.length > 0">
-        <el-card class="chain_info" v-for="(item, index) in wealths" :key="index"
-          :header="mappingChainName(item.chainName)" shadow="hover">
-          <el-tabs class="maker-header--balances__names">
-            <el-tab-pane v-for="(item1, index1) in item.balances" :key="index1" :label="item1.tokenName"
-              :name="index1 + ''">
-              <div v-if="item1.tokenAddress" class="maker-header--balances__info">
-                TokenAddress:&nbsp;
-                <a :href="`${item.tokenExploreUrl}${item1.tokenAddress}`" target="_blank">
-                  <TextLong :content="item1.tokenAddress">
-                    {{ item1.tokenAddress }}
-                  </TextLong>
-                </a>
-              </div>
-              <div class="maker-header--balances__info">
-                Balances:&nbsp;
-                <span class="maker-header--balances__value">
-                  {{ item1.value || 'Faild Get' }}
-                </span>
-              </div>
-            </el-tab-pane>
-          </el-tabs>
-        </el-card>
-      </div>
+    <div
+      class="maker-block maker-header maker-header--balances"
+      v-loading="loadingWealths"
+      element-loading-text="Loading Balances"
+    >
+      <el-row v-if="wealths.length > 0" class="chain_info_wrap" :gutter="16">
+        <el-col v-for="(item, index) in wealths" :key="index" :span="4">
+          <el-card
+            class="chain_info"
+            :header="mappingChainName(item.chainName)"
+            shadow="hover"
+          >
+            <el-tabs class="maker-header--balances__names">
+              <el-tab-pane
+                v-for="(item1, index1) in item.balances"
+                :key="index1"
+                :label="item1.tokenName"
+                :name="index1 + ''"
+              >
+                <div
+                  v-if="item1.tokenAddress"
+                  class="maker-header--balances__info"
+                >
+                  TokenAddress:&nbsp;
+                  <a
+                    :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
+                    target="_blank"
+                  >
+                    <TextLong :content="item1.tokenAddress">
+                      {{ item1.tokenAddress }}
+                    </TextLong>
+                  </a>
+                </div>
+                <div class="maker-header--balances__info">
+                  Balances:&nbsp;
+                  <span class="maker-header--balances__value">
+                    {{ item1.value || 'Faild Get' }}
+                  </span>
+                </div>
+              </el-tab-pane>
+            </el-tabs>
+          </el-card>
+        </el-col>
+      </el-row>
       <el-empty v-else description="Empty balances"></el-empty>
     </div>
-    <div class="maker-block maker-header maker-header--search" v-loading="loadingNodes">
+    <div
+      class="maker-block maker-header maker-header--search"
+      v-loading="loadingNodes"
+    >
       <el-row :gutter="20">
-        <el-col :span="4" class="maker-search__item">
+        <el-col :span="3" class="maker-search__item">
           <div class="title">From chain</div>
           <el-select v-model="fromChainId" placeholder="Select">
-            <el-option v-for="(item, index) in chains" :key="index" :label="mappingChainName(item.chainName)"
-              :value="item.chainId"></el-option>
+            <el-option
+              v-for="(item, index) in chains"
+              :key="index"
+              :label="mappingChainName(item.chainName)"
+              :value="item.chainId"
+            ></el-option>
           </el-select>
         </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">To chain</div>
           <el-select v-model="toChainId" placeholder="Select">
-            <el-option v-for="(item, index) in chains" :key="index" :label="mappingChainName(item.chainName)"
-              :value="item.chainId"></el-option>
+            <el-option
+              v-for="(item, index) in chains"
+              :key="index"
+              :label="mappingChainName(item.chainName)"
+              :value="item.chainId"
+            ></el-option>
           </el-select>
         </el-col>
-        <el-col :span="10" class="maker-search__item">
-          <div class="title">
-            From date range
-            <!-- <span style="font-size: 12px"
-              >(Earliest: 2017-10-11 10:20:30, updating...)</span
-            >-->
-          </div>
-          <el-date-picker v-model="rangeDate" type="datetimerange" range-separator="To" start-placeholder="Start date"
-            end-placeholder="End date" :clearable="false" :offset="-110" :show-arrow="false"></el-date-picker>
+        <el-col :span="7" class="maker-search__item">
+          <div class="title">From date range</div>
+          <el-date-picker
+            v-model="rangeDate"
+            type="datetimerange"
+            range-separator="To"
+            start-placeholder="Start date"
+            end-placeholder="End date"
+            :clearable="false"
+            :offset="-110"
+            :show-arrow="false"
+          ></el-date-picker>
         </el-col>
         <el-col :span="6" class="maker-search__item">
+          <div class="title">TransactionID | User | FromTx | ToTx</div>
+          <el-input
+            v-model="keyword"
+            placeholder="Input search keyword."
+            :clearable="true"
+          />
+        </el-col>
+        <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
           <el-button type="primary" @click="getMakerNodes">Apply</el-button>
         </el-col>
       </el-row>
       <el-row v-if="userAddressSelected">
-        <el-tag closable @close="userAddressSelected = ''">UserAddress: {{ userAddressSelected }}</el-tag>
+        <el-tag closable @close="userAddressSelected = ''"
+          >UserAddress: {{ userAddressSelected }}</el-tag
+        >
       </el-row>
     </div>
     <div class="maker-block maker-header maker-header__statistics">
+      <el-button-group>
+        <el-button
+          :disabled="loadingNodes"
+          size="small"
+          @click="onClickPageButton(false)"
+        >
+          Previous Page
+        </el-button>
+        <el-button
+          :disabled="loadingNodes"
+          size="small"
+          @click="onClickPageButton(true)"
+        >
+          Next Page
+        </el-button>
+      </el-button-group>
+
       <div>TransactionTotal: {{ list.length }}</div>
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
             <div class="user-addresses">
-              <div v-for="(item, index) in userAddressList" :key="index" @click="userAddressSelected = item.address">
+              <div
+                v-for="(item, index) in userAddressList"
+                :key="index"
+                @click="userAddressSelected = item.address"
+              >
                 {{ item.address }}
                 <span>&nbsp;({{ item.count }})</span>
               </div>
@@ -93,7 +156,10 @@
         +{{ diffAmountTotalCNY }} CNY
       </div>
       <div style="margin-left: auto">
-        <router-link :to="`/maker/history?makerAddress=${makerAddressSelected}`" target="_blank">
+        <router-link
+          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
+          target="_blank"
+        >
           <el-button size="small" round>All transactions</el-button>
         </router-link>
       </div>
@@ -104,9 +170,16 @@
           <el-table-column label="TransactionID">
             <template #default="scope">
               <div>
-                <el-tag v-if="scope.row.txTokenName" type="info" effect="plain" size="mini">{{ scope.row.txTokenName }}
+                <el-tag
+                  v-if="scope.row.txTokenName"
+                  type="info"
+                  effect="plain"
+                  size="mini"
+                  >{{ scope.row.txTokenName }}
                 </el-tag>
-                <el-tag v-else type="danger" effect="plain" size="mini">Invalid</el-tag>
+                <el-tag v-else type="danger" effect="plain" size="mini"
+                  >Invalid</el-tag
+                >
               </div>
               <div>
                 <TextLong :content="scope.row.transactionID">
@@ -121,9 +194,19 @@
               <br />To
             </template>
             <template #default="scope">
-              <el-tag class="maker__chain-tag" type="success" effect="light" size="mini">+ {{ scope.row.fromChainName }}
+              <el-tag
+                class="maker__chain-tag"
+                type="success"
+                effect="light"
+                size="mini"
+                >+ {{ scope.row.fromChainName }}
               </el-tag>
-              <el-tag class="maker__chain-tag" type="danger" effect="light" size="mini">- {{ scope.row.toChainName }}
+              <el-tag
+                class="maker__chain-tag"
+                type="danger"
+                effect="light"
+                size="mini"
+                >- {{ scope.row.toChainName }}
               </el-tag>
             </template>
           </el-table-column>
@@ -157,7 +240,8 @@
                 </TextLong>
               </a>
               <div class="table-timestamp">
-                <TextLong :content="scope.row.fromTimeStamp" placement="bottom">{{ scope.row.fromTimeStampAgo }}
+                <TextLong :content="scope.row.fromTimeStamp" placement="bottom"
+                  >{{ scope.row.fromTimeStampAgo }}
                 </TextLong>
               </div>
             </template>
@@ -173,10 +257,15 @@
               </a>
               <TextLong v-else :content="row.toTx">{{ row.toTx }}</TextLong>
               <div class="table-timestamp">
-                <TextLong v-if="row.toTimeStamp && row.toTimeStamp != '0'" :content="row.toTimeStamp"
-                  placement="bottom">
+                <TextLong
+                  v-if="row.toTimeStamp && row.toTimeStamp != '0'"
+                  :content="row.toTimeStamp"
+                  placement="bottom"
+                >
                   {{ row.toTimeStampAgo }}
-                  <span v-if="row.tradeDuration >= 0">({{ row.tradeDuration }}s)</span>
+                  <span v-if="row.tradeDuration >= 0"
+                    >({{ row.tradeDuration }}s)</span
+                  >
                 </TextLong>
                 <span v-else>{{ row.toTimeStampAgo }}</span>
               </div>
@@ -192,12 +281,15 @@
                 <span class="amount-operator--plus">+</span>
                 {{ row.fromAmountFormat }}
               </TextLong>
-              <TextLong :content="
-                row.toAmountFormat +
-                (row.toAmount <= 0
-                  ? ` (NeedTo: ${row.needTo.amountFormat})`
-                  : '')
-              " placement="bottom">
+              <TextLong
+                :content="
+                  row.toAmountFormat +
+                  (row.toAmount <= 0
+                    ? ` (NeedTo: ${row.needTo.amountFormat})`
+                    : '')
+                "
+                placement="bottom"
+              >
                 <span class="amount-operator--minus">-</span>
                 {{ row.toAmountFormat }}
               </TextLong>
@@ -215,8 +307,13 @@
           </el-table-column>
           <el-table-column prop="state" label="State" width="140">
             <template #default="{ row }">
-              <el-tag :class="'state-tag--' + row.state" :type="stateTags[row.state]?.type" effect="dark"
-                @click="onClickStateTag(row)">{{ stateTags[row.state]?.label }}</el-tag>
+              <el-tag
+                :class="'state-tag--' + row.state"
+                :type="stateTags[row.state]?.type"
+                effect="dark"
+                @click="onClickStateTag(row)"
+                >{{ stateTags[row.state]?.label }}</el-tag
+              >
             </template>
           </el-table-column>
         </el-table>
@@ -261,6 +358,9 @@ const CHAIN_NAME_MAPPING = {
   optimism: 'Optimism',
 }
 
+// Default time duration
+const DEFAULT_TIME_DURATION = 10800000
+
 export default defineComponent({
   components: {
     TextLong,
@@ -274,6 +374,7 @@ export default defineComponent({
       fromChainId: '',
       toChainId: '',
       userAddressSelected: '',
+      keyword: '',
     })
     const stateTags = {
       0: { label: 'From: check', type: 'info' },
@@ -362,11 +463,12 @@ export default defineComponent({
 
     const reset = () => {
       const endTime = new Date()
-      const startTime = new Date(endTime.getTime() - 86400000)
+      const startTime = new Date(endTime.getTime() - DEFAULT_TIME_DURATION)
       state.rangeDate = [startTime, endTime]
       state.fromChainId = ''
       state.toChainId = ''
       state.userAddressSelected = ''
+      state.keyword = ''
     }
     reset()
 
@@ -375,7 +477,8 @@ export default defineComponent({
         makerAddressSelected?.value,
         Number(state.fromChainId),
         Number(state.toChainId),
-        state.rangeDate
+        state.rangeDate,
+        state.keyword
       )
     }
 
@@ -525,6 +628,19 @@ export default defineComponent({
         })
       }
     }
+    const onClickPageButton = (next: boolean) => {
+      const startTime: Date = state.rangeDate[0]
+      const endTime: Date = state.rangeDate[1]
+      if (!startTime || !endTime) {
+        return
+      }
+      const duration = next ? DEFAULT_TIME_DURATION : -DEFAULT_TIME_DURATION
+      state.rangeDate = [
+        new Date(startTime.getTime() + duration),
+        new Date(endTime.getTime() + duration),
+      ]
+      getMakerNodes()
+    }
 
     return {
       makerAddressSelected,
@@ -552,14 +668,15 @@ export default defineComponent({
       mappingChainName,
 
       onClickStateTag,
+      onClickPageButton,
     }
   },
 })
 </script>
 
 <style lang="scss">
-.maker-header--balances__info{
-      white-space: nowrap;
+.maker-header--balances__info {
+  white-space: nowrap;
 }
 .maker {
   a {
@@ -581,7 +698,7 @@ export default defineComponent({
   box-sizing: border-box;
 }
 
-.maker-search__item>* {
+.maker-search__item > * {
   margin-bottom: 8px;
 }
 
@@ -604,12 +721,12 @@ export default defineComponent({
     color: #555555;
   }
 
-  &>* {
+  & > * {
     margin-right: 20px;
     flex: 1;
   }
 
-  &>*:last-child {
+  & > *:last-child {
     margin-right: 0;
   }
 
@@ -634,7 +751,7 @@ export default defineComponent({
     align-items: center;
     margin-bottom: 4px;
 
-    >* {
+    > * {
       display: contents;
     }
   }
@@ -657,7 +774,7 @@ export default defineComponent({
   flex-direction: row;
   align-items: center;
 
-  &>* {
+  & > * {
     margin-right: 16px;
   }
 }
@@ -666,7 +783,7 @@ export default defineComponent({
   max-height: 300px;
   overflow-y: scroll;
 
-  >* {
+  > * {
     padding: 8px 0;
     border-bottom: 1px solid #f0f0f0;
     text-align: center;
@@ -718,15 +835,12 @@ export default defineComponent({
 }
 
 .chain_info_wrap {
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-wrap: wrap;
-
   .chain_info {
-    width: 200px;
-    height: 160px;
-    margin: 10px;
+    height: 165px;
+  }
+
+  .el-col:nth-child(n + 7) .chain_info {
+    margin-top: 16px;
   }
 }
 </style>
