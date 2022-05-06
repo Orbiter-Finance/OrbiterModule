@@ -208,6 +208,26 @@ export default {
     },
     gasPrice: 2,
   },
+  boba: {
+    wsEndPoint: 'wss://ws.mainnet.boba.network',
+    httpEndPoint: 'https://mainnet.boba.network',
+    api: {
+      endPoint: 'https://blockexplorer.boba.network/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 288,
+  },
+  boba_test: {
+    wsEndPoint: 'wss://wss.rinkeby.boba.network',
+    httpEndPoint: 'https://rinkeby.boba.network',
+    api: {
+      endPoint: 'https://blockexplorer.rinkeby.boba.network/graphiql',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 28,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [
