@@ -1,9 +1,8 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
-import Dashboard from '../views/Dashboard.vue'
-// import Home from '../views/Home.vue'
+import Home from '../views/Home.vue'
 import Maker from '../views/Maker.vue'
-import Setting from '../views/Setting/index.vue'
 import MakerHistory from '../views/MakerHistory.vue'
+import Setting from '../views/Setting/index.vue'
 
 const routes: Array<RouteRecordRaw> = [
   // {
@@ -21,8 +20,8 @@ const routes: Array<RouteRecordRaw> = [
   // },
   {
     path: '/',
-    name: 'Dashboard',
-    component: Dashboard,
+    name: 'Home',
+    component: Home,
     meta: { navHide: true },
   },
   {
