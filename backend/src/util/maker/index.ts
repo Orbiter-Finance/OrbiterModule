@@ -393,7 +393,7 @@ async function watchTransfers(pool, state) {
           }
           startBlockNumber = transaction.blockNumber
           if (checkData(transaction.value + '', transaction.hash) === true) {
-            confirmFromTransaction(pool, state, transaction.hash)
+            confirmFromTransaction(pool, state, transaction.hash, 1)
           }
         },
       }
@@ -1760,7 +1760,7 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
     }
     return trx.blockNumber === null
       ? { confirmations: 0, trx: trx }
-      : { confirmations: currentBlock - trx.blockNumber, trx: trx }
+      : { confirmations: currentBlock - trx + 1, trx: trx }
   } catch (error) {
     errorLogger.error(error)
   }
