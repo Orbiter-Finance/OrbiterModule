@@ -93,7 +93,7 @@ export async function getMakerPulls(
   queryBuilder.where(`${ALIAS_MP}.makerAddress = :makerAddress`, {
     makerAddress,
   })
-  queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
+  // queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
     `${ALIAS_MP}.${
       fromOrToMaker ? 'fromAddress' : 'toAddress'

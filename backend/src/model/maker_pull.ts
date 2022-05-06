@@ -19,6 +19,8 @@ import { CommonEntity } from './common'
   'tx_status',
 ])
 @Index('save_pull_find', ['chainId', 'makerAddress', 'tokenAddress', 'txHash'])
+@Index('get_maker_pulls_1', ['makerAddress', 'fromAddress', 'txTime'])
+@Index('get_maker_pulls_0', ['makerAddress', 'toAddress', 'txTime'])
 @Entity()
 export class MakerPull extends CommonEntity {
   @PrimaryGeneratedColumn()
