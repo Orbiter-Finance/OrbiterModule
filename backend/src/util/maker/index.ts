@@ -1754,7 +1754,7 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
     }
     return trx.blockNumber === null
       ? { confirmations: 0, trx: trx }
-      : { confirmations: currentBlock - trx + 1, trx: trx }
+      : { confirmations: currentBlock - trx.blockNumber + 1, trx: trx }
   } catch (error) {
     errorLogger.error(error)
   }
