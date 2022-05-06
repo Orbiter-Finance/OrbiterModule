@@ -452,9 +452,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -693,11 +693,12 @@ async function sendConsumer(value: any) {
         zksync.utils.closestPackableTransactionAmount(amountToSend)
 
       //here has changed a lager from old
-      let accountInfo = await zkspace_help.getNormalAccountInfo(wallet, privateKey,
+      let accountInfo = await zkspace_help.getNormalAccountInfo(
+        wallet,
+        privateKey,
         chainID,
         makerAddress
       )
-
 
       const tokenId = 0
       const feeTokenId = 0
@@ -705,10 +706,7 @@ async function sendConsumer(value: any) {
         chainID === 512
           ? makerConfig.zkspace_test.api.chainID
           : makerConfig.zkspace.api.chainID
-      let fee = await zkspace_help.getZKSTransferGasFee(
-        chainID,
-        makerAddress
-      )
+      let fee = await zkspace_help.getZKSTransferGasFee(chainID, makerAddress)
       const transferFee = zksync.utils.closestPackableTransactionFee(
         ethers.utils.parseUnits(fee.toString(), 18)
       )
@@ -792,7 +790,7 @@ async function sendConsumer(value: any) {
           signature: ethSignature,
         },
         fastProcessing: false,
-        tx: txParams
+        tx: txParams,
       }
       let transferResult = await axios.post(
         (chainID === 512
@@ -854,7 +852,9 @@ async function sendConsumer(value: any) {
   }
   accessLogger.info('tokenBalance =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
+    errorLogger.error(
+      `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
+    )
     return {
       code: 1,
       txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
@@ -955,6 +955,9 @@ async function sendConsumer(value: any) {
     isEthTokenAddress(tokenAddress) ? maxPrice : undefined
   )
   let gasLimit = 100000
+  if (toChain === 'boba_test' || toChain === 'boba') {
+    gasLimit = 200000
+  }
   if (
     toChain === 'arbitrum_test' ||
     toChain === 'arbitrum' ||
