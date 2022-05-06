@@ -957,13 +957,13 @@ async function sendConsumer(value: any) {
       (fromChainID == 2 || fromChainID == 22) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
     }
     if (
       (fromChainID == 3 || fromChainID == 33) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
     }
   }
   const gasPrices = await getCurrentGasPrices(
