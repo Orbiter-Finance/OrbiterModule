@@ -968,7 +968,8 @@ async function sendConsumer(value: any) {
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
-    isEthTokenAddress(tokenAddress) ? maxPrice : undefined
+    // isEthTokenAddress(tokenAddress) ? maxPrice : undefined
+    maxPrice
   )
   let gasLimit = 100000
   if (
