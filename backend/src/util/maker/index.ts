@@ -406,11 +406,6 @@ async function watchTransfers(pool, state) {
           return startBlockNumber + ''
         } else {
           // Current block number +1, to prevent restart too fast!!!
-          if (fromChainID == 10 || fromChainID == 510) {
-            const httpWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
-            startBlockNumber = (await httpWeb3.eth.getBlockNumber()) + 1
-            return startBlockNumber + ''
-          }
           startBlockNumber = (await web3.eth.getBlockNumber()) + 1
           return startBlockNumber + ''
         }
