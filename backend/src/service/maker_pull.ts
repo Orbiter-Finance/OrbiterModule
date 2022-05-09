@@ -93,7 +93,7 @@ export async function getMakerPulls(
   queryBuilder.where(`${ALIAS_MP}.makerAddress = :makerAddress`, {
     makerAddress,
   })
-  queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
+  // queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
     `${ALIAS_MP}.${
       fromOrToMaker ? 'fromAddress' : 'toAddress'
@@ -410,8 +410,8 @@ export class ServiceMakerPull {
    */
   private getTxExtFromInput(input: string) {
     if (input.length > 138) {
-      const inputData = CrossAddress.parseTransferERC20Input(input)
-      if (inputData.ext) {
+      const inputData = CrossAddress.safeParseTransferERC20Input(input)
+      if (inputData && inputData.ext) {
         return inputData.ext
       }
     }

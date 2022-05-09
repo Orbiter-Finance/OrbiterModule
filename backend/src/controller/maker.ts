@@ -63,6 +63,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         toChain?: number
         startTime?: number
         endTime?: number
+        keyword?: string
         userAddress?: string
       },
       request.query
@@ -73,6 +74,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       params.toChain,
       Number(params.startTime),
       Number(params.endTime),
+      params.keyword,
       params.userAddress
     )
 
