@@ -1293,6 +1293,10 @@ function confirmFromTransaction(
     if (!trxConfirmations) {
       return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
+
+    if (fromChainID == 10 || fromChainID == 510) {
+      confirmations = 1
+    }
     var trx = trxConfirmations.trx
 
     accessLogger.info(
