@@ -364,8 +364,6 @@ async function watchTransfers(pool, state) {
     return
   }
 
-  let fromChain = state ? pool.c2Name : pool.c1Name
-
   const web3 = createAlchemyWeb3(wsEndPoint)
   // boba
   if (fromChainID == 13 || fromChainID === 513) {
@@ -396,7 +394,7 @@ async function watchTransfers(pool, state) {
   }
   const isPolygon = fromChainID == 6 || fromChainID == 66
   const isMetis = fromChainID == 10 || fromChainID == 510
-  if (isEthTokenAddress(tokenAddress) || isMetis) {
+  if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
     new EthListen(
       api,
