@@ -192,7 +192,7 @@ export function getLastStatus() {
     LOOPRING_LAST,
     DYDX_LAST,
     ZKSPACE_LAST,
-    BOBA_LAST
+    BOBA_LAST,
   }
 }
 
@@ -1327,7 +1327,7 @@ export class ServiceMakerPull {
     //   limit: 100,
     //   createdBeforeOrAt,
     // })
-    const transfers = DydxHelper.makerTrx.get(this.makerAddress)?.reverse();
+    const transfers = DydxHelper.makerTrx.get(this.makerAddress)?.reverse()
     if (transfers && transfers.length > 0) {
       const promiseMethods: (() => Promise<unknown>)[] = []
       for (const item of transfers) {
@@ -1566,8 +1566,5 @@ export class ServiceMakerPull {
     }
     makerPullLastData.makerPull = lastMakePull
     BOBA_LAST[makerPullLastKey] = makerPullLastData
-  }
-  saveDydxTransaction(txlist: TransferResponseObject[]) {
-    console.log(txlist, '======txlist')
   }
 }

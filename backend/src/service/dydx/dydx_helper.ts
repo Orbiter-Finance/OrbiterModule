@@ -8,7 +8,6 @@ import {
 import { getAccountId } from '@dydxprotocol/v3-client/build/src/lib/db'
 import BigNumber from 'bignumber.js'
 import { ethers, utils } from 'ethers'
-import { number } from 'starknet'
 import Web3 from 'web3'
 import { makerConfig } from '../../config'
 import { equalsIgnoreCase } from '../../util'
