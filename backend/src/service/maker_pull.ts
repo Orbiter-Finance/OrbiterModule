@@ -1322,12 +1322,9 @@ export class ServiceMakerPull {
     if (lastMakePull?.txTime) {
       createdBeforeOrAt = lastMakePull.txTime.toISOString()
     }
-
-    // const { transfers } = await dydxHelper.getTransfers({
-    //   limit: 100,
-    //   createdBeforeOrAt,
-    // })
-    const transfers = DydxHelper.makerTrx.get(this.makerAddress)?.reverse()
+    const transfers = DydxHelper.makerTrx
+      .get(this.makerAddress.toLowerCase())
+      ?.reverse()
     if (transfers && transfers.length > 0) {
       const promiseMethods: (() => Promise<unknown>)[] = []
       for (const item of transfers) {
