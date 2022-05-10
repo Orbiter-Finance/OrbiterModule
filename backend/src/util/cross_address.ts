@@ -220,6 +220,18 @@ export class CrossAddress {
 
   /**
    * @param input 0x...
+   * @returns
+   */
+  static safeParseTransferInput(input: string) {
+    try {
+      return CrossAddress.parseTransferInput(input)
+    } catch (err) {
+      return undefined
+    }
+  }
+
+  /**
+   * @param input 0x...
    */
   static parseTransferERC20Input(input: string): {
     token: string
@@ -232,5 +244,17 @@ export class CrossAddress {
       utils.hexDataSlice(input, 4)
     )
     return { token, to, amount, ext: CrossAddress.decodeExt(ext) }
+  }
+
+  /**
+   * @param input 0x...
+   * @returns
+   */
+  static safeParseTransferERC20Input(input: string) {
+    try {
+      return CrossAddress.parseTransferERC20Input(input)
+    } catch (err) {
+      return undefined
+    }
   }
 }
