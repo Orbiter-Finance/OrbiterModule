@@ -7,7 +7,8 @@ import { uniqBy } from 'lodash'
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.post('notify/dydx', async ({ request, restful }) => {
     //
-    const { txlist, address } = request.body
+    const { txlist } = request.body
+    const address = request.body['address'].toLowerCase();
     if (txlist && address) {
       const values = DydxHelper.makerTrx.get(address)
       if (values && values.length > 0) {
