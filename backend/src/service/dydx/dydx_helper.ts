@@ -3,7 +3,7 @@ import {
   ApiKeyCredentials,
   DydxClient,
   SigningMethod,
-  TransferResponseObject
+  TransferResponseObject,
 } from '@dydxprotocol/v3-client'
 import { getAccountId } from '@dydxprotocol/v3-client/build/src/lib/db'
 import BigNumber from 'bignumber.js'
@@ -32,6 +32,7 @@ const DYDX_ACCOUNTS = {}
 const DYDX_API_KEY_CREDENTIALS: { [key: string]: ApiKeyCredentials } = {}
 
 export class DydxHelper {
+  static makerTrx = new Map<string, TransferResponseObject[]>()
   private chainId: number
   private networkId: number
   private host: string
@@ -283,7 +284,9 @@ export class DydxHelper {
    * @param ethereumAddress
    * @returns
    */
-  static getApiKeyCredentials(ethereumAddress: string): ApiKeyCredentials | undefined {
+  static getApiKeyCredentials(
+    ethereumAddress: string
+  ): ApiKeyCredentials | undefined {
     return DYDX_API_KEY_CREDENTIALS[ethereumAddress]
   }
 

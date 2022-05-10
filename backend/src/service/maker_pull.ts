@@ -17,6 +17,8 @@ import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
+import { TransferResponseObject } from '@dydxprotocol/v3-client'
+import dayjs from 'dayjs'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -190,7 +192,7 @@ export function getLastStatus() {
     LOOPRING_LAST,
     DYDX_LAST,
     ZKSPACE_LAST,
-    BOBA_LAST
+    BOBA_LAST,
   }
 }
 
@@ -1305,15 +1307,10 @@ export class ServiceMakerPull {
    * @pararm api
    */
   async dydx(api: { endPoint: string; key: string }) {
-    const apiKeyCredentials = DydxHelper.getApiKeyCredentials(this.makerAddress)
-    if (!apiKeyCredentials) {
-      return
-    }
     const dydxHelper = new DydxHelper(this.chainId)
-    const dydxClient = await dydxHelper.getDydxClient(this.makerAddress)
-    dydxClient.apiKeyCredentials = apiKeyCredentials
 
     const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+
     let makerPullLastData = DYDX_LAST[makerPullLastKey]
 
     if (!makerPullLastData) {
@@ -1326,12 +1323,12 @@ export class ServiceMakerPull {
       createdBeforeOrAt = lastMakePull.txTime.toISOString()
     }
 
-    const { transfers } = await dydxClient.private.getTransfers({
-      limit: 100,
-      createdBeforeOrAt,
-    })
-
-    if (transfers.length > 0) {
+    // const { transfers } = await dydxHelper.getTransfers({
+    //   limit: 100,
+    //   createdBeforeOrAt,
+    // })
+    const transfers = DydxHelper.makerTrx.get(this.makerAddress)?.reverse()
+    if (transfers && transfers.length > 0) {
       const promiseMethods: (() => Promise<unknown>)[] = []
       for (const item of transfers) {
         const transaction = DydxHelper.toTransaction(item, this.makerAddress)
@@ -1386,7 +1383,6 @@ export class ServiceMakerPull {
           gasAmount: '0',
           tx_status,
         })
-
         promiseMethods.push(async () => {
           await savePull(makerPull)
 
@@ -1396,17 +1392,12 @@ export class ServiceMakerPull {
       }
 
       await this.doPromisePool(promiseMethods)
+      DydxHelper.makerTrx.delete(this.makerAddress)
     } else {
       // When transfers.length <= 0. The end!
       lastMakePull = undefined
     }
-
-    // set DYDX_LAST
-    if (lastMakePull?.txHash == makerPullLastData.makerPull?.txHash) {
-      makerPullLastData.pullCount++
-    }
     makerPullLastData.makerPull = lastMakePull
-
     DYDX_LAST[makerPullLastKey] = makerPullLastData
   }
   /**
