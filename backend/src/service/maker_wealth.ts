@@ -109,14 +109,7 @@ async function getTokenBalance(
         }
         break
       case 'dydx':
-        const apiKeyCredentials = DydxHelper.getApiKeyCredentials(makerAddress)
-        if (!apiKeyCredentials) {
-          break
-        }
         const dydxHelper = new DydxHelper(chainId)
-        const dydxClient = await dydxHelper.getDydxClient(makerAddress)
-        dydxClient.apiKeyCredentials = apiKeyCredentials
-
         value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
         break
       case 'zkspace':
