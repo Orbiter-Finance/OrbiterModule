@@ -33,6 +33,7 @@ const DYDX_API_KEY_CREDENTIALS: { [key: string]: ApiKeyCredentials } = {}
 
 export class DydxHelper {
   static makerTrx = new Map<string, TransferResponseObject[]>()
+  static makerAccount = new Map<string, AccountResponseObject>()
   private chainId: number
   private networkId: number
   private host: string
@@ -160,15 +161,11 @@ export class DydxHelper {
     let balance = ethers.BigNumber.from(0)
 
     try {
-      let dydxClient = DYDX_CLIENTS[ethereumAddress]
-      if (ensureUser && !dydxClient) {
-        dydxClient = await this.getDydxClient(ethereumAddress)
-      }
-
-      if (dydxClient) {
-        const { account } = await dydxClient.private.getAccount(ethereumAddress)
-        const usdc = parseInt((account.freeCollateral || 0) * 10 ** 6 + '')
-        balance = balance.add(usdc)
+      const account = DydxHelper.makerAccount.get(
+        ethereumAddress.toLocaleLowerCase()
+      )
+      if (account) {
+        balance = balance.add(Number(account.freeCollateral) * 10 ** 6)
       }
     } catch (err) {
       console.warn('GetBalanceUsdc failed: ' + err.message)
