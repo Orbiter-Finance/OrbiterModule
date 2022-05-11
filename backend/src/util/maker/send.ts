@@ -109,6 +109,7 @@ async function sendConsumer(value: any) {
     toAddress,
     toChain,
     chainID,
+    tokenInfo,
     tokenAddress,
     amountToSend,
     result_nonce,
@@ -357,17 +358,6 @@ async function sendConsumer(value: any) {
         accessLogger.info('result_nonde =', result_nonce)
       }
 
-      // IMX transfer(Only ETH)
-      if (!isEthTokenAddress(tokenAddress)) {
-        return
-      }
-
-      let tokenInfo: any = {
-        type: ETHTokenType.ETH,
-        data: {
-          decimals: 18,
-        },
-      }
       if (!isEthTokenAddress(tokenAddress)) {
         const makerPool = await getTargetMakerPool(
           makerAddress,
@@ -384,6 +374,7 @@ async function sendConsumer(value: any) {
           },
         }
       }
+
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
         token: tokenInfo,
@@ -428,7 +419,6 @@ async function sendConsumer(value: any) {
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
-
     try {
       let netWorkID = chainID == 9 ? 1 : 5
       const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
@@ -472,7 +462,7 @@ async function sendConsumer(value: any) {
       // step 3 get storageId
       const GetNextStorageIdRequest = {
         accountId: accountInfo.accountId,
-        sellTokenId: 0,
+        sellTokenId: tokenInfo.tokenId,
       }
       const storageId = await userApi.getNextStorageId(
         GetNextStorageIdRequest,
@@ -504,7 +494,7 @@ async function sendConsumer(value: any) {
         payeeId: 0,
         storageId: result_nonce,
         token: {
-          tokenId: 0,
+          tokenId: tokenInfo.tokenId,
           volume: amountToSend + '',
         },
         maxFee: {
@@ -527,10 +517,8 @@ async function sendConsumer(value: any) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
         }
-
         nonceDic[makerAddress][chainID] = result_nonce
       }
-
       return new Promise((resolve, reject) => {
         if (transactionResult['hash']) {
           resolve({
@@ -663,7 +651,7 @@ async function sendConsumer(value: any) {
       if (
         !balanceInfo ||
         !balanceInfo.length ||
-        balanceInfo.findIndex((item) => item.id == 0) == -1
+        balanceInfo.findIndex((item) => item.id == tokenInfo.id) == -1
       ) {
         errorLogger.error('zks Insufficient balance 0')
         return {
@@ -671,8 +659,8 @@ async function sendConsumer(value: any) {
           txid: 'ZKS Insufficient balance 0',
         }
       }
-      let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
-      const tokenBalanceWei = balanceInfo[defaultIndex].amount * 10 ** 18
+      let defaultIndex = balanceInfo.findIndex((item) => item.id == tokenInfo.id)
+      const tokenBalanceWei = balanceInfo[defaultIndex].amount * 10 ** tokenInfo.decimals
       if (!tokenBalanceWei) {
         errorLogger.error('zks Insufficient balance 00')
         return {
@@ -698,8 +686,7 @@ async function sendConsumer(value: any) {
         makerAddress
       )
 
-
-      const tokenId = 0
+      const tokenId = tokenInfo.id
       const feeTokenId = 0
       const zksNetworkID =
         chainID === 512
@@ -755,8 +742,8 @@ async function sendConsumer(value: any) {
       const tx = {
         accountId: accountInfo.id,
         to: toAddress,
-        tokenSymbol: 'ETH',
-        tokenAmount: ethers.utils.formatUnits(transferValue, 18),
+        tokenSymbol: tokenInfo.symbol,
+        tokenAmount: ethers.utils.formatUnits(transferValue, tokenInfo.decimals),
         feeSymbol: 'ETH',
         fee: fee.toString(),
         zksNetworkID,
@@ -852,7 +839,7 @@ async function sendConsumer(value: any) {
       txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
     }
   }
-  accessLogger.info('tokenBalance =', tokenBalanceWei)
+  accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
     errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
     return {
@@ -970,7 +957,7 @@ async function sendConsumer(value: any) {
 
   const details = {
     gas: web3.utils.toHex(gasLimit),
-    gasPrice: gasPrices, // converts the gwei price to wei
+    gasPrice: gasPrices * 2, // converts the gwei price to wei
     nonce: result_nonce,
     chainId: chainID, // mainnet: 1, rinkeby: 4
   }
@@ -1061,7 +1048,7 @@ async function send(
   toAddress,
   toChain,
   chainID,
-  tokenID, // 3 33 use
+  tokenInfo, // 12 512 use
   tokenAddress,
   amountToSend,
   result_nonce = 0,
@@ -1077,7 +1064,7 @@ async function send(
       toAddress,
       toChain,
       chainID,
-      tokenID,
+      tokenInfo,
       tokenAddress,
       amountToSend,
       result_nonce,
