@@ -1786,7 +1786,7 @@ function getTokenInfo(chainId, tokenAddress) {
     return getLpTokenInfo(tokenAddress)
   }
 }
-function getZKSTokenInfo(tokenAddress) {
+export function getZKSTokenInfo(tokenAddress) {
   if (!zksTokenInfo.length) {
     return null
   } else {
@@ -1796,9 +1796,10 @@ function getZKSTokenInfo(tokenAddress) {
         return tokenInfo
       }
     }
+    return null
   }
 }
-function getLpTokenInfo(tokenAddress) {
+export function getLpTokenInfo(tokenAddress) {
   if (!lpTokenInfo.length) {
     return null
   } else {
@@ -1808,6 +1809,7 @@ function getLpTokenInfo(tokenAddress) {
         return tokenInfo
       }
     }
+    return null
   }
 }
 function getTime() {

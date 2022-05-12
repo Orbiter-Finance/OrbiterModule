@@ -8,7 +8,7 @@ import { MakerWealth } from '../model/maker_wealth'
 import { isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
-import { getMakerList } from '../util/maker'
+import { getMakerList, getLpTokenInfo, getZKSTokenInfo } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
@@ -70,14 +70,12 @@ async function getTokenBalance(
             accountID = accountInfo.data.accountId
           }
 
+          const lpTokenInfo = getLpTokenInfo(tokenAddress)
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=0`
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0}`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
-            if (!Array.isArray(balanceData.data)) {
-              value = '0'
-            }
-            if (balanceData.data.length == 0) {
+            if (balanceData.data && balanceData.data.length == 0) {
               value = '0'
             }
             let balanceMap = balanceData.data[0]
@@ -131,8 +129,9 @@ async function getTokenBalance(
         ) {
           value = '0'
         }
-        let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
-        value = balanceInfo[defaultIndex].amount * 10 ** 18 + ''
+        const zksTokenInfo = getZKSTokenInfo(tokenAddress)
+        let defaultIndex = balanceInfo.findIndex((item) => item.id == zksTokenInfo ? zksTokenInfo.id : 0)
+        value = balanceInfo[defaultIndex].amount * 10 ** zksTokenInfo.decimals + ''
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
@@ -286,8 +285,8 @@ export async function getWealthsChains(makerAddress: string) {
           CHAIN_INDEX[item.chainId] == 'polygon'
             ? 'MATIC'
             : CHAIN_INDEX[item.chainId] == 'metis'
-            ? 'METIS'
-            : 'ETH',
+              ? 'METIS'
+              : 'ETH',
         decimals: 18,
         value: '',
       })
