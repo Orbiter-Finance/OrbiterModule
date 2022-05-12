@@ -916,6 +916,18 @@ async function sendConsumer(value: any) {
       maxPrice = 180
     }
     if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
       (fromChainID == 7 || fromChainID == 77) &&
       (chainID == 1 || chainID == 5)
     ) {
