@@ -343,7 +343,7 @@ async function watchTransfers(pool, state) {
     try {
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
-      console.log('error =', error)
+      errorLogger.error('error =', error)
       throw 'getLPTransactionDataError'
     }
     return
@@ -933,8 +933,6 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           let zksList: any[] = []
           allZksList.push(...originZksList)
           let firstTxTime = originZksList[0].created_at
-            ? originZksList[0].created_at
-            : 0
             ? originZksList[0].created_at
             : 0
           let whileTag = true

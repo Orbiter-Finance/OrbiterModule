@@ -728,9 +728,9 @@ async function sendConsumer(value: any) {
         nonceDic[makerAddress] = {}
       }
       nonceDic[makerAddress][chainID] = result_nonce
-      accessLogger.info('nonce =', accountInfo.nonce)
-      accessLogger.info('sql_nonce =', sql_nonce)
-      accessLogger.info('result_nonde =', result_nonce)
+      accessLogger.info('zks_nonce =', accountInfo.nonce)
+      accessLogger.info('zks_sql_nonce =', sql_nonce)
+      accessLogger.info('zks_result_nonce =', result_nonce)
 
       const msgBytes = ethers.utils.concat([
         '0x05',
