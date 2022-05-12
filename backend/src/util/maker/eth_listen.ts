@@ -38,6 +38,7 @@ export class EthListen {
   private api: Api
   private address: string
   private action: Action
+  private offset: number
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }
@@ -47,13 +48,14 @@ export class EthListen {
     api: Api,
     address: string,
     action: Action = 'txlist',
+    offset = 100,
     blockProvider?: (isFirst: boolean) => Promise<string>
   ) {
     this.api = api
     this.address = address
     this.blockProvider = blockProvider
     this.action = action
-
+    this.offset = offset
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
   }
@@ -104,7 +106,7 @@ export class EthListen {
             action: this.action,
             address: this.address,
             page: 1,
-            offset: 100,
+            offset: this.offset,
             startblock,
             endblock: 'latest',
             sort: 'asc',
