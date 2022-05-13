@@ -48,14 +48,12 @@ export class EthListen {
     api: Api,
     address: string,
     action: Action = 'txlist',
-    offset = 100,
     blockProvider?: (isFirst: boolean) => Promise<string>
   ) {
     this.api = api
     this.address = address
     this.blockProvider = blockProvider
     this.action = action
-    this.offset = offset
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
   }
@@ -106,7 +104,7 @@ export class EthListen {
             action: this.action,
             address: this.address,
             page: 1,
-            offset: this.offset,
+            offset: 100,
             startblock,
             endblock: 'latest',
             sort: 'asc',

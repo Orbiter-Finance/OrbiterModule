@@ -384,16 +384,15 @@ async function watchTransfers(pool, state) {
   //todo
   const isPolygon = (fromChainID == 6 || fromChainID == 66)
     && tokenAddress == '0x0000000000000000000000000000000000001010'
-  const isMetis = (fromChainID == 10 || fromChainID == 510)
-    && tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
-  if (isEthTokenAddress(tokenAddress) || isPolygon || isMetis) {
+  // const isMetis = (fromChainID == 10 || fromChainID == 510)
+  //   && tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
+  if (isEthTokenAddress(tokenAddress) || isPolygon) {
     let startBlockNumber = 0
 
     new EthListen(
       api,
       makerAddress,
-      isPolygon || isMetis ? 'tokentx' : 'txlist',
-      isMetis ? 0 : 100,
+      isPolygon ? 'tokentx' : 'txlist',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
