@@ -357,7 +357,12 @@ async function sendConsumer(value: any) {
         accessLogger.info('imx_sql_nonce =', imx_sql_nonce)
         accessLogger.info('result_nonde =', result_nonce)
       }
-
+      let imxTokenInfo: any = {
+        type: ETHTokenType.ETH,
+        data: {
+          decimals: 18,
+        },
+      }
       if (!isEthTokenAddress(tokenAddress)) {
         const makerPool = await getTargetMakerPool(
           makerAddress,
@@ -365,7 +370,7 @@ async function sendConsumer(value: any) {
           fromChainID,
           chainID
         )
-        tokenInfo = {
+        imxTokenInfo = {
           type: ERC20TokenType.ERC20,
           data: {
             symbol: makerPool?.tName,
@@ -377,7 +382,7 @@ async function sendConsumer(value: any) {
 
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
-        token: tokenInfo,
+        token: imxTokenInfo,
         quantity: amountToSend,
         receiver: toAddress,
       })
