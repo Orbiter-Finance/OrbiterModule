@@ -67,8 +67,11 @@ export default {
       throw new Error('getZKSTransferGasFee NetWorkError')
     }
   },
-  async getFristResult(chainID, txHash) {
-    const firstResult = await this.getZKSpaceTransactionData(chainID, txHash)
+  async getFristTransferResult(fromChainID, txHash) {
+    const firstResult = await this.getZKSpaceTransactionData(
+      fromChainID,
+      txHash
+    )
     if (
       firstResult.success &&
       !firstResult.data.fail_reason &&
@@ -77,7 +80,7 @@ export default {
     ) {
       //tip todo
       await sleep(300)
-      await this.getFristResult(chainID, txHash)
+      await this.getFristTransferResult(fromChainID, txHash)
     } else if (
       firstResult.success &&
       !firstResult.data.fail_reason &&
@@ -259,6 +262,15 @@ Only sign this message for a trusted client!`
       }
     } else {
       throw new Error('getZKSpaceTransactionData NetWorkError')
+    }
+  },
+  getTokenInfos: async function (httpEndPoint) {
+    const zksTokenInfoUrl = `${httpEndPoint}/tokens`
+    const response = await axios.get(zksTokenInfoUrl)
+    if (response.status === 200 && response.data.success) {
+      return response.data.data
+    } else {
+      return null
     }
   },
 }
