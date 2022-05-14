@@ -792,7 +792,7 @@ async function sendConsumer(value: any) {
         }
       )
       const txHash = transferResult.data.data.replace('sync-tx:', '0x')
-      await zkspace_help.getFristResult(chainID, txHash)
+      await zkspace_help.getFristTransferResult(chainID, txHash)
       nonceDic[makerAddress][chainID] = result_nonce
       return {
         code: 0,
@@ -957,7 +957,7 @@ async function sendConsumer(value: any) {
 
   const details = {
     gas: web3.utils.toHex(gasLimit),
-    gasPrice: gasPrices * 2, // converts the gwei price to wei
+    gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
     chainId: chainID, // mainnet: 1, rinkeby: 4
   }

@@ -220,7 +220,7 @@ function getPTextFromTAmount(chain, amount) {
   if (!isChainSupport(chain)) {
     return {
       state: false,
-      error: '',
+      error: 'The chain did not support',
     }
   }
   if (amount < 1) {

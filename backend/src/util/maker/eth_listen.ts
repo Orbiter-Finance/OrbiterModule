@@ -38,7 +38,6 @@ export class EthListen {
   private api: Api
   private address: string
   private action: Action
-  private offset: number
   private blockProvider?: (isFirst: boolean) => Promise<string>
   private transferReceivedHashs: { [key: string]: boolean }
   private transferConfirmationedHashs: { [key: string]: boolean }

@@ -66,7 +66,7 @@ export default {
       throw new Error('getZKSTransferGasFee NetWorkError')
     }
   },
-  async getFristResult(fromChainID, txHash) {
+  async getFristTransferResult(fromChainID, txHash) {
 
     const firstResult = await this.getZKSpaceTransactionData(
       fromChainID,
@@ -79,7 +79,7 @@ export default {
       !firstResult.data.amount
     ) {
       await sleep(300)
-      await this.getFristResult(fromChainID, txHash)
+      await this.getFristTransferResult(fromChainID, txHash)
     } else if (
       firstResult.success &&
       !firstResult.data.fail_reason &&
