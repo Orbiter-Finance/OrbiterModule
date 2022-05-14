@@ -249,7 +249,8 @@ export async function getTargetMakerPool(
     const { pool1 } = expanPool(maker)
     if (
       pool1.makerAddress == makerAddress &&
-      equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
+      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
+        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
       ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId) ||
         (pool1.c2ID == fromChainId && pool1.c1ID == toChainId)) &&
       transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
