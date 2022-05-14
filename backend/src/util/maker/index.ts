@@ -380,13 +380,11 @@ async function watchTransfers(pool, state) {
 
   const web3 = createAlchemyWeb3(wsEndPoint)
 
-
-  //todo
   const isPolygon = (fromChainID == 6 || fromChainID == 66)
     && tokenAddress == '0x0000000000000000000000000000000000001010'
   // const isMetis = (fromChainID == 10 || fromChainID == 510)
   //   && tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
-  if (isEthTokenAddress(tokenAddress) || isPolygon) {
+  if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
 
     new EthListen(
