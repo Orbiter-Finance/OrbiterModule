@@ -829,8 +829,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 )
                 var transactionID =
                   lpTransaction.senderAddress.toLowerCase() +
-                  fromChainID +
-                  nonce
+                  fromChainID + lpTransaction['storageInfo'].tokenId
+                  + nonce
                 let makerNode: MakerNode | undefined
                 try {
                   makerNode = await repositoryMakerNode().findOne(
