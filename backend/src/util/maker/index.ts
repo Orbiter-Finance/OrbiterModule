@@ -409,9 +409,9 @@ async function watchTransfers(pool, state) {
   const isPolygon =
     (fromChainID == 6 || fromChainID == 66) &&
     tokenAddress == '0x0000000000000000000000000000000000001010'
-  const isMetis =
-    (fromChainID == 10 || fromChainID == 510) &&
-    tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
+  // const isMetis =
+  //   (fromChainID == 10 || fromChainID == 510) &&
+  //   tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
     new EthListen(
