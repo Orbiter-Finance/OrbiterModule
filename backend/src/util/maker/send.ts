@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
+import * as zksync2 from "zksync-web3"
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
@@ -245,7 +246,90 @@ async function sendConsumer(value: any) {
     }
     return
   }
+  // zk2 || zk2_test
+  if (chainID === 514) {
+    try {
+      let ethProvider
+      let syncProvider
+      if (chainID === 514) {
+        const httpEndPoint = makerConfig["zksync2_test"].httpEndPoint
+        ethProvider = ethers.getDefaultProvider("goerli");
+        syncProvider = new zksync2.Provider(httpEndPoint);
+      }
+      const syncWallet = new zksync2.Wallet(makerConfig.privateKeys[makerAddress], syncProvider, ethProvider);
+      let tokenBalanceWei = await syncWallet.getBalance(
+        tokenAddress,
+        'finalized'
+      )
+      if (!tokenBalanceWei) {
+        errorLogger.error('zk Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZK Insufficient balance 0',
+        }
+      }
+      accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zk Insufficient balance')
+        return {
+          code: 1,
+          txid: 'zk Insufficient balance',
+        }
+      }
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        let zk_nonce = await syncWallet.getNonce('committed')
+        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!zk_sql_nonce) {
+          result_nonce = zk_nonce
+        } else {
+          if (zk_nonce > zk_sql_nonce) {
+            result_nonce = zk_nonce
+          } else {
+            result_nonce = zk_sql_nonce + 1
+          }
+        }
+        accessLogger.info('zk_nonce =', zk_nonce)
+        accessLogger.info('zk_sql_nonce =', zk_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
 
+      const transfer = await syncWallet.transfer({
+        to: toAddress,
+        token: tokenAddress,
+        amount: amountToSend,
+        // feeToken: tokenAddress,
+      });
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+      return new Promise((resolve, reject) => {
+        if (transfer.hash) {
+          resolve({
+            code: 0,
+            txid: transfer.hash,
+            chainID: chainID,
+            zk2Nonce: result_nonce,
+          })
+        } else {
+          resolve({
+            code: 1,
+            error: 'zk2 transfer error',
+            result_nonce,
+          })
+        }
+      })
+    } catch (error) {
+      return {
+        code: 1,
+        txid: error,
+        result_nonce,
+      }
+    }
+  }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     try {
@@ -452,9 +536,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
