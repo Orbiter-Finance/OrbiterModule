@@ -16,13 +16,21 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
+import Web3 from "web3"
 import BobaService from './boba/boba_service'
+import makerConfig from '../config/maker'
+import { number } from 'starknet'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 const repositoryMakerPull = (): Repository<MakerPull> => {
   return Core.db.getRepository(MakerPull)
 }
+//====only for zksync2======
+const zk2ContractInfo = {}
+const zk2BlockNumberInfo = {}
+let zk2Web3;
+//=========================
 
 /**
  * save maker_pull
@@ -95,8 +103,7 @@ export async function getMakerPulls(
   })
   // queryBuilder.andWhere(`${ALIAS_MP}.amount_flag != '0'`)
   queryBuilder.andWhere(
-    `${ALIAS_MP}.${
-      fromOrToMaker ? 'fromAddress' : 'toAddress'
+    `${ALIAS_MP}.${fromOrToMaker ? 'fromAddress' : 'toAddress'
     } = :makerAddress`,
     { makerAddress }
   )
@@ -175,6 +182,7 @@ const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
 const BOBA_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSPACE_LAST: { [key: string]: MakerPullLastData } = {}
+const ZKSYNC2_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -251,6 +259,7 @@ export class ServiceMakerPull {
       last.pullCount = 0
       last.startPoint = 0 //only for zkspace
       last.roundTotal++
+      zk2BlockNumberInfo[this.tokenAddress] = undefined//only for zk2
     } else {
       lastMakePull = last.makerPull
     }
@@ -447,8 +456,7 @@ export class ServiceMakerPull {
       transaction.input = resp.data.result?.input || transaction.input
     } catch (err) {
       errorLogger.error(
-        `proxy.eth_getTransactionByHash failed. hash:${
-          transaction.hash
+        `proxy.eth_getTransactionByHash failed. hash:${transaction.hash
         }, api: ${JSON.stringify(api)}, error: ${err.message}.`
       )
     }
@@ -1174,7 +1182,7 @@ export class ServiceMakerPull {
         gasAmount: lpTransaction.feeAmount || '',
         tx_status:
           lpTransaction.status == 'processed' ||
-          lpTransaction.status == 'received'
+            lpTransaction.status == 'received'
             ? 'finalized'
             : 'committed',
       })
@@ -1478,7 +1486,7 @@ export class ServiceMakerPull {
           gasAmount: zksTransaction.fee || '',
           tx_status:
             zksTransaction.status == 'verified' ||
-            zksTransaction.status == 'pending'
+              zksTransaction.status == 'pending'
               ? 'finalized'
               : 'committed',
         })
@@ -1576,4 +1584,143 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     BOBA_LAST[makerPullLastKey] = makerPullLastData
   }
+  /**
+  * pull zksync2
+  * @param api
+  */
+  async zksync2(httpEndPoint) {
+    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
+    let makerPullLastData = ZKSYNC2_LAST[makerPullLastKey]
+    if (!makerPullLastData) {
+      makerPullLastData = new MakerPullLastData()
+    }
+    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    // getTxList
+    let data = await this.zksync2GetTxlist(httpEndPoint, this.tokenAddress, this.makerAddress)
+    const promiseMethods: (() => Promise<unknown>)[] = []
+    for (const item of data) {
+      // contractAddress = 0x0...0
+      let contractAddress = item.address
+      // checks
+      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
+        continue
+      }
+      const amount_flag = getAmountFlag(this.chainId, item.returnValues.amount)
+      // save
+      const makerPull = (lastMakePull = <MakerPull>{
+        chainId: this.chainId,
+        makerAddress: this.makerAddress,
+        tokenAddress: contractAddress,
+        data: JSON.stringify(item),
+        amount: item.returnValues.amount,
+        amount_flag,
+        nonce: item.nonce,
+        fromAddress: item.from,
+        toAddress: item.to,
+        txBlock: item.blockNumber,
+        txHash: item.transactionHash,
+        txTime: new Date(item.timeStamp * 1000),
+        gasCurrency: this.tokenSymbol,
+        gasAmount: item.gasAmount ? item.gasAmount : '0',//one transaction contain two transaction. from can receive the two transaction,and mix them.to receive only one transaction.if not understand,contact aneng
+        tx_status: 'finalized'
+      })
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+        // compare
+        await this.singleCompareData(makerPull)
+      })
+    }
+    await this.doPromisePool(promiseMethods)
+    // set ZK2_LAST
+    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+      makerPullLastData.pullCount++
+    }
+    makerPullLastData.makerPull = lastMakePull
+    ZKSYNC2_LAST[makerPullLastKey] = makerPullLastData
+  }
+
+  private async zksync2GetTxlist(httpEndPoint, tokenAddress, makerAddress) {
+    tokenAddress = tokenAddress.toLowerCase()
+    if (!zk2Web3) {
+      zk2Web3 = new Web3(httpEndPoint)
+    }
+    let currentBlock = zk2BlockNumberInfo[tokenAddress]
+    if (!currentBlock) {
+      currentBlock = await zk2Web3.eth.getBlockNumber()
+      zk2BlockNumberInfo[tokenAddress] = currentBlock
+    }
+    let tokenContract = zk2ContractInfo[tokenAddress]
+    if (!tokenContract) {
+      tokenContract = new zk2Web3.eth.Contract(makerConfig.ABI, tokenAddress)
+    }
+    return await this.getTxListTen(zk2Web3, tokenAddress, tokenContract, makerAddress)
+  }
+
+  private async getTxListTen(zk2Web3, tokenAddress, tokenContract, makerAddress) {
+    let txList: any[] = []
+    for (let i = 0; i < 1; i++) {
+      try {
+        const fromTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress], makerAddress, true)
+        const toTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress], makerAddress, false)
+
+        let fromTxPromises = fromTxs.map(async (item) => {
+          const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
+          const blockInfo = await zk2Web3.eth.getBlock(item.blockNumber)
+          item.nonce = txInfo.nonce
+          item.timestamp = blockInfo.timestamp;
+          item.input = txInfo.input
+        })
+        let toTxPromises = toTxs.map(async (item) => {
+          const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
+          const blockInfo = await zk2Web3.eth.getBlock(item.blockNumber)
+          item.nonce = txInfo.nonce
+          item.timestamp = blockInfo.timestamp;
+          item.input = txInfo.input
+        })
+        await Promise.all(fromTxPromises.concat(toTxPromises))
+        txList.push(...fromTxs)
+        txList.push(...toTxs)
+        zk2BlockNumberInfo[tokenAddress] = zk2BlockNumberInfo[tokenAddress] - 100 > 0 ? zk2BlockNumberInfo[tokenAddress] - 100 : 0
+      } catch (error) {
+        errorLogger.error(`get zk2 txs error ${error.message}`)
+      }
+    }
+    return txList
+  }
+
+  private getTxListOnce(tokenContract, currentBlock, makerAddress, isFrom) {
+    return new Promise((resolve, reject) => {
+      const options = {
+        filter: {},
+        fromBlock: currentBlock - 99 > 0 ? currentBlock - 99 : 0,
+        toBlock: currentBlock,
+      }
+      if (isFrom) {
+        options.filter = { from: makerAddress }
+      } else {
+        options.filter = { to: makerAddress }
+      }
+      tokenContract.getPastEvents('Transfer', options, function (error, events) {
+        if (error) {
+          reject(error)
+          errorLogger.error('zk2 getTxListOnce error=', error)
+        } else {
+          let realEvents: any[] = []
+          while (events.length) {
+            let realEventIndex = realEvents.findIndex((item) => item.transactionHash == events[0].transactionHash)
+            if (realEventIndex < 0) {
+              realEvents.push(events[0])
+            } else {
+              const gasAmount = realEvents[realEventIndex].value
+              realEvents[realEventIndex] = events[0]
+              realEvents[realEventIndex].gasAmount = gasAmount
+            }
+            events.splice(0, 1);
+          }
+          resolve(realEvents)
+        }
+      })
+    })
+  }
 }
+
