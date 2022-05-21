@@ -262,18 +262,18 @@ async function sendConsumer(value: any) {
         'finalized'
       )
       if (!tokenBalanceWei) {
-        errorLogger.error('zk Insufficient balance 0')
+        errorLogger.error('zk2 Insufficient balance 0')
         return {
           code: 1,
-          txid: 'ZK Insufficient balance 0',
+          txid: 'ZK2 Insufficient balance 0',
         }
       }
-      accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
+      accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
       if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        errorLogger.error('zk Insufficient balance')
+        errorLogger.error('zk2 Insufficient balance')
         return {
           code: 1,
-          txid: 'zk Insufficient balance',
+          txid: 'zk2 Insufficient balance',
         }
       }
       const has_result_nonce = result_nonce > 0
