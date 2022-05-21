@@ -449,12 +449,7 @@ async function watchTransfers(pool, state) {
         }
       })
       .on('connected', (subscriptionId: string) => {
-        accessLogger.info(
-          'contract subscriptionId =',
-          subscriptionId,
-          ' time =',
-          getTime()
-        )
+        accessLogger.info(`contract subscriptionId =${subscriptionId} time =${getTime()}`)
       })
   }
 }
@@ -1331,8 +1326,6 @@ function confirmFromTransaction(
       amountStr = inputData.amount.toNumber() + ''
       transferExt = inputData.ext
     }
-
-
 
     let makerNode: MakerNode | undefined
     try {
