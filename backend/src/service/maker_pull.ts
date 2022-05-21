@@ -1617,7 +1617,7 @@ export class ServiceMakerPull {
       if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
         continue
       }
-      const amount_flag = getAmountFlag(this.chainId, item.returnValues.amount)
+      const amount_flag = getAmountFlag(this.chainId, item.returnValues.value)
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
@@ -1631,7 +1631,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.transactionHash,
-        txTime: new Date(item.timeStamp * 1000),
+        txTime: new Date(item.timestamp * 1000),
         gasCurrency: this.tokenSymbol,
         gasAmount: item.gasAmount ? item.gasAmount : '0',//one transaction contain two transaction. from can receive the two transaction,and mix them.to receive only one transaction.if not understand,contact aneng
         tx_status: 'finalized'
