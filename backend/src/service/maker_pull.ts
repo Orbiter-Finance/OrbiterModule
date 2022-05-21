@@ -19,7 +19,7 @@ import { getMakerPullStart } from './setting'
 import Web3 from "web3"
 import BobaService from './boba/boba_service'
 import makerConfig from '../config/maker'
-import { number } from 'starknet'
+import { DEFAULT_MAKER_PULL_START } from './setting'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -28,7 +28,7 @@ const repositoryMakerPull = (): Repository<MakerPull> => {
 }
 //====only for zksync2======
 const zk2ContractInfo = {}
-const zk2BlockNumberInfo = {}
+const zk2BlockNumberInfo: any = {}
 let zk2Web3;
 //=========================
 
@@ -259,7 +259,9 @@ export class ServiceMakerPull {
       last.pullCount = 0
       last.startPoint = 0 //only for zkspace
       last.roundTotal++
-      zk2BlockNumberInfo[this.tokenAddress] = undefined//only for zk2
+      if (this.chainId == 14 || this.chainId == 514) {
+        zk2BlockNumberInfo[this.tokenAddress.toLowerCase()] = undefined//only for zk2
+      }
     } else {
       lastMakePull = last.makerPull
     }
@@ -1595,6 +1597,16 @@ export class ServiceMakerPull {
       makerPullLastData = new MakerPullLastData()
     }
     let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+
+    // to avoid pull nothing which cant not stop pull
+    const tokenAddress = this.tokenAddress.toLowerCase()
+    if (!makerPullLastData.roundTotal && zk2BlockNumberInfo[tokenAddress] && zk2BlockNumberInfo[tokenAddress].startBlockNumber - zk2BlockNumberInfo[tokenAddress].pointBlockNumber > DEFAULT_MAKER_PULL_START.totalPull / 2000) {
+      makerPullLastData.roundTotal++;
+      zk2BlockNumberInfo[tokenAddress] = undefined
+    } else if (makerPullLastData.roundTotal && zk2BlockNumberInfo[tokenAddress] && zk2BlockNumberInfo[tokenAddress].startBlockNumber - zk2BlockNumberInfo[tokenAddress].pointBlockNumber > DEFAULT_MAKER_PULL_START.incrementPull / 2000) {
+      zk2BlockNumberInfo[tokenAddress] = undefined
+    }
+
     // getTxList
     let data = await this.zksync2GetTxlist(httpEndPoint, this.tokenAddress, this.makerAddress)
     const promiseMethods: (() => Promise<unknown>)[] = []
@@ -1632,7 +1644,8 @@ export class ServiceMakerPull {
     }
     await this.doPromisePool(promiseMethods)
     // set ZK2_LAST
-    if (lastMakePull?.txBlock == makerPullLastData.makerPull?.txBlock) {
+
+    if (lastMakePull && makerPullLastData.makerPull && lastMakePull.txBlock == makerPullLastData.makerPull.txBlock) {
       makerPullLastData.pullCount++
     }
     makerPullLastData.makerPull = lastMakePull
@@ -1644,10 +1657,10 @@ export class ServiceMakerPull {
     if (!zk2Web3) {
       zk2Web3 = new Web3(httpEndPoint)
     }
-    let currentBlock = zk2BlockNumberInfo[tokenAddress]
+    let currentBlock = zk2BlockNumberInfo[tokenAddress]?.pointBlockNumber
     if (!currentBlock) {
       currentBlock = await zk2Web3.eth.getBlockNumber()
-      zk2BlockNumberInfo[tokenAddress] = currentBlock
+      zk2BlockNumberInfo[tokenAddress] = { startBlockNumber: currentBlock, pointBlockNumber: currentBlock }
     }
     let tokenContract = zk2ContractInfo[tokenAddress]
     if (!tokenContract) {
@@ -1658,10 +1671,10 @@ export class ServiceMakerPull {
 
   private async getTxListTen(zk2Web3, tokenAddress, tokenContract, makerAddress) {
     let txList: any[] = []
-    for (let i = 0; i < 1; i++) {
+    for (let i = 0; i < 10; i++) {
       try {
-        const fromTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress], makerAddress, true)
-        const toTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress], makerAddress, false)
+        const fromTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, true)
+        const toTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, false)
 
         let fromTxPromises = fromTxs.map(async (item) => {
           const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
@@ -1680,7 +1693,7 @@ export class ServiceMakerPull {
         await Promise.all(fromTxPromises.concat(toTxPromises))
         txList.push(...fromTxs)
         txList.push(...toTxs)
-        zk2BlockNumberInfo[tokenAddress] = zk2BlockNumberInfo[tokenAddress] - 100 > 0 ? zk2BlockNumberInfo[tokenAddress] - 100 : 0
+        zk2BlockNumberInfo[tokenAddress].pointBlockNumber = zk2BlockNumberInfo[tokenAddress].pointBlockNumber - 100 > 0 ? zk2BlockNumberInfo[tokenAddress].pointBlockNumber - 100 : 0
       } catch (error) {
         errorLogger.error(`get zk2 txs error ${error.message}`)
       }
@@ -1711,7 +1724,7 @@ export class ServiceMakerPull {
             if (realEventIndex < 0) {
               realEvents.push(events[0])
             } else {
-              const gasAmount = realEvents[realEventIndex].value
+              const gasAmount = realEvents[realEventIndex].returnValues.value
               realEvents[realEventIndex] = events[0]
               realEvents[realEventIndex].gasAmount = gasAmount
             }

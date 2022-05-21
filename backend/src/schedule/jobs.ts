@@ -203,6 +203,7 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.zksync2(httpEndPoint)
           break
+        
       }
     } catch (error) {
       errorLogger.error(
