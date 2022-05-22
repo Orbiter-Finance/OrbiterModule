@@ -281,8 +281,8 @@ export class ServiceMakerPull {
     // if maker out
     if (fromAddress == makerAddress) {
       const targetMP = await repositoryMakerPull().findOne({
-        makerAddress: this.makerAddress, //  same makerAddress
-        fromAddress: makerPull.toAddress,
+        makerAddress: makerAddress, //  same makerAddress
+        fromAddress: toAddress,
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
         nonce: makerPull.amount_flag,
@@ -333,6 +333,13 @@ export class ServiceMakerPull {
       )
       let needToAmount = '0'
       if (targetMakerPool) {
+        const params = {
+          chainId: makerPull.chainId,
+          amount_flag: Number(makerPull.amount_flag),
+          amount: makerPull.amount,
+          targetMakerPool: targetMakerPool,
+          nonce: makerPull.nonce
+        }
         needToAmount =
           getAmountToSend(
             makerPull.chainId,
@@ -342,12 +349,20 @@ export class ServiceMakerPull {
             makerPull.nonce
           )?.tAmount || '0'
       }
-
+      const params = {
+        chainId: Number(makerPull.amount_flag),
+        makerAddress: makerAddress,
+        fromAddress: makerAddress,
+        toAddress: fromAddress,
+        amount: needToAmount,
+        amount_flag: makerPull.nonce,
+        tx_status: Not('rejected'),
+      }
       // match data from maker_pull
       const _mp = await repositoryMakerPull().findOne({
         chainId: Number(makerPull.amount_flag),
-        makerAddress: this.makerAddress,
-        fromAddress: makerPull.makerAddress,
+        makerAddress: makerAddress,
+        fromAddress: makerAddress,
         toAddress: fromAddress,
         amount: needToAmount,
         amount_flag: makerPull.nonce,
@@ -372,8 +387,8 @@ export class ServiceMakerPull {
         } else {
           await repositoryMakerNode().insert({
             transactionID,
-            makerAddress: makerPull.makerAddress,
-            userAddress: fromAddress,
+            makerAddress: makerPull.makerAddress.toLowerCase(),
+            userAddress: fromAddress.toLowerCase(),
             fromChain: String(makerPull.chainId),
             toChain: makerPull.amount_flag,
             formTx: makerPull.txHash,
@@ -381,7 +396,7 @@ export class ServiceMakerPull {
             formNonce: makerPull.nonce,
             needToAmount,
             fromTimeStamp: dateFormatNormal(makerPull.txTime),
-            txToken: makerPull.tokenAddress,
+            txToken: makerPull.tokenAddress.toLowerCase(),
             fromExt: makerPull.txExt,
             ...otherData,
           })
@@ -527,14 +542,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txExt: this.getTxExtFromInput(item.input),
@@ -633,14 +648,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txExt: this.getTxExtFromInput(item.input),
@@ -739,14 +754,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txExt: this.getTxExtFromInput(item.input),
@@ -850,14 +865,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: this.tokenAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: this.tokenAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: _op.amount,
         amount_flag,
         nonce: _op.nonce,
-        fromAddress: _op.from,
-        toAddress: _op.to,
+        fromAddress: _op.from.toLowerCase(),
+        toAddress: _op.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.txHash,
         txTime: new Date(item.createdAt),
@@ -955,14 +970,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txExt: this.getTxExtFromInput(item.input),
@@ -1049,14 +1064,14 @@ export class ServiceMakerPull {
           // save
           const makerPull = (lastMakePull = <MakerPull>{
             chainId: this.chainId,
-            makerAddress: this.makerAddress,
-            tokenAddress: transaction.contractAddress,
+            makerAddress: this.makerAddress.toLowerCase(),
+            tokenAddress: transaction.contractAddress.toLowerCase(),
             data: JSON.stringify(item),
             amount: transaction.value,
             amount_flag,
             nonce: transaction.nonce,
-            fromAddress: transaction.from,
-            toAddress: transaction.to,
+            fromAddress: transaction.from.toLowerCase(),
+            toAddress: transaction.to.toLowerCase(),
             txBlock: transaction.blockHash,
             txHash: String(transaction.hash),
             txTime: new Date(transaction.timeStamp * 1000),
@@ -1167,14 +1182,14 @@ export class ServiceMakerPull {
 
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: this.tokenAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: this.tokenAddress.toLowerCase(),
         data: JSON.stringify(lpTransaction),
         amount: lpTransaction.amount,
         amount_flag,
         nonce: nonce,
-        fromAddress: lpTransaction.senderAddress,
-        toAddress: lpTransaction.receiverAddress,
+        fromAddress: lpTransaction.senderAddress.toLowerCase(),
+        toAddress: lpTransaction.receiverAddress.toLowerCase(),
         txBlock: lpTransaction['blockId']
           ? lpTransaction['blockId'] + '-' + lpTransaction['indexInBlock']
           : '0',
@@ -1270,14 +1285,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txExt: this.getTxExtFromInput(item.input),
@@ -1381,14 +1396,14 @@ export class ServiceMakerPull {
         // save
         const makerPull = (lastMakePull = <MakerPull>{
           chainId: this.chainId,
-          makerAddress: this.makerAddress,
-          tokenAddress: this.tokenAddress, // Only usdc now!
+          makerAddress: this.makerAddress.toLowerCase(),
+          tokenAddress: this.tokenAddress.toLowerCase(), // Only usdc now!
           data: JSON.stringify(item),
           amount: transaction.value,
           amount_flag,
           nonce: transaction.nonce,
-          fromAddress: transaction.from,
-          toAddress,
+          fromAddress: transaction.from.toLowerCase(),
+          toAddress: toAddress.toLowerCase(),
           txBlock: transaction.blockHash,
           txHash: String(transaction.hash),
           txTime: new Date(transaction.timeStamp * 1000),
@@ -1471,16 +1486,16 @@ export class ServiceMakerPull {
         )
         const makerPull = (lastMakePull = <MakerPull>{
           chainId: this.chainId,
-          makerAddress: this.makerAddress,
-          tokenAddress: this.tokenAddress,
+          makerAddress: this.makerAddress.toLowerCase(),
+          tokenAddress: this.tokenAddress.toLowerCase(),
           data: JSON.stringify(zksTransaction),
           amount: new BigNumber(zksTransaction.amount)
             .multipliedBy(new BigNumber(10 ** 18))
             .toString(),
           amount_flag,
           nonce: zksTransaction.nonce,
-          fromAddress: zksTransaction.from,
-          toAddress: zksTransaction.to,
+          fromAddress: zksTransaction.from.toLowerCase(),
+          toAddress: zksTransaction.to.toLowerCase(),
           txBlock: zksTransaction['block_number'],
           txHash: zksTransaction.tx_hash,
           txTime: new Date(zksTransaction.created_at * 1000),
@@ -1548,14 +1563,14 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
         amount: item.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.from.toLowerCase(),
+        toAddress: item.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.hash,
         txTime: new Date(item.timeStamp * 1000),
@@ -1621,18 +1636,19 @@ export class ServiceMakerPull {
       // save
       const makerPull = (lastMakePull = <MakerPull>{
         chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
+        makerAddress: this.makerAddress.toLowerCase(),
+        tokenAddress: contractAddress.toLowerCase(),
         data: JSON.stringify(item),
-        amount: item.returnValues.amount,
+        amount: item.returnValues.value,
         amount_flag,
         nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
+        fromAddress: item.returnValues.from.toLowerCase(),
+        toAddress: item.returnValues.to.toLowerCase(),
         txBlock: item.blockNumber,
         txHash: item.transactionHash,
         txTime: new Date(item.timestamp * 1000),
-        gasCurrency: this.tokenSymbol,
+        // gasCurrency: this.tokenSymbol,
+        gasCurrency: "ETH",
         gasAmount: item.gasAmount ? item.gasAmount : '0',//one transaction contain two transaction. from can receive the two transaction,and mix them.to receive only one transaction.if not understand,contact aneng
         tx_status: 'finalized'
       })
@@ -1719,14 +1735,19 @@ export class ServiceMakerPull {
           errorLogger.error('zk2 getTxListOnce error=', error)
         } else {
           let realEvents: any[] = []
+          for (let item of events) {
+            if (item.returnValues.to != '0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7') {
+              realEvents.push(item)
+            }
+          }
           while (events.length) {
-            let realEventIndex = realEvents.findIndex((item) => item.transactionHash == events[0].transactionHash)
-            if (realEventIndex < 0) {
-              realEvents.push(events[0])
-            } else {
-              const gasAmount = realEvents[realEventIndex].returnValues.value
-              realEvents[realEventIndex] = events[0]
-              realEvents[realEventIndex].gasAmount = gasAmount
+
+            if (events[0].returnValues.to == '0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7') {
+              let realEvent = realEvents.find((item) => item.transactionHash == events[0].transactionHash)
+              if (realEvent) {
+                const gasAmount = events[0].returnValues.value
+                realEvent.gasAmount = gasAmount
+              }
             }
             events.splice(0, 1);
           }
@@ -1736,4 +1757,3 @@ export class ServiceMakerPull {
     })
   }
 }
-
