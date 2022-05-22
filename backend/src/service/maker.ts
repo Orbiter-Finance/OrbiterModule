@@ -157,10 +157,11 @@ export async function getTokenInfo(
  */
 export function makeTransactionID(
   fromAddress: string,
+  tokenAddress: string,
   chainId: number,
   nonce: string
 ) {
-  return `${fromAddress}${chainId}${nonce}`
+  return `${fromAddress.toLowerCase()}${tokenAddress.toLowerCase()}${chainId}${nonce}`
 }
 
 /**

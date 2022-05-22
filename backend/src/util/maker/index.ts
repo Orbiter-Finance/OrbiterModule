@@ -568,8 +568,8 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         nonce +
                         ' has found'
                       )
-                      var transactionID =
-                        element.op.from.toLowerCase() + fromChainID + nonce
+                      const transactionID = element.op.from.toLowerCase() +
+                        tokenAddress.toLowerCase() + fromChainID + nonce
                       let makerNode: MakerNode | undefined
                       try {
                         makerNode = await repositoryMakerNode().findOne(
@@ -827,10 +827,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                   (nonce * 2 + 1) +
                   ' has found'
                 )
-                var transactionID =
-                  lpTransaction.senderAddress.toLowerCase() +
-                  fromChainID + lpTransaction['storageInfo'].tokenId
-                  + nonce
+                var transactionID = lpTransaction.senderAddress.toLowerCase() +
+                  tokenAddress.toLowerCase() + fromChainID + nonce
                 let makerNode: MakerNode | undefined
                 try {
                   makerNode = await repositoryMakerNode().findOne(
@@ -1029,8 +1027,8 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                     nonce +
                     ' has found'
                   )
-                  var transactionID =
-                    zksTransaction.from.toLowerCase() + fromChainID + nonce
+                  var transactionID = zksTransaction.from.toLowerCase() +
+                    tokenAddress.toLowerCase() + fromChainID + nonce
                   let makerNode: MakerNode | undefined
                   try {
                     makerNode = await repositoryMakerNode().findOne(
@@ -1122,7 +1120,7 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
     return
   }
 
-  const transactionID = fromL1Address.toLowerCase() + fromChainID + nonce
+  const transactionID = fromL1Address.toLowerCase() + tokenAddress.toLowerCase() + fromChainID + nonce
 
   let makerNode: MakerNode | undefined
   try {
@@ -1201,7 +1199,7 @@ async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
     'ImmutableX Transaction with hash ' + hash + ', status: ' + txreceipt_status
   )
 
-  const transactionID = from.toLowerCase() + fromChainID + nonce
+  const transactionID = from.toLowerCase() + tokenAddress.toLowerCase() + fromChainID + nonce
 
   let makerNode: MakerNode | undefined
   try {
@@ -1298,7 +1296,7 @@ function confirmFromTransaction(
       trxConfirmations.confirmations +
       ' confirmation(s)'
     )
-    var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
+    var transactionID = trx.from.toLowerCase() + tokenAddress.toLowerCase() + fromChainID + trx.nonce
 
     // ERC20's transfer input length is 138(include 0x), when the length > 138, it is cross address transfer
     let amountStr = '0'

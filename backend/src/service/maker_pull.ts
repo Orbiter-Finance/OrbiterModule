@@ -277,6 +277,7 @@ export class ServiceMakerPull {
       if (targetMP) {
         const transactionID = makeTransactionID(
           targetMP.fromAddress,
+          targetMP.tokenAddress,
           targetMP.chainId,
           targetMP.nonce
         )
@@ -304,35 +305,39 @@ export class ServiceMakerPull {
         return
       }
 
-      const transactionID = makeTransactionID(
-        makerPull.fromAddress,
-        makerPull.chainId,
-        makerPull.nonce
-      )
       // find pool and calculate needToAmount
-      const targetMakerPool = await getTargetMakerPool(
+      const targetMakerPool: any = await getTargetMakerPool(
         this.makerAddress,
         this.tokenAddress,
         makerPull.chainId,
         Number(makerPull.amount_flag),
         makerPull.txTime
       )
+      let transactionID = ""
       let needToAmount = '0'
+      let mpTokenAddress = ""
       if (targetMakerPool) {
-        needToAmount =
-          getAmountToSend(
-            makerPull.chainId,
-            Number(makerPull.amount_flag),
-            makerPull.amount,
-            targetMakerPool,
-            makerPull.nonce
-          )?.tAmount || '0'
+        needToAmount = getAmountToSend(
+          makerPull.chainId,
+          Number(makerPull.amount_flag),
+          makerPull.amount,
+          targetMakerPool,
+          makerPull.nonce
+        )?.tAmount || '0'
+        mpTokenAddress = targetMakerPool.c1ID == makerPull.chainId ? targetMakerPool.t2Address : targetMakerPool.t1Address
+        transactionID = makeTransactionID(
+          makerPull.fromAddress,
+          targetMakerPool.c1ID == makerPull.chainId ? targetMakerPool.t1Address : targetMakerPool.t2Address,
+          makerPull.chainId,
+          makerPull.nonce
+        )
       }
 
       // match data from maker_pull
       const _mp = await repositoryMakerPull().findOne({
         chainId: Number(makerPull.amount_flag),
         makerAddress: this.makerAddress,
+        tokenAddress: mpTokenAddress,
         fromAddress: makerPull.makerAddress,
         toAddress: fromAddress,
         amount: needToAmount,
