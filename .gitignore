@@ -14,3 +14,4 @@ mysql*/
 local.*
 .vscode/
 backend/src/config/maker.ts
+.env
