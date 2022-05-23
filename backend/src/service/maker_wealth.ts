@@ -282,10 +282,7 @@ export async function getWealthsChains(makerAddress: string) {
         (CHAIN_INDEX[item.chainId] == 'zksync2' &&
           item2.tokenAddress.toLowerCase() == `0x${"e".repeat(40)}`)
     })
-    //zk2 eth is 0xee...ee
-    if (CHAIN_INDEX[item.chainId] == 'zksync2') {
-      continue
-    }
+    //if zk2 eth exist,ignore 
     if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
       continue;
     }
