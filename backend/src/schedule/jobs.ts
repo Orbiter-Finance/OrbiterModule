@@ -198,6 +198,15 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.zkspace(apiZkspace)
           break
+        case 'zksync2':
+          // let httpEndPoint= makerConfig.zksync2.httpEndPoint
+          let httpEndPoint
+          if (toChain == 514) {
+            httpEndPoint = makerConfig.zksync2_test.httpEndPoint
+          }
+          await serviceMakerPull.zksync2(httpEndPoint)
+          break
+
       }
     } catch (error) {
       errorLogger.error(

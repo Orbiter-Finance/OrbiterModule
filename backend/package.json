@@ -47,7 +47,8 @@
     "typeorm": "^0.2.37",
     "validator": "^13.7.0",
     "web3": "1.3.0",
-    "zksync": "^0.11.5"
+    "zksync": "^0.11.5",
+    "zksync-web3": "^0.4.0"
   },
   "devDependencies": {
     "@types/crypto-js": "^4.1.1",

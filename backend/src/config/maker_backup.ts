@@ -234,6 +234,16 @@ export default {
     gasPrice: 2,
     customChainId: 28,
   },
+  zksync2_test: {
+    wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
+    httpEndPoint: 'https://zksync2-testnet.zksync.dev',
+    api: {
+      endPoint: 'https://rinkeby-api.zksync.io/api/v0.2',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 280,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   s3AccessKeyId: 'Your Key',
   s3SecretAccessKey: 'Your Key',
