@@ -582,8 +582,8 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         await repositoryMakerNode()
                           .insert({
                             transactionID: transactionID,
-                            userAddress: element.op.from.toLowerCase(),
-                            makerAddress:makerAddress.toLowerCase(),
+                            userAddress: element.op.from,
+                            makerAddress,
                             fromChain: fromChainID,
                             toChain: toChainID,
                             formTx: element.txHash,
@@ -592,7 +592,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                             ),
                             fromAmount: element.op.amount,
                             formNonce: element.op.nonce,
-                            txToken: tokenAddress.toLowerCase(),
+                            txToken: tokenAddress,
                             state: 1,
                           })
                           .then(async () => {
@@ -640,9 +640,9 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                     if (!lastHash) {
                       try {
                         const rst = await repositoryMakerZkHash().insert({
-                          makerAddress:makerAddress.toLowerCase(),
+                          makerAddress,
                           validPText: validPText,
-                          tokenAddress:tokenAddress.toLowerCase(),
+                          tokenAddress,
                           txhash: element.txHash,
                         })
                         accessLogger.info('newHashResult =', rst)
@@ -841,8 +841,8 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                   await repositoryMakerNode()
                     .insert({
                       transactionID: transactionID,
-                      userAddress: lpTransaction.senderAddress.toLowerCase(),
-                      makerAddress:makerAddress.toLowerCase(),
+                      userAddress: lpTransaction.senderAddress,
+                      makerAddress,
                       fromChain: fromChainID,
                       toChain: toChainID,
                       formTx: lpTransaction.hash,
@@ -851,7 +851,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                       ),
                       fromAmount: lpTransaction.amount,
                       formNonce: nonce + '',
-                      txToken: tokenAddress.toLowerCase(),
+                      txToken: tokenAddress,
                       state: 1,
                     })
                     .then(async () => {
@@ -1044,8 +1044,8 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                     await repositoryMakerNode()
                       .insert({
                         transactionID: transactionID,
-                        userAddress: zksTransaction.from.toLowerCase(),
-                        makerAddress:makerAddress.toLowerCase(),
+                        userAddress: zksTransaction.from,
+                        makerAddress,
                         fromChain: fromChainID,
                         toChain: toChainID,
                         formTx: transactionHash,
@@ -1056,7 +1056,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
                         ),
                         fromAmount: amount + '',
                         formNonce: nonce + '',
-                        txToken: tokenAddress.toLowerCase(),
+                        txToken: tokenAddress,
                         state: 1,
                       })
                       .then(async () => {
@@ -1136,15 +1136,15 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
     try {
       await repositoryMakerNode().insert({
         transactionID: transactionID,
-        userAddress: fromL1Address.toLowerCase(),
-        makerAddress:makerAddress.toLowerCase(),
+        userAddress: fromL1Address,
+        makerAddress,
         fromChain: fromChainID,
         toChain: toChainID,
         formTx: hash,
         fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
         fromAmount: value,
         formNonce: nonce,
-        txToken: tokenAddress.toLowerCase(),
+        txToken: tokenAddress,
         state: 0,
       })
       accessLogger.info('add success')
@@ -1215,15 +1215,15 @@ async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
     try {
       await repositoryMakerNode().insert({
         transactionID: transactionID,
-        userAddress: from.toLowerCase(),
-        makerAddress:makerAddress.toLowerCase(),
+        userAddress: from,
+        makerAddress,
         fromChain: fromChainID,
         toChain: toChainID,
         formTx: hash,
         fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
         fromAmount: value,
         formNonce: nonce,
-        txToken: tokenAddress.toLowerCase(),
+        txToken: tokenAddress,
         state: 0,
       })
       accessLogger.info('add success')
@@ -1361,8 +1361,8 @@ function confirmFromTransaction(
       try {
         await repositoryMakerNode().insert({
           transactionID: transactionID,
-          userAddress: trx.from.toLowerCase(),
-          makerAddress:makerAddress.toLowerCase(),
+          userAddress: trx.from,
+          makerAddress,
           fromChain: fromChainID,
           toChain: toChainID,
           formTx: trx.hash,
@@ -1372,7 +1372,7 @@ function confirmFromTransaction(
           fromAmount: amountStr,
           formNonce: trx.nonce,
           fromExt: transferExt,
-          txToken: tokenAddress.toLowerCase(),
+          txToken: tokenAddress,
           state: 0,
         })
         accessLogger.info('add success')
@@ -1959,9 +1959,9 @@ export async function sendTransaction(
         //         fromChainID,
         //         toChainID,
         //         toChain,
-        //         tokenAddress:tokenAddress.toLowerCase(),
+        //         tokenAddress,
         //         amountStr,
-        //         fromAddress:fromAddress.toLowerCase(),
+        //         fromAddress,
         //         pool,
         //         nonce,
         //         result_nonce: response.result_nonce,

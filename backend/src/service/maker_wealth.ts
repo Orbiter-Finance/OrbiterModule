@@ -358,8 +358,8 @@ export async function saveWealths(wealths: WealthsChain[]) {
   for (const item1 of wealths) {
     for (const item2 of item1.balances) {
       await repositoryMakerWealth().insert({
-        makerAddress: item1.makerAddress.toLowerCase(),
-        tokenAddress: item2.tokenAddress.toLowerCase(),
+        makerAddress: item1.makerAddress,
+        tokenAddress: item2.tokenAddress,
         chainId: item1.chainId,
         balance: item2.value,
         decimals: item2.decimals,
