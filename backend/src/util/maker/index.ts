@@ -1935,8 +1935,9 @@ export async function sendTransaction(
           { transactionID: transactionID },
           { state: 20 }
         )
-        accessLogger.info('update success')
-
+        accessLogger.info(
+          `sendTransaction toChain ${toChain} state = 20  update success`
+        )
         // todo need result_nonce
         // if (response.result_nonce > 0) {
         //   // insert or update todo
