@@ -920,8 +920,6 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           let firstTxTime = originZksList[0].created_at
             ? originZksList[0].created_at
             : 0
-              ? originZksList[0].created_at
-              : 0
           let whileTag = true
           while (whileTag) {
             if (
@@ -954,7 +952,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           zksList = allZksList
           allZksList = []
           for (let zksTransaction of zksList) {
-            if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
+            if (zksLastTimeStamp[toChain] <= zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
               accessLogger.info(
                 'zksLastTimeStamp[',
