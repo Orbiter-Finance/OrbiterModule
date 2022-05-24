@@ -983,7 +983,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           zksList = allZksList
           allZksList = []
           for (let zksTransaction of zksList) {
-            if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
+            if (zksLastTimeStamp[toChain] <= zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
               accessLogger.info(
                 `zksLastTimeStamp[${toChain}] = ${zksLastTimeStamp[toChain]}`

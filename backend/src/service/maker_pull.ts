@@ -19,7 +19,6 @@ import { getMakerPullStart } from './setting'
 import Web3 from 'web3'
 import BobaService from './boba/boba_service'
 import makerConfig from '../config/maker'
-import { DEFAULT_MAKER_PULL_START } from './setting'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -266,7 +265,11 @@ export class ServiceMakerPull {
     } else {
       lastMakePull = last.makerPull
     }
-    return lastMakePull
+    return {
+      lastMakePull,
+      totalPull: makerPullStart.totalPull,
+      incrementPull: makerPullStart.incrementPull,
+    }
   }
 
   /**
@@ -476,7 +479,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
@@ -579,7 +582,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -685,7 +688,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -803,7 +806,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     const resp = await axios.get(
       `${api.endPoint}/accounts/${this.makerAddress}/transactions`,
@@ -901,7 +904,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -1015,7 +1018,7 @@ export class ServiceMakerPull {
       if (!makerPullLastData) {
         makerPullLastData = new MakerPullLastData()
       }
-      let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+      let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
       const resp = await imxClient.getTransfers({
         user,
@@ -1112,7 +1115,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
     let netWorkID = this.chainId == 9 ? 1 : 5
     const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
     const userApi = new UserAPI({ chainId: netWorkID })
@@ -1217,7 +1220,7 @@ export class ServiceMakerPull {
       makerPullLastData = new MakerPullLastData()
     }
 
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     // when endblock is empty, will end latest
     const startblock = ''
@@ -1331,7 +1334,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
 
     let createdBeforeOrAt: string | undefined
     if (lastMakePull?.txTime) {
@@ -1431,7 +1434,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
     const url = `${api.endPoint}/txs?types=Transfer&address=${this.makerAddress}&token=0&start=${makerPullLastData.startPoint}&limit=50`
     let zksResponse: any
     try {
@@ -1519,7 +1522,7 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
+    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
     // when endblock is empty, will end latest
     const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
@@ -1598,29 +1601,30 @@ export class ServiceMakerPull {
     if (!makerPullLastData) {
       makerPullLastData = new MakerPullLastData()
     }
-    let lastMakePull = await this.getLastMakerPull(makerPullLastData)
-
+    let { lastMakePull, totalPull, incrementPull } =
+      await this.getLastMakerPull(makerPullLastData)
+    makerPullLastData
     // to avoid pull nothing which cant not stop pull
     const tokenAddress = this.tokenAddress.toLowerCase()
-    if (
-      !makerPullLastData.roundTotal &&
-      zk2BlockNumberInfo[tokenAddress] &&
-      zk2BlockNumberInfo[tokenAddress].startBlockNumber -
-        zk2BlockNumberInfo[tokenAddress].pointBlockNumber >
-        DEFAULT_MAKER_PULL_START.totalPull / 2000
-    ) {
-      makerPullLastData.roundTotal++
-      zk2BlockNumberInfo[tokenAddress] = undefined
-    } else if (
-      makerPullLastData.roundTotal &&
-      zk2BlockNumberInfo[tokenAddress] &&
-      zk2BlockNumberInfo[tokenAddress].startBlockNumber -
-        zk2BlockNumberInfo[tokenAddress].pointBlockNumber >
-        DEFAULT_MAKER_PULL_START.incrementPull / 2000
-    ) {
-      zk2BlockNumberInfo[tokenAddress] = undefined
+    if (zk2BlockNumberInfo[tokenAddress]) {
+      const nowTimeStamp = new Date().getTime()
+      let theTimeStamp = await this.getBlockStampByNumber(
+        httpEndPoint,
+        zk2BlockNumberInfo[tokenAddress].pointBlockNumber
+      )
+      if (
+        !makerPullLastData.roundTotal &&
+        nowTimeStamp - Number(theTimeStamp) * 1000 > totalPull
+      ) {
+        makerPullLastData.roundTotal++
+        zk2BlockNumberInfo[tokenAddress] = undefined
+      } else if (
+        makerPullLastData.roundTotal &&
+        nowTimeStamp - Number(theTimeStamp) * 1000 > incrementPull
+      ) {
+        zk2BlockNumberInfo[tokenAddress] = undefined
+      }
     }
-
     // getTxList
     let data = await this.zksync2GetTxlist(
       httpEndPoint,
@@ -1771,18 +1775,12 @@ export class ServiceMakerPull {
           } else {
             let realEvents: any[] = []
             for (let item of events) {
-              if (
-                item.returnValues.to !=
-                '0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7'
-              ) {
+              if (item.returnValues.to != makerConfig.zksync2Provider) {
                 realEvents.push(item)
               }
             }
             while (events.length) {
-              if (
-                events[0].returnValues.to ==
-                '0xde03a0B5963f75f1C8485B355fF6D30f3093BDE7'
-              ) {
+              if (events[0].returnValues.to == makerConfig.zksync2Provider) {
                 let realEvent = realEvents.find(
                   (item) => item.transactionHash == events[0].transactionHash
                 )
@@ -1798,5 +1796,12 @@ export class ServiceMakerPull {
         }
       )
     })
+  }
+  private async getBlockStampByNumber(httpEndPoint, blockNumber) {
+    if (!zk2Web3) {
+      zk2Web3 = new Web3(httpEndPoint)
+    }
+    let blockInfo = await zk2Web3.eth.getBlock(blockNumber)
+    return blockInfo.timestamp
   }
 }

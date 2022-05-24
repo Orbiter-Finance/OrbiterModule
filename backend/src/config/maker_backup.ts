@@ -249,6 +249,7 @@ export default {
   s3SecretAccessKey: 'Your Key',
   s3Proof: 'S3 Proof',
   crossAddressContracts: {},
+  zksync2Provider: 'GET ZKSYNC2 PROVIDER ADDRESS',
   ABI: [
     {
       inputs: [

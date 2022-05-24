@@ -249,13 +249,17 @@ async function sendConsumer(value: any) {
     return
   }
   // zk2 || zk2_test
-  if (chainID === 514) {
+  if (chainID === 14 || chainID === 514) {
     try {
       let ethProvider
       let syncProvider
       if (chainID === 514) {
         const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
         ethProvider = ethers.getDefaultProvider('goerli')
+        syncProvider = new zksync2.Provider(httpEndPoint)
+      } else {
+        const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
+        ethProvider = ethers.getDefaultProvider('homestead')
         syncProvider = new zksync2.Provider(httpEndPoint)
       }
       const syncWallet = new zksync2.Wallet(
@@ -295,8 +299,8 @@ async function sendConsumer(value: any) {
             result_nonce = zk_sql_nonce + 1
           }
         }
-        accessLogger.info('zk_nonce =', zk_nonce)
-        accessLogger.info('zk_sql_nonce =', zk_sql_nonce)
+        accessLogger.info('zk2_nonce =', zk_nonce)
+        accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
         accessLogger.info('result_nonde =', result_nonce)
       }
 
