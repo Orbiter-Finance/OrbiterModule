@@ -1,0 +1,207 @@
+[
+  {
+    "api": {
+      "url": "https://api.etherscan.io/api",
+      "key": ""
+    },
+    "chainId": "1",
+    "networkId": "1",
+    "internalId": "1",
+    "name": "Ethereum Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": ["wss://eth-mainnet.alchemyapi.io/v2/1qliM8190Db9cTpzuJcItGucaESVHdP-"],
+    "watch": ["ws", "api"]
+  },
+  {
+    "api": {
+      "url": "http://api.arbiscan.io/api",
+      "key": ""
+    },
+    "chainId": "42161",
+    "networkId": "42161",
+    "internalId": "2",
+    "name": "Arbitrum One",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": ["wss://arb1.arbitrum.io/ws"],
+    "watch": ["ws", "api"]
+  },
+  {
+    "api": {
+      "url": "https://blockexplorer.boba.network/api",
+      "key": ""
+    },
+    "chainId": "288",
+    "internalId": "13",
+    "name": "Boba Network",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "networkId": "288",
+    "rpc": ["wss://ws.mainnet.boba.network"],
+    "watch": ["ws"]
+  },
+  {
+    "api": {
+      "url": "https://andromeda-explorer.metis.io/api",
+      "key": ""
+    },
+    "chain": "ETH",
+    "chainId": "1088",
+    "networkId": "1088",
+    "internalId": "10",
+    "name": "Metis Andromeda Mainnet",
+    "nativeCurrency": {
+      "name": "Metis",
+      "symbol": "METIS",
+      "decimals": 18
+    },
+    "rpc": ["wss://andromeda-ws.metis.io"],
+    "watch": ["api", "ws"]
+  },
+  {
+    "api": {
+      "url": "https://api.zksync.io/api/v0.2",
+      "key": ""
+    },
+    "chainId": "zksync",
+    "networkId": "zksync",
+    "internalId": "3",
+    "name": "ZKSync Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": [],
+    "watch": ["api"]
+  },
+  {
+    "api": {
+      "url": "https://api.polygonscan.com/api",
+      "key": ""
+    },
+    "chainId": "137",
+    "networkId": "137",
+    "internalId": "6",
+    "name": "Polygon Mainnet",
+    "rpc": [
+      "wss://polygon-mainnet.g.alchemy.com/v2/oDTzg33wi74qrjt5OpXuZIy1A_G2KwTW"
+    ],
+    "watch": ["api", "ws"]
+  },
+  {
+    "api": {
+      "url": "https://api-optimistic.etherscan.io/api",
+      "key": ""
+    },
+    "chainId": "10",
+    "networkId": "10",
+    "internalId": "7",
+    "name": "Optimism",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": [
+      "wss://opt-mainnet.g.alchemy.com/v2/IWGLcdSJjLh7yGwJnY8yBRnQ7cVdRPCN"
+    ],
+    "watch": ["api", "ws"]
+  },
+  {
+    "api": {
+      "url": "https://api.zkswap.info/v3",
+      "key": ""
+    },
+    "chainId": "zkspace",
+    "networkId": "zkspace",
+    "internalId": "12",
+    "name": "ZKSpace Mainnet",
+    "nativeCurrency": {
+      "name": "",
+      "symbol": "",
+      "decimals": 0
+    },
+    "rpc": [],
+    "watch": ["api"]
+  },
+  {
+    "api": {
+      "url": "https://api.stage.dydx.exchange",
+      "key": "f95941d0-80dc-f545-ed47-83e9e8695093.jDCUVKtPO8PQ60RiXYXH.p3gFDe8cG2FcYJg9JzSdMc1l1dymBUPwfIU2s8T1"
+    },
+    "chainId": "dydx",
+    "networkId": "dydx",
+    "internalId": "11",
+    "name": "Dydx Mainnet",
+    "nativeCurrency": {
+      "name": "",
+      "symbol": "",
+      "decimals": 0
+    },
+    "rpc": [],
+    "watch": ["api"]
+  },
+  {
+    "api": {
+      "url": "https://api.x.immutable.com/v1",
+      "key": ""
+    },
+    "chainId": "immutableX",
+    "networkId": "immutableX",
+    "internalId": "8",
+    "name": "immutableX Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": [],
+    "watch": ["api"]
+  },
+  {
+    "api": {
+      "url": "https://api3.loopring.io/api/v3",
+      "key": "EH6eIAdzygKElV78BrfHmhLDy8uyzLHiASfvwS0184lC9KEJL4O4s9RoMtNmqhfr"
+    },
+    "chainId": "loopring",
+    "networkId": "1",
+    "internalId": "9",
+    "name": "Loopring Mainnet",
+    "nativeCurrency": {
+      "name": "",
+      "symbol": "",
+      "decimals": 0
+    },
+    "rpc": ["wss://ws.api3.loopring.io/v3/ws"],
+    "watch": ["api"]
+  },
+  {
+    "api": {
+      "url": "https://zksync2-testnet.zkscan.io/api",
+      "key": ""
+    },
+    "chainId": "280",
+    "networkId": "280",
+    "internalId": "514",
+    "name": "zkSync alpha testnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "rpc": ["wss://zksync2-testnet.zksync.dev/ws", "https://zksync2-testnet.zksync.dev"],
+    "watch": ["api", "ws"]
+  }
+  
+]
