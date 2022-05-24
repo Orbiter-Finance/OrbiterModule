@@ -1589,7 +1589,7 @@ export class ServiceMakerPull {
   * pull zksync2
   * @param api
   */
-  async zksync2(httpEndPoint) {
+  async zksync2(chainInfo) {
     const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
     let makerPullLastData = ZKSYNC2_LAST[makerPullLastKey]
     if (!makerPullLastData) {
@@ -1601,7 +1601,7 @@ export class ServiceMakerPull {
     const tokenAddress = this.tokenAddress.toLowerCase()
     if (zk2BlockNumberInfo[tokenAddress]) {
       const nowTimeStamp = new Date().getTime()
-      let theTimeStamp = await this.getBlockStampByNumber(httpEndPoint, zk2BlockNumberInfo[tokenAddress].pointBlockNumber)
+      let theTimeStamp = await this.getBlockStampByNumber(chainInfo.httpEndPoint, zk2BlockNumberInfo[tokenAddress].pointBlockNumber)
       if (!makerPullLastData.roundTotal && (nowTimeStamp - Number(theTimeStamp) * 1000) > totalPull) {
         makerPullLastData.roundTotal++;
         zk2BlockNumberInfo[tokenAddress] = undefined
@@ -1610,7 +1610,7 @@ export class ServiceMakerPull {
       }
     }
     // getTxList
-    let data = await this.zksync2GetTxlist(httpEndPoint, this.tokenAddress, this.makerAddress)
+    let data = await this.zksync2GetTxlist(chainInfo, this.tokenAddress, this.makerAddress)
     const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data) {
       // contractAddress = 0x0...0
@@ -1655,10 +1655,10 @@ export class ServiceMakerPull {
     ZKSYNC2_LAST[makerPullLastKey] = makerPullLastData
   }
 
-  private async zksync2GetTxlist(httpEndPoint, tokenAddress, makerAddress) {
+  private async zksync2GetTxlist(chainInfo, tokenAddress, makerAddress) {
     tokenAddress = tokenAddress.toLowerCase()
     if (!zk2Web3) {
-      zk2Web3 = new Web3(httpEndPoint)
+      zk2Web3 = new Web3(chainInfo.httpEndPoint)
     }
     let currentBlock = zk2BlockNumberInfo[tokenAddress]?.pointBlockNumber
     if (!currentBlock) {
@@ -1669,15 +1669,15 @@ export class ServiceMakerPull {
     if (!tokenContract) {
       tokenContract = new zk2Web3.eth.Contract(makerConfig.ABI, tokenAddress)
     }
-    return await this.getTxListTen(zk2Web3, tokenAddress, tokenContract, makerAddress)
+    return await this.getTxListTen(chainInfo, zk2Web3, tokenAddress, tokenContract, makerAddress)
   }
 
-  private async getTxListTen(zk2Web3, tokenAddress, tokenContract, makerAddress) {
+  private async getTxListTen(chainInfo, zk2Web3, tokenAddress, tokenContract, makerAddress) {
     let txList: any[] = []
     for (let i = 0; i < 10; i++) {
       try {
-        const fromTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, true)
-        const toTxs: any = await this.getTxListOnce(tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, false)
+        const fromTxs: any = await this.getTxListOnce(chainInfo.zksync2GasAddress, tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, true)
+        const toTxs: any = await this.getTxListOnce(chainInfo.zksync2GasAddress, tokenContract, zk2BlockNumberInfo[tokenAddress].pointBlockNumber, makerAddress, false)
 
         let fromTxPromises = fromTxs.map(async (item) => {
           const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
@@ -1704,7 +1704,7 @@ export class ServiceMakerPull {
     return txList
   }
 
-  private getTxListOnce(tokenContract, currentBlock, makerAddress, isFrom) {
+  private getTxListOnce(zksync2GasAddress, tokenContract, currentBlock, makerAddress, isFrom) {
     return new Promise((resolve, reject) => {
       const options = {
         filter: {},
@@ -1723,12 +1723,12 @@ export class ServiceMakerPull {
         } else {
           let realEvents: any[] = []
           for (let item of events) {
-            if (item.returnValues.to != makerConfig.zksync2Provider) {
+            if (item.returnValues.to != zksync2GasAddress) {
               realEvents.push(item)
             }
           }
           while (events.length) {
-            if (events[0].returnValues.to == makerConfig.zksync2Provider) {
+            if (events[0].returnValues.to == zksync2GasAddress) {
               let realEvent = realEvents.find((item) => item.transactionHash == events[0].transactionHash)
               if (realEvent) {
                 const gasAmount = events[0].returnValues.value

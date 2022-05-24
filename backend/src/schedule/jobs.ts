@@ -197,11 +197,11 @@ export function jobMakerPull() {
           break
         case 'zksync2':
           // let httpEndPoint= makerConfig.zksync2.httpEndPoint
-          let httpEndPoint
+          let chainInfo
           if (toChain == 514) {
-            httpEndPoint = makerConfig.zksync2_test.httpEndPoint
+            chainInfo = makerConfig.zksync2_test
           }
-          await serviceMakerPull.zksync2(httpEndPoint)
+          await serviceMakerPull.zksync2(chainInfo)
           break
 
       }
