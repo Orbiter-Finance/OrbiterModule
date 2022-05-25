@@ -97,7 +97,12 @@
     "rpc": [
       "wss://polygon-mainnet.g.alchemy.com/v2/oDTzg33wi74qrjt5OpXuZIy1A_G2KwTW"
     ],
-    "watch": ["api", "ws"]
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18
+    },
+    "watch": ["api", "rpc"]
   },
   {
     "api": {
@@ -116,7 +121,7 @@
     "rpc": [
       "wss://opt-mainnet.g.alchemy.com/v2/IWGLcdSJjLh7yGwJnY8yBRnQ7cVdRPCN"
     ],
-    "watch": ["api", "ws"]
+    "watch": ["api", "rpc"]
   },
   {
     "api": {
@@ -201,7 +206,7 @@
       "decimals": 18
     },
     "rpc": ["wss://zksync2-testnet.zksync.dev/ws", "https://zksync2-testnet.zksync.dev"],
-    "watch": ["api", "ws"]
+    "watch": ["api", "rpc"]
   }
   
 ]

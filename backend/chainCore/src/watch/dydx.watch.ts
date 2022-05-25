@@ -7,7 +7,7 @@ export default class DydxWatch extends AbstractWatch {
       limit: 50,
       createdBeforeOrAt: dayjs().toISOString(),
     }
-    const cursor = await this.cursor(address)
+    const cursor = await this.apiScanCursor(address)
     if (cursor) {
       params.createdBeforeOrAt = String(dayjs(cursor.timestamp).toISOString())
     }
@@ -21,7 +21,7 @@ export default class DydxWatch extends AbstractWatch {
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist
   }
-  public async ws() {
+  public async rpcScan() {
     throw new Error('Method not implemented.')
   }
 }

@@ -1,4 +1,5 @@
 import { AlchemyWeb3, createAlchemyWeb3 } from '@alch/alchemy-web3'
+import { isEmpty } from '@loopring-web/loopring-sdk'
 import BigNumber from 'bignumber.js'
 import {
   HashOrBlockNumber,
@@ -7,10 +8,14 @@ import {
   Transaction,
   TransactionStatus,
 } from '../types'
-import { IChain, IChainConfig, QueryTransactionsResponse } from '../types/chain'
-import { decodeMethod, DEFAULT_ABI } from '../utils'
+import {
+  IChainConfig,
+  IEVMChain,
+  QueryTransactionsResponse,
+} from '../types/chain'
+import { decodeMethod, IERC20_ABI } from '../utils'
 
-export abstract class EVMChain implements IChain {
+export abstract class EVMChain implements IEVMChain {
   private readonly web3: AlchemyWeb3
   constructor(public readonly chainConfig: IChainConfig) {
     const wss = this.chainConfig.rpc.find((url: string) => {
@@ -21,7 +26,7 @@ export abstract class EVMChain implements IChain {
     }
     this.web3 = createAlchemyWeb3(wss)
   }
-  abstract readonly minConfirmations: number
+
   public abstract getTransactions(
     address: string,
     filter?: Partial<QueryTxFilterEther>
@@ -58,9 +63,14 @@ export abstract class EVMChain implements IChain {
   ): Promise<number> {
     return Number(latestHeight) - Number(targetHeight) + 1
   }
-  public async getTransactionByHash(txHash: string): Promise<ITransaction> {
-    const trxRcceipt = await this.web3.eth.getTransactionReceipt(txHash)
-    console.log(trxRcceipt, '===trxRcceipt')
+  public async getTransactionByHash(
+    txHash: string
+  ): Promise<ITransaction | null> {
+    const trx = await this.web3.eth.getTransaction(txHash)
+    const tx = await this.convertTxToEntity(trx)
+    return tx
+  }
+  public async convertTxToEntity(trx: any): Promise<Transaction | null> {
     const {
       hash,
       nonce,
@@ -74,9 +84,15 @@ export abstract class EVMChain implements IChain {
       gas,
       input,
       ...extra
-    } = await this.web3.eth.getTransaction(txHash)
-    const block = await this.web3.eth.getBlock(Number(blockNumber))
-    const trxDTO = new Transaction({
+    } = trx
+    const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
+    if (!trxRcceipt) {
+      return null
+    }
+    // status
+    const block = await this.web3.eth.getBlock(Number(blockNumber), false)
+    const confirmations = await this.getConfirmations(blockNumber)
+    const newTx = new Transaction({
       chainId: this.chainConfig.chainId,
       hash,
       from,
@@ -89,46 +105,41 @@ export abstract class EVMChain implements IChain {
       gas: Number(gas),
       gasPrice: Number(gasPrice),
       fee: Number(gas) * Number(gasPrice),
-      feeToken: '',
+      feeToken: this.chainConfig.nativeCurrency.symbol,
       input,
       symbol: '',
       status: TransactionStatus.Fail,
       timestamp: Number(block.timestamp),
+      confirmations,
       extra,
     })
-    const confirmations = await this.getConfirmations(trxDTO.blockNumber)
-    trxDTO.confirmations = confirmations
-    if (trxRcceipt) {
-      if (trxRcceipt.status) {
-        trxDTO.status =
-          confirmations >= this.minConfirmations
-            ? TransactionStatus.COMPLETE
-            : TransactionStatus.PENDING
+    if (trxRcceipt.status) {
+      newTx.status = TransactionStatus.COMPLETE
+    }
+    // valid main token or contract token
+    if (!isEmpty(to)) {
+      const code = await this.web3.eth.getCode(to)
+      if (code === '0x') {
+        newTx.symbol = this.chainConfig.nativeCurrency.symbol
       } else {
-        trxDTO.status = TransactionStatus.Fail
+        // contract token
+        newTx.contractAddress = to
+        newTx.to = ''
+        const decodeInputData = decodeMethod(String(input))
+        if (decodeInputData && decodeInputData.name === 'transfer') {
+          const addressEvent = decodeInputData.params.find(
+            (e) => e.type === 'address'
+          )
+          const valueEvent = decodeInputData.params.find(
+            (e) => e.type === 'uint256'
+          )
+          newTx.value = new BigNumber(valueEvent.value)
+          newTx.to = addressEvent.value
+          // newTx.symbol = await this.getTokenSymbol(to)
+        }
       }
     }
-    // valid is contract address
-    const code = await this.web3.eth.getCode(trxDTO.to)
-    if (code === '0x') {
-      trxDTO.symbol = this.chainConfig.nativeCurrency.symbol
-    } else {
-      trxDTO.contractAddress = String(to)
-      trxDTO.symbol = await this.getTokenSymbol(trxDTO.contractAddress)
-      trxDTO.to = ''
-      const decodeInputData = decodeMethod(String(trxDTO.input))
-      if (decodeInputData && decodeInputData.name === 'transfer') {
-        const addressEvent = decodeInputData.params.find(
-          (e) => e.name === '_to' && e.type === 'address'
-        )
-        const valueEvent = decodeInputData.params.find(
-          (e) => e.name === '_value' && e.type === 'uint256'
-        )
-        trxDTO.value = new BigNumber(valueEvent.value)
-        trxDTO.to = addressEvent.value
-      }
-    }
-    return trxDTO
+    return newTx
   }
   public async getBalance(address: string): Promise<BigNumber> {
     const value = await this.web3.eth.getBalance(address)
@@ -142,7 +153,7 @@ export abstract class EVMChain implements IChain {
     contractAddress: string
   ): Promise<BigNumber> {
     const tokenContract = new this.web3.eth.Contract(
-      DEFAULT_ABI as any,
+      IERC20_ABI as any,
       contractAddress
     )
     const tokenBalance = await tokenContract.methods.balanceOf(address).call()
@@ -150,7 +161,7 @@ export abstract class EVMChain implements IChain {
   }
   public async getTokenDecimals(contractAddress: string): Promise<number> {
     const tokenContract = new this.web3.eth.Contract(
-      DEFAULT_ABI as any,
+      IERC20_ABI as any,
       contractAddress
     )
     const decimals = await tokenContract.methods.decimals().call()
@@ -158,7 +169,7 @@ export abstract class EVMChain implements IChain {
   }
   public async getTokenSymbol(contractAddress: string): Promise<string> {
     const tokenContract = new this.web3.eth.Contract(
-      DEFAULT_ABI as any,
+      IERC20_ABI as any,
       contractAddress
     )
     const symbol = await tokenContract.methods.symbol().call()

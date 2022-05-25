@@ -1,98 +1,147 @@
 import { EVMChain } from '../chain/evm-chain.service'
-import { Address, IChain, ITransaction, QueryTxFilterEther } from '../types'
-import { decodeMethod, isEmpty } from '../utils'
+import {
+  Address,
+  AddressMapTransactions,
+  IEVMChain,
+  QueryTxFilterEther,
+} from '../types'
 import logger from '../utils/logger'
 import BasetWatch from './base.watch'
 
-export default class EVMWatchBase extends BasetWatch {
-  chain: IChain
-
-  protected async matchBlockTransaction(
-    block: any
-  ): Promise<Map<Address, Array<ITransaction>>> {
-    // valid address
-    const { transactions } = block
-    const addressTxMap: Map<Address, Array<ITransaction>> = new Map()
-    for (const tx of transactions) {
-      const to = tx.to?.toLowerCase()
-      const from = tx.from.toLowerCase()
-      let matchAddress = ''
-      if (this.addrTxs.has(to)) {
-        // receive
-        matchAddress = to
-      } else if (this.addrTxs.has(from)) {
-        // sender
-        matchAddress = from
-      } else {
-        // token receive
-        const decodeInputData = decodeMethod(String(tx.input))
-        if (!decodeInputData) continue
-        if (decodeInputData.name !== 'transfer') continue
-
-        const toParams = decodeInputData.params.find(
-          (log) => log.name === '_to' && log.type === 'address'
-        )
-        if (!toParams) continue
-
-        const toAddress = toParams.value.toLowerCase()
-        if (this.addrTxs.has(toAddress)) {
-          matchAddress = toAddress
-        }
-      }
-      if (!isEmpty(matchAddress)) {
-        const trx = await this.chain.getTransactionByHash(tx.hash)
-        if (!addressTxMap.has(matchAddress))
-          addressTxMap.set(matchAddress, new Array())
-        addressTxMap.get(matchAddress)?.push(trx)
-      }
-    }
-    return addressTxMap
+export default abstract class EVMWatchBase extends BasetWatch {
+  abstract readonly minConfirmations: number
+  private currentBlock: number = 0
+  constructor(public readonly chain: IEVMChain) {
+    super(chain)
   }
-  public async ws(): Promise<void> {
-    const web3 = (<EVMChain>this.chain).getWeb3()
-    if (!web3 || !web3.currentProvider) {
-      throw new Error(`[${this.chain.chainConfig.name}] Web3 Not initialized`)
+  public set setCurrentBlock(currentBlock: number) {
+    if (currentBlock > this.currentBlock) {
+      this.currentBlock = currentBlock
+      this.cache.set(`rpcScan:${this.chain.chainConfig.chainId}`, currentBlock)
     }
-    logger.info(
-      `[${this.chain.chainConfig.name}] Start Websocket Subscribe `,
-      web3.currentProvider['ws']['url']
-    )
-    web3.eth
-      .subscribe('newBlockHeaders', (error, result) => {
-        if (error) logger.error(`[${this.chain.chainConfig.name}] ws Subscribe newBlockHeaders error:`, error)
-      })
-      .on('data', async (blockHeader) => {
-        const block = await web3.eth.getBlock(blockHeader.number, true)
-        logger.debug(
-          `[${this.chain.chainConfig.name}] WS Scan Block in Progress`,
-          block.number,
-          block.transactions.length
-        )
-        const addrMapTxlist: Map<
-          Address,
-          Array<ITransaction>
-        > = await this.matchBlockTransaction(block)
-        addrMapTxlist.forEach(
-          async (txList: Array<ITransaction>, address: Address) => {
-            const pushtxList = await this.pushMessage(address, txList)
-            logger.info(
-              `${this.chain.chainConfig.name} ${block.number} Websocket Subscribe New Transaction `,
-              pushtxList.map((tx) => tx.hash)
-            )
-          }
-        )
-      })
   }
+  public get getCurrentBlock() {
+    return this.currentBlock
+  }
+
   public async getApiFilter(address: Address): Promise<QueryTxFilterEther> {
     const params: Partial<QueryTxFilterEther> = {
       address,
       sort: 'asc',
       offset: 100,
     }
-    const cursor = await this.cursor(address)
+    const cursor = await this.apiScanCursor(address)
     if (cursor) {
       params.startblock = Number(cursor.blockNumber) + 1
     }
     return params as QueryTxFilterEther
+  }
+  private isWatchAddress(address: string): boolean {
+    return this.watchAddress.has(address.toLowerCase())
+  }
+  public async replayBlockTransaction(
+    trx: string | any
+  ): Promise<AddressMapTransactions> {
+    const txmap: AddressMapTransactions = new Map()
+    try {
+      trx =
+        typeof trx === 'string'
+          ? await this.chain.getTransactionByHash(trx)
+          : await this.chain.convertTxToEntity(trx)
+      if (trx) {
+        const from = trx.from.toLowerCase()
+        const to = trx.to.toLowerCase()
+        if (this.isWatchAddress(from)) {
+          if (!txmap.has(from)) txmap.set(from, [])
+          txmap.get(from)?.push(trx)
+        } else if (this.isWatchAddress(to)) {
+          if (!txmap.has(to)) txmap.set(to, [])
+          txmap.get(to)?.push(trx)
+        }
+      }
+      return txmap
+    } catch (error) {
+      throw error
+    }
+  }
+  public async replayBlock(
+    start: number,
+    end: number,
+    changeBlock?: Function
+  ): Promise<{ start: number; end: number }> {
+    try {
+      const web3 = (<EVMChain>this.chain).getWeb3()
+      const config = this.chain.chainConfig
+      logger.info(`${config.name} Start replayBlock ${start} to ${end}`)
+      while (start < end) {
+        try {
+          const block = await web3.eth.getBlock(start, true)
+          const { transactions } = block
+          logger.debug(
+            `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
+          )
+          const txmap: AddressMapTransactions = new Map()
+          for (const tx of transactions) {
+            if (Number(tx.transactionIndex) <= 120) {
+              continue
+            }
+            logger.debug(
+              `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
+            )
+            const matchTxList = await this.replayBlockTransaction(tx)
+            matchTxList.forEach((txlist, address) => {
+              if (!txmap.has(address)) txmap.set(address, [])
+              txmap.get(address)?.push(...txlist)
+            })
+          }
+          changeBlock && changeBlock(start, txmap)
+          start++
+        } catch (error) {
+          logger.error(`[${config.name}] replayBlock Error:`, error.message)
+        }
+      }
+      return { start, end }
+    } catch (error) {
+      throw error
+    }
+  }
+
+  public async rpcScan() {
+    await this.init()
+    const currentBlockCacheKey = `rpcScan:${this.chain.chainConfig.chainId}`
+    const latestHeight = await this.chain.getLatestHeight()
+    if (!this.getCurrentBlock || this.getCurrentBlock <= 0) {
+      // get cache height
+      let cacheBlock = await this.cache.get(currentBlockCacheKey)
+      if (!cacheBlock) {
+        cacheBlock = latestHeight
+      }
+      this.setCurrentBlock = cacheBlock
+    }
+    const currentBlockHeight = this.getCurrentBlock
+    const isScan = latestHeight - currentBlockHeight + 1 > this.minConfirmations
+    logger.debug(
+      `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
+    )
+    if (isScan) {
+      await this.replayBlock(
+        currentBlockHeight,
+        latestHeight,
+        (blockNumber: number, txmap: AddressMapTransactions) => {
+          this.setCurrentBlock = blockNumber
+          if (txmap && txmap.size > 0) {
+            txmap.forEach((txlist, address) => {
+              this.pushMessage(address, txlist)
+              if (txlist.length > 0) {
+                logger.info(
+                  `[${this.chain.chainConfig.name}] RpcScan New Transaction: Cursor = ${blockNumber} `,
+                  txlist.map((tx) => tx.hash)
+                )
+              }
+            })
+          }
+        }
+      )
+    }
   }
 }

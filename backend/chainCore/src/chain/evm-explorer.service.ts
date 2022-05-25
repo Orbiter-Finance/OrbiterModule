@@ -56,7 +56,7 @@ export abstract class EvmExplorerService extends EVMChain {
       let status = TransactionStatus.PENDING
       if (extra.isError === '1' || extra.txreceipt_status !== '1') {
         status = TransactionStatus.Fail
-      } else if (Number(extra.confirmations) >= this.minConfirmations) {
+      } else {
         status = TransactionStatus.COMPLETE
       }
       const symbol = isEmpty(contractAddress)
@@ -132,7 +132,7 @@ export abstract class EvmExplorerService extends EVMChain {
       let status = TransactionStatus.PENDING
       if (extra.isError === '1' || extra.txreceipt_status !== '1') {
         status = TransactionStatus.Fail
-      } else if (Number(extra.confirmations) >= this.minConfirmations) {
+      }  {
         status = TransactionStatus.COMPLETE
       }
       returnResponse.txlist.push({

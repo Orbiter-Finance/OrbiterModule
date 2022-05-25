@@ -7,7 +7,7 @@ export default class ZKSyncWatch extends AbstractWatch {
       limit: 100,
       direction: 'newer'
     }
-    const cursor = await this.cursor(address)
+    const cursor = await this.apiScanCursor(address)
     if (cursor && cursor.hash) {
       params.from = String(cursor.hash)
     }
@@ -21,7 +21,7 @@ export default class ZKSyncWatch extends AbstractWatch {
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist
   }
-  public async ws() {
+  public async rpcScan() {
     throw new Error('Method not implemented.')
   }
 }

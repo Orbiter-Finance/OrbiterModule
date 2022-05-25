@@ -124,8 +124,7 @@ export default class EtherscanClient {
       apikey: this.apiKey,
       module,
     })}`
-    console.debug(`request api debug ${this.apiUrl} `, mergeUrl)
-    
+    // console.debug(`request api debug ${this.apiUrl} `, mergeUrl)
     const response = await fetch(mergeUrl)
 
     // 403 responses are not usually expected

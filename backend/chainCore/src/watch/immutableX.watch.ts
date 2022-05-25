@@ -16,7 +16,7 @@ export default class ImmutableXWatch extends BasetWatch {
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist
   }
-  public async ws() {
+  public async rpcScan() {
     throw new Error('Method not implemented.')
   }
 }

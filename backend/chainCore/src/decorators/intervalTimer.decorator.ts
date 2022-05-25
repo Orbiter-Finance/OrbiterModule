@@ -9,7 +9,7 @@ export const IntervalTimerDecorator = (
   let execTime = Date.now()
   let isLock = false
   descriptor.value = function () {
-    const intervalSeconds = (this.chain.chainConfig && this.chain.chainConfig.api.intervalTime || 1000 * 5)
+    const intervalSeconds = (this.chain.chainConfig && this.chain.chainConfig.api.intervalTime || 1000 * 6)
     const timer = setInterval(async () => {
       if (Date.now() - execTime > intervalSeconds && !isLock) {
         try {

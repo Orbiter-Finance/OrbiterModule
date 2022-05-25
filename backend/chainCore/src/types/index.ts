@@ -7,9 +7,9 @@ export type Hash = string
 export type Address = string
 export interface IChainWatch {
   chain: IChain
-  api(): Promise<void>
-  ws(): Promise<void>
-  // cursor(address: Address, tx?: ITransaction): Promise<string>
+  apiScan(): Promise<void>
+  rpcScan(): Promise<void>
+  apiScanCursor(address: Address, tx?: ITransaction): Promise<ITransaction | null> 
 }
 // export interface IEvmChainExplorerApi {
 //   getTransactions(
@@ -68,6 +68,7 @@ export interface QueryTxFilterLoopring extends QueryTxFilter {
   transferTypes?: string;
 }
 
+export type AddressMapTransactions = Map<string, Array<ITransaction>>;
 export interface QueryTxFilterIMX extends QueryTxFilter {
   order_by: string | null
   page_size: number | null
