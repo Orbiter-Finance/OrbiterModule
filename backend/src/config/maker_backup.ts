@@ -232,7 +232,7 @@ export default {
     wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
     httpEndPoint: 'https://zksync2-testnet.zksync.dev',
     api: {
-      endPoint: 'https://rinkeby-api.zksync.io/api/v0.2',
+      endPoint: 'https://zksync2-testnet.zkscan.io/api',
       key: '',
     },
     gasPrice: 2,
