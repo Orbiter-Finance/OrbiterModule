@@ -1638,7 +1638,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
-        txTime: new Date(Number(item.timestamp) * 1000),
+        txTime: new Date(Number(item.timeStamp) * 1000),
         gasCurrency: "ETH",
         gasAmount: item.gasAmount ? item.gasAmount : '0',
         tx_status: item.confirmations >= FINALIZED_CONFIRMATIONS
