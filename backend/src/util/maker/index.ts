@@ -345,11 +345,13 @@ async function watchTransfers(pool, state) {
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
-      const tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
-      if (tokenInfos) {
-        lpTokenInfo = tokenInfos
-        accessLogger.info('lpTokenInfo =', lpTokenInfo)
+      let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
       }
+      lpTokenInfo = tokenInfos
+      accessLogger.info('lpTokenInfo =', lpTokenInfo)
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
       errorLogger.error('error =', error)
