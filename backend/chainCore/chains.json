@@ -11,10 +11,21 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["wss://eth-mainnet.alchemyapi.io/v2/1qliM8190Db9cTpzuJcItGucaESVHdP-"],
-    "watch": ["ws", "api"]
+    "rpc": [
+      "wss://eth-mainnet.alchemyapi.io/v2/1qliM8190Db9cTpzuJcItGucaESVHdP-"
+    ],
+    "watch": ["ws", "api"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      }
+    ]
   },
   {
     "api": {
@@ -28,10 +39,19 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": ["wss://arb1.arbitrum.io/ws"],
-    "watch": ["ws", "api"]
+    "watch": ["ws", "api"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+      }
+    ]
   },
   {
     "api": {
@@ -44,11 +64,13 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x4200000000000000000000000000000000000006"
     },
     "networkId": "288",
     "rpc": ["wss://ws.mainnet.boba.network"],
-    "watch": ["ws"]
+    "watch": ["ws"],
+    "tokens": []
   },
   {
     "api": {
@@ -61,12 +83,27 @@
     "internalId": "10",
     "name": "Metis Andromeda Mainnet",
     "nativeCurrency": {
-      "name": "Metis",
+      "name": "Metis Token",
       "symbol": "METIS",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     },
-    "rpc": ["wss://andromeda-ws.metis.io"],
-    "watch": ["api", "ws"]
+    "rpc": ["https://andromeda-explorer.metis.io/api/eth-rpc"],
+    "watch": ["api", "ws"],
+    "tokens": [
+      {
+        "name": "Ether (WETH)",
+        "symbol": "WETH",
+        "decimals": 18,
+        "address": "0x420000000000000000000000000000000000000a"
+      },
+      {
+        "name": "USDC Token",
+        "symbol": "m.USDC",
+        "decimals": 6,
+        "address": "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"
+      }
+    ]
   },
   {
     "api": {
@@ -80,10 +117,19 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"]
+    "watch": ["api"],
+    "tokens": [
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
   },
   {
     "api": {
@@ -98,11 +144,26 @@
       "wss://polygon-mainnet.g.alchemy.com/v2/oDTzg33wi74qrjt5OpXuZIy1A_G2KwTW"
     ],
     "nativeCurrency": {
-      "name": "Ether",
-      "symbol": "ETH",
-      "decimals": 18
+      "name": "MATIC",
+      "symbol": "MATIC",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
-    "watch": ["api", "rpc"]
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "Wrapped Ether",
+        "symbol": "WETH",
+        "decimals": 18,
+        "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619"
+      },
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+      }
+    ]
   },
   {
     "api": {
@@ -116,12 +177,21 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
       "wss://opt-mainnet.g.alchemy.com/v2/IWGLcdSJjLh7yGwJnY8yBRnQ7cVdRPCN"
     ],
-    "watch": ["api", "rpc"]
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+      }
+    ]
   },
   {
     "api": {
@@ -133,29 +203,66 @@
     "internalId": "12",
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
-      "name": "",
-      "symbol": "",
-      "decimals": 0
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"]
+    "watch": ["api"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
   },
   {
     "api": {
-      "url": "https://api.stage.dydx.exchange",
-      "key": "f95941d0-80dc-f545-ed47-83e9e8695093.jDCUVKtPO8PQ60RiXYXH.p3gFDe8cG2FcYJg9JzSdMc1l1dymBUPwfIU2s8T1"
+      "url": "https://api.zks.app/v3/4",
+      "key": ""
+    },
+    "chainId": "zkspace_test",
+    "networkId": "zkspace",
+    "internalId": "512",
+    "name": "ZKSpace Testnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [],
+    "watch": ["api"],
+    "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://api.dydx.exchange",
+      "key": ""
     },
     "chainId": "dydx",
     "networkId": "dydx",
     "internalId": "11",
     "name": "Dydx Mainnet",
     "nativeCurrency": {
-      "name": "",
-      "symbol": "",
-      "decimals": 0
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 0,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"]
+    "watch": ["api"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "USDC"
+      }
+    ]
   },
   {
     "api": {
@@ -169,10 +276,19 @@
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
-      "decimals": 18
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"]
+    "watch": ["api"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
   },
   {
     "api": {
@@ -184,29 +300,13 @@
     "internalId": "9",
     "name": "Loopring Mainnet",
     "nativeCurrency": {
-      "name": "",
-      "symbol": "",
-      "decimals": 0
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 0,
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": ["wss://ws.api3.loopring.io/v3/ws"],
-    "watch": ["api"]
-  },
-  {
-    "api": {
-      "url": "https://zksync2-testnet.zkscan.io/api",
-      "key": ""
-    },
-    "chainId": "280",
-    "networkId": "280",
-    "internalId": "514",
-    "name": "zkSync alpha testnet",
-    "nativeCurrency": {
-      "name": "Ether",
-      "symbol": "ETH",
-      "decimals": 18
-    },
-    "rpc": ["wss://zksync2-testnet.zksync.dev/ws", "https://zksync2-testnet.zksync.dev"],
-    "watch": ["api", "rpc"]
+    "watch": ["api"],
+    "tokens": []
   }
-  
 ]

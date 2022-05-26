@@ -9,7 +9,7 @@ import {
   Transaction,
   TransactionStatus,
 } from '../types'
-import { AccountInfo, ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
+import { ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
 import { HttpGet } from '../utils'
 /**
  * https://beta.loopring.io/#/

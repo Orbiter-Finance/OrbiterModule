@@ -1,5 +1,6 @@
 import dayjs from 'dayjs'
 import { Address, ITransaction, QueryTxFilterDydx } from '../types'
+import { isEmpty } from '../utils'
 import AbstractWatch from './base.watch'
 export default class DydxWatch extends AbstractWatch {
   public async getApiFilter(address: Address): Promise<QueryTxFilterDydx> {
@@ -17,6 +18,9 @@ export default class DydxWatch extends AbstractWatch {
   public async apiWatchNewTransaction(
     address: Address
   ): Promise<Array<ITransaction>> {
+    if (!isEmpty(this.chain.chainConfig.api.key)) {
+      return [];
+    }
     const filter: any = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist

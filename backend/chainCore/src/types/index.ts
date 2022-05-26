@@ -11,17 +11,7 @@ export interface IChainWatch {
   rpcScan(): Promise<void>
   apiScanCursor(address: Address, tx?: ITransaction): Promise<ITransaction | null> 
 }
-// export interface IEvmChainExplorerApi {
-//   getTransactions(
-//     address: string,
-//     filter: Partial<TxListFilter>
-//   ): Promise<ITransaction[]>
-//   getTokenTransactions(
-//     address: string,
-//     contractAddress?: string | null,
-//     filter?: Partial<TxListFilter>
-//   ): Promise<ITransaction[]>
-// }
+
 export interface QueryTxFilter {}
 export interface QueryTxFilterMetis extends QueryTxFilter {
   address: string

@@ -37,7 +37,7 @@ export class ZKSync implements IChain {
   public async getTokenList() {
     if (this.tokens.size <= 0) {
       const { success, data } = await HttpGet(
-        `${this.chainConfig.api.url}/exchange/tokens`
+        `${this.chainConfig.api.url}/tokens?from=1&limit=100&direction=newer`
       )
       if (success && Array.isArray(data)) {
         data.forEach((token) => {

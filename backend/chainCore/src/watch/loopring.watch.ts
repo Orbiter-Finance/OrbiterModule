@@ -10,7 +10,7 @@ export default class LoopringWatch extends AbstractWatch {
       // tokenSymbol: 'ETH',
       transferTypes: 'transfer',
     }
-    const cursor = await this.cursor(address)
+    const cursor = await this.apiScanCursor(address)
     if (cursor && cursor.timestamp)
       filter.start = Number(cursor.timestamp) * 1000 + 1
     filter.end = dayjs(filter.start).add(10, 'minute').valueOf()
@@ -22,8 +22,5 @@ export default class LoopringWatch extends AbstractWatch {
     const filter = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist
-  }
-  public async ws() {
-    throw new Error('Method not implemented.')
   }
 }

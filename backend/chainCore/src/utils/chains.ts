@@ -1,4 +1,6 @@
-const chains = require('../../chains.json')
+const mainnetChains = require('../../chains.json')
+const testnetChains = require('../../testnet.json');
+const chains = [...mainnetChains, ...testnetChains];
 import { IChainConfig } from '../types/chain'
 
 export function getAllChains(): IChainConfig[] {

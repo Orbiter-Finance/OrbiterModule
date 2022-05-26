@@ -13,18 +13,12 @@ import {
   IEVMChain,
   QueryTransactionsResponse,
 } from '../types/chain'
-import { decodeMethod, IERC20_ABI } from '../utils'
+import { decodeLogs, decodeMethod, IERC20_ABI_JSON } from '../utils'
 
 export abstract class EVMChain implements IEVMChain {
-  private readonly web3: AlchemyWeb3
+  protected readonly web3: AlchemyWeb3
   constructor(public readonly chainConfig: IChainConfig) {
-    const wss = this.chainConfig.rpc.find((url: string) => {
-      return url && url.includes('wss://')
-    })
-    if (!wss) {
-      throw new Error(`[${this.chainConfig.name}] Not Config RPC WSS Server`)
-    }
-    this.web3 = createAlchemyWeb3(wss)
+    this.web3 = createAlchemyWeb3(this.chainConfig.rpc[0])
   }
 
   public abstract getTransactions(
@@ -67,8 +61,11 @@ export abstract class EVMChain implements IEVMChain {
     txHash: string
   ): Promise<ITransaction | null> {
     const trx = await this.web3.eth.getTransaction(txHash)
-    const tx = await this.convertTxToEntity(trx)
-    return tx
+    if (trx) {
+      const tx = await this.convertTxToEntity(trx)
+      return tx
+    }
+    return null
   }
   public async convertTxToEntity(trx: any): Promise<Transaction | null> {
     const {
@@ -89,6 +86,11 @@ export abstract class EVMChain implements IEVMChain {
     if (!trxRcceipt) {
       return null
     }
+    console.log(
+      JSON.stringify(trxRcceipt),
+      '===',
+      JSON.stringify(decodeLogs(trxRcceipt.logs))
+    )
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)
     const confirmations = await this.getConfirmations(blockNumber)
@@ -153,7 +155,7 @@ export abstract class EVMChain implements IEVMChain {
     contractAddress: string
   ): Promise<BigNumber> {
     const tokenContract = new this.web3.eth.Contract(
-      IERC20_ABI as any,
+      IERC20_ABI_JSON as any,
       contractAddress
     )
     const tokenBalance = await tokenContract.methods.balanceOf(address).call()
@@ -161,7 +163,7 @@ export abstract class EVMChain implements IEVMChain {
   }
   public async getTokenDecimals(contractAddress: string): Promise<number> {
     const tokenContract = new this.web3.eth.Contract(
-      IERC20_ABI as any,
+      IERC20_ABI_JSON as any,
       contractAddress
     )
     const decimals = await tokenContract.methods.decimals().call()
@@ -169,7 +171,7 @@ export abstract class EVMChain implements IEVMChain {
   }
   public async getTokenSymbol(contractAddress: string): Promise<string> {
     const tokenContract = new this.web3.eth.Contract(
-      IERC20_ABI as any,
+      IERC20_ABI_JSON as any,
       contractAddress
     )
     const symbol = await tokenContract.methods.symbol().call()

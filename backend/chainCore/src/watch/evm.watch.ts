@@ -1,4 +1,5 @@
 import { EVMChain } from '../chain/evm-chain.service'
+import { IntervalTimerDecorator } from '../decorators/intervalTimer.decorator'
 import {
   Address,
   AddressMapTransactions,
@@ -82,9 +83,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
           )
           const txmap: AddressMapTransactions = new Map()
           for (const tx of transactions) {
-            if (Number(tx.transactionIndex) <= 120) {
-              continue
-            }
             logger.debug(
               `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
             )
@@ -105,11 +103,12 @@ export default abstract class EVMWatchBase extends BasetWatch {
       throw error
     }
   }
-
+  @IntervalTimerDecorator
   public async rpcScan() {
     await this.init()
     const currentBlockCacheKey = `rpcScan:${this.chain.chainConfig.chainId}`
     const latestHeight = await this.chain.getLatestHeight()
+
     if (!this.getCurrentBlock || this.getCurrentBlock <= 0) {
       // get cache height
       let cacheBlock = await this.cache.get(currentBlockCacheKey)
@@ -124,7 +123,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
       `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
     )
     if (isScan) {
-      await this.replayBlock(
+      const result = await this.replayBlock(
         currentBlockHeight,
         latestHeight,
         (blockNumber: number, txmap: AddressMapTransactions) => {
@@ -142,6 +141,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
           }
         }
       )
+      logger.info(`rpcScan End of scan：`, result);
     }
   }
 }

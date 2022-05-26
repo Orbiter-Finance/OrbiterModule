@@ -43,7 +43,4 @@ export default class ZKSpaceWatch extends AbstractWatch {
     const response = await this.chain.getTransactions(address, filter)
     return response.txlist
   }
-  public async ws() {
-    throw new Error('Method not implemented.')
-  }
 }

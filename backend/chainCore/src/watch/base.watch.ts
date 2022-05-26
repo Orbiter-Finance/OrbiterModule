@@ -134,7 +134,7 @@ export default abstract class BasetWatch implements IChainWatch {
     trx?: ITransaction
   ): Promise<ITransaction | null> {
     await this.init()
-    const cursorKey = `cursor:${address}`
+    const cursorKey = `ApiCursor:${address}`
     let cursorTx: ITransaction = await this.cache.get(cursorKey)
     if (trx && trx.hash) {
       if (
