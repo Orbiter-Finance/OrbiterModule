@@ -26,7 +26,7 @@ export class ChainFactory {
         `Internal public Chain ID profile not found ${intranetChainId}`
       )
     }
-    switch (intranetChainId) {
+    switch (chainConfig.internalId) {
       case '1':
       case '5':
         watchChain = new EthereumWatch(new chains.EthereumChain(chainConfig))
@@ -37,7 +37,7 @@ export class ChainFactory {
         break
       case '3':
       case '33':
-        watchChain = new ZKSyncWatch(new chains.ZKSpaceChain(chainConfig))
+        watchChain = new ZKSyncWatch(new chains.ZKSyncChain(chainConfig))
         break
       case '6':
       case '66':

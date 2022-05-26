@@ -2,7 +2,7 @@ import log4js from 'log4js'
 
 export default class logger {
   static debug(message: string, ...args:any) {
-    log4js.getLogger('access').debug(`${message}`, args)
+    console.debug(`${message}`, args)
   }
   static error(message: string, ...args: any) {
     log4js.getLogger('scanChainError').error(message, args)

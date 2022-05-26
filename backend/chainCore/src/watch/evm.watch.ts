@@ -130,9 +130,9 @@ export default abstract class EVMWatchBase extends BasetWatch {
     }
     const currentBlockHeight = this.getCurrentBlock
     const isScan = latestHeight - currentBlockHeight + 1 > this.minConfirmations
-    // logger.debug(
-    //   `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
-    // )
+    logger.debug(
+      `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
+    )
     if (isScan) {
       const result = await this.replayBlock(
         currentBlockHeight,
