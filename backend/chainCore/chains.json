@@ -221,25 +221,6 @@
   },
   {
     "api": {
-      "url": "https://api.zks.app/v3/4",
-      "key": "You Key"
-    },
-    "chainId": "zkspace_test",
-    "networkId": "zkspace",
-    "internalId": "512",
-    "name": "ZKSpace Testnet",
-    "nativeCurrency": {
-      "name": "Ether",
-      "symbol": "ETH",
-      "decimals": 18,
-      "address": "0x0000000000000000000000000000000000000000"
-    },
-    "rpc": [],
-    "watch": ["api"],
-    "tokens": []
-  },
-  {
-    "api": {
       "url": "https://api.dydx.exchange",
       "key": "You Key"
     },

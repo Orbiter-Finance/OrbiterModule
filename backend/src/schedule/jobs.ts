@@ -209,7 +209,7 @@ export async function jobMakerPull() {
   for (const intranetId in convertMakerList) {
     //
     scanChain.mq.subscribe(`${intranetId}:txlist`, (result) => {
-      console.log('接收到新交易：', result)
+      console.log('new tx', result)
     })
   }
   scanChain.run()
