@@ -2,7 +2,7 @@
   {
     "api": {
       "url": "https://api-rinkeby.etherscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "4",
     "networkId": "4",
@@ -21,7 +21,7 @@
   {
     "api": {
       "url": "https://testnet.arbiscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "421611",
     "networkId": "421611",
@@ -40,7 +40,7 @@
   {
     "api": {
       "url": "https://blockexplorer.rinkeby.boba.network/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "288",
     "internalId": "513",
@@ -59,7 +59,7 @@
   {
     "api": {
       "url": "https://stardust-explorer.metis.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chain": "ETH",
     "chainId": "588",
@@ -79,7 +79,7 @@
   {
     "api": {
       "url": "https://rinkeby-api.zksync.io/api/v0.2",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "zksync_test",
     "networkId": "zksync",
@@ -105,14 +105,14 @@
   {
     "api": {
       "url": "https://api-testnet.polygonscan.com/api",
-      "key": "93B5F59W4XWXRPJFD2WRERHNSPQ1T4UTAE"
+      "key": "You Key"
     },
     "chainId": "80001",
     "networkId": "80001",
     "internalId": "66",
     "name": "Polygon Mumbai Testnet",
     "rpc": [
-      "wss://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp"
+      "wss://polygon-mumbai.g.alchemy.com/v2/You Key"
     ],
     "nativeCurrency": {
       "name": "MATIC",
@@ -125,7 +125,7 @@
   },
   {
     "api": {
-      "url": "https://opt-kovan.g.alchemy.com/v2/t1Ph1XdHept57UMzEiRQghYP4y_Igg7w",
+      "url": "https://opt-kovan.g.alchemy.com/v2/You Key",
       "key": ""
     },
     "chainId": "69",
@@ -139,7 +139,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://opt-kovan.g.alchemy.com/v2/t1Ph1XdHept57UMzEiRQghYP4y_Igg7w"
+      "wss://opt-kovan.g.alchemy.com/v2/You Key"
     ],
     "watch": ["api", "rpc"],
     "tokens": []
@@ -147,7 +147,7 @@
   {
     "api": {
       "url": "https://api.stage.dydx.exchange",
-      "key": "f95941d0-80dc-f545-ed47-83e9e8695093.jDCUVKtPO8PQ60RiXYXH.p3gFDe8cG2FcYJg9JzSdMc1l1dymBUPwfIU2s8T1"
+      "key": "You Key"
     },
     "chainId": "dydx_test",
     "networkId": "dydx",
@@ -173,7 +173,7 @@
   {
     "api": {
       "url": "https://api.ropsten.x.immutable.com/v1",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "immutableX_testnet",
     "networkId": "immutableX",
@@ -199,7 +199,7 @@
   {
     "api": {
       "url": "https://uat2.loopring.io",
-      "key": "35vBhSaHoYuUodTk2pFzuOLNeeVXtWyvsEUunNp0TRTph28gNFBecX9XRodrMUda"
+      "key": "You Key"
     },
     "chainId": "loopring_testnet",
     "networkId": "5",
@@ -218,7 +218,7 @@
   {
     "api": {
       "url": "https://zksync2-testnet.zkscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "280",
     "networkId": "280",

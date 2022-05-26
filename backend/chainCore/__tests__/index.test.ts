@@ -1658,3 +1658,4 @@ import { ScanChainMain } from '..'
 // ]
 
 // const ScanChain = new ScanChainMain(ScanChainMain.convertTradingList(makerList)).run()
+

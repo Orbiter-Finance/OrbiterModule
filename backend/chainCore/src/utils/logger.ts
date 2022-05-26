@@ -1,12 +1,13 @@
-import { accessLogger, errorLogger } from '../../../src/util/logger'
+import log4js from 'log4js'
+
 export default class logger {
   static debug(message: string, ...args:any) {
-    console.debug(`${message}`, args)
+    log4js.getLogger('access').debug(`${message}`, args)
   }
   static error(message: string, ...args: any) {
-    errorLogger.error(message, args)
+    log4js.getLogger('scanChainError').error(message, args)
   }
   static info(message: string, ...args: any) {
-    accessLogger.info(message, args)
+    log4js.getLogger('scanChainInfo').info(message, args)
   }
 }

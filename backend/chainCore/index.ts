@@ -1,4 +1,6 @@
+import { groupBy, uniqBy } from './src/utils'
 import logger from './src/utils/logger'
+import PubSubMQ, { PubSub } from './src/utils/pubsub'
 import { ChainFactory } from './src/watch/chainFactory'
 export interface IScanChainItem {
   address: string
@@ -6,6 +8,7 @@ export interface IScanChainItem {
   chainId: string
 }
 export class ScanChainMain {
+  public mq:PubSub = PubSubMQ;
   static convertTradingList(makerList: Array<any>) {
     const c1List = uniqBy(makerList, (row) => {
       return row.c1ID + row.makerAddress

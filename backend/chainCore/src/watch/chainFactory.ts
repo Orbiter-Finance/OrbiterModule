@@ -12,6 +12,9 @@ import OptimismWatch from './optimism.watch'
 import EthereumWatch from './ethereum.watch'
 import { IChainConfig } from '../types'
 import ZKSync2Watch from './zksync2.watcht'
+import LoopringWatch from './loopring.watch'
+import ImmutableXWatch from './immutableX.watch'
+
 export class ChainFactory {
   static createWatchChainByIntranetId(
     intranetChainId: IChainConfig['internalId']
@@ -44,6 +47,17 @@ export class ChainFactory {
       case '77':
         watchChain = new OptimismWatch(new chains.OptimismChain(chainConfig))
         break
+      case '8':
+      case '88':
+        watchChain = new ImmutableXWatch(
+          new chains.ImmutableXChain(chainConfig)
+        )
+        break
+      case '9':
+      case '99':
+        watchChain = new LoopringWatch(new chains.LoopringChain(chainConfig))
+        break
+
       case '10':
       case '510':
         watchChain = new MetisWatch(new chains.MetisChain(chainConfig))

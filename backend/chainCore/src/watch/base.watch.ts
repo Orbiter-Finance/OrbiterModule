@@ -84,7 +84,7 @@ export default abstract class BasetWatch implements IChainWatch {
       // write addrTxMap to cache
       this.cache.set('txlist', Array.from(this.pushHistory.keys()))
       ;({ txlist: pushTrx } = await this.pushBefore(address, pushTrx))
-      PubSubMQ.publish(`${this.chain.chainConfig.chainId}:${address}`, pushTrx)
+      PubSubMQ.publish(`${this.chain.chainConfig.internalId}:txlist`, pushTrx)
       logger.info(
         `[${this.chain.chainConfig.name}] New transaction pushed`,
         JSON.stringify(pushTrx)

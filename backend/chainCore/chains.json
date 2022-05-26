@@ -2,7 +2,7 @@
   {
     "api": {
       "url": "https://api.etherscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "1",
     "networkId": "1",
@@ -15,7 +15,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://eth-mainnet.alchemyapi.io/v2/1qliM8190Db9cTpzuJcItGucaESVHdP-"
+      "wss://eth-mainnet.alchemyapi.io/v2/You Key"
     ],
     "watch": ["ws", "api"],
     "tokens": [
@@ -30,7 +30,7 @@
   {
     "api": {
       "url": "http://api.arbiscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "42161",
     "networkId": "42161",
@@ -56,7 +56,7 @@
   {
     "api": {
       "url": "https://blockexplorer.boba.network/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "288",
     "internalId": "13",
@@ -75,7 +75,7 @@
   {
     "api": {
       "url": "https://andromeda-explorer.metis.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chain": "ETH",
     "chainId": "1088",
@@ -108,7 +108,7 @@
   {
     "api": {
       "url": "https://api.zksync.io/api/v0.2",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "zksync",
     "networkId": "zksync",
@@ -134,14 +134,14 @@
   {
     "api": {
       "url": "https://api.polygonscan.com/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "137",
     "networkId": "137",
     "internalId": "6",
     "name": "Polygon Mainnet",
     "rpc": [
-      "wss://polygon-mainnet.g.alchemy.com/v2/oDTzg33wi74qrjt5OpXuZIy1A_G2KwTW"
+      "wss://polygon-mainnet.g.alchemy.com/v2/You Key"
     ],
     "nativeCurrency": {
       "name": "MATIC",
@@ -168,7 +168,7 @@
   {
     "api": {
       "url": "https://api-optimistic.etherscan.io/api",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "10",
     "networkId": "10",
@@ -181,7 +181,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://opt-mainnet.g.alchemy.com/v2/IWGLcdSJjLh7yGwJnY8yBRnQ7cVdRPCN"
+      "wss://opt-mainnet.g.alchemy.com/v2/You Key"
     ],
     "watch": ["api", "rpc"],
     "tokens": [
@@ -196,7 +196,7 @@
   {
     "api": {
       "url": "https://api.zkswap.info/v3",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "zkspace",
     "networkId": "zkspace",
@@ -222,7 +222,7 @@
   {
     "api": {
       "url": "https://api.zks.app/v3/4",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "zkspace_test",
     "networkId": "zkspace",
@@ -241,7 +241,7 @@
   {
     "api": {
       "url": "https://api.dydx.exchange",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "dydx",
     "networkId": "dydx",
@@ -267,7 +267,7 @@
   {
     "api": {
       "url": "https://api.x.immutable.com/v1",
-      "key": ""
+      "key": "You Key"
     },
     "chainId": "immutableX",
     "networkId": "immutableX",
@@ -293,7 +293,7 @@
   {
     "api": {
       "url": "https://api3.loopring.io/api/v3",
-      "key": "EH6eIAdzygKElV78BrfHmhLDy8uyzLHiASfvwS0184lC9KEJL4O4s9RoMtNmqhfr"
+      "key": "You Key"
     },
     "chainId": "loopring",
     "networkId": "1",

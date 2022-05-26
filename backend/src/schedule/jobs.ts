@@ -6,10 +6,10 @@ import { ServiceMakerPull } from '../service/maker_pull'
 import * as serviceMakerWealth from '../service/maker_wealth'
 import { doBalanceAlarm } from '../service/setting'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-
+import { ScanChainMain } from '../../chainCore'
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -104,7 +104,7 @@ export function jobGetWealths() {
   new MJobPessimism('* */60 * * * *', callback, jobGetWealths.name).schedule()
 }
 
-export function jobMakerPull() {
+export async function jobMakerPull() {
   const startPull = async (
     toChain: number,
     makerAddress: string,
@@ -203,42 +203,17 @@ export function jobMakerPull() {
     }
   }
 
-  // Concurrent pull
-  // const callback = async () => {
-  //   const promises: Promise<void>[] = []
-
-  //   // Add promise
-  //   const runningKeyArr: string[] = []
-  //   const addPromise = (
-  //     chainId: number,
-  //     makerAddress: string,
-  //     tokenAddress: string,
-  //     tName: string
-  //   ) => {
-  //     const runningKey = `${chainId}:${makerAddress}:${tokenAddress}:${tName}`
-  //     if (runningKeyArr.indexOf(runningKey) > -1) {
-  //       return
-  //     }
-  //     runningKeyArr.push(runningKey)
-
-  //     promises.push(startPull(chainId, makerAddress, tokenAddress, tName))
-  //   }
-
-  //   const makerList = await getMakerList()
-  //   for (const item of makerList) {
-  //     const { pool1, pool2 } = expanPool(item)
-  //     addPromise(pool1.c1ID, pool1.makerAddress, pool1.t1Address, pool1.tName)
-  //     addPromise(pool2.c2ID, pool2.makerAddress, pool2.t2Address, pool2.tName)
-  //   }
-
-  //   await Promise.all(promises)
-
-  //   // Reset ServiceMakerPull.compareDataPromise
-  //   ServiceMakerPull.resetCompareDataPromise()
-  // }
-
+  const makerList = await getMakerList()
+  const convertMakerList = ScanChainMain.convertTradingList(makerList)
+  const scanChain = new ScanChainMain(convertMakerList)
+  for (const intranetId in convertMakerList) {
+    //
+    scanChain.mq.subscribe(`${intranetId}:txlist`, (result) => {
+      console.log('接收到新交易：', result)
+    })
+  }
+  scanChain.run()
   const callback = async () => {
-    const makerList = await getMakerList()
     for (const item of makerList) {
       const { pool1, pool2 } = expanPool(item)
       await startPull(
@@ -256,7 +231,7 @@ export function jobMakerPull() {
     }
   }
 
-  new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
+  // new MJobPessimism('*/10 * * * * *', callback, jobMakerPull.name).schedule()
 }
 
 const jobMakerNodeTodoMakerAddresses: string[] = []

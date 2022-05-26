@@ -6,7 +6,6 @@ import {
   IEVMChain,
   QueryTxFilterEther,
 } from '../types'
-import { isEmpty } from '../utils'
 import logger from '../utils/logger'
 import BasetWatch from './base.watch'
 
@@ -80,9 +79,9 @@ export default abstract class EVMWatchBase extends BasetWatch {
         try {
           const block = await web3.eth.getBlock(start, true)
           const { transactions } = block
-          logger.debug(
-            `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
-          )
+          // logger.debug(
+          //   `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
+          // )
           const txmap: AddressMapTransactions = new Map()
           for (const tx of transactions) {
             // Filter non whitelist address transactions
@@ -131,9 +130,9 @@ export default abstract class EVMWatchBase extends BasetWatch {
     }
     const currentBlockHeight = this.getCurrentBlock
     const isScan = latestHeight - currentBlockHeight + 1 > this.minConfirmations
-    logger.debug(
-      `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
-    )
+    // logger.debug(
+    //   `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
+    // )
     if (isScan) {
       const result = await this.replayBlock(
         currentBlockHeight,
