@@ -94,7 +94,7 @@ export class ZKSync implements IChain {
           to,
           value: new BigNumber(amount),
           fee,
-          feeToken: '',
+          feeToken: this.chainConfig.nativeCurrency.symbol,
           contractAddress: String(token),
           timestamp: dayjs(tx.createdAt).unix(),
           extra,

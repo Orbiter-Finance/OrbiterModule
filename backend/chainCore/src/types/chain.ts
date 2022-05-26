@@ -6,10 +6,11 @@ export interface IExplorerConfig {
   url: string
   standard: string
 }
-export interface INativeCurrency {
+export interface Token {
   name: string
   symbol: string
-  decimals: number
+  decimals: 18
+  address: string
 }
 export interface IChainConfig {
   name: string
@@ -23,9 +24,10 @@ export interface IChainConfig {
     key?: string
     intervalTime: number
   }
-  nativeCurrency: INativeCurrency
+  nativeCurrency: Token
   watch: Array<string>
   explorers: IExplorerConfig[]
+  tokens: Array<Token>
 }
 export interface QueryTransactionsResponse {
   txlist: Array<ITransaction>
@@ -51,7 +53,7 @@ export interface IChain {
   getTokenDecimals(contractAddress: string): Promise<number>
   getTokenSymbol(contractAddress: string): Promise<string>
 }
-export interface IEVMChain extends IChain{
+export interface IEVMChain extends IChain {
   chainConfig: IChainConfig
   getConfirmations(hashOrHeight: HashOrBlockNumber): Promise<number>
   calcConfirmations(targetHeight: number, latestHeight: number): Promise<number>

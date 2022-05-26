@@ -94,7 +94,6 @@ export class Loopring implements IChain {
         },
         filter
       )
-      console.log('查询条件：', params)
       const { userTransfers } = await userApi.getUserTransferList(
         params,
         String(this.chainConfig.api.key)

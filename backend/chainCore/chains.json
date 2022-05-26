@@ -88,7 +88,7 @@
       "decimals": 18,
       "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     },
-    "rpc": ["https://andromeda-explorer.metis.io/api/eth-rpc"],
+    "rpc": ["wss://andromeda-ws.metis.io"],
     "watch": ["api", "ws"],
     "tokens": [
       {

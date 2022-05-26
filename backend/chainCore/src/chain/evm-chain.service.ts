@@ -86,11 +86,6 @@ export abstract class EVMChain implements IEVMChain {
     if (!trxRcceipt) {
       return null
     }
-    console.log(
-      JSON.stringify(trxRcceipt),
-      '===',
-      JSON.stringify(decodeLogs(trxRcceipt.logs))
-    )
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)
     const confirmations = await this.getConfirmations(blockNumber)
@@ -110,6 +105,7 @@ export abstract class EVMChain implements IEVMChain {
       feeToken: this.chainConfig.nativeCurrency.symbol,
       input,
       symbol: '',
+      contractAddress: "",
       status: TransactionStatus.Fail,
       timestamp: Number(block.timestamp),
       confirmations,
@@ -137,7 +133,8 @@ export abstract class EVMChain implements IEVMChain {
           )
           newTx.value = new BigNumber(valueEvent.value)
           newTx.to = addressEvent.value
-          // newTx.symbol = await this.getTokenSymbol(to)
+          // get token symbol
+          newTx.symbol = await this.getTokenSymbol(to)
         }
       }
     }
@@ -148,7 +145,7 @@ export abstract class EVMChain implements IEVMChain {
     return new BigNumber(value)
   }
   public async getDecimals(): Promise<number> {
-    return 18
+    return this.chainConfig.nativeCurrency.decimals;
   }
   public async getTokenBalance(
     address: string,
@@ -162,6 +159,10 @@ export abstract class EVMChain implements IEVMChain {
     return new BigNumber(tokenBalance)
   }
   public async getTokenDecimals(contractAddress: string): Promise<number> {
+    const token = await this.chainConfig.tokens.find(token=> token.address.toLowerCase() === contractAddress.toLowerCase());
+    if (token) {
+      return token.decimals
+    }
     const tokenContract = new this.web3.eth.Contract(
       IERC20_ABI_JSON as any,
       contractAddress
@@ -170,6 +171,10 @@ export abstract class EVMChain implements IEVMChain {
     return decimals
   }
   public async getTokenSymbol(contractAddress: string): Promise<string> {
+    const token = await this.chainConfig.tokens.find(token=> token.address.toLowerCase() === contractAddress.toLowerCase());
+    if (token) {
+      return token.symbol
+    }
     const tokenContract = new this.web3.eth.Contract(
       IERC20_ABI_JSON as any,
       contractAddress

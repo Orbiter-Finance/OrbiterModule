@@ -6,6 +6,7 @@ import {
   IEVMChain,
   QueryTxFilterEther,
 } from '../types'
+import { isEmpty } from '../utils'
 import logger from '../utils/logger'
 import BasetWatch from './base.watch'
 
@@ -74,6 +75,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
       logger.info(`${config.name} Start replayBlock ${start} to ${end}`)
+      const chainConfig = this.chain.chainConfig
       while (start < end) {
         try {
           const block = await web3.eth.getBlock(start, true)
@@ -83,6 +85,16 @@ export default abstract class EVMWatchBase extends BasetWatch {
           )
           const txmap: AddressMapTransactions = new Map()
           for (const tx of transactions) {
+            // Filter non whitelist address transactions
+            const txTokenIndex = chainConfig.tokens.findIndex(
+              (token) => token.address.toLowerCase() === tx.to?.toLowerCase()
+            )
+            const isWatchAddress =
+              chainConfig.nativeCurrency.address.toLowerCase() ===
+              tx.to?.toLowerCase()
+            if (!(txTokenIndex != -1 || isWatchAddress)) {
+              continue
+            }
             logger.debug(
               `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
             )
@@ -141,7 +153,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
           }
         }
       )
-      logger.info(`rpcScan End of scan：`, result);
+      logger.info(`rpcScan End of scan：`, result)
     }
   }
 }

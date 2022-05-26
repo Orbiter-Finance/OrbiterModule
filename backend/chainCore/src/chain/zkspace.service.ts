@@ -112,7 +112,7 @@ export class ZKSpace implements IChain {
           to,
           value: new BigNumber(amount),
           fee,
-          feeToken: extra.fee_token === 0 ? '' : extra.fee_token,
+          feeToken: extra.fee_token === 0 ? this.chainConfig.nativeCurrency.symbol : extra.fee_token,
           contractAddress: String(token.id),
           timestamp: created_at,
           extra,
