@@ -108,7 +108,7 @@ export class ImmutableX implements IChain {
           timestamp: dayjs(timestamp).unix(),
           fee: 0,
           feeToken: '',
-          contractAddress: String(token.data['token_address']),
+          tokenAddress: String(token.data['token_address']),
           extra,
         })
       })
@@ -142,7 +142,7 @@ export class ImmutableX implements IChain {
   }
   getTokenTransactions(
     address: string,
-    contractAddress: string,
+    tokenAddress: string,
     filter: Partial<QueryTxFilterIMX>
   ): Promise<QueryTransactionsResponse> {
     throw new Error('Method not implemented.')
@@ -167,33 +167,33 @@ export class ImmutableX implements IChain {
   }
   async getTokenBalance(
     address: string,
-    contractAddress: string
+    tokenAddress: string
   ): Promise<BigNumber> {
-    const tokenInfo = this.tokens.get(contractAddress)
+    const tokenInfo = this.tokens.get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     const client = await this.createClient()
     const { balance } = await client.getBalance({
       user: address,
-      tokenAddress: contractAddress,
+      tokenAddress: tokenAddress,
     })
     return new BigNumber(balance?.toString() || 0)
   }
-  async getTokenDecimals(contractAddress: string): Promise<number> {
-    const tokenInfo = this.tokens.get(contractAddress)
+  async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const tokenInfo = this.tokens.get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     if (tokenInfo) {
       return Number(tokenInfo.decimals)
     }
     return 0
   }
-  async getTokenSymbol(contractAddress: string): Promise<string> {
-    const tokenInfo = this.tokens.get(contractAddress)
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const tokenInfo = this.tokens.get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     return tokenInfo && tokenInfo.symbol
   }

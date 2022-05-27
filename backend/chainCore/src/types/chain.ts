@@ -28,6 +28,7 @@ export interface IChainConfig {
   watch: Array<string>
   explorers: IExplorerConfig[]
   tokens: Array<Token>
+  contracts:Array<string>
 }
 export interface QueryTransactionsResponse {
   txlist: Array<ITransaction>

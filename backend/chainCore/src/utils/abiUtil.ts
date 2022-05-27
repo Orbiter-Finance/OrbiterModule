@@ -3,11 +3,20 @@ import AbiCoder from 'web3-eth-abi'
 import BigNumber from 'bignumber.js'
 export const IERC20_ABI_JSON = require('../abi/IERC20.json')
 export const ZKSYNC2_ABI_JSON = require('../abi/IERC20.json')
+export const ETHER_DYDX_ABI = require('../abi/0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc.json')
 type ABIConfig = {
   json: any
   map: Map<string, any>
 }
 const ABIMap: Map<string, ABIConfig> = new Map()
+ABIMap.set('IERC20', {
+  json: IERC20_ABI_JSON,
+  map: ABIToMapping(IERC20_ABI_JSON),
+})
+ABIMap.set('0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc', {
+  json: ETHER_DYDX_ABI,
+  map: ABIToMapping(ETHER_DYDX_ABI),
+})
 export function ABIToMapping(abi: Array<any>) {
   try {
     const abiMap: Map<string, any> = new Map()
@@ -38,13 +47,10 @@ export function ABIInputToString<T extends { type: string; components?: any }>(
   return input.type
 }
 
-ABIMap.set('IERC20', {
-  json: IERC20_ABI_JSON,
-  map: ABIToMapping(IERC20_ABI_JSON),
-})
-export function decodeMethod(input: string, abiFile: string = 'IERC20'):any {
+export function decodeMethod(input: string, abiFile: string = 'IERC20'): any {
   if (!ABIMap.has(abiFile)) {
-    throw new Error(`${abiFile} Abi Name Not Exists`)
+    abiFile = 'IERC20'
+    // throw new Error(`${abiFile} Abi Name Not Exists`)
   }
   const abiItems = ABIMap.get(abiFile)?.map
   if (!abiItems) {
@@ -65,7 +71,7 @@ export function decodeMethod(input: string, abiFile: string = 'IERC20'):any {
   )
   for (let index = 0; index < decodeResult.__length__; index++) {
     const element = decodeResult[index]
-    let values: any = null
+    let values: any = element
     const isUint = abiItem.inputs[index].type.includes('uint')
     const isInt = abiItem.inputs[index].type.includes('int')
     const isAddress = abiItem.inputs[index].type.includes('address')
@@ -93,9 +99,13 @@ export function decodeMethod(input: string, abiFile: string = 'IERC20'):any {
   return result
 }
 
-export function decodeLogs(logs: any, abiFile: string = 'IERC20'):Array<any> | null{
+export function decodeLogs(
+  logs: any,
+  abiFile: string = 'IERC20'
+): Array<any> | null {
   if (!ABIMap.has(abiFile)) {
-    throw new Error(`${abiFile} Abi Name Not Exists`)
+    abiFile = 'IERC20'
+    // throw new Error(`${abiFile} Abi Name Not Exists`)
   }
   const abiItems = ABIMap.get(abiFile)?.map
   if (!abiItems) {

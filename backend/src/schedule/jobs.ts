@@ -10,6 +10,7 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { ScanChainMain } from '../../chainCore'
+import BigNumber from 'bignumber.js'
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -104,7 +105,7 @@ export function jobGetWealths() {
   new MJobPessimism('* */60 * * * *', callback, jobGetWealths.name).schedule()
 }
 
-export async function jobMakerPull() {
+export function jobMakerPull() {
   const startPull = async (
     toChain: number,
     makerAddress: string,
@@ -203,17 +204,8 @@ export async function jobMakerPull() {
     }
   }
 
-  const makerList = await getMakerList()
-  const convertMakerList = ScanChainMain.convertTradingList(makerList)
-  const scanChain = new ScanChainMain(convertMakerList)
-  for (const intranetId in convertMakerList) {
-    //
-    scanChain.mq.subscribe(`${intranetId}:txlist`, (result) => {
-      console.log('new tx', result)
-    })
-  }
-  scanChain.run()
   const callback = async () => {
+    const makerList = await getMakerList()
     for (const item of makerList) {
       const { pool1, pool2 } = expanPool(item)
       await startPull(
@@ -271,4 +263,20 @@ export function jobBalanceAlarm() {
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
+}
+
+export async function startNewDashboardPull() {
+  const makerList = await getMakerList()
+  // console.log(makerList, '==makerList')
+  const convertMakerList = ScanChainMain.convertTradingList(makerList)
+  const scanChain = new ScanChainMain(convertMakerList)
+  const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
+  for (const intranetId in convertMakerList) {
+    //
+    scanChain.mq.subscribe(`${intranetId}:txlist`, (result) => {
+      console.log('pull new tx:', result)
+      serviceMakerPull.handleNewScanChainTrx(result, makerList)
+    })
+  }
+  scanChain.run()
 }

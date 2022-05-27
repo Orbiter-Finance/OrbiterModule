@@ -56,7 +56,7 @@ export class ZKSync2 extends EvmExplorerService {
         newTx.symbol = this.chainConfig.nativeCurrency.symbol
       } else {
         // contract token
-        newTx.contractAddress = to
+        newTx.tokenAddress = to
         newTx.to = ''
         const eventLogs = decodeLogs(trxRcceipt.logs)
         if (eventLogs && eventLogs.length >= 2) {

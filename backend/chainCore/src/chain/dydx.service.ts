@@ -103,7 +103,7 @@ export class Dydx implements IChain {
         timestamp: dayjs(createdAt).unix(),
         fee: 0,
         feeToken: '',
-        contractAddress: '',
+        tokenAddress: '',
         extra,
         symbol,
       })
@@ -118,7 +118,7 @@ export class Dydx implements IChain {
   }
   getTokenTransactions(
     address: string,
-    contractAddress: string,
+    tokenAddress: string,
     filter: Partial<QueryTxFilterDydx>
   ): Promise<QueryTransactionsResponse> {
     throw new Error('Method not implemented.')
@@ -131,14 +131,14 @@ export class Dydx implements IChain {
   }
   getTokenBalance(
     address: string,
-    contractAddress: string
+    tokenAddress: string
   ): Promise<BigNumber> {
     throw new Error('Method not implemented.')
   }
-  getTokenDecimals(contractAddress: string): Promise<number> {
+  getTokenDecimals(tokenAddress: string): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTokenSymbol(contractAddress: string): Promise<string> {
+  getTokenSymbol(tokenAddress: string): Promise<string> {
     throw new Error('Method not implemented.')
   }
 }

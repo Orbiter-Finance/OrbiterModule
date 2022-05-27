@@ -17,6 +17,8 @@ import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
+import { Transaction, TransactionStatus } from '../../chainCore/src/types'
+import { getChainByChainId, isEmpty } from '../../chainCore/src/utils'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -190,7 +192,7 @@ export function getLastStatus() {
     LOOPRING_LAST,
     DYDX_LAST,
     ZKSPACE_LAST,
-    BOBA_LAST
+    BOBA_LAST,
   }
 }
 
@@ -527,7 +529,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
-        txExt: this.getTxExtFromInput(item.input),
+        txExt: item.input && this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -1576,4 +1578,67 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     BOBA_LAST[makerPullLastKey] = makerPullLastData
   }
+
+  async handleNewScanChainTrx(
+    txlist: Array<Transaction>,
+    makerList: Array<any>
+  ) {
+    const promiseMethods: (() => Promise<unknown>)[] = []
+    for (const tx of txlist) {
+      const chainConfig = getChainByChainId(tx.chainId)
+  
+      if (tx.status === TransactionStatus.Fail) {
+      }
+      let makerAddress = ''
+      if (
+        makerList.find(
+          (row) => row.makerAddress.toLowerCase() === tx.from.toLowerCase()
+        )
+      ) {
+        makerAddress = tx.from
+      } else if (
+        makerList.find(
+          (row) => row.makerAddress.toLowerCase() === tx.to.toLowerCase()
+        )
+      ) {
+        makerAddress = tx.to
+      }
+      const value = tx.value.toString()
+      const amount_flag = getAmountFlag(chainConfig.internalId, value)
+  
+      // market list
+      const makerPull: any = {
+        chainId: chainConfig.internalId,
+        makerAddress: makerAddress,
+        tokenAddress: tx.tokenAddress || '',
+        data: JSON.stringify(tx),
+        amount: value,
+        amount_flag,
+        nonce: String(tx.nonce),
+        fromAddress: tx.from,
+        toAddress: tx.to,
+        txBlock: String(tx.blockNumber),
+        txHash: tx.hash,
+        txExt: !isEmpty(tx.input) && this.getTxExtFromInput(String(tx.input)),
+        txTime: new Date(tx.timestamp * 1000),
+        gasCurrency: tx.feeToken,
+        gasAmount: String(tx.fee),
+        tx_status: tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
+      }
+      //
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+  
+        // compare
+        await this.singleCompareData(makerPull)
+      })
+    }
+    await PromisePool.for(promiseMethods)
+      .withConcurrency(10)
+      .process(async (item) => await item())
+    //
+  }
+
 }
+
+

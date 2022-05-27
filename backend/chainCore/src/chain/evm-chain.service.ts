@@ -13,7 +13,8 @@ import {
   IEVMChain,
   QueryTransactionsResponse,
 } from '../types/chain'
-import { decodeLogs, decodeMethod, IERC20_ABI_JSON } from '../utils'
+import { decodeMethod, IERC20_ABI_JSON } from '../utils'
+import logger from '../utils/logger'
 
 export abstract class EVMChain implements IEVMChain {
   protected readonly web3: AlchemyWeb3
@@ -28,7 +29,7 @@ export abstract class EVMChain implements IEVMChain {
 
   public abstract getTokenTransactions(
     address: string,
-    contractAddress?: string | null,
+    tokenAddress?: string | null,
     filter?: Partial<QueryTxFilterEther>
   ): Promise<QueryTransactionsResponse>
   public getWeb3() {
@@ -105,7 +106,7 @@ export abstract class EVMChain implements IEVMChain {
       feeToken: this.chainConfig.nativeCurrency.symbol,
       input,
       symbol: '',
-      contractAddress: "",
+      tokenAddress: '',
       status: TransactionStatus.Fail,
       timestamp: Number(block.timestamp),
       confirmations,
@@ -121,18 +122,36 @@ export abstract class EVMChain implements IEVMChain {
         newTx.symbol = this.chainConfig.nativeCurrency.symbol
       } else {
         // contract token
-        newTx.contractAddress = to
+        newTx.tokenAddress = to
         newTx.to = ''
-        const decodeInputData = decodeMethod(String(input))
+        const decodeInputData = decodeMethod(String(input), to.toLowerCase())
+        // Compatible with transaction data from other chains to dydx
+        if (
+          this.chainConfig.contracts.findIndex(
+            (addr) => addr.toLowerCase() === to.toLowerCase()
+          ) !== -1
+        ) {
+          if (decodeInputData.name === 'transferERC20') {
+            decodeInputData.params.forEach((el) => {
+              if (el.name === '_token') {
+                newTx.tokenAddress = el.value
+              } else if (el.name === '_to') {
+                newTx.to = el.value
+              } else if (el.name === '_amount') {
+                newTx.value = new BigNumber(el.value)
+              }
+            })
+            newTx.symbol = await this.getTokenSymbol(to)
+          }
+        }
         if (decodeInputData && decodeInputData.name === 'transfer') {
-          const addressEvent = decodeInputData.params.find(
-            (e) => e.type === 'address'
-          )
-          const valueEvent = decodeInputData.params.find(
-            (e) => e.type === 'uint256'
-          )
-          newTx.value = new BigNumber(valueEvent.value)
-          newTx.to = addressEvent.value
+          decodeInputData.params.forEach((el) => {
+            if (el.type === 'address') {
+              newTx.to = el.value
+            } else if (el.type === 'uint256') {
+              newTx.value = new BigNumber(el.value)
+            }
+          })
           // get token symbol
           newTx.symbol = await this.getTokenSymbol(to)
         }
@@ -145,41 +164,55 @@ export abstract class EVMChain implements IEVMChain {
     return new BigNumber(value)
   }
   public async getDecimals(): Promise<number> {
-    return this.chainConfig.nativeCurrency.decimals;
+    return this.chainConfig.nativeCurrency.decimals
   }
   public async getTokenBalance(
     address: string,
-    contractAddress: string
+    tokenAddress: string
   ): Promise<BigNumber> {
     const tokenContract = new this.web3.eth.Contract(
       IERC20_ABI_JSON as any,
-      contractAddress
+      tokenAddress
     )
     const tokenBalance = await tokenContract.methods.balanceOf(address).call()
     return new BigNumber(tokenBalance)
   }
-  public async getTokenDecimals(contractAddress: string): Promise<number> {
-    const token = await this.chainConfig.tokens.find(token=> token.address.toLowerCase() === contractAddress.toLowerCase());
+  public async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const token = await this.chainConfig.tokens.find(
+      (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+    )
     if (token) {
       return token.decimals
     }
-    const tokenContract = new this.web3.eth.Contract(
-      IERC20_ABI_JSON as any,
-      contractAddress
-    )
-    const decimals = await tokenContract.methods.decimals().call()
-    return decimals
+    try {
+      const tokenContract = new this.web3.eth.Contract(
+        IERC20_ABI_JSON as any,
+        tokenAddress
+      )
+      const decimals = await tokenContract.methods.decimals().call()
+      return decimals
+    } catch (error) {
+      logger.error(`getTokenDecimals Error:`, error.message, tokenAddress)
+    }
+    return NaN
   }
-  public async getTokenSymbol(contractAddress: string): Promise<string> {
-    const token = await this.chainConfig.tokens.find(token=> token.address.toLowerCase() === contractAddress.toLowerCase());
+  public async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const token = await this.chainConfig.tokens.find(
+      (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+    )
     if (token) {
       return token.symbol
     }
-    const tokenContract = new this.web3.eth.Contract(
-      IERC20_ABI_JSON as any,
-      contractAddress
-    )
-    const symbol = await tokenContract.methods.symbol().call()
-    return symbol
+    try {
+      const tokenContract = new this.web3.eth.Contract(
+        IERC20_ABI_JSON as any,
+        tokenAddress
+      )
+      const symbol = await tokenContract.methods.symbol().call()
+      return symbol
+    } catch (error) {
+      logger.error(`getTokenSymbol Error:`, error.message, tokenAddress)
+    }
+    return ''
   }
 }

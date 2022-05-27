@@ -4,7 +4,9 @@ import {
   Address,
   AddressMapTransactions,
   IEVMChain,
+  ITransaction,
   QueryTxFilterEther,
+  Transaction,
 } from '../types'
 import logger from '../utils/logger'
 import BasetWatch from './base.watch'
@@ -29,7 +31,8 @@ export default abstract class EVMWatchBase extends BasetWatch {
     const params: Partial<QueryTxFilterEther> = {
       address,
       sort: 'asc',
-      offset: 100,
+      page: 1,
+      // offset: 100,
     }
     const cursor = await this.apiScanCursor(address)
     if (cursor) {
@@ -37,33 +40,68 @@ export default abstract class EVMWatchBase extends BasetWatch {
     }
     return params as QueryTxFilterEther
   }
-  private isWatchAddress(address: string): boolean {
-    return this.watchAddress.has(address.toLowerCase())
-  }
+
   public async replayBlockTransaction(
-    trx: string | any
+    hashOrTx: string | any
   ): Promise<AddressMapTransactions> {
     const txmap: AddressMapTransactions = new Map()
     try {
-      trx =
-        typeof trx === 'string'
-          ? await this.chain.getTransactionByHash(trx)
-          : await this.chain.convertTxToEntity(trx)
-      if (trx) {
-        const from = trx.from.toLowerCase()
-        const to = trx.to.toLowerCase()
-        if (this.isWatchAddress(from)) {
-          if (!txmap.has(from)) txmap.set(from, [])
-          txmap.get(from)?.push(trx)
-        } else if (this.isWatchAddress(to)) {
-          if (!txmap.has(to)) txmap.set(to, [])
-          txmap.get(to)?.push(trx)
-        }
+      const trx =
+        typeof hashOrTx === 'string'
+          ? await this.chain.getTransactionByHash(hashOrTx)
+          : await this.chain.convertTxToEntity(hashOrTx)
+      if (!trx) {
+        return txmap
+      }
+      const from = trx.from.toLowerCase()
+      const to = trx.to.toLowerCase()
+      //
+      if (await this.isWatchWalletAddress(from)) {
+        if (!txmap.has(from)) txmap.set(from, [])
+        txmap.get(from)?.push(trx)
+      } else if (await this.isWatchWalletAddress(to)) {
+        if (!txmap.has(to)) txmap.set(to, [])
+        txmap.get(to)?.push(trx)
       }
       return txmap
     } catch (error) {
       throw error
     }
+  }
+  private async isWatchWalletAddress(address: string): Promise<boolean> {
+    return this.watchAddress.has(address.toLowerCase())
+  }
+  private async isWatchContractAddress(address: string): Promise<boolean> {
+    const isWatchContract =
+      this.chain.chainConfig.contracts.findIndex(
+        (addr) => addr.toLowerCase() === address.toLowerCase()
+      ) != -1
+    return isWatchContract
+  }
+  private async isWatchTokenAddress(address: string): Promise<boolean> {
+    const isWatchToken =
+      this.chain.chainConfig.tokens.findIndex(
+        (token) => token.address.toLowerCase() === address.toLowerCase()
+      ) != -1
+    return isWatchToken
+  }
+  public async isWatchToAddress(to: string) {
+    const lowerToAddress = to.toLowerCase()
+    const chainConfig = this.chain.chainConfig
+    // is watch wallet address
+    const isWatchWallet = await this.isWatchWalletAddress(lowerToAddress)
+    if (isWatchWallet) return true
+    // is watch token address
+    const isWatchToken = await this.isWatchTokenAddress(lowerToAddress)
+    if (isWatchToken) return true
+    // is chain main coin
+    const isChainMainCoin =
+      chainConfig.nativeCurrency.address.toLowerCase() === lowerToAddress
+    if (isChainMainCoin) return true
+    // is watch contract address
+    const isWatchContract = await this.isWatchContractAddress(lowerToAddress)
+    if (isWatchContract) return true
+    return false
   }
   public async replayBlock(
     start: number,
@@ -74,7 +112,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
       logger.info(`${config.name} Start replayBlock ${start} to ${end}`)
-      const chainConfig = this.chain.chainConfig
       while (start < end) {
         try {
           const block = await web3.eth.getBlock(start, true)
@@ -85,13 +122,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
           const txmap: AddressMapTransactions = new Map()
           for (const tx of transactions) {
             // Filter non whitelist address transactions
-            const txTokenIndex = chainConfig.tokens.findIndex(
-              (token) => token.address.toLowerCase() === tx.to?.toLowerCase()
-            )
-            const isWatchAddress =
-              chainConfig.nativeCurrency.address.toLowerCase() ===
-              tx.to?.toLowerCase()
-            if (!(txTokenIndex != -1 || isWatchAddress)) {
+            if (!(await this.isWatchToAddress(String(tx.to)))) {
               continue
             }
             logger.debug(

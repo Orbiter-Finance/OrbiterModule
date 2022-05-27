@@ -133,7 +133,7 @@ export class Loopring implements IChain {
               feeToken: feeTokenSymbol,
               input: '',
               symbol,
-              contractAddress: String(storageInfo.tokenId),
+              tokenAddress: String(storageInfo.tokenId),
               status: TransactionStatus.Fail,
               timestamp: parseInt(String(timestamp / 1000)),
               extra,
@@ -154,7 +154,7 @@ export class Loopring implements IChain {
   }
   async getTokenTransactions(
     address: string,
-    contractAddress: string | null,
+    tokenAddress: string | null,
     filter: Partial<QueryTxFilter>
   ): Promise<QueryTransactionsResponse> {
     const response: QueryTransactionsResponse = {
@@ -174,21 +174,21 @@ export class Loopring implements IChain {
   }
   getTokenBalance(
     address: string,
-    contractAddress: string
+    tokenAddress: string
   ): Promise<BigNumber> {
     throw new Error('Method not implemented.')
   }
-  async getTokenDecimals(contractAddress: string): Promise<number> {
-    const tokenInfo = (await this.getTokenList()).get(contractAddress)
+  async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const tokenInfo = (await this.getTokenList()).get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     return tokenInfo && tokenInfo.decimals
   }
-  async getTokenSymbol(contractAddress: string): Promise<string> {
-    const tokenInfo = (await this.getTokenList()).get(contractAddress)
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const tokenInfo = (await this.getTokenList()).get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     return tokenInfo && tokenInfo.symbol
   }

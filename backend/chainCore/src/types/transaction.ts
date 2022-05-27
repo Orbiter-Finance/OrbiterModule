@@ -4,28 +4,6 @@ export enum TransactionStatus {
   COMPLETE,
   Fail,
 }
-// export interface ITransaction {
-//   hash: string
-//   nonce: number
-//   blockHash: string
-//   blockNumber: number
-//   transactionIndex: number
-//   from: string
-//   to: string
-//   value: BigNumber
-//   gasPrice: number
-//   gas: number
-//   input: string
-//   status: TransactionStatus
-//   contractAddress: string
-//   timestamp:number
-//   extra: any
-//   fee: number
-//   feeToken: string
-//   chainId: string
-//   source: string
-//   confirmations: number
-// }
 
 export class Transaction {
   public hash: string
@@ -41,7 +19,7 @@ export class Transaction {
   public gas?: number
   public input?: string
   public status: TransactionStatus
-  public contractAddress?: string
+  public tokenAddress?: string
   public timestamp: number
   public fee: number
   public feeToken: string
@@ -64,7 +42,7 @@ export class Transaction {
     this.gas = Number(opts.gas || 0)
     this.input = opts.input || ''
     this.status = opts.status || TransactionStatus.PENDING
-    this.contractAddress = String(opts.contractAddress || '')
+    this.tokenAddress = String(opts.tokenAddress || '')
     this.timestamp = Number(opts.timestamp)
     this.fee = Number(opts.fee || 0)
     this.feeToken = String(opts.feeToken || "")

@@ -113,7 +113,7 @@ export class ZKSpace implements IChain {
           value: new BigNumber(amount),
           fee,
           feeToken: extra.fee_token === 0 ? this.chainConfig.nativeCurrency.symbol : extra.fee_token,
-          contractAddress: String(token.id),
+          tokenAddress: String(token.id),
           timestamp: created_at,
           extra,
           status: txStatus,
@@ -126,12 +126,12 @@ export class ZKSpace implements IChain {
   }
   async getTokenTransactions(
     address: string,
-    contractAddress: string,
+    tokenAddress: string,
     filter: Partial<QueryTxFilterZKSpace>
   ): Promise<QueryTransactionsResponse> {
-    const token = (await this.getTokenList()).get(contractAddress)
+    const token = (await this.getTokenList()).get(tokenAddress)
     if (!token) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     const response: QueryTransactionsResponse = {
       txlist: [],
@@ -176,7 +176,7 @@ export class ZKSpace implements IChain {
           value: new BigNumber(amount),
           fee,
           feeToken: extra.fee_token === 0 ? '' : extra.fee_token,
-          contractAddress: String(token.id),
+          tokenAddress: String(token.id),
           timestamp: created_at,
           extra,
           status: txStatus,
@@ -199,11 +199,11 @@ export class ZKSpace implements IChain {
   }
   async getTokenBalance(
     address: string,
-    contractAddress: string
+    tokenAddress: string
   ): Promise<BigNumber> {
-    const token = (await this.getTokenList()).get(contractAddress)
+    const token = (await this.getTokenList()).get(tokenAddress)
     if (!token) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     const { success, data } = await HttpGet(
       `${this.chainConfig.api.url}/overview/account/${address}`
@@ -214,20 +214,20 @@ export class ZKSpace implements IChain {
     }
     return new BigNumber(0)
   }
-  async getTokenDecimals(contractAddress: string): Promise<number> {
-    const tokenInfo = (await this.getTokenList()).get(contractAddress);
+  async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const tokenInfo = (await this.getTokenList()).get(tokenAddress);
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     if (tokenInfo) {
       return Number(tokenInfo.decimals)
     }
     return 0
   }
-  async getTokenSymbol(contractAddress: string): Promise<string> {
-    const tokenInfo = (await this.getTokenList()).get(contractAddress)
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const tokenInfo = (await this.getTokenList()).get(tokenAddress)
     if (!tokenInfo) {
-      throw new Error(`${contractAddress} Token Not Exists`)
+      throw new Error(`${tokenAddress} Token Not Exists`)
     }
     return tokenInfo && tokenInfo.symbol
   }
