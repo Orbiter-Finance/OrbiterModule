@@ -280,7 +280,6 @@ export class ServiceMakerPull {
       if (targetMP) {
         const transactionID = makeTransactionID(
           targetMP.fromAddress,
-          targetMP.tokenAddress,
           targetMP.chainId,
           targetMP.nonce
         )
@@ -330,7 +329,6 @@ export class ServiceMakerPull {
         mpTokenAddress = targetMakerPool.c1ID == makerPull.chainId ? targetMakerPool.t2Address : targetMakerPool.t1Address
         transactionID = makeTransactionID(
           makerPull.fromAddress,
-          targetMakerPool.c1ID == makerPull.chainId ? targetMakerPool.t1Address : targetMakerPool.t2Address,
           makerPull.chainId,
           makerPull.nonce
         )
