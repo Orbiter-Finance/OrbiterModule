@@ -200,6 +200,7 @@ export function getLastStatus() {
     DYDX_LAST,
     ZKSPACE_LAST,
     BOBA_LAST,
+    ZKSYNC2_LAST,
   }
 }
 
@@ -1618,10 +1619,13 @@ export class ServiceMakerPull {
     // let data = await this.zksync2GetTxlistByWeb3(chainInfo, this.tokenAddress, this.makerAddress)
 
     // when endblock is empty, will end latest
-    const startblock = ''
     const endblock = lastMakePull ? lastMakePull.txBlock : ''
 
-    let data = await this.zksync2GetTxlistByApi(chainInfo, startblock, endblock)
+    let data = await this.zksync2GetTxlistByApi(
+      chainInfo,
+      endblock,
+      makerPullLastData.pullCount
+    )
     const promiseMethods: (() => Promise<unknown>)[] = []
     for (const item of data) {
       // contractAddress = 0x0...0
@@ -1672,15 +1676,22 @@ export class ServiceMakerPull {
     ZKSYNC2_LAST[makerPullLastKey] = makerPullLastData
   }
 
-  private async zksync2GetTxlistByApi(chainInfo, startblock, endblock) {
+  private async zksync2GetTxlistByApi(chainInfo, endblock, pullCount) {
+    let startBlockNumber = 0
+    if (endblock) {
+      startBlockNumber =
+        Number(endblock) - (pullCount + 1) * 5000 > 0
+          ? Number(endblock) - (pullCount + 1) * 5000
+          : 0
+    }
     try {
       const respData = await axiosPlus('get', chainInfo.api.endPoint, {
         module: 'account',
         action: 'tokentx',
         address: this.makerAddress,
         page: 1,
-        offset: 100,
-        startblock,
+        offset: 0,
+        startblock: startBlockNumber,
         endblock: endblock ? endblock : 'latest',
         sort: 'desc',
       })
