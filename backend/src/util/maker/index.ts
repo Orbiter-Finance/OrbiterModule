@@ -367,11 +367,13 @@ async function watchTransfers(pool, state) {
   // zkspace || zkspace_test
   if (fromChainID == 12 || fromChainID == 512) {
     try {
-      const tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
-      if (tokenInfos) {
-        zksTokenInfo = tokenInfos
-        accessLogger.info('zksTokenInfo =', zksTokenInfo)
+      let tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
       }
+      zksTokenInfo = tokenInfos
+      accessLogger.info('zksTokenInfo =', zksTokenInfo)
       confirmZKSTransaction(pool, tokenAddress, state)
     } catch (error) {
       errorLogger.error('zksTokenInfo error =', error.message)
@@ -587,7 +589,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                           nonce +
                           ' has found'
                       )
-                      var transactionID =
+                      const transactionID =
                         element.op.from.toLowerCase() + fromChainID + nonce
                       let makerNode: MakerNode | undefined
                       try {
@@ -848,7 +850,6 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                 var transactionID =
                   lpTransaction.senderAddress.toLowerCase() +
                   fromChainID +
-                  lpTransaction['storageInfo'].tokenId +
                   nonce
                 let makerNode: MakerNode | undefined
                 try {
@@ -1845,7 +1846,7 @@ export function getZKSTokenInfo(tokenAddress) {
   } else {
     for (let index = 0; index < zksTokenInfo.length; index++) {
       const tokenInfo = zksTokenInfo[index]
-      if (tokenInfo.address === tokenAddress) {
+      if (tokenInfo.address.toLowerCase() === tokenAddress.toLowerCase()) {
         return tokenInfo
       }
     }

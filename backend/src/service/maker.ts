@@ -160,7 +160,7 @@ export function makeTransactionID(
   chainId: number,
   nonce: string
 ) {
-  return `${fromAddress}${chainId}${nonce}`
+  return `${fromAddress.toLowerCase()}${chainId}${nonce}`
 }
 
 /**

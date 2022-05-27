@@ -203,7 +203,6 @@ export function getLastStatus() {
     ZKSYNC2_LAST,
   }
 }
-
 const SERVICE_MAKER_PULL_TIMEOUT = 16000
 export class ServiceMakerPull {
   private static compareDataPromise = Promise.resolve()
@@ -324,20 +323,17 @@ export class ServiceMakerPull {
         return
       }
 
-      const transactionID = makeTransactionID(
-        makerPull.fromAddress,
-        makerPull.chainId,
-        makerPull.nonce
-      )
       // find pool and calculate needToAmount
-      const targetMakerPool = await getTargetMakerPool(
+      const targetMakerPool: any = await getTargetMakerPool(
         this.makerAddress,
         this.tokenAddress,
         makerPull.chainId,
         Number(makerPull.amount_flag),
         makerPull.txTime
       )
+      let transactionID = ''
       let needToAmount = '0'
+      let mpTokenAddress = ''
       if (targetMakerPool) {
         needToAmount =
           getAmountToSend(
@@ -347,12 +343,22 @@ export class ServiceMakerPull {
             targetMakerPool,
             makerPull.nonce
           )?.tAmount || '0'
+        mpTokenAddress =
+          targetMakerPool.c1ID == makerPull.chainId
+            ? targetMakerPool.t2Address
+            : targetMakerPool.t1Address
+        transactionID = makeTransactionID(
+          makerPull.fromAddress,
+          makerPull.chainId,
+          makerPull.nonce
+        )
       }
 
       // match data from maker_pull
       const _mp = await repositoryMakerPull().findOne({
         chainId: Number(makerPull.amount_flag),
         makerAddress: this.makerAddress,
+        tokenAddress: mpTokenAddress,
         fromAddress: makerPull.makerAddress,
         toAddress: fromAddress,
         amount: needToAmount,
@@ -1138,7 +1144,6 @@ export class ServiceMakerPull {
       end: lastMakePull ? lastMakePull.txTime.getTime() : 9999999999999,
       status: 'processed,received',
       limit: 50,
-      tokenSymbol: 'ETH',
       transferTypes: 'transfer',
     }
     let LPTransferResult: any
@@ -1184,10 +1189,10 @@ export class ServiceMakerPull {
         toAddress: lpTransaction.receiverAddress,
         txBlock: lpTransaction['blockId']
           ? lpTransaction['blockId'] + '-' + lpTransaction['indexInBlock']
-          : '0',
+          : '0', //it looks like 4480-4 not 4476
         txHash: lpTransaction.hash,
         txTime: new Date(lpTransaction.timestamp),
-        gasCurrency: lpTransaction.symbol,
+        gasCurrency: lpTransaction.feeTokenSymbol,
         gasAmount: lpTransaction.feeAmount || '',
         tx_status:
           lpTransaction.status == 'processed' ||
@@ -1437,7 +1442,7 @@ export class ServiceMakerPull {
       makerPullLastData = new MakerPullLastData()
     }
     let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
-    const url = `${api.endPoint}/txs?types=Transfer&address=${this.makerAddress}&token=0&start=${makerPullLastData.startPoint}&limit=50`
+    const url = `${api.endPoint}/txs?types=Transfer&address=${this.makerAddress}&start=${makerPullLastData.startPoint}&limit=50`
     let zksResponse: any
     try {
       zksResponse = await axios.get(url)
@@ -1464,7 +1469,6 @@ export class ServiceMakerPull {
           (zksTransaction.status != 'verified' &&
             zksTransaction.status != 'pending') ||
           zksTransaction.tx_type != 'Transfer' ||
-          zksTransaction.token.symbol != 'ETH' ||
           !zksTransaction.success ||
           zksTransaction.fail_reason != ''
         ) {
