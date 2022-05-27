@@ -343,11 +343,13 @@ async function watchTransfers(pool, state) {
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
-      const tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
-      if (tokenInfos) {
-        lpTokenInfo = tokenInfos
-        accessLogger.info('lpTokenInfo =', lpTokenInfo)
+      let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
       }
+      lpTokenInfo = tokenInfos
+      accessLogger.info('lpTokenInfo =', lpTokenInfo)
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
       console.log('error =', error)
@@ -363,11 +365,13 @@ async function watchTransfers(pool, state) {
   // zkspace || zkspace_test
   if (fromChainID == 12 || fromChainID == 512) {
     try {
-      const tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
-      if (tokenInfos) {
-        zksTokenInfo = tokenInfos
-        accessLogger.info('zksTokenInfo =', zksTokenInfo)
+      let tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
       }
+      zksTokenInfo = tokenInfos
+      accessLogger.info('zksTokenInfo =', zksTokenInfo)
       confirmZKSTransaction(pool, tokenAddress, state)
     } catch (error) {
       errorLogger.error('zksTokenInfo error =', error.message)
@@ -1787,7 +1791,7 @@ export function getZKSTokenInfo(tokenAddress) {
   } else {
     for (let index = 0; index < zksTokenInfo.length; index++) {
       const tokenInfo = zksTokenInfo[index]
-      if (tokenInfo.address === tokenAddress) {
+      if (tokenInfo.address.toLowerCase() === tokenAddress.toLowerCase()) {
         return tokenInfo
       }
     }
@@ -1795,6 +1799,7 @@ export function getZKSTokenInfo(tokenAddress) {
   }
 }
 export function getLpTokenInfo(tokenAddress) {
+
   if (!lpTokenInfo.length) {
     return null
   } else {

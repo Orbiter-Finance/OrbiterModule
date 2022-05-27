@@ -173,6 +173,8 @@ const IMMUTABLEX_RECEIVER_LAST: { [key: string]: MakerPullLastData } = {}
 const LOOPRING_LAST: { [key: string]: MakerPullLastData } = {}
 const DYDX_LAST: { [key: string]: MakerPullLastData } = {}
 const ZKSPACE_LAST: { [key: string]: MakerPullLastData } = {}
+const BOBA_LAST: { [key: string]: MakerPullLastData } = {}
+const ZKSYNC2_LAST: { [key: string]: MakerPullLastData } = {}
 
 export function getLastStatus() {
   return {
@@ -188,9 +190,10 @@ export function getLastStatus() {
     LOOPRING_LAST,
     DYDX_LAST,
     ZKSPACE_LAST,
+    BOBA_LAST,
+    ZKSYNC2_LAST,
   }
 }
-
 const SERVICE_MAKER_PULL_TIMEOUT = 16000
 export class ServiceMakerPull {
   private static compareDataPromise = Promise.resolve()
