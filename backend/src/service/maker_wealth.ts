@@ -139,7 +139,7 @@ async function getTokenBalance(
         let tokenInfos = await ZKSpaceHelper.getTokenInfos(httpEndPoint)
         const zksTokenInfo = tokenInfos.find((item) => item.address.toLowerCase() == (tokenAddress ? tokenAddress.toLowerCase() : "0x" + "0".repeat(40)))
         let defaultIndex = balanceInfo.findIndex((item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0))
-        value = defaultIndex > -1 ? balanceInfo[defaultIndex].amount * 10 ** zksTokenInfo.decimals + '' : '0'
+        value = defaultIndex > -1 ? balanceInfo[defaultIndex].amount * 10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) + '' : '0'
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
