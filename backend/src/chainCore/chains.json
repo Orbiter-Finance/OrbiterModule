@@ -2,7 +2,7 @@
   {
     "api": {
       "url": "https://api.etherscan.io/api",
-      "key": "84974CAA7PEIHE6CC5WTBZFVGBIBU9YQ2S"
+      "key": ""
     },
     "chainId": "1",
     "networkId": "1",
@@ -15,7 +15,6 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://eth-mainnet.alchemyapi.io/v2/1qliM8190Db9cTpzuJcItGucaESVHdP-"
     ],
     "watch": ["ws", "api"],
     "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
@@ -141,14 +140,13 @@
   {
     "api": {
       "url": "https://api.polygonscan.com/api",
-      "key": "EKFB17IGYXGHVQXF2ZCKI4Q2IY1ADFYWRM"
+      "key": ""
     },
     "chainId": "137",
     "networkId": "137",
     "internalId": "6",
     "name": "Polygon Mainnet",
     "rpc": [
-      "wss://polygon-mainnet.g.alchemy.com/v2/oDTzg33wi74qrjt5OpXuZIy1A_G2KwTW"
     ],
     "nativeCurrency": {
       "name": "MATIC",
@@ -176,7 +174,7 @@
   {
     "api": {
       "url": "https://api-optimistic.etherscan.io/api",
-      "key": "1F5QCZIIUJ7KD4YFQVTS7MCC4A1DX5SZ7X"
+      "key": ""
     },
     "chainId": "10",
     "networkId": "10",
