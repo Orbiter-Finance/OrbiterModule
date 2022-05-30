@@ -279,6 +279,129 @@ export class ServiceMakerPull {
    * @param makerPull
    * @returns
    */
+  private async newCompareData(makerPull: MakerPull) {
+    // to lower
+    const makerAddress = makerPull.makerAddress.toLowerCase()
+    const fromAddress = makerPull.fromAddress.toLowerCase()
+    const toAddress = makerPull.toAddress.toLowerCase()
+    // if maker out
+    if (fromAddress == makerAddress) {
+      const targetMP = await repositoryMakerPull().findOne({
+        makerAddress: makerAddress, //  same makerAddress
+        fromAddress: makerPull.toAddress,
+        toAddress: fromAddress,
+        amount_flag: String(makerPull.chainId),
+        nonce: makerPull.amount_flag,
+        tx_status: Not('rejected'),
+      })
+      if (targetMP) {
+        const transactionID = makeTransactionID(
+          targetMP.fromAddress,
+          targetMP.chainId,
+          targetMP.nonce
+        )
+        await repositoryMakerNode().update(
+          {
+            transactionID,
+            needToAmount: makerPull.amount,
+          },
+          {
+            toTx: makerPull.txHash,
+            toAmount: makerPull.amount,
+            toTimeStamp: dateFormatNormal(makerPull.txTime),
+            gasCurrency: makerPull.gasCurrency,
+            gasAmount: makerPull.gasAmount,
+            state: targetMP.tx_status == 'finalized' ? 3 : 2,
+          }
+        )
+      }
+    }
+
+    // if into maker
+    if (toAddress == makerAddress) {
+      // when amount_flag not in CHAIN_INDEX, it cann't identify toChain
+      if (!CHAIN_INDEX[makerPull.amount_flag]) {
+        return
+      }
+      const transactionID = makeTransactionID(
+        makerPull.fromAddress,
+        makerPull.chainId,
+        makerPull.nonce
+      )
+      // find pool and calculate needToAmount
+      const targetMakerPool = await getTargetMakerPool(
+        makerAddress,
+        makerPull.tokenAddress,
+        makerPull.chainId,
+        Number(makerPull.amount_flag),
+        makerPull.txTime
+      )
+      let needToAmount = '0'
+      if (targetMakerPool) {
+        needToAmount =
+          getAmountToSend(
+            makerPull.chainId,
+            Number(makerPull.amount_flag),
+            makerPull.amount,
+            targetMakerPool,
+            makerPull.nonce
+          )?.tAmount || '0'
+      }
+
+      // match data from maker_pull
+      const _mp = await repositoryMakerPull().findOne({
+        chainId: Number(makerPull.amount_flag),
+        makerAddress: makerAddress,
+        fromAddress: makerPull.makerAddress,
+        toAddress: fromAddress,
+        amount: needToAmount,
+        amount_flag: makerPull.nonce,
+        tx_status: Not('rejected'),
+      })
+      const otherData = {
+        state: makerPull.tx_status == 'finalized' ? 1 : 0,
+      }
+      if (_mp) {
+        otherData['toTx'] = _mp.txHash
+        otherData['toAmount'] = _mp.amount
+        otherData['toTimeStamp'] = dateFormatNormal(_mp.txTime)
+        otherData['gasCurrency'] = _mp.gasCurrency
+        otherData['gasAmount'] = _mp.gasAmount
+        otherData['state'] = _mp.tx_status == 'finalized' ? 3 : 2
+      }
+      try {
+        const makerNode = await repositoryMakerNode().findOne({ transactionID })
+        // update or insert
+        if (makerNode) {
+          await repositoryMakerNode().update({ transactionID }, otherData)
+        } else {
+          await repositoryMakerNode().insert({
+            transactionID,
+            makerAddress: makerPull.makerAddress,
+            userAddress: fromAddress,
+            fromChain: String(makerPull.chainId),
+            toChain: makerPull.amount_flag,
+            formTx: makerPull.txHash,
+            fromAmount: makerPull.amount,
+            formNonce: makerPull.nonce,
+            needToAmount,
+            fromTimeStamp: dateFormatNormal(makerPull.txTime),
+            txToken: makerPull.tokenAddress,
+            fromExt: makerPull.txExt,
+            ...otherData,
+          })
+        }
+      } catch (e) {
+        // When run concurrently, insert will try transactionID exist error
+        errorLogger.error(e)
+      }
+    }
+  }
+
+  /**
+   * @param makerPull
+   * @returns
+   */
   private async compareData(makerPull: MakerPull) {
     // to lower
     const makerAddress = makerPull.makerAddress.toLowerCase()
@@ -1823,7 +1946,7 @@ export class ServiceMakerPull {
       promiseMethods.push(async () => {
         await savePull(makerPull)
         // compare
-        await this.compareData(makerPull)
+        await this.newCompareData(makerPull)
       })
     }
     await PromisePool.for(promiseMethods)
