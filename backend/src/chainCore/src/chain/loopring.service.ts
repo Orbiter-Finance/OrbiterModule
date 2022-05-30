@@ -12,7 +12,7 @@ import {
 } from '../types'
 import { ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
 import { HttpGet } from '../utils'
-import { id } from 'ethers/lib/utils'
+import logger from '../utils/logger'
 /**
  * https://beta.loopring.io/#/
  * https://docs.loopring.io/en/dex_apis/
@@ -107,11 +107,16 @@ export class Loopring implements IChain {
         },
         filter
       )
-      const { userTransfers } = await userApi.getUserTransferList(
+      const resData = await userApi.getUserTransferList(
         params,
         String(this.chainConfig.api.key)
       )
-      if (userTransfers && Array.isArray(userTransfers)) {
+      if (resData['code']) {
+        logger.error('Loopring getUserTransferList Fail:',JSON.stringify(resData))
+        return response
+      }
+      const userTransfers:any =resData.userTransfers;
+      if (userTransfers && Array.isArray(userTransfers) && userTransfers.length>0) {
         for (const tx of userTransfers) {
           const {
             id,
@@ -163,7 +168,7 @@ export class Loopring implements IChain {
             response.txlist.push(trxDTO)
           }
         }
-      }
+      } 
     } catch (error) {
       console.error('Get loopring txlist faild: ', error.message)
     }

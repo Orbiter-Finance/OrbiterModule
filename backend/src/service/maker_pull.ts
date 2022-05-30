@@ -1607,11 +1607,12 @@ export class ServiceMakerPull {
       }
       const chainConfig = await getChainByChainId(tx.chainId)
       const value = tx.value.toString()
-      const amount_flag = getAmountFlag(Number(chainConfig.internalId), value)
+      let amount_flag = getAmountFlag(Number(chainConfig.internalId), value)
       let txExt: any = null
       if (amount_flag == '11' || amount_flag == '511') {
         txExt = this.getTxExtFromInput(String(tx.input))
       }
+
       // market list
       const backTx = JSON.stringify(tx)
       const makerPull: any = {
@@ -1633,8 +1634,11 @@ export class ServiceMakerPull {
         tx_status:
           tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
       }
+      if ([9, 99].includes(Number(makerPull.chainId)) && tx.extra) {
+        makerPull.amount_flag = (<any>tx.extra.memo % 9000) + ''
+      }
       if (
-        [3, 33, 8, 88,12,512].includes(makerPull.chainId) &&
+        [3, 33, 8, 88, 12, 512].includes(makerPull.chainId) &&
         tx.status === TransactionStatus.PENDING
       ) {
         makerPull.tx_status = 'finalized'

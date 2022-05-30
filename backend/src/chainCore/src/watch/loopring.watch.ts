@@ -9,11 +9,13 @@ export default class LoopringWatch extends AbstractWatch {
       limit: 100,
       // tokenSymbol: 'ETH',
       transferTypes: 'transfer',
+      end: 9999999999999,
     }
     const cursor = await this.apiScanCursor(address)
-    if (cursor && cursor.timestamp)
-      filter.start = Number(cursor.timestamp) * 1000 + 1
-    filter.end = dayjs(filter.start).add(10, 'minute').valueOf()
+    if (cursor && cursor.timestamp) {
+      filter.start = dayjs(Number(cursor.timestamp * 1000)).add(1, 'second').valueOf()
+    }
+    // filter.end = dayjs(filter.start).add(20, 'minute').valueOf()
     return filter as QueryTxFilterLoopring
   }
   public async apiWatchNewTransaction(
