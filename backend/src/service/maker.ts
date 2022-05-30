@@ -265,11 +265,11 @@ export async function getTargetMakerPool(
     transactionTime = new Date()
   }
   const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
-
-  for (const maker of await getAllMakerList()) {
+  const allMakerList = await getAllMakerList(); 
+  for (const maker of allMakerList) {
     const { pool1, pool2 } = expanPool(maker)
     if (
-      pool1.makerAddress == makerAddress &&
+      pool1.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
       equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
       pool1.c1ID == fromChainId &&
       pool1.c2ID == toChainId &&
@@ -278,9 +278,8 @@ export async function getTargetMakerPool(
     ) {
       return pool1
     }
-
     if (
-      pool2.makerAddress == makerAddress &&
+      pool2.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
       equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
       pool2.c1ID == toChainId &&
       pool2.c2ID == fromChainId &&

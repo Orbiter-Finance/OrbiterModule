@@ -17,8 +17,8 @@ import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
-import { Transaction, TransactionStatus } from '../../chainCore/src/types'
-import { getChainByChainId, isEmpty } from '../../chainCore/src/utils'
+import { Transaction, TransactionStatus } from '../chainCore/src/types'
+import { getChainByChainId, isEmpty } from '../chainCore/src/utils'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -265,14 +265,13 @@ export class ServiceMakerPull {
    */
   private async compareData(makerPull: MakerPull) {
     // to lower
-    const makerAddress = this.makerAddress.toLowerCase()
+    const makerAddress = makerPull.makerAddress.toLowerCase()
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
-
     // if maker out
     if (fromAddress == makerAddress) {
       const targetMP = await repositoryMakerPull().findOne({
-        makerAddress: this.makerAddress, //  same makerAddress
+        makerAddress: makerAddress, //  same makerAddress
         fromAddress: makerPull.toAddress,
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
@@ -308,7 +307,6 @@ export class ServiceMakerPull {
       if (!CHAIN_INDEX[makerPull.amount_flag]) {
         return
       }
-
       const transactionID = makeTransactionID(
         makerPull.fromAddress,
         makerPull.chainId,
@@ -316,8 +314,8 @@ export class ServiceMakerPull {
       )
       // find pool and calculate needToAmount
       const targetMakerPool = await getTargetMakerPool(
-        this.makerAddress,
-        this.tokenAddress,
+        makerAddress,
+        makerPull.tokenAddress,
         makerPull.chainId,
         Number(makerPull.amount_flag),
         makerPull.txTime
@@ -337,7 +335,7 @@ export class ServiceMakerPull {
       // match data from maker_pull
       const _mp = await repositoryMakerPull().findOne({
         chainId: Number(makerPull.amount_flag),
-        makerAddress: this.makerAddress,
+        makerAddress: makerAddress,
         fromAddress: makerPull.makerAddress,
         toAddress: fromAddress,
         amount: needToAmount,
@@ -484,6 +482,7 @@ export class ServiceMakerPull {
       },
       timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
+
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
@@ -1585,9 +1584,12 @@ export class ServiceMakerPull {
   ) {
     const promiseMethods: (() => Promise<unknown>)[] = []
     for (const tx of txlist) {
-      const chainConfig = getChainByChainId(tx.chainId)
-  
-      if (tx.status === TransactionStatus.Fail) {
+      if (tx.value.lte(0)) {
+        accessLogger.error(
+          'Transaction amount is incorrect, please check：',
+          JSON.stringify(tx)
+        )
+        continue
       }
       let makerAddress = ''
       if (
@@ -1603,15 +1605,20 @@ export class ServiceMakerPull {
       ) {
         makerAddress = tx.to
       }
+      const chainConfig = await getChainByChainId(tx.chainId)
       const value = tx.value.toString()
-      const amount_flag = getAmountFlag(chainConfig.internalId, value)
-  
+      const amount_flag = getAmountFlag(Number(chainConfig.internalId), value)
+      let txExt: any = null
+      if (amount_flag == '11' || amount_flag == '511') {
+        txExt = this.getTxExtFromInput(String(tx.input))
+      }
       // market list
+      const backTx = JSON.stringify(tx)
       const makerPull: any = {
-        chainId: chainConfig.internalId,
+        chainId: Number(chainConfig.internalId),
         makerAddress: makerAddress,
-        tokenAddress: tx.tokenAddress || '',
-        data: JSON.stringify(tx),
+        tokenAddress: tx.tokenAddress,
+        data: backTx,
         amount: value,
         amount_flag,
         nonce: String(tx.nonce),
@@ -1619,26 +1626,31 @@ export class ServiceMakerPull {
         toAddress: tx.to,
         txBlock: String(tx.blockNumber),
         txHash: tx.hash,
-        txExt: !isEmpty(tx.input) && this.getTxExtFromInput(String(tx.input)),
+        txExt,
         txTime: new Date(tx.timestamp * 1000),
         gasCurrency: tx.feeToken,
         gasAmount: String(tx.fee),
-        tx_status: tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
+        tx_status:
+          tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
       }
+      if (
+        [3, 33, 8, 88,12,512].includes(makerPull.chainId) &&
+        tx.status === TransactionStatus.PENDING
+      ) {
+        makerPull.tx_status = 'finalized'
+      }
+      accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
       //
       promiseMethods.push(async () => {
         await savePull(makerPull)
-  
         // compare
-        await this.singleCompareData(makerPull)
+        await this.compareData(makerPull)
       })
     }
     await PromisePool.for(promiseMethods)
       .withConcurrency(10)
       .process(async (item) => await item())
     //
+    return txlist.map((tx) => tx.hash)
   }
-
 }
-
-
