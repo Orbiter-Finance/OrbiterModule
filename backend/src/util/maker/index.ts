@@ -11,10 +11,16 @@ import {
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
+import { logger } from 'ethers'
+import Keyv from 'keyv'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
 import { isEthTokenAddress, sleep } from '..'
+import { ScanChainMain } from '../../chainCore'
+import { ITransaction } from '../../chainCore/src/types'
+import { getChainByChainId } from '../../chainCore/src/utils'
+import KeyvFile from '../../chainCore/src/utils/keyvFile'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
@@ -46,7 +52,7 @@ let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
-
+const pullTrxMap:Map<string, Array<string>> = new Map();
 let zksLastTimeStamp: {} = {}
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -116,11 +122,45 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
   }
 }
 
+export async function startNewMakerTrxPull() {
+
+  const makerList = await getMakerList()
+  const convertMakerList = ScanChainMain.convertTradingList(makerList)
+  const scanChain = new ScanChainMain(convertMakerList)
+  for (const intranetId in convertMakerList) {
+    //
+    const cache = new Keyv({
+      store: new KeyvFile({
+        filename: `cache/maker/${intranetId}`, // the file path to store the data
+        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        encode: JSON.stringify, // serialize function
+        decode: JSON.parse, // deserialize function
+      }),
+    })
+    // init
+    pullTrxMap.set(intranetId, []);
+    // reader cache
+    // const pullList = await cache.get('pullTrxs');
+    
+
+    scanChain.mq.subscribe(`${intranetId}:txlist`, async (newTxList:Array<ITransaction>) => {
+      // Transaction received
+      newTxList.forEach((tx)=> {
+        const pullTrxList = pullTrxMap.get(chainConfig.internalId);
+        const chainConfig = getChainByChainId(tx.chainId)
+        
+        pullTrxList.unshift(tx.hash.toLowerCase())
+      })
+    })
+  }
+  scanChain.run()
+}
+
 export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
     return
   }
-
   await deployStarknetMaker(makerInfo, makerInfo.c1ID)
   await deployStarknetMaker(makerInfo, makerInfo.c2ID)
 
@@ -178,6 +218,7 @@ function watchPool(pool) {
   const expan = expanPool(pool)
   // accessLogger.info('userpool1 =', expan.pool1)
   // accessLogger.info('userpool2 =', expan.pool2)
+  // watch trx
 
   watchTransfers(expan.pool1, 0)
   watchTransfers(expan.pool2, 1)
