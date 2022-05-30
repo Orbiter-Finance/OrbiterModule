@@ -7,6 +7,7 @@
     "chainId": "4",
     "networkId": "4",
     "internalId": "5",
+    "debug":false,
     "name": "Ethereum Testnet Rinkeby",
     "nativeCurrency": {
       "name": "Ether",
@@ -27,6 +28,7 @@
     "chainId": "421611",
     "networkId": "421611",
     "internalId": "22",
+    "debug":false,
     "name": "Arbitrum testnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -46,6 +48,7 @@
     },
     "chainId": "288",
     "internalId": "513",
+    "debug":false,
     "name": "Boba Rinkeby Network",
     "nativeCurrency": {
       "name": "Ether",
@@ -68,6 +71,7 @@
     "chainId": "588",
     "networkId": "588",
     "internalId": "510",
+    "debug":false,
     "name": "Metis Stardust Testnet",
     "nativeCurrency": {
       "name": "Metis Token",
@@ -88,6 +92,7 @@
     "chainId": "zksync_test",
     "networkId": "zksync",
     "internalId": "33",
+    "debug":false,
     "name": "ZKSync Rinkeby",
     "nativeCurrency": {
       "name": "Ether",
@@ -115,6 +120,7 @@
     "chainId": "80001",
     "networkId": "80001",
     "internalId": "66",
+    "debug":false,
     "name": "Polygon Mumbai Testnet",
     "rpc": [
       "wss://polygon-mumbai.g.alchemy.com/v2/{you key}"
@@ -137,6 +143,7 @@
     "chainId": "69",
     "networkId": "69",
     "internalId": "77",
+    "debug":false,
     "name": "Optimism Kovan Testnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -159,6 +166,7 @@
     "chainId": "dydx_test",
     "networkId": "dydx",
     "internalId": "511",
+    "debug":false,
     "name": "Dydx Testnet",
     "nativeCurrency": {
       "name": "",
@@ -186,6 +194,7 @@
     "chainId": "immutableX_testnet",
     "networkId": "immutableX",
     "internalId": "88",
+    "debug":false,
     "name": "immutableX Testnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -213,6 +222,7 @@
     "chainId": "loopring_testnet",
     "networkId": "5",
     "internalId": "99",
+    "debug":false,
     "name": "Loopring Testnet",
     "nativeCurrency": {
       "name": "Ethereum",
@@ -233,6 +243,7 @@
     "chainId": "280",
     "networkId": "280",
     "internalId": "514",
+    "debug":false,
     "name": "zkSync alpha testnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -256,6 +267,7 @@
     "chainId": "zkspace_test",
     "networkId": "zkspace",
     "internalId": "512",
+    "debug":false,
     "name": "ZKSpace Testnet",
     "nativeCurrency": {
       "name": "Ether",
