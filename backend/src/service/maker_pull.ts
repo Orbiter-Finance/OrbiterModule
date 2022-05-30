@@ -20,6 +20,8 @@ import Web3 from 'web3'
 import BobaService from './boba/boba_service'
 import makerConfig from '../config/maker'
 import { axiosPlus } from '../util/Axios'
+import { Transaction, TransactionStatus } from '../chainCore/src/types'
+import { getChainByChainId, isEmpty } from '../chainCore/src/utils'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -279,14 +281,13 @@ export class ServiceMakerPull {
    */
   private async compareData(makerPull: MakerPull) {
     // to lower
-    const makerAddress = this.makerAddress.toLowerCase()
+    const makerAddress = makerPull.makerAddress.toLowerCase()
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
-
     // if maker out
     if (fromAddress == makerAddress) {
       const targetMP = await repositoryMakerPull().findOne({
-        makerAddress: this.makerAddress, //  same makerAddress
+        makerAddress: makerAddress, //  same makerAddress
         fromAddress: makerPull.toAddress,
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
@@ -505,6 +506,7 @@ export class ServiceMakerPull {
       },
       timeout: SERVICE_MAKER_PULL_TIMEOUT,
     })
+
     // check data
     const { data } = resp
     if (data.status != '1' || !data.result || data.result.length <= 0) {
@@ -550,7 +552,7 @@ export class ServiceMakerPull {
         toAddress: item.to,
         txBlock: item.blockNumber,
         txHash: item.hash,
-        txExt: this.getTxExtFromInput(item.input),
+        txExt: item.input && this.getTxExtFromInput(item.input),
         txTime: new Date(item.timeStamp * 1000),
         gasCurrency: 'ETH',
         gasAmount: new BigNumber(item.gasUsed)
@@ -1751,145 +1753,83 @@ export class ServiceMakerPull {
     }
   }
 
-  private async zksync2GetTxlistByWeb3(chainInfo, tokenAddress, makerAddress) {
-    tokenAddress = tokenAddress.toLowerCase()
-    let zk2Web3
-    let zk2BlockNumberInfo = {}
-    let zk2ContractInfo = {} // if active the func please remove them.they are at top of the page
-    if (!zk2Web3) {
-      zk2Web3 = new Web3(chainInfo.httpEndPoint)
-    }
-    let currentBlock = zk2BlockNumberInfo[tokenAddress]?.pointBlockNumber
-    if (!currentBlock) {
-      currentBlock = await zk2Web3.eth.getBlockNumber()
-      zk2BlockNumberInfo[tokenAddress] = {
-        startBlockNumber: currentBlock,
-        pointBlockNumber: currentBlock,
-      }
-    }
-    let tokenContract = zk2ContractInfo[tokenAddress]
-    if (!tokenContract) {
-      tokenContract = new zk2Web3.eth.Contract(makerConfig.ABI, tokenAddress)
-    }
-    return await this.getTxListTenByWeb3(
-      chainInfo,
-      zk2Web3,
-      tokenAddress,
-      tokenContract,
-      makerAddress
-    )
-  }
-
-  private async getTxListTenByWeb3(
-    chainInfo,
-    zk2Web3,
-    tokenAddress,
-    tokenContract,
-    makerAddress
+  async handleNewScanChainTrx(
+    txlist: Array<Transaction>,
+    makerList: Array<any>
   ) {
-    let zk2BlockNumberInfo = {} // if active the func please remove it.it is at top of the page
-    let txList: any[] = []
-    for (let i = 0; i < 10; i++) {
-      try {
-        const fromTxs: any = await this.getTxListOnceByWeb3(
-          chainInfo.zksync2GasAddress,
-          tokenContract,
-          zk2BlockNumberInfo[tokenAddress].pointBlockNumber,
-          makerAddress,
-          true
+    const promiseMethods: (() => Promise<unknown>)[] = []
+    for (const tx of txlist) {
+      if (tx.value.lte(0)) {
+        accessLogger.error(
+          'Transaction amount is incorrect, please check：',
+          JSON.stringify(tx)
         )
-        const toTxs: any = await this.getTxListOnceByWeb3(
-          chainInfo.zksync2GasAddress,
-          tokenContract,
-          zk2BlockNumberInfo[tokenAddress].pointBlockNumber,
-          makerAddress,
-          false
+        continue
+      }
+      let makerAddress = ''
+      if (
+        makerList.find(
+          (row) => row.makerAddress.toLowerCase() === tx.from.toLowerCase()
         )
+      ) {
+        makerAddress = tx.from
+      } else if (
+        makerList.find(
+          (row) => row.makerAddress.toLowerCase() === tx.to.toLowerCase()
+        )
+      ) {
+        makerAddress = tx.to
+      }
+      const chainConfig = await getChainByChainId(tx.chainId)
+      const value = tx.value.toString()
+      let amount_flag = getAmountFlag(Number(chainConfig.internalId), value)
+      let txExt: any = null
+      if (amount_flag == '11' || amount_flag == '511') {
+        txExt = this.getTxExtFromInput(String(tx.input))
+      }
 
-        let fromTxPromises = fromTxs.map(async (item) => {
-          const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
-          const blockInfo = await zk2Web3.eth.getBlock(item.blockNumber)
-          item.nonce = txInfo.nonce
-          item.timestamp = blockInfo.timestamp
-          item.input = txInfo.input
-        })
-        let toTxPromises = toTxs.map(async (item) => {
-          const txInfo = await zk2Web3.eth.getTransaction(item.transactionHash)
-          const blockInfo = await zk2Web3.eth.getBlock(item.blockNumber)
-          item.nonce = txInfo.nonce
-          item.timestamp = blockInfo.timestamp
-          item.input = txInfo.input
-        })
-        await Promise.all(fromTxPromises.concat(toTxPromises))
-        txList.push(...fromTxs)
-        txList.push(...toTxs)
-        zk2BlockNumberInfo[tokenAddress].pointBlockNumber =
-          zk2BlockNumberInfo[tokenAddress].pointBlockNumber - 100 > 0
-            ? zk2BlockNumberInfo[tokenAddress].pointBlockNumber - 100
-            : 0
-      } catch (error) {
-        errorLogger.error(`get zk2 txs error ${error.message}`)
+      // market list
+      const backTx = JSON.stringify(tx)
+      const makerPull: any = {
+        chainId: Number(chainConfig.internalId),
+        makerAddress: makerAddress,
+        tokenAddress: tx.tokenAddress,
+        data: backTx,
+        amount: value,
+        amount_flag,
+        nonce: String(tx.nonce),
+        fromAddress: tx.from,
+        toAddress: tx.to,
+        txBlock: String(tx.blockNumber),
+        txHash: tx.hash,
+        txExt,
+        txTime: new Date(tx.timestamp * 1000),
+        gasCurrency: tx.feeToken,
+        gasAmount: String(tx.fee),
+        tx_status:
+          tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
       }
+      if ([9, 99].includes(Number(makerPull.chainId)) && tx.extra) {
+        makerPull.amount_flag = (<any>tx.extra.memo % 9000) + ''
+      }
+      if (
+        [3, 33, 8, 88, 12, 512].includes(makerPull.chainId) &&
+        tx.status === TransactionStatus.PENDING
+      ) {
+        makerPull.tx_status = 'finalized'
+      }
+      accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
+      //
+      promiseMethods.push(async () => {
+        await savePull(makerPull)
+        // compare
+        await this.compareData(makerPull)
+      })
     }
-    return txList
-  }
-
-  private getTxListOnceByWeb3(
-    zksync2GasAddress,
-    tokenContract,
-    currentBlock,
-    makerAddress,
-    isFrom
-  ) {
-    return new Promise((resolve, reject) => {
-      const options = {
-        filter: {},
-        fromBlock: currentBlock - 99 > 0 ? currentBlock - 99 : 0,
-        toBlock: currentBlock,
-      }
-      if (isFrom) {
-        options.filter = { from: makerAddress }
-      } else {
-        options.filter = { to: makerAddress }
-      }
-      tokenContract.getPastEvents(
-        'Transfer',
-        options,
-        function (error, events) {
-          if (error) {
-            reject(error)
-            errorLogger.error('zk2 getTxListOnce error=', error)
-          } else {
-            let realEvents: any[] = []
-            for (let item of events) {
-              if (item.returnValues.to != zksync2GasAddress) {
-                realEvents.push(item)
-              }
-            }
-            while (events.length) {
-              if (events[0].returnValues.to == zksync2GasAddress) {
-                let realEvent = realEvents.find(
-                  (item) => item.transactionHash == events[0].transactionHash
-                )
-                if (realEvent) {
-                  const gasAmount = events[0].returnValues.value
-                  realEvent.gasAmount = gasAmount
-                }
-              }
-              events.splice(0, 1)
-            }
-            resolve(realEvents)
-          }
-        }
-      )
-    })
-  }
-  private async getBlockStampByNumber(httpEndPoint, blockNumber) {
-    let zk2Web3 // if active the func please remove it.it is at top of the page
-    if (!zk2Web3) {
-      zk2Web3 = new Web3(httpEndPoint)
-    }
-    let blockInfo = await zk2Web3.eth.getBlock(blockNumber)
-    return blockInfo.timestamp
+    await PromisePool.for(promiseMethods)
+      .withConcurrency(10)
+      .process(async (item) => await item())
+    //
+    return txlist.map((tx) => tx.hash)
   }
 }

@@ -9,6 +9,7 @@ import {
   // jobMakerNodeTodo,
   jobGetMakerList,
   jobMakerPull,
+  startNewDashboardPull,
 } from './jobs'
 // import { doSms } from '../sms/smsSchinese'
 
@@ -108,7 +109,8 @@ export const startMasterJobs = async () => {
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
-
+    // 
+    startNewDashboardPull();
     // get wealths
     jobGetWealths()
 

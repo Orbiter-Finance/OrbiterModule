@@ -1,0 +1,304 @@
+[
+  {
+    "api": {
+      "url": "https://api.etherscan.io/api",
+      "key": ""
+    },
+    "chainId": "1",
+    "networkId": "1",
+    "internalId": "1",
+    "name": "Ethereum Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [
+    ],
+    "watch": ["ws", "api"],
+    "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "http://api.arbiscan.io/api",
+      "key": ""
+    },
+    "chainId": "42161",
+    "networkId": "42161",
+    "internalId": "2",
+    "debug":true,
+    "name": "Arbitrum One",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["wss://arb1.arbitrum.io/ws"],
+    "watch": ["ws", "api"],
+    "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://blockexplorer.boba.network/api",
+      "key": ""
+    },
+    "chainId": "288",
+    "internalId": "13",
+    "name": "Boba Network",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x4200000000000000000000000000000000000006"
+    },
+    "networkId": "288",
+    "rpc": ["wss://ws.mainnet.boba.network"],
+    "watch": ["ws"],
+    "contracts":[],
+    "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://andromeda-explorer.metis.io/api",
+      "key": ""
+    },
+    "chain": "ETH",
+    "chainId": "1088",
+    "networkId": "1088",
+    "internalId": "10",
+    "name": "Metis Andromeda Mainnet",
+    "nativeCurrency": {
+      "name": "Metis Token",
+      "symbol": "METIS",
+      "decimals": 18,
+      "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
+    },
+    "rpc": ["wss://andromeda-ws.metis.io"],
+    "watch": ["api", "ws"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "Ether (WETH)",
+        "symbol": "WETH",
+        "decimals": 18,
+        "address": "0x420000000000000000000000000000000000000a"
+      },
+      {
+        "name": "USDC Token",
+        "symbol": "m.USDC",
+        "decimals": 6,
+        "address": "0xEA32A96608495e54156Ae48931A7c20f0dcc1a21"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api.zksync.io/api/v0.2",
+      "key": ""
+    },
+    "chainId": "zksync",
+    "networkId": "zksync",
+    "internalId": "3",
+    "name": "ZKSync Mainnet",
+    "debug":true,
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [],
+    "watch": ["api"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api.polygonscan.com/api",
+      "key": ""
+    },
+    "chainId": "137",
+    "networkId": "137",
+    "internalId": "6",
+    "name": "Polygon Mainnet",
+    "rpc": [
+    ],
+    "nativeCurrency": {
+      "name": "MATIC",
+      "symbol": "MATIC",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "watch": ["api", "rpc"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "Wrapped Ether",
+        "symbol": "WETH",
+        "decimals": 18,
+        "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619"
+      },
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api-optimistic.etherscan.io/api",
+      "key": ""
+    },
+    "chainId": "10",
+    "networkId": "10",
+    "internalId": "7",
+    "name": "Optimism",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [
+      "https://mainnet.optimism.io"
+    ],
+    "watch": ["api", "rpc"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api.zkswap.info/v3",
+      "key": ""
+    },
+    "chainId": "zkspace",
+    "networkId": "zkspace",
+    "internalId": "12",
+    "name": "ZKSpace Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [],
+    "watch": ["api"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api.dydx.exchange",
+      "key": ""
+    },
+    "chainId": "dydx",
+    "networkId": "dydx",
+    "internalId": "11",
+    "name": "Dydx Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 0,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [],
+    "watch": ["api"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "USDC"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api.x.immutable.com/v1",
+      "key": ""
+    },
+    "chainId": "immutableX",
+    "networkId": "immutableX",
+    "internalId": "8",
+    "name": "immutableX Mainnet",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [],
+    "watch": ["api"],
+    "contracts":[],
+    "tokens": [
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://api3.loopring.io/api/v3",
+      "key": ""
+    },
+    "chainId": "loopring",
+    "networkId": "1",
+    "internalId": "9",
+    "name": "Loopring Mainnet",
+    "nativeCurrency": {
+      "name": "Ethereum",
+      "symbol": "ETH",
+      "decimals": 0,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["wss://ws.api3.loopring.io/v3/ws"],
+    "watch": ["api"],
+    "contracts":[],
+    "tokens": []
+  }
+]

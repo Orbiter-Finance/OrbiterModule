@@ -22,6 +22,9 @@
     // "declaration": true,
     // "declarationDir": "./declarations"
   },
-  "include": ["src/**/*", "typings"],
-  "exclude": ["node_modules", "build", "docs"]
+  "include": ["src/**/*", "typings", "src/chainCore/chains.json", "src/chainCore/testnet.json", "src/**/*.json"],
+  "exclude": ["node_modules", "build", "docs"],
+  "types": [
+    "jest"
+  ],
 }
