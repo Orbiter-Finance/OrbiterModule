@@ -2,7 +2,7 @@
   {
     "api": {
       "url": "https://api.etherscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "1",
     "networkId": "1",
@@ -30,7 +30,7 @@
   {
     "api": {
       "url": "http://api.arbiscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "42161",
     "networkId": "42161",
@@ -78,7 +78,7 @@
   {
     "api": {
       "url": "https://andromeda-explorer.metis.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chain": "ETH",
     "chainId": "1088",
@@ -140,7 +140,7 @@
   {
     "api": {
       "url": "https://api.polygonscan.com/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "137",
     "networkId": "137",
@@ -174,7 +174,7 @@
   {
     "api": {
       "url": "https://api-optimistic.etherscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "10",
     "networkId": "10",
@@ -284,7 +284,7 @@
   {
     "api": {
       "url": "https://api3.loopring.io/api/v3",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "loopring",
     "networkId": "1",
