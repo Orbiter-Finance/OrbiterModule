@@ -2,11 +2,12 @@
   {
     "api": {
       "url": "https://api.etherscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "1",
     "networkId": "1",
     "internalId": "1",
+    "debug":false,
     "name": "Ethereum Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -30,12 +31,12 @@
   {
     "api": {
       "url": "http://api.arbiscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "42161",
     "networkId": "42161",
     "internalId": "2",
-    "debug":true,
+    "debug":false,
     "name": "Arbitrum One",
     "nativeCurrency": {
       "name": "Ether",
@@ -62,6 +63,7 @@
     },
     "chainId": "288",
     "internalId": "13",
+    "debug":false,
     "name": "Boba Network",
     "nativeCurrency": {
       "name": "Ether",
@@ -78,12 +80,13 @@
   {
     "api": {
       "url": "https://andromeda-explorer.metis.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chain": "ETH",
     "chainId": "1088",
     "networkId": "1088",
     "internalId": "10",
+    "debug":false,
     "name": "Metis Andromeda Mainnet",
     "nativeCurrency": {
       "name": "Metis Token",
@@ -117,8 +120,8 @@
     "chainId": "zksync",
     "networkId": "zksync",
     "internalId": "3",
+    "debug":false,
     "name": "ZKSync Mainnet",
-    "debug":true,
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -140,11 +143,12 @@
   {
     "api": {
       "url": "https://api.polygonscan.com/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "137",
     "networkId": "137",
     "internalId": "6",
+    "debug":false,
     "name": "Polygon Mainnet",
     "rpc": [
     ],
@@ -174,11 +178,12 @@
   {
     "api": {
       "url": "https://api-optimistic.etherscan.io/api",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "10",
     "networkId": "10",
     "internalId": "7",
+    "debug":false,
     "name": "Optimism",
     "nativeCurrency": {
       "name": "Ether",
@@ -208,6 +213,7 @@
     "chainId": "zkspace",
     "networkId": "zkspace",
     "internalId": "12",
+    "debug":false,
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -235,6 +241,7 @@
     "chainId": "dydx",
     "networkId": "dydx",
     "internalId": "11",
+    "debug":false,
     "name": "Dydx Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -262,6 +269,7 @@
     "chainId": "immutableX",
     "networkId": "immutableX",
     "internalId": "8",
+    "debug":false,
     "name": "immutableX Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -284,11 +292,12 @@
   {
     "api": {
       "url": "https://api3.loopring.io/api/v3",
-      "key": ""
+      "key": "{you key}"
     },
     "chainId": "loopring",
     "networkId": "1",
     "internalId": "9",
+    "debug":false,
     "name": "Loopring Mainnet",
     "nativeCurrency": {
       "name": "Ethereum",
