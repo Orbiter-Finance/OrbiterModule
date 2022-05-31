@@ -13,7 +13,6 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { ScanChainMain } from '../chainCore'
-import { sleep } from '../util'
 // import { doSms } from '../sms/smsSchinese'
 const apiUrl = 'https://orbiter-makerlist.s3.ap-northeast-1.amazonaws.com'
 class MJob {
