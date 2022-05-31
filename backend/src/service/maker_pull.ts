@@ -315,7 +315,10 @@ export class ServiceMakerPull {
           }
         )
       } else {
-        logger.error('Collection transaction, user transfer transaction ID not found:', JSON.stringify(makerPull))
+        logger.error(
+          'Collection transaction, user transfer transaction ID not found:',
+          JSON.stringify(makerPull)
+        )
       }
     }
 
@@ -1943,19 +1946,7 @@ export class ServiceMakerPull {
       ) {
         makerPull.tx_status = 'finalized'
       }
-<<<<<<< HEAD
-      accessLogger.info(
-        'Processing transactions：',
-        tx.hash,
-        tx.from,
-        tx.to,
-        tx.tokenAddress,
-        tx.nonce,
-        makerPull.amount_flag
-      )
-=======
       accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
->>>>>>> eth_dev_scanchain
       //
       promiseMethods.push(async () => {
         await savePull(makerPull)
