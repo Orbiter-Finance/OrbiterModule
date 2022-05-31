@@ -45,6 +45,7 @@ export class ZKSync2 extends EvmExplorerService {
       timestamp: Number(block.timestamp),
       confirmations,
       extra,
+      source: 'rpc'
     })
     if (trxRcceipt.status) {
       newTx.status = TransactionStatus.COMPLETE

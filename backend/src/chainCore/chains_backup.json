@@ -59,7 +59,7 @@
   {
     "api": {
       "url": "https://blockexplorer.boba.network/api",
-      "key": ""
+      "key": "https://blockexplorer.boba.network/graphiql"
     },
     "chainId": "288",
     "internalId": "13",

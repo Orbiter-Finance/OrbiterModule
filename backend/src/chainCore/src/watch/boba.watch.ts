@@ -9,11 +9,7 @@ export default class BobaWatch extends EVMWatchBase {
       blockNumber: number
     }
   >(addressHash: string): Promise<Array<T>> {
-    const endpoint =
-      this.chain.chainConfig.internalId === '13'
-        ? 'https://blockexplorer.boba.network/graphiql'
-        : ''
-    const grap = new GraphQLClient(endpoint, { headers: {} })
+    const grap = new GraphQLClient(this.chain.chainConfig.api.url, { })
     // exec query
     const query = gql`
       query ($hash: AddressHash!) {

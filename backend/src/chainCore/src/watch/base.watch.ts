@@ -126,6 +126,7 @@ export default abstract class BasetWatch implements IChainWatch {
       pushTrx = orderBy(pushTrx, ['timestamp', 'blockNumber'], ['desc', 'desc'])
       this.pushAfter(address, pushTrx)
     }
+    return pushTrx;
   }
   protected async pushBefore(address: Address, txlist: Array<ITransaction>) {
     return { address, txlist }

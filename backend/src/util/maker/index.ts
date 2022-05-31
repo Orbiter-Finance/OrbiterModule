@@ -155,13 +155,13 @@ export async function startNewMakerTrxPull() {
         for (const chainId in groupData) {
           const chainConfig = getChainByChainId(chainId)
           const pullTrxList = pullTrxMap.get(chainConfig.internalId)
-          const newHashList = groupData[chainId].map((hash) =>
-            hash.toLowerCase()
-          )
-          pullTrxList!.unshift(...newHashList)
-          // save cache
+          //
+          for (const tx of groupData[chainId]) {
+            pullTrxList!.unshift(tx.hash.toLowerCase())
+            console.log(tx, '====')
+            await this.handleMakerPaymentCollection(tx)
+          }
           cache.set('hashList', pullTrxList)
-          // Payment collection
         }
       }
     )
@@ -174,7 +174,7 @@ export async function handleMakerPaymentCollection(tx: ITransaction) {
     switch (Number(chainConfig.internalId)) {
       case 3:
       case 33:
-        // 
+        //
         break
     }
   }

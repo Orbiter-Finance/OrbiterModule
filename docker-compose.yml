@@ -20,6 +20,7 @@ services:
       DB_PASSWORD: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
     volumes:
+      - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'
       - './backend/cache:/app/cache'
     #   - './backend:/app'
