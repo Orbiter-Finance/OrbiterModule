@@ -17,7 +17,7 @@
     "rpc": [
       "wss://eth-rinkeby.alchemyapi.io/v2/{You Key}"
     ],
-    "watch": ["ws", "api"],
+    "watch": ["rpc", "api"],
     "contracts": [],
     "tokens": [
       {
@@ -44,7 +44,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": ["wss://arb-rinkeby.g.alchemy.com/v2/{You Key}"],
-    "watch": ["ws", "api"],
+    "watch": ["rpc", "api"],
     "contracts": [],
     "tokens": [
       {
@@ -71,7 +71,7 @@
     },
     "networkId": "288",
     "rpc": ["wss://wss.rinkeby.boba.network"],
-    "watch": ["ws", "api"],
+    "watch": ["rpc", "api"],
     "contracts": [],
     "tokens": []
   },
@@ -92,7 +92,7 @@
       "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     },
     "rpc": ["wss://stardust-ws.metis.io"],
-    "watch": ["api", "ws"],
+    "watch": ["api", "rpc"],
     "contracts": [],
     "tokens": [
       {
