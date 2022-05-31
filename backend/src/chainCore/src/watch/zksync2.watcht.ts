@@ -24,6 +24,7 @@ export default class ZKSync2Watch extends EVMWatchBase {
       null,
       filter
     )
+    response.txlist = response.txlist.filter(row => row.to.toLowerCase() !== '0xde03a0b5963f75f1c8485b355ff6d30f3093bde7'.toLowerCase())
     return response.txlist
   }
 }

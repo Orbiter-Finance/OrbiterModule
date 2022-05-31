@@ -44,7 +44,6 @@ async function savePull(
     tokenAddress: makerPull.tokenAddress,
     [checkField]: makerPull[checkField],
   }
-  await repositoryMakerPull().insert(makerPull)
   const his = await repositoryMakerPull().findOne(findConditions)
   if (his) {
     await repositoryMakerPull().update({ id: his.id }, makerPull)
