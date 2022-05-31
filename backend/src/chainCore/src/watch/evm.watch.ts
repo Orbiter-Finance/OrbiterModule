@@ -115,28 +115,37 @@ export default abstract class EVMWatchBase extends BasetWatch {
       while (start < end) {
         try {
           const block = await web3.eth.getBlock(start, true)
-          const { transactions } = block
-          config.debug && logger.debug(
-            `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
-          )
-          const txmap: AddressMapTransactions = new Map()
-          for (const tx of transactions) {
-            // Filter non whitelist address transactions
-            if (!(await this.isWatchToAddress(String(tx.to)))) {
-              continue
+          console.log(block.number)
+          if (block) {
+            const { transactions } = block
+            config.debug &&
+              logger.debug(
+                `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
+              )
+            const txmap: AddressMapTransactions = new Map()
+            for (const tx of transactions) {
+              // Filter non whitelist address transactions
+              const watchToAddress = await this.isWatchToAddress(String(tx.to));
+              const watchFromAddress = await this.isWatchToAddress(String(tx.from));
+              if (!watchToAddress && !watchFromAddress) {
+                continue
+              }
+              console.log('监控到-')
+              config.debug &&
+                logger.debug(
+                  `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
+                )
+              const matchTxList = await this.replayBlockTransaction(tx)
+              matchTxList.forEach((txlist, address) => {
+                if (!txmap.has(address)) txmap.set(address, [])
+                txmap.get(address)?.push(...txlist)
+              })
             }
-            config.debug && logger.debug(
-              `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
-            )
-            const matchTxList = await this.replayBlockTransaction(tx)
-            matchTxList.forEach((txlist, address) => {
-              if (!txmap.has(address)) txmap.set(address, [])
-              txmap.get(address)?.push(...txlist)
-            })
+            changeBlock && changeBlock(start, txmap)
+            start++
           }
-          changeBlock && changeBlock(start, txmap)
-          start++
         } catch (error) {
+          console.error(error)
           logger.error(`[${config.name}] replayBlock Error:`, error.message)
         }
       }
@@ -161,9 +170,10 @@ export default abstract class EVMWatchBase extends BasetWatch {
     }
     const currentBlockHeight = this.getCurrentBlock
     const isScan = latestHeight - currentBlockHeight + 1 > this.minConfirmations
-    this.chain.chainConfig.debug && logger.debug(
-      `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
-    )
+    this.chain.chainConfig.debug &&
+      logger.debug(
+        `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
+      )
     if (isScan) {
       const result = await this.replayBlock(
         currentBlockHeight,
@@ -183,7 +193,10 @@ export default abstract class EVMWatchBase extends BasetWatch {
           }
         }
       )
-      logger.info(`[${this.chain.chainConfig}] rpcScan End of scan result：`, result)
+      logger.info(
+        `[${this.chain.chainConfig}] rpcScan End of scan result：`,
+        result
+      )
     }
   }
 }

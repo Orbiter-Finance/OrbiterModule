@@ -112,6 +112,7 @@ export abstract class EVMChain implements IEVMChain {
       timestamp: Number(block.timestamp),
       confirmations,
       extra,
+      source: 'rpc'
     })
     if (trxRcceipt.status) {
       newTx.status = TransactionStatus.COMPLETE

@@ -87,6 +87,7 @@ export abstract class EvmExplorerService extends EVMChain {
           confirmations,
           symbol,
           extra,
+          source: 'api'
         })
         if (newTx.input === 'deprecated') {
           // is deprecated
@@ -174,6 +175,7 @@ export abstract class EvmExplorerService extends EVMChain {
           symbol,
           confirmations,
           extra,
+          source: 'api'
         })
         if (newTx.input === 'deprecated') {
           // is deprecated
