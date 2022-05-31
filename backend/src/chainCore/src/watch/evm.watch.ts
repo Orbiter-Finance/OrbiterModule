@@ -111,21 +111,21 @@ export default abstract class EVMWatchBase extends BasetWatch {
     try {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
-      logger.info(`${config.name} Start replayBlock ${start} to ${end}`)
+      logger.info(`[${config.name}] Start replayBlock ${start} to ${end}`)
       while (start < end) {
         try {
           const block = await web3.eth.getBlock(start, true)
           const { transactions } = block
-          // logger.debug(
-          //   `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
-          // )
+          config.debug && logger.debug(
+            `[${config.name}] replayBlock (${start}/${end}), Trxs Count ${transactions.length}`
+          )
           const txmap: AddressMapTransactions = new Map()
           for (const tx of transactions) {
             // Filter non whitelist address transactions
             if (!(await this.isWatchToAddress(String(tx.to)))) {
               continue
             }
-            logger.debug(
+            config.debug && logger.debug(
               `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
             )
             const matchTxList = await this.replayBlockTransaction(tx)
@@ -161,7 +161,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
     }
     const currentBlockHeight = this.getCurrentBlock
     const isScan = latestHeight - currentBlockHeight + 1 > this.minConfirmations
-    logger.debug(
+    this.chain.chainConfig.debug && logger.debug(
       `[${this.chain.chainConfig.name}] RpcScan in Progress (${currentBlockHeight}/${latestHeight}) Min Confirmation:${this.minConfirmations} Scan Or Not:${isScan}`
     )
     if (isScan) {
@@ -183,7 +183,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
           }
         }
       )
-      logger.info(`rpcScan End of scan：`, result)
+      logger.info(`[${this.chain.chainConfig}] rpcScan End of scan result：`, result)
     }
   }
 }

@@ -1941,7 +1941,7 @@ export class ServiceMakerPull {
       ) {
         makerPull.tx_status = 'finalized'
       }
-      accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
+      accessLogger.info('Processing transactions：', tx.hash,tx.from,tx.to,tx.tokenAddress, tx.nonce)
       //
       promiseMethods.push(async () => {
         await savePull(makerPull)

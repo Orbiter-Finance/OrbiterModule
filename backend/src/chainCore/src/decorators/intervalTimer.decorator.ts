@@ -19,10 +19,6 @@ export const IntervalTimerDecorator = (
       setInterval(async () => {
         if (Date.now() - execTime > intervalSeconds && !isLock) {
           try {
-            that.chain.chainConfig.debug &&
-              console.debug(
-                `Api Scan ${process.pid}:【${this.chain.chainConfig.name}】`
-              )
             isLock = true
             await methods.call(this, ...arguments)
           } catch (error) {
