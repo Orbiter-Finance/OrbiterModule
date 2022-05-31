@@ -1,6 +1,6 @@
 import BigNumber from 'bignumber.js'
 import { Transaction, TransactionStatus } from '../types'
-import { decodeLogs, decodeMethod, isEmpty } from '../utils'
+import { decodeLogs, isEmpty } from '../utils'
 import { EvmExplorerService } from './evm-explorer.service'
 export class ZKSync2 extends EvmExplorerService {
   public async convertTxToEntity(trx: any): Promise<Transaction | null> {
@@ -58,6 +58,7 @@ export class ZKSync2 extends EvmExplorerService {
       } else {
         // contract token
         newTx.tokenAddress = to
+        newTx.symbol = await this.getTokenSymbol(to)
         newTx.to = ''
         const eventLogs = decodeLogs(trxRcceipt.logs)
         if (eventLogs && eventLogs.length >= 2) {
@@ -76,7 +77,7 @@ export class ZKSync2 extends EvmExplorerService {
           const feeLog = eventLogs[0]
           if (feeLog.name === 'Transfer') {
             // to
-            newTx.feeToken = feeLog.address
+            newTx.feeToken = await this.getTokenSymbol(feeLog.address)
             feeLog.events.forEach((e) => {
               if (e.type === 'uint256' && e.name === 'value') {
                 newTx.fee = e.value
