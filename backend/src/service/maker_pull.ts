@@ -17,7 +17,7 @@ import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
-import { Transaction, TransactionStatus } from '../chainCore/src/types'
+import { ITransaction, Transaction, TransactionStatus } from '../chainCore/src/types'
 import { getChainByChainId, isEmpty } from '../chainCore/src/utils'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -1579,7 +1579,7 @@ export class ServiceMakerPull {
   }
 
   async handleNewScanChainTrx(
-    txlist: Array<Transaction>,
+    txlist: Array<ITransaction>,
     makerList: Array<any>
   ) {
     const promiseMethods: (() => Promise<unknown>)[] = []
@@ -1643,7 +1643,7 @@ export class ServiceMakerPull {
       ) {
         makerPull.tx_status = 'finalized'
       }
-      accessLogger.info('Processing transactions：', tx.hash,tx.from,tx.to,tx.tokenAddress, tx.nonce)
+      accessLogger.info('Processing transactions：', tx.hash,tx.from,tx.to,tx.tokenAddress, tx.nonce, makerPull.amount_flag)
       //
       promiseMethods.push(async () => {
         await savePull(makerPull)

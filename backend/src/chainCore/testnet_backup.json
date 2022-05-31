@@ -57,7 +57,7 @@
   },
   {
     "api": {
-      "url": "https://blockexplorer.rinkeby.boba.network/api",
+      "url": "https://blockexplorer.rinkeby.boba.network/graphiql",
       "key": ""
     },
     "chainId": "288",
@@ -67,7 +67,7 @@
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
-      "address": "0x4200000000000000000000000000000000000006"
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "networkId": "288",
     "rpc": ["wss://wss.rinkeby.boba.network"],
