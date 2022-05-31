@@ -17,8 +17,9 @@ import { IMXHelper } from './immutablex/imx_helper'
 import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
-import { ITransaction, Transaction, TransactionStatus } from '../chainCore/src/types'
-import { getChainByChainId, isEmpty } from '../chainCore/src/utils'
+import { ITransaction, TransactionStatus } from '../chainCore/src/types'
+import { getChainByChainId } from '../chainCore/src/utils'
+import logger from '../chainCore/src/utils/logger'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -43,6 +44,7 @@ async function savePull(
     tokenAddress: makerPull.tokenAddress,
     [checkField]: makerPull[checkField],
   }
+  await repositoryMakerPull().insert(makerPull)
   const his = await repositoryMakerPull().findOne(findConditions)
   if (his) {
     await repositoryMakerPull().update({ id: his.id }, makerPull)
@@ -272,7 +274,7 @@ export class ServiceMakerPull {
     if (fromAddress == makerAddress) {
       const targetMP = await repositoryMakerPull().findOne({
         makerAddress: makerAddress, //  same makerAddress
-        fromAddress: makerPull.toAddress,
+        fromAddress: toAddress,
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
         nonce: makerPull.amount_flag,
@@ -298,6 +300,8 @@ export class ServiceMakerPull {
             state: targetMP.tx_status == 'finalized' ? 3 : 2,
           }
         )
+      } else {
+        logger.error('Collection transaction, user transfer transaction ID not found:', JSON.stringify(makerPull))
       }
     }
 
@@ -1643,7 +1647,7 @@ export class ServiceMakerPull {
       ) {
         makerPull.tx_status = 'finalized'
       }
-      accessLogger.info('Processing transactions：', tx.hash,tx.from,tx.to,tx.tokenAddress, tx.nonce, makerPull.amount_flag)
+      accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
       //
       promiseMethods.push(async () => {
         await savePull(makerPull)

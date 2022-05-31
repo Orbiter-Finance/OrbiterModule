@@ -115,7 +115,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
       while (start < end) {
         try {
           const block = await web3.eth.getBlock(start, true)
-          console.log(block.number)
           if (block) {
             const { transactions } = block
             config.debug &&
