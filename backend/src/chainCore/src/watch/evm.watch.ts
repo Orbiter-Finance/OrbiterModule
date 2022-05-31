@@ -193,7 +193,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
         }
       )
       logger.info(
-        `[${this.chain.chainConfig}] rpcScan End of scan result：`,
+        `[${this.chain.chainConfig.name}] rpcScan End of scan result：`,
         result
       )
     }
