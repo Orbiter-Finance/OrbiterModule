@@ -58,8 +58,8 @@
   },
   {
     "api": {
-      "url": "https://blockexplorer.boba.network/api",
-      "key": "https://blockexplorer.boba.network/graphiql"
+      "url": "https://blockexplorer.boba.network/graphiql",
+      "key": ""
     },
     "chainId": "288",
     "internalId": "13",
@@ -68,7 +68,7 @@
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
-      "address": "0x4200000000000000000000000000000000000006"
+      "address": "0x0000000000000000000000000000000000000000"
     },
     "networkId": "288",
     "rpc": ["wss://ws.mainnet.boba.network"],

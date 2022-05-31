@@ -130,7 +130,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
               if (!watchToAddress && !watchFromAddress) {
                 continue
               }
-              console.log('监控到-')
               config.debug &&
                 logger.debug(
                   `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
@@ -181,8 +180,8 @@ export default abstract class EVMWatchBase extends BasetWatch {
         (blockNumber: number, txmap: AddressMapTransactions) => {
           this.setCurrentBlock = blockNumber
           if (txmap && txmap.size > 0) {
-            txmap.forEach((txlist, address) => {
-              this.pushMessage(address, txlist)
+            txmap.forEach(async (txlist, address) => {
+              await this.pushMessage(address, txlist)
               if (txlist.length > 0) {
                 logger.info(
                   `[${this.chain.chainConfig.name}] RpcScan New Transaction: Cursor = ${blockNumber} `,
@@ -194,7 +193,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
         }
       )
       logger.info(
-        `[${this.chain.chainConfig}] rpcScan End of scan result：`,
+        `[${this.chain.chainConfig.name}] rpcScan End of scan result：`,
         result
       )
     }

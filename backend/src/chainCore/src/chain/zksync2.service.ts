@@ -69,7 +69,7 @@ export class ZKSync2 extends EvmExplorerService {
                 newTx.to = e.value
               }
               if (e.type === 'uint256' && e.name === 'value') {
-                newTx.value = e.value
+                newTx.value = new BigNumber(e.value)
               }
             })
           }
