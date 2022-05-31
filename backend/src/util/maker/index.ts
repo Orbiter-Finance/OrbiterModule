@@ -19,7 +19,11 @@ import Web3 from 'web3'
 import { isEthTokenAddress, sleep } from '..'
 import { ScanChainMain } from '../../chainCore'
 import { ITransaction } from '../../chainCore/src/types'
-import { getChainByChainId } from '../../chainCore/src/utils'
+import {
+  getChainByChainId,
+  getChainByInternalId,
+  groupBy,
+} from '../../chainCore/src/utils'
 import KeyvFile from '../../chainCore/src/utils/keyvFile'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
@@ -52,7 +56,7 @@ let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
-const pullTrxMap:Map<string, Array<string>> = new Map();
+const pullTrxMap: Map<string, Array<string>> = new Map()
 let zksLastTimeStamp: {} = {}
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -123,7 +127,6 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
 }
 
 export async function startNewMakerTrxPull() {
-
   const makerList = await getMakerList()
   const convertMakerList = ScanChainMain.convertTradingList(makerList)
   const scanChain = new ScanChainMain(convertMakerList)
@@ -138,23 +141,43 @@ export async function startNewMakerTrxPull() {
         decode: JSON.parse, // deserialize function
       }),
     })
-    // init
-    pullTrxMap.set(intranetId, []);
+    pullTrxMap.set(intranetId, [])
     // reader cache
-    // const pullList = await cache.get('pullTrxs');
-    
-
-    scanChain.mq.subscribe(`${intranetId}:txlist`, async (newTxList:Array<ITransaction>) => {
-      // Transaction received
-      newTxList.forEach((tx)=> {
-        const pullTrxList = pullTrxMap.get(chainConfig.internalId);
-        const chainConfig = getChainByChainId(tx.chainId)
-        
-        pullTrxList.unshift(tx.hash.toLowerCase())
-      })
-    })
+    const historyHashList = await cache.get('hashList')
+    if (historyHashList && Array.isArray(historyHashList)) {
+      pullTrxMap.set(intranetId, historyHashList)
+    }
+    scanChain.mq.subscribe(
+      `${intranetId}:txlist`,
+      async (newTxList: Array<ITransaction>) => {
+        // Transaction received
+        const groupData = groupBy(newTxList, 'chainId')
+        for (const chainId in groupData) {
+          const chainConfig = getChainByChainId(chainId)
+          const pullTrxList = pullTrxMap.get(chainConfig.internalId)
+          const newHashList = groupData[chainId].map((hash) =>
+            hash.toLowerCase()
+          )
+          pullTrxList!.unshift(...newHashList)
+          // save cache
+          cache.set('hashList', pullTrxList)
+          // Payment collection
+        }
+      }
+    )
   }
   scanChain.run()
+}
+export async function handleMakerPaymentCollection(tx: ITransaction) {
+  const chainConfig = getChainByInternalId(tx.chainId)
+  if (chainConfig) {
+    switch (Number(chainConfig.internalId)) {
+      case 3:
+      case 33:
+        // 
+        break
+    }
+  }
 }
 
 export async function startMaker(makerInfo: any) {
@@ -165,6 +188,8 @@ export async function startMaker(makerInfo: any) {
   await deployStarknetMaker(makerInfo, makerInfo.c2ID)
 
   watchPool(makerInfo)
+  // new maker trx pull
+  startNewMakerTrxPull()
 }
 
 export async function getMakerList() {

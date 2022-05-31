@@ -7,13 +7,13 @@ const configure: Configuration = {
   appenders: {
     scanChainInfo:{
       type: 'dateFile',
-      filename: path.resolve(logsDir, 'scanChain.info.log'),
+      filename: path.resolve('chainlogs', 'scanChain.info.log'),
       pattern: '.dd',
       mode: 0o644
     },
     scanChainError: {
       type: 'dateFile',
-      filename: path.resolve(logsDir, 'scanChain.error.log'),
+      filename: path.resolve('chainlogs', 'scanChain.error.log'),
       pattern: '.dd',
       mode: 0o644
     },

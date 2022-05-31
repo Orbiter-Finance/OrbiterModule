@@ -2,12 +2,11 @@
   {
     "api": {
       "url": "https://api.etherscan.io/api",
-      "key": "{you key}"
+      "key": "{You Key}"
     },
     "chainId": "1",
     "networkId": "1",
     "internalId": "1",
-    "debug":false,
     "name": "Ethereum Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -16,8 +15,9 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
+      "wss://eth-mainnet.alchemyapi.io/v2/{You Key}"
     ],
-    "watch": ["ws", "api"],
+    "watch": ["rpc", "api"],
     "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
     "tokens": [
       {
@@ -31,12 +31,12 @@
   {
     "api": {
       "url": "http://api.arbiscan.io/api",
-      "key": "{you key}"
+      "key": "{You Key}"
     },
     "chainId": "42161",
     "networkId": "42161",
     "internalId": "2",
-    "debug":false,
+    "debug":true,
     "name": "Arbitrum One",
     "nativeCurrency": {
       "name": "Ether",
@@ -45,7 +45,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": ["wss://arb1.arbitrum.io/ws"],
-    "watch": ["ws", "api"],
+    "watch": ["rpc", "api"],
     "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
     "tokens": [
       {
@@ -63,7 +63,6 @@
     },
     "chainId": "288",
     "internalId": "13",
-    "debug":false,
     "name": "Boba Network",
     "nativeCurrency": {
       "name": "Ether",
@@ -73,20 +72,19 @@
     },
     "networkId": "288",
     "rpc": ["wss://ws.mainnet.boba.network"],
-    "watch": ["ws"],
+    "watch": ["rpc", "api"],
     "contracts":[],
     "tokens": []
   },
   {
     "api": {
       "url": "https://andromeda-explorer.metis.io/api",
-      "key": "{you key}"
+      "key": ""
     },
     "chain": "ETH",
     "chainId": "1088",
     "networkId": "1088",
     "internalId": "10",
-    "debug":false,
     "name": "Metis Andromeda Mainnet",
     "nativeCurrency": {
       "name": "Metis Token",
@@ -95,7 +93,7 @@
       "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     },
     "rpc": ["wss://andromeda-ws.metis.io"],
-    "watch": ["api", "ws"],
+    "watch": ["api", "rpc"],
     "contracts":[],
     "tokens": [
       {
@@ -120,8 +118,8 @@
     "chainId": "zksync",
     "networkId": "zksync",
     "internalId": "3",
-    "debug":false,
     "name": "ZKSync Mainnet",
+    "debug":true,
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -143,14 +141,14 @@
   {
     "api": {
       "url": "https://api.polygonscan.com/api",
-      "key": "{you key}"
+      "key": "{You Key}"
     },
     "chainId": "137",
     "networkId": "137",
     "internalId": "6",
-    "debug":false,
     "name": "Polygon Mainnet",
     "rpc": [
+      "wss://polygon-mainnet.g.alchemy.com/v2/{You Key}"
     ],
     "nativeCurrency": {
       "name": "MATIC",
@@ -178,12 +176,11 @@
   {
     "api": {
       "url": "https://api-optimistic.etherscan.io/api",
-      "key": "{you key}"
+      "key": "{You Key}"
     },
     "chainId": "10",
     "networkId": "10",
     "internalId": "7",
-    "debug":false,
     "name": "Optimism",
     "nativeCurrency": {
       "name": "Ether",
@@ -213,7 +210,6 @@
     "chainId": "zkspace",
     "networkId": "zkspace",
     "internalId": "12",
-    "debug":false,
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -241,7 +237,6 @@
     "chainId": "dydx",
     "networkId": "dydx",
     "internalId": "11",
-    "debug":false,
     "name": "Dydx Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -269,7 +264,6 @@
     "chainId": "immutableX",
     "networkId": "immutableX",
     "internalId": "8",
-    "debug":false,
     "name": "immutableX Mainnet",
     "nativeCurrency": {
       "name": "Ether",
@@ -292,12 +286,11 @@
   {
     "api": {
       "url": "https://api3.loopring.io/api/v3",
-      "key": "{you key}"
+      "key": "{You Key}"
     },
     "chainId": "loopring",
     "networkId": "1",
     "internalId": "9",
-    "debug":false,
     "name": "Loopring Mainnet",
     "nativeCurrency": {
       "name": "Ethereum",
