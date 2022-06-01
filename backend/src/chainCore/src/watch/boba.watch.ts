@@ -14,7 +14,7 @@ export default class BobaWatch extends EVMWatchBase {
     const query = gql`
       query ($hash: AddressHash!) {
         address(hash: $hash) {
-          transactions(first: 49) {
+          transactions(first: 30) {
             edges {
               node {
                 blockNumber

@@ -276,6 +276,5 @@ export async function startNewDashboardPull() {
       return await serviceMakerPull.handleNewScanChainTrx(result, makerList)
     })
   }
-  await sleep(2000)
   scanChain.run()
 }

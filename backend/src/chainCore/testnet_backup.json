@@ -60,7 +60,7 @@
       "url": "https://blockexplorer.rinkeby.boba.network/graphiql",
       "key": ""
     },
-    "chainId": "288",
+    "chainId": "28",
     "internalId": "513",
     "name": "Boba Rinkeby Network",
     "nativeCurrency": {
@@ -69,7 +69,7 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "networkId": "288",
+    "networkId": "28",
     "rpc": ["wss://wss.rinkeby.boba.network"],
     "watch": ["rpc", "api"],
     "contracts": [],

@@ -83,7 +83,7 @@ export default abstract class BasetWatch implements IChainWatch {
   }
   protected async pushMessage(address: Address, txList: Array<ITransaction>) {
     let pushTrx: Array<ITransaction> = []
-    // filter value lte 0
+    ;({ txList } = await this.pushBefore(address, txList))
     txList = txList.filter((tx) => tx.value.gt(0))
     txList.forEach((tx) => {
       if (!this.pushHistory.has(tx.hash.toLowerCase())) {
@@ -96,9 +96,8 @@ export default abstract class BasetWatch implements IChainWatch {
     })
     if (pushTrx.length > 0) {
       // write addrTxMap to cache
-      ;({ txlist: pushTrx } = await this.pushBefore(address, pushTrx))
       logger.info(
-        `[${this.chain.chainConfig.name}] New transaction pushed`,
+        `[${this.chain.chainConfig.name}] New Transaction Pushed`,
         JSON.stringify(pushTrx)
       )
       PubSubMQ.publish(
@@ -113,26 +112,26 @@ export default abstract class BasetWatch implements IChainWatch {
               }
             }
           })
-          logger.info(
-            `[${this.chain.chainConfig.name}] New transaction pushed handle success`,
-            JSON.stringify(hashList)
-          )
           this.cache.set(
             'txlist',
             Array.from(this.pushHistory.keys()).reverse()
+          )
+          logger.info(
+            `[${this.chain.chainConfig.name}] New Transaction Pushed Save DB Success TxHash List`,
+            JSON.stringify(hashList)
           )
         }
       )
       pushTrx = orderBy(pushTrx, ['timestamp', 'blockNumber'], ['desc', 'desc'])
       this.pushAfter(address, pushTrx)
     }
-    return pushTrx;
+    return pushTrx
   }
-  protected async pushBefore(address: Address, txlist: Array<ITransaction>) {
-    return { address, txlist }
+  protected async pushBefore(address: Address, txList: Array<ITransaction>) {
+    return { address, txList }
   }
-  protected pushAfter(address: Address, txlist: Array<ITransaction>) {
-    return { address, txlist }
+  protected pushAfter(address: Address, txList: Array<ITransaction>) {
+    return { address, txList }
   }
   public async apiWatchNewTransaction(
     address: Address
@@ -209,10 +208,7 @@ export default abstract class BasetWatch implements IChainWatch {
       const prevCursor = await this.apiScanCursor(address)
       if (prevCursor) {
         // exec query trx
-        this.chain.chainConfig.debug &&
-          console.debug(
-            `[${this.chain.chainConfig.name}] API Scan Block in Progress:Address=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`
-          )
+        logger.info(`[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`)
         queryTxs = await this.apiWatchNewTransaction(address)
         await this.pushMessage(address, queryTxs)
         const latest = orderBy(

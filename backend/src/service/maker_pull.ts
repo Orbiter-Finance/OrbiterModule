@@ -300,7 +300,7 @@ export class ServiceMakerPull {
           }
         )
       } else {
-        logger.error('Collection transaction, user transfer transaction ID not found:', JSON.stringify(makerPull))
+        logger.error('Collection transaction, user transfer targetMP  not found:', JSON.stringify(makerPull))
       }
     }
 
