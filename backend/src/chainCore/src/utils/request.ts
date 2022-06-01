@@ -9,7 +9,6 @@ export async function HttpGet(url: string, params?: any) {
   const response = await axios.get(url, {
     timeout: 1000 * 30
   })
-  console.debug(`request api debug：`, url)
   return response.data
 }
 export async function HttpPost() {}

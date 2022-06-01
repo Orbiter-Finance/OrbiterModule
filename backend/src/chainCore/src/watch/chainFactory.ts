@@ -75,7 +75,7 @@ export class ChainFactory {
       case '513':
         watchChain = new BobaWatch(new chains.BobaChain(chainConfig))
         break
-      // case '14':
+      case '14':
       case '514':
         watchChain = new ZKSync2Watch(new chains.ZKSync2Chain(chainConfig))
         break

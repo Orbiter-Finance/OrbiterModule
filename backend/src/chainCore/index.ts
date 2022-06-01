@@ -37,13 +37,13 @@ export class ScanChainMain {
   run() {
     logger.info(`ScanChainMain Run:`, JSON.stringify(this.scanChainConfig))
     for (const intranetId in this.scanChainConfig) {
+      const addressList = this.scanChainConfig[intranetId].map(
+        (row) => row.address
+      )
       try {
         logger.info(
           `ScanChainMain Run in Progress:`,
           JSON.stringify(this.scanChainConfig[intranetId])
-        )
-        const addressList = this.scanChainConfig[intranetId].map(
-          (row) => row.address
         )
         if (addressList.length > 0) {
           const chain =
@@ -68,8 +68,11 @@ export class ScanChainMain {
         }
       } catch (error) {
         logger.error(
-          `ScanChainMain Run Error:${error.message}`,
-          this.scanChainConfig[intranetId]
+          `ScanChainMain Run Error:${
+            error.message
+          }, intranetId:${intranetId}, addressList:${JSON.stringify(
+            addressList
+          )}`
         )
       }
     }

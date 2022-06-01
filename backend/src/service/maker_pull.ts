@@ -50,7 +50,6 @@ async function savePull(
     tokenAddress: makerPull.tokenAddress,
     [checkField]: makerPull[checkField],
   }
-  await repositoryMakerPull().insert(makerPull)
   const his = await repositoryMakerPull().findOne(findConditions)
   if (his) {
     await repositoryMakerPull().update({ id: his.id }, makerPull)
@@ -316,7 +315,7 @@ export class ServiceMakerPull {
         )
       } else {
         logger.error(
-          'Collection transaction, user transfer transaction ID not found:',
+          'Collection transaction, user transfer targetMP  not found:',
           JSON.stringify(makerPull)
         )
       }
