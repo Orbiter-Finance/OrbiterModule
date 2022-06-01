@@ -1,5 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
+import { padStart } from '../chainCore/src/utils'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
@@ -161,6 +162,14 @@ export function makeTransactionID(
   nonce: string
 ) {
   return `${fromAddress.toLowerCase()}${chainId}${nonce}`
+}
+export function newMakeTransactionID(
+  fromAddress: string,
+  chainId: number,
+  nonce: string,
+  symbol: string
+) {
+  return (`${fromAddress}${padStart(String(chainId), 4, '00')}${nonce}${symbol}`).toLowerCase()
 }
 
 /**
