@@ -213,7 +213,6 @@ export default abstract class BasetWatch implements IChainWatch {
         // exec query trx
         logger.info(`[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`)
         queryTxs = await this.apiWatchNewTransaction(address)
-        console.log(JSON.stringify(queryTxs), '===queryTxs--扫到交易：')
         await this.pushMessage(address, queryTxs)
         const latest = orderBy(
           queryTxs,
