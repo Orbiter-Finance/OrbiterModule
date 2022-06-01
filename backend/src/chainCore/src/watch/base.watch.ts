@@ -40,6 +40,9 @@ export default abstract class BasetWatch implements IChainWatch {
   public abstract getApiFilter(address: Address): Promise<QueryTxFilter>
   public async init() {
     let txlist: Array<string> = (await this.cache.get(`txlist`)) || []
+    if (txlist.length>=1000) {
+      txlist.splice(1000)
+    }
     if (!Array.isArray(txlist)) txlist = []
     txlist.forEach((hash) => {
       if (!this.pushHistory.has(hash.toLowerCase())) {
