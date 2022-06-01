@@ -11,20 +11,10 @@ import {
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
-import { logger } from 'ethers'
-import Keyv from 'keyv'
 import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
 import { isEthTokenAddress, sleep } from '..'
-import { ScanChainMain } from '../../chainCore'
-import { ITransaction } from '../../chainCore/src/types'
-import {
-  getChainByChainId,
-  getChainByInternalId,
-  groupBy,
-} from '../../chainCore/src/utils'
-import KeyvFile from '../../chainCore/src/utils/keyvFile'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
@@ -56,7 +46,6 @@ let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
 let accountInfo: AccountInfo
 let lpKey: string
-const pullTrxMap: Map<string, Array<string>> = new Map()
 let zksLastTimeStamp: {} = {}
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -126,59 +115,6 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
   }
 }
 
-export async function startNewMakerTrxPull() {
-  const makerList = await getMakerList()
-  const convertMakerList = ScanChainMain.convertTradingList(makerList)
-  const scanChain = new ScanChainMain(convertMakerList)
-  for (const intranetId in convertMakerList) {
-    //
-    const cache = new Keyv({
-      store: new KeyvFile({
-        filename: `cache/maker/${intranetId}`, // the file path to store the data
-        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
-        encode: JSON.stringify, // serialize function
-        decode: JSON.parse, // deserialize function
-      }),
-    })
-    pullTrxMap.set(intranetId, [])
-    // reader cache
-    const historyHashList = await cache.get('hashList')
-    if (historyHashList && Array.isArray(historyHashList)) {
-      pullTrxMap.set(intranetId, historyHashList)
-    }
-    scanChain.mq.subscribe(
-      `${intranetId}:txlist`,
-      async (newTxList: Array<ITransaction>) => {
-        // Transaction received
-        const groupData = groupBy(newTxList, 'chainId')
-        for (const chainId in groupData) {
-          const chainConfig = getChainByChainId(chainId)
-          const pullTrxList = pullTrxMap.get(chainConfig.internalId)
-          //
-          for (const tx of groupData[chainId]) {
-            pullTrxList!.unshift(tx.hash.toLowerCase())
-            console.log(tx, '====')
-            await this.handleMakerPaymentCollection(tx)
-          }
-          cache.set('hashList', pullTrxList)
-        }
-      }
-    )
-  }
-  scanChain.run()
-}
-export async function handleMakerPaymentCollection(tx: ITransaction) {
-  const chainConfig = getChainByInternalId(tx.chainId)
-  if (chainConfig) {
-    switch (Number(chainConfig.internalId)) {
-      case 3:
-      case 33:
-        //
-        break
-    }
-  }
-}
 
 export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
@@ -189,7 +125,6 @@ export async function startMaker(makerInfo: any) {
 
   watchPool(makerInfo)
   // new maker trx pull
-  startNewMakerTrxPull()
 }
 
 export async function getMakerList() {

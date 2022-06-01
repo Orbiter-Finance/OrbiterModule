@@ -10,7 +10,6 @@ import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { ScanChainMain } from '../chainCore'
-import { sleep } from '../util'
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:

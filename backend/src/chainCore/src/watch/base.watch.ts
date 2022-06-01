@@ -142,15 +142,6 @@ export default abstract class BasetWatch implements IChainWatch {
     const trxList: Array<ITransaction> = []
     const filter = await this.getApiFilter(address)
     try {
-      const response: QueryTransactionsResponse =
-        await this.chain.getTransactions(address, filter)
-      trxList.push(...response.txlist)
-    } catch (error) {
-      logger.error(
-        `[${this.chain.chainConfig.name}] apiWatchNewTransaction getTransactions error: ${error.message}`
-      )
-    }
-    try {
       const response = await this.chain.getTokenTransactions(
         address,
         null,
@@ -162,7 +153,16 @@ export default abstract class BasetWatch implements IChainWatch {
         `[${this.chain.chainConfig.name}] apiWatchNewTransaction getTokenTransactions error: ${error.message}`
       )
     }
-    return trxList
+    try {
+      const response: QueryTransactionsResponse =
+        await this.chain.getTransactions(address, filter)
+      trxList.push(...response.txlist)
+    } catch (error) {
+      logger.error(
+        `[${this.chain.chainConfig.name}] apiWatchNewTransaction getTransactions error: ${error.message}`
+      )
+    }
+    return trxList.filter(tx=> tx.value.gt(0))
   }
   public async apiScanCursor(
     address: Address,
@@ -213,6 +213,7 @@ export default abstract class BasetWatch implements IChainWatch {
         // exec query trx
         logger.info(`[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`)
         queryTxs = await this.apiWatchNewTransaction(address)
+        console.log(JSON.stringify(queryTxs), '===queryTxs--扫到交易：')
         await this.pushMessage(address, queryTxs)
         const latest = orderBy(
           queryTxs,

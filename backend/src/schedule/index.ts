@@ -2,6 +2,7 @@ import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
+import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   jobBalanceAlarm,
   jobCacheCoinbase,
@@ -122,5 +123,6 @@ export const startWorkerJobs = async () => {
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
+    startNewMakerTrxPull()
   }
 }

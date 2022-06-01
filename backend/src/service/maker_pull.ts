@@ -14,7 +14,12 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
-import { getAmountFlag, getTargetMakerPool, makeTransactionID } from './maker'
+import {
+  getAmountFlag,
+  getTargetMakerPool,
+  makeTransactionID,
+  newMakeTransactionID,
+} from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
 import { ITransaction, TransactionStatus } from '../chainCore/src/types'
@@ -273,7 +278,7 @@ export class ServiceMakerPull {
     if (fromAddress == makerAddress) {
       const targetMP = await repositoryMakerPull().findOne({
         makerAddress: makerAddress, //  same makerAddress
-        fromAddress: toAddress,
+        fromAddress: makerPull.toAddress,
         toAddress: fromAddress,
         amount_flag: String(makerPull.chainId),
         nonce: makerPull.amount_flag,
@@ -299,8 +304,6 @@ export class ServiceMakerPull {
             state: targetMP.tx_status == 'finalized' ? 3 : 2,
           }
         )
-      } else {
-        logger.error('Collection transaction, user transfer targetMP  not found:', JSON.stringify(makerPull))
       }
     }
 
@@ -310,10 +313,152 @@ export class ServiceMakerPull {
       if (!CHAIN_INDEX[makerPull.amount_flag]) {
         return
       }
-      const transactionID = makeTransactionID(
+
+      // find pool and calculate needToAmount
+      const targetMakerPool: any = await getTargetMakerPool(
+        this.makerAddress,
+        this.tokenAddress,
+        makerPull.chainId,
+        Number(makerPull.amount_flag),
+        makerPull.txTime
+      )
+      let transactionID = ''
+      let needToAmount = '0'
+      let mpTokenAddress = ''
+      if (targetMakerPool) {
+        needToAmount =
+          getAmountToSend(
+            makerPull.chainId,
+            Number(makerPull.amount_flag),
+            makerPull.amount,
+            targetMakerPool,
+            makerPull.nonce
+          )?.tAmount || '0'
+        mpTokenAddress =
+          targetMakerPool.c1ID == makerPull.chainId
+            ? targetMakerPool.t2Address
+            : targetMakerPool.t1Address
+        transactionID = makeTransactionID(
+          makerPull.fromAddress,
+          makerPull.chainId,
+          makerPull.nonce
+        )
+      }
+
+      // match data from maker_pull
+      const _mp = await repositoryMakerPull().findOne({
+        chainId: Number(makerPull.amount_flag),
+        makerAddress: this.makerAddress,
+        tokenAddress: mpTokenAddress,
+        fromAddress: makerPull.makerAddress,
+        toAddress: fromAddress,
+        amount: needToAmount,
+        amount_flag: makerPull.nonce,
+        tx_status: Not('rejected'),
+      })
+      const otherData = {
+        state: makerPull.tx_status == 'finalized' ? 1 : 0,
+      }
+      if (_mp) {
+        otherData['toTx'] = _mp.txHash
+        otherData['toAmount'] = _mp.amount
+        otherData['toTimeStamp'] = dateFormatNormal(_mp.txTime)
+        otherData['gasCurrency'] = _mp.gasCurrency
+        otherData['gasAmount'] = _mp.gasAmount
+        otherData['state'] = _mp.tx_status == 'finalized' ? 3 : 2
+      }
+      try {
+        const makerNode = await repositoryMakerNode().findOne({ transactionID })
+        // update or insert
+        if (makerNode) {
+          await repositoryMakerNode().update({ transactionID }, otherData)
+        } else {
+          await repositoryMakerNode().insert({
+            transactionID,
+            makerAddress: makerPull.makerAddress,
+            userAddress: fromAddress,
+            fromChain: String(makerPull.chainId),
+            toChain: makerPull.amount_flag,
+            formTx: makerPull.txHash,
+            fromAmount: makerPull.amount,
+            formNonce: makerPull.nonce,
+            needToAmount,
+            fromTimeStamp: dateFormatNormal(makerPull.txTime),
+            txToken: makerPull.tokenAddress,
+            fromExt: makerPull.txExt,
+            ...otherData,
+          })
+        }
+      } catch (e) {
+        // When run concurrently, insert will try transactionID exist error
+        errorLogger.error(e)
+      }
+    }
+  }
+  /**
+   * @param new makerPull
+   * @returns
+   */
+  private async newCompareData(makerPull: MakerPull) {
+    // to lower
+    const makerAddress = makerPull.makerAddress.toLowerCase()
+    const fromAddress = makerPull.fromAddress.toLowerCase()
+    const toAddress = makerPull.toAddress.toLowerCase()
+    // if maker out
+    const originTx: ITransaction = JSON.parse(makerPull.data)
+    if (fromAddress == makerAddress) {
+      const targetMP = await repositoryMakerPull().findOne({
+        makerAddress: makerAddress, //  same makerAddress
+        fromAddress: toAddress,
+        toAddress: fromAddress,
+        amount_flag: String(makerPull.chainId),
+        nonce: makerPull.amount_flag,
+        tx_status: Not('rejected'),
+      }, {
+        order: {
+          'id': 'DESC'
+        }
+      })
+      if (targetMP) {
+        const transactionID = newMakeTransactionID(
+          targetMP.fromAddress,
+          targetMP.chainId,
+          targetMP.nonce,
+          originTx.symbol
+        )
+        await repositoryMakerNode().update(
+          {
+            transactionID,
+            needToAmount: makerPull.amount,
+          },
+          {
+            toTx: makerPull.txHash,
+            toAmount: makerPull.amount,
+            toTimeStamp: dateFormatNormal(makerPull.txTime),
+            gasCurrency: makerPull.gasCurrency,
+            gasAmount: makerPull.gasAmount,
+            state: targetMP.tx_status == 'finalized' ? 3 : 2,
+          }
+        )
+      } else {
+        logger.error(
+          'Collection transaction, user transfer targetMP  not found:',
+          JSON.stringify(makerPull)
+        )
+      }
+    }
+    // if into maker
+    if (toAddress == makerAddress) {
+      // when amount_flag not in CHAIN_INDEX, it cann't identify toChain
+      if (!CHAIN_INDEX[makerPull.amount_flag]) {
+        return
+      }
+
+      const transactionID = newMakeTransactionID(
         makerPull.fromAddress,
         makerPull.chainId,
-        makerPull.nonce
+        makerPull.nonce,
+        originTx.symbol
       )
       // find pool and calculate needToAmount
       const targetMakerPool = await getTargetMakerPool(
@@ -384,7 +529,6 @@ export class ServiceMakerPull {
       }
     }
   }
-
   /**
    * @param makerPull
    */
@@ -1651,7 +1795,7 @@ export class ServiceMakerPull {
       promiseMethods.push(async () => {
         await savePull(makerPull)
         // compare
-        await this.compareData(makerPull)
+        await this.newCompareData(makerPull)
       })
     }
     await PromisePool.for(promiseMethods)

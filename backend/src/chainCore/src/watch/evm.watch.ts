@@ -6,6 +6,7 @@ import {
   IEVMChain,
   QueryTxFilterEther,
 } from '../types'
+import { equals } from '../utils'
 import logger from '../utils/logger'
 import BasetWatch from './base.watch'
 
@@ -71,20 +72,18 @@ export default abstract class EVMWatchBase extends BasetWatch {
   }
   private async isWatchContractAddress(address: string): Promise<boolean> {
     const isWatchContract =
-      this.chain.chainConfig.contracts.findIndex(
-        (addr) => addr.toLowerCase() === address.toLowerCase()
+      this.chain.chainConfig.contracts.findIndex((addr) =>
+        equals(addr, address)
       ) != -1
     return isWatchContract
   }
   private async isWatchTokenAddress(address: string): Promise<boolean> {
     const chainConfig = this.chain.chainConfig
-    const isChainMainCoin =
-      chainConfig.nativeCurrency.address.toLowerCase() === address.toLowerCase()
+    const isChainMainCoin = equals(chainConfig.nativeCurrency.address, address)
     if (isChainMainCoin) return true
     const isWatchToken =
-      chainConfig.tokens.findIndex(
-        (token) => token.address.toLowerCase() === address.toLowerCase()
-      ) != -1
+      chainConfig.tokens.findIndex((token) => equals(token.address, address)) !=
+      -1
     return isWatchToken
   }
   public async isWatchToAddress(to: string) {
@@ -114,7 +113,9 @@ export default abstract class EVMWatchBase extends BasetWatch {
           const block = await web3.eth.getBlock(start, true)
           if (block) {
             const { transactions } = block
-            logger.info( `[${config.name}] replayBlock (${start}/${end}), Trxs Count : ${transactions.length}`)
+            logger.info(
+              `[${config.name}] replayBlock (${start}/${end}), Trxs Count : ${transactions.length}`
+            )
             const txmap: AddressMapTransactions = new Map()
             for (const tx of transactions) {
               // Filter non whitelist address transactions

@@ -1,5 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
+import { padStart } from '../chainCore/src/utils'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
@@ -162,6 +163,14 @@ export function makeTransactionID(
 ) {
   return `${fromAddress}${chainId}${nonce}`
 }
+export function newMakeTransactionID(
+  fromAddress: string,
+  chainId: number,
+  nonce: string,
+  symbol: string
+) {
+  return (`${fromAddress}${padStart(String(chainId), 4, '00')}${nonce}${symbol}`).toLowerCase()
+}
 
 /**
  * Get maker nodes
@@ -265,7 +274,7 @@ export async function getTargetMakerPool(
     transactionTime = new Date()
   }
   const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
-  const allMakerList = await getAllMakerList(); 
+  const allMakerList = await getAllMakerList()
   for (const maker of allMakerList) {
     const { pool1, pool2 } = expanPool(maker)
     if (

@@ -6,7 +6,7 @@ import {
   Transaction,
   TransactionStatus,
 } from '../types'
-import { isEmpty } from '../utils'
+import { equals, isEmpty } from '../utils'
 import EtherscanClient, { EtherscanApiAction } from '../utils/etherscan'
 import logger from '../utils/logger'
 import { EVMChain } from './evm-chain.service'
@@ -89,7 +89,7 @@ export abstract class EvmExplorerService extends EVMChain {
           extra,
           source: 'api'
         })
-        if (newTx.input === 'deprecated') {
+        if (equals(newTx.input, 'deprecated')) {
           // is deprecated
           const rpcTx = await this.web3.eth.getTransaction(hash)
           newTx.input = rpcTx.input
