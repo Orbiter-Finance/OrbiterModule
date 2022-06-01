@@ -416,7 +416,7 @@ export class ServiceMakerPull {
         tx_status: Not('rejected'),
       }, {
         order: {
-          'id': 'DESC'
+          'txTime': 'DESC'
         }
       })
       if (targetMP) {
