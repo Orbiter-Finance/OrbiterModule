@@ -13,6 +13,7 @@ import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
+import loopring_help from './loopring/loopring_help'
 import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
 
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
@@ -58,10 +59,13 @@ async function getTokenBalance(
       case 'loopring':
         {
           let api = makerConfig.loopring.api
+          let httpEndPoint = makerConfig.loopring.httpEndPoint
           let accountID: Number | undefined
           if (chainId === 99) {
             api = makerConfig.loopring_test.api
+            httpEndPoint = makerConfig.loopring_test.httpEndPoint
           }
+          let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
           // getAccountID first
           const accountInfo = await axios(
             `${api.endPoint}/account?owner=${makerAddress}`
@@ -69,15 +73,12 @@ async function getTokenBalance(
           if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
             accountID = accountInfo.data.accountId
           }
-
+          const lpTokenInfo = tokenInfos.find((item) => item.address.toLowerCase() === tokenAddress.toLowerCase())
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=0`
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0}`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
-            if (!Array.isArray(balanceData.data)) {
-              value = '0'
-            }
-            if (balanceData.data.length == 0) {
+            if (balanceData.data && balanceData.data.length == 0) {
               value = '0'
             }
             let balanceMap = balanceData.data[0]
@@ -131,8 +132,14 @@ async function getTokenBalance(
         ) {
           value = '0'
         }
-        let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
-        value = balanceInfo[defaultIndex].amount * 10 ** 18 + ''
+        let httpEndPoint = makerConfig.zkspace.httpEndPoint
+        if (chainId === 512) {
+          httpEndPoint = makerConfig.zkspace_test.httpEndPoint
+        }
+        let tokenInfos = await ZKSpaceHelper.getTokenInfos(httpEndPoint)
+        const zksTokenInfo = tokenInfos.find((item) => item.address.toLowerCase() == (tokenAddress ? tokenAddress.toLowerCase() : "0x" + "0".repeat(40)))
+        let defaultIndex = balanceInfo.findIndex((item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0))
+        value = defaultIndex > -1 ? balanceInfo[defaultIndex].amount * 10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) + '' : '0'
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
@@ -286,8 +293,8 @@ export async function getWealthsChains(makerAddress: string) {
           CHAIN_INDEX[item.chainId] == 'polygon'
             ? 'MATIC'
             : CHAIN_INDEX[item.chainId] == 'metis'
-            ? 'METIS'
-            : 'ETH',
+              ? 'METIS'
+              : 'ETH',
         decimals: 18,
         value: '',
       })

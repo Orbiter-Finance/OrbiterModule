@@ -30,6 +30,7 @@ import {
   saveMappingL1AndL2,
 } from '../../service/starknet/helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
+import loopring_help from '../../service/loopring/loopring_help'
 import { Core } from '../core'
 import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
@@ -41,6 +42,8 @@ import { factoryStarknetListen } from './starknet_listen'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const zkTokenInfo: any[] = []
+let zksTokenInfo: any[] = []
+let lpTokenInfo: any[] = []
 const matchHashList: any[] = [] // Intercept multiple receive
 let loopringStartTime: {} = {}
 let loopringLastHash: string = ''
@@ -114,7 +117,6 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
     errorLogger.error('Deploy starknet maker error: ' + err.message)
   }
 }
-
 
 export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
@@ -244,6 +246,7 @@ async function watchTransfers(pool, state) {
     if (ptext.state === false) {
       return false
     }
+
     const pText = ptext.pText
     let validPText = (9000 + Number(toChainID)).toString()
     const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amount)
@@ -341,10 +344,17 @@ async function watchTransfers(pool, state) {
   // loopring || loopring_test
   if (fromChainID == 9 || fromChainID == 99) {
     try {
+      let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
+      }
+      lpTokenInfo = tokenInfos
+      accessLogger.info('lpTokenInfo =', lpTokenInfo)
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
       console.log('error =', error)
-      throw 'getLPTransactionDataError'
+      throw new Error('getLPTransactionDataError')
     }
     return
   }
@@ -353,14 +363,20 @@ async function watchTransfers(pool, state) {
   if (fromChainID == 11 || fromChainID == 511) {
     return
   }
-
   // zkspace || zkspace_test
   if (fromChainID == 12 || fromChainID == 512) {
     try {
+      let tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
+      while (!tokenInfos) {
+        await sleep(300)
+        tokenInfos = await zkspace_help.getTokenInfos(httpEndPoint)
+      }
+      zksTokenInfo = tokenInfos
+      accessLogger.info('zksTokenInfo =', zksTokenInfo)
       confirmZKSTransaction(pool, tokenAddress, state)
     } catch (error) {
-      console.log('error =', error)
-      throw 'getZKSTransactionDataError'
+      errorLogger.error('zksTokenInfo error =', error.message)
+      throw new Error('zksTokenInfo error')
     }
     return
   }
@@ -400,7 +416,7 @@ async function watchTransfers(pool, state) {
     new EthListen(
       api,
       makerAddress,
-      isPolygon || isMetis ? 'tokentx' : 'txlist',
+      isPolygon ? 'tokentx' : 'txlist',
       async () => {
         if (startBlockNumber) {
           return startBlockNumber + ''
@@ -430,10 +446,8 @@ async function watchTransfers(pool, state) {
       <any>makerConfig.ABI,
       tokenAddress
     )
-
     // Generate filter options
     const options = { filter: { to: makerAddress }, fromBlock: 'latest' }
-
     // Subscribe to Transfer events matching filter criteria
     tokenContract.events
       .Transfer(options, (error, event) => {
@@ -442,8 +456,9 @@ async function watchTransfers(pool, state) {
           errorLogger.error(error)
           return
         }
-
-        if (event.returnValues.to === makerAddress) {
+        if (
+          event.returnValues.to.toLowerCase() === makerAddress.toLowerCase()
+        ) {
           if (
             checkData(event.returnValues.value, event.transactionHash) === true
           ) {
@@ -575,7 +590,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                           nonce +
                           ' has found'
                       )
-                      var transactionID =
+                      const transactionID =
                         element.op.from.toLowerCase() + fromChainID + nonce
                       let makerNode: MakerNode | undefined
                       try {
@@ -640,10 +655,10 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                           },
                           { txhash: element.txHash }
                         )
-                        accessLogger.info('update success')
+                        accessLogger.info('zk hash update success')
                       } catch (error) {
                         if (error) {
-                          errorLogger.error('updateHashError =', error)
+                          errorLogger.error('zk updateHashError =', error)
                         }
                       }
                     }
@@ -759,15 +774,17 @@ function confirmLPTransaction(pool, tokenAddress, state) {
       } catch (error) {
         errorLogger.error('checkLoopringAccountKeyError =', error)
       }
+      const lpTokenInfo = getLpTokenInfo(tokenAddress)
       const GetUserTransferListRequest = {
         accountId: accountInfo?.accountId,
         start: loopringStartTime[toChain],
         end: 99999999999999,
         status: 'processed',
         limit: 50,
-        tokenSymbol: 'ETH',
+        tokenSymbol: lpTokenInfo.symbol,
         transferTypes: 'transfer',
       }
+
       const LPTransferResult = await userApi.getUserTransferList(
         GetUserTransferListRequest,
         lpKey
@@ -793,7 +810,7 @@ function confirmLPTransaction(pool, tokenAddress, state) {
             lpTransaction.txType == 'TRANSFER' &&
             lpTransaction.receiverAddress.toLowerCase() ==
               makerAddress.toLowerCase() &&
-            lpTransaction.symbol == 'ETH' &&
+            lpTransaction.symbol == lpTokenInfo.symbol &&
             lpTransaction.hash !== loopringLastHash
           ) {
             const pText = lpTransaction.memo
@@ -908,7 +925,12 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
       let fromChain = state ? pool.c2Name : pool.c1Name
       let toChainID = state ? pool.c1ID : pool.c2ID
       let toChain = state ? pool.c1Name : pool.c2Name
-      const url = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
+      const tokenInfo = getZKSTokenInfo(tokenAddress)
+      const url = `${
+        makerConfig[fromChain].httpEndPoint
+      }/txs?types=Transfer&address=${makerAddress}&token=${
+        tokenInfo ? tokenInfo.id : 0
+      }&start=${startPoint}&limit=50`
       try {
         let zksResponse = await axios.get(url)
         if (
@@ -939,7 +961,11 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
               originZksList.length == 50
             ) {
               startPoint = startPoint + 50
-              const moreUrl = `${makerConfig[fromChain].httpEndPoint}/txs?types=Transfer&address=${makerAddress}&token=0&start=${startPoint}&limit=50`
+              const moreUrl = `${
+                makerConfig[fromChain].httpEndPoint
+              }/txs?types=Transfer&address=${makerAddress}&token=${
+                tokenInfo ? tokenInfo.id : 0
+              }&start=${startPoint}&limit=50`
               let moreZksResponse = await axios.get(moreUrl)
               if (
                 moreZksResponse.status === 200 &&
@@ -967,10 +993,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
             if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
               accessLogger.info(
-                'zksLastTimeStamp[',
-                toChain,
-                '] =',
-                zksLastTimeStamp[toChain]
+                `zksLastTimeStamp[${toChain}] = ${zksLastTimeStamp[toChain]}`
               )
             } else {
               continue
@@ -979,7 +1002,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
               (zksTransaction.status == 'verified' ||
                 zksTransaction.status == 'pending') &&
               zksTransaction.tx_type == 'Transfer' &&
-              zksTransaction.token.symbol == 'ETH' &&
+              zksTransaction.token.symbol == tokenInfo.symbol &&
               zksTransaction.to.toLowerCase() == makerAddress.toLowerCase()
             ) {
               const amount = new BigNumber(zksTransaction.amount).multipliedBy(
@@ -1099,7 +1122,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           errorLogger.error('zksTxListError1 = NetWorkError')
         }
       } catch (error) {
-        errorLogger.error('zksTxListError2 =', error)
+        errorLogger.error('zksTxListError =', error.message)
       }
     } catch (error) {
       errorLogger.error('zkspaceError =', error)
@@ -1175,7 +1198,7 @@ async function confirmSNTransaction(pool: any, state: any, transaction: any) {
       { transactionID: transactionID },
       { state: 1 }
     )
-    accessLogger.info('update success')
+    accessLogger.info('confirmSNTransaction update success')
   } catch (error) {
     errorLogger.error('updateFromError =', error)
     return
@@ -1236,7 +1259,7 @@ async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
         txToken: tokenAddress,
         state: 0,
       })
-      accessLogger.info('add success')
+      accessLogger.info('confirmIMXTransaction add success')
     } catch (error) {
       errorLogger.error('newTransactionSqlError =', error)
     }
@@ -1254,7 +1277,7 @@ async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
       { transactionID: transactionID },
       { state: 1 }
     )
-    accessLogger.info('update success')
+    accessLogger.info('confirmIMXTransaction update success')
   } catch (error) {
     errorLogger.error('updateFromError =', error)
     return
@@ -1284,7 +1307,6 @@ function confirmFromTransaction(
   isFirst = true
 ) {
   accessLogger.info('confirmFromTransaction =', getTime())
-
   const ticker = async () => {
     const makerAddress = pool.makerAddress
     var fromChain = state ? pool.c2Name : pool.c1Name
@@ -1374,7 +1396,9 @@ function confirmFromTransaction(
           txToken: tokenAddress,
           state: 0,
         })
-        accessLogger.info('add success')
+        accessLogger.info(
+          `confirmFromTransaction fromChain ${fromChain} add success`
+        )
       } catch (error) {
         errorLogger.error('newTransactionSqlError =', error)
       }
@@ -1392,12 +1416,13 @@ function confirmFromTransaction(
           { transactionID: transactionID },
           { state: 1 }
         )
-        accessLogger.info('update success')
+        accessLogger.info(
+          `confirmFromTransaction fromChain ${fromChain} update success`
+        )
       } catch (error) {
         errorLogger.error('updateFromError =', error)
         return
       }
-
       const toTokenAddress = state ? pool.t1Address : pool.t2Address
       let toAddress = trx.from
       if (transferExt?.value) {
@@ -1484,7 +1509,7 @@ function confirmToTransaction(
           { transactionID: transactionID },
           { toTimeStamp: timestamp, state: 3 }
         )
-        accessLogger.info('update success')
+        accessLogger.info(`confirmToTransaction->Chain:${Chain} update success`)
       } catch (error) {
         errorLogger.error('updateToSqlError =', error)
         return
@@ -1579,8 +1604,7 @@ function confirmToLPTransaction(
         let lpTransaction = LPTransferResult.userTransfers[0]
         if (
           lpTransaction.status == 'processed' &&
-          lpTransaction.txType == 'TRANSFER' &&
-          lpTransaction.symbol == 'ETH'
+          lpTransaction.txType == 'TRANSFER'
         ) {
           accessLogger.info({ lpTransaction })
           accessLogger.info(
@@ -1771,7 +1795,53 @@ function getZKTokenID(tokenAddress) {
     }
   }
 }
-
+function getZKTokenInfo(tokenAddress) {
+  if (!zkTokenInfo.length) {
+    return null
+  } else {
+    for (let index = 0; index < zkTokenInfo.length; index++) {
+      const tokenInfo = zkTokenInfo[index]
+      if (tokenInfo.address === tokenAddress) {
+        return tokenInfo
+      }
+    }
+  }
+}
+function getTokenInfo(chainId, tokenAddress) {
+  if (chainId == 3 || chainId == 33) {
+    return getZKTokenInfo(tokenAddress)
+  } else if (chainId == 12 || chainId == 512) {
+    return getZKSTokenInfo(tokenAddress)
+  } else if (chainId == 9 || chainId == 99) {
+    return getLpTokenInfo(tokenAddress)
+  }
+}
+export function getZKSTokenInfo(tokenAddress) {
+  if (!zksTokenInfo.length) {
+    return null
+  } else {
+    for (let index = 0; index < zksTokenInfo.length; index++) {
+      const tokenInfo = zksTokenInfo[index]
+      if (tokenInfo.address.toLowerCase() === tokenAddress.toLowerCase()) {
+        return tokenInfo
+      }
+    }
+    return null
+  }
+}
+export function getLpTokenInfo(tokenAddress) {
+  if (!lpTokenInfo.length) {
+    return null
+  } else {
+    for (let index = 0; index < lpTokenInfo.length; index++) {
+      const tokenInfo = lpTokenInfo[index]
+      if (tokenInfo.address === tokenAddress) {
+        return tokenInfo
+      }
+    }
+    return null
+  }
+}
 function getTime() {
   const time = dayjs().format('YYYY-MM-DD HH:mm:ss')
   return time
@@ -1868,7 +1938,7 @@ export async function sendTransaction(
     toAddress,
     toChain,
     toChainID,
-    getZKTokenID(tokenAddress),
+    getTokenInfo(toChainID, tokenAddress),
     tokenAddress,
     tAmount,
     result_nonce,
@@ -1891,7 +1961,7 @@ export async function sendTransaction(
             state: 2,
           }
         )
-        accessLogger.info('update success')
+        accessLogger.info(`sendTransaction toChain ${toChain} update success`)
       } catch (error) {
         errorLogger.error('updateToSqlError =', error)
         return
@@ -1932,7 +2002,9 @@ export async function sendTransaction(
           { transactionID: transactionID },
           { state: 20 }
         )
-        accessLogger.info('update success')
+        accessLogger.info(
+          `sendTransaction toChain ${toChain} state = 20  update success`
+        )
 
         // todo need result_nonce
         // if (response.result_nonce > 0) {
