@@ -23,7 +23,7 @@ import {
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
 import { ITransaction, TransactionStatus } from '../chainCore/src/types'
-import { getChainByChainId } from '../chainCore/src/utils'
+import { equals, getChainByChainId } from '../chainCore/src/utils'
 import logger from '../chainCore/src/utils/logger'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -407,18 +407,21 @@ export class ServiceMakerPull {
     // if maker out
     const originTx: ITransaction = JSON.parse(makerPull.data)
     if (fromAddress == makerAddress) {
-      const targetMP = await repositoryMakerPull().findOne({
-        makerAddress: makerAddress, //  same makerAddress
-        fromAddress: toAddress,
-        toAddress: fromAddress,
-        amount_flag: String(makerPull.chainId),
-        nonce: makerPull.amount_flag,
-        tx_status: Not('rejected'),
-      }, {
-        order: {
-          'txTime': 'DESC'
+      const targetMP = await repositoryMakerPull().findOne(
+        {
+          makerAddress: makerAddress, //  same makerAddress
+          fromAddress: toAddress,
+          toAddress: fromAddress,
+          amount_flag: String(makerPull.chainId),
+          nonce: makerPull.amount_flag,
+          tx_status: Not('rejected'),
+        },
+        {
+          order: {
+            txTime: 'DESC',
+          },
         }
-      })
+      )
       if (targetMP) {
         const transactionID = newMakeTransactionID(
           targetMP.fromAddress,
@@ -1739,17 +1742,9 @@ export class ServiceMakerPull {
         continue
       }
       let makerAddress = ''
-      if (
-        makerList.find(
-          (row) => row.makerAddress.toLowerCase() === tx.from.toLowerCase()
-        )
-      ) {
+      if (makerList.find((row) => equals(row.makerAddress, tx.from))) {
         makerAddress = tx.from
-      } else if (
-        makerList.find(
-          (row) => row.makerAddress.toLowerCase() === tx.to.toLowerCase()
-        )
-      ) {
+      } else if (makerList.find((row) => equals(row.makerAddress, tx.to))) {
         makerAddress = tx.to
       }
       const chainConfig = await getChainByChainId(tx.chainId)

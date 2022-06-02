@@ -165,11 +165,11 @@ export function makeTransactionID(
 }
 export function newMakeTransactionID(
   fromAddress: string,
-  chainId: number,
-  nonce: string,
-  symbol: string
+  fromChainId: number | string,
+  fromTxNonce: string | number,
+  symbol: string | undefined
 ) {
-  return (`${fromAddress}${padStart(String(chainId), 4, '00')}${nonce}${symbol}`).toLowerCase()
+  return (`${fromAddress}${padStart(String(fromChainId), 4, '00')}${fromTxNonce}${symbol || ''}`).toLowerCase()
 }
 
 /**

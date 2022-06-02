@@ -16,7 +16,7 @@ import {
 } from '@dydxprotocol/v3-client'
 import Web3 from 'web3'
 import dayjs from 'dayjs'
-import { isEmpty } from '../utils'
+import { equals, isEmpty } from '../utils'
 export class Dydx implements IChain {
   private apiKeyCredentials: ApiKeyCredentials = {
     key: '',
@@ -35,8 +35,14 @@ export class Dydx implements IChain {
 
   public getDydxClient() {
     const apiKeyCredentials = this.apiKeyCredentials
-    if (!apiKeyCredentials.key || !apiKeyCredentials.secret || !apiKeyCredentials.passphrase) {
-        throw new Error('Wallet signature not configured key | secret | passphrase')
+    if (
+      !apiKeyCredentials.key ||
+      !apiKeyCredentials.secret ||
+      !apiKeyCredentials.passphrase
+    ) {
+      throw new Error(
+        'Wallet signature not configured key | secret | passphrase'
+      )
     }
     const web3 = new Web3()
     return new DydxClient(this.chainConfig.api.url, {
@@ -107,9 +113,9 @@ export class Dydx implements IChain {
         extra,
         symbol,
       })
-      if (row.status === 'PENDING') {
+      if (equals(row.status, 'PENDING')) {
         tx.status = TransactionStatus.PENDING
-      } else if (row.status === 'CONFIRMED') {
+      } else if (equals(row.status, 'CONFIRMED')) {
         tx.status = TransactionStatus.COMPLETE
       }
       response.txlist.push(tx)
@@ -129,10 +135,7 @@ export class Dydx implements IChain {
   getDecimals(): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTokenBalance(
-    address: string,
-    tokenAddress: string
-  ): Promise<BigNumber> {
+  getTokenBalance(address: string, tokenAddress: string): Promise<BigNumber> {
     throw new Error('Method not implemented.')
   }
   getTokenDecimals(tokenAddress: string): Promise<number> {

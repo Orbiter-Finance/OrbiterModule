@@ -154,7 +154,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
     await this.init()
     const currentBlockCacheKey = `rpcScan:${this.chain.chainConfig.chainId}`
     const latestHeight = await this.chain.getLatestHeight()
-
     if (!this.getCurrentBlock || this.getCurrentBlock <= 0) {
       // get cache height
       let cacheBlock = await this.cache.get(currentBlockCacheKey)

@@ -1,6 +1,6 @@
-import { expanPool, getMakerList } from '.'
+import { getMakerList, sendTransaction } from '.'
 import { ScanChainMain } from '../../chainCore'
-import { ITransaction } from '../../chainCore/src/types'
+import { ITransaction, TransactionStatus } from '../../chainCore/src/types'
 import * as orbiterCore from './core'
 import {
   equals,
@@ -9,7 +9,15 @@ import {
   groupBy,
 } from '../../chainCore/src/utils'
 import BigNumber from 'bignumber.js'
-import { ChainId } from '@loopring-web/loopring-sdk'
+import { newMakeTransactionID } from '../../service/maker'
+import { accessLogger, errorLogger } from '../logger'
+import { Core } from '../core'
+import { Repository } from 'typeorm'
+import { MakerNode } from '../../model/maker_node'
+import { isEmpty } from 'class-validator'
+const repositoryMakerNode = (): Repository<MakerNode> => {
+  return Core.db.getRepository(MakerNode)
+}
 const pullTrxMap: Map<string, Array<string>> = new Map()
 
 export interface IMarket {
@@ -31,7 +39,7 @@ export interface IMarket {
 // checkData
 export function checkAmount(
   fromChainId: string,
-  toChainId:string,
+  toChainId: string,
   amount: string,
   market: IMarket
 ) {
@@ -61,7 +69,7 @@ export function checkAmount(
   ) {
     return false
   }
-  return true;
+  return true
 }
 export async function startNewMakerTrxPull() {
   const makerList = await getMakerList()
@@ -128,63 +136,183 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   const makerList = await getMakerList()
   const groupData = groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
-    const chainConfig = getChainByChainId(chainId)
-    const pullTrxList = pullTrxMap.get(chainConfig.internalId)
+    // const chainConfig = getChainByChainId(chainId)
+    // const pullTrxList = pullTrxMap.get(chainConfig.internalId)
     //
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
       const fromChain = await getChainByChainId(tx.chainId)
+      if (
+        ['3', '33', '8', '88', '12', '512'].includes(fromChain.internalId) &&
+        tx.status === TransactionStatus.PENDING
+      ) {
+        tx.status = TransactionStatus.COMPLETE
+      }
+      if (tx.status != TransactionStatus.COMPLETE) {
+        accessLogger.info('Incorrect transaction status: ' + JSON.stringify(tx))
+        continue
+      }
       const result = orbiterCore.getPTextFromTAmount(
         fromChain.internalId,
         tx.value.toString()
       )
       if (!result.state) {
+        accessLogger.info(
+          'Incorrect transaction getPTextFromTAmount: ' + JSON.stringify(tx),
+          JSON.stringify(result)
+        )
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000
       const toChain = await getChainByInternalId(String(toChainInternalId))
-      let market:IMarket | undefined;
+      const fromTokenInfo = fromChain.tokens.find((row) =>
+        equals(row.address, String(tx.tokenAddress))
+      )
+      if (isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
+        accessLogger.info(
+          'Refund The query currency information does not exist: ' +
+            JSON.stringify(tx)
+        )
+        continue
+      }
+      let market: IMarket | undefined
       for (const m of makerList) {
         const marketArr = newExpanPool(m)
         market = marketArr.find(
           (row) =>
             equals(row.fromChain.id, fromChain.internalId) &&
-            equals(row.toChain.id, toChain.internalId)
+            equals(row.toChain.id, toChain.internalId) &&
+            equals(row.fromChain.tokenAddress, tx.tokenAddress) &&
+            equals(row.toChain.symbol, tx.symbol)
         )
         if (market) {
           break
         }
       }
-      if (market && checkAmount(fromChain.internalId, toChain.internalId, tx.value.toString(), market)) {
+      if (isEmpty(market)) {
+        accessLogger.info(
+          'Payment collection query Market  does not exist' + JSON.stringify(tx)
+        )
+        continue
+      }
+      if (
+        market &&
+        checkAmount(
+          fromChain.internalId,
+          toChain.internalId,
+          tx.value.toString(),
+          market
+        )
+      ) {
         // pullTrxList!.unshift(tx.hash.toLowerCase())
-        await handleMakerPaymentCollection(tx, market)
+        await handleMakerPaymentCollection(market, tx)
       }
     }
     // cache.set('hashList', pullTrxList)
   }
 }
 export async function handleMakerPaymentCollection(
-  tx: ITransaction,
-  market: any
+  market: IMarket,
+  tx: ITransaction
 ) {
-  console.log('market:', market)
-  console.log('trx:', tx)
-
-  const chainConfig = getChainByInternalId(tx.chainId)
-  if (chainConfig) {
-    switch (Number(chainConfig.internalId)) {
-      case 3:
-      case 33:
-        //
-        break
-      case 5:
-      case 1:
-        //
-        break
+  const chainConfig = getChainByChainId(tx.chainId)
+  // check send
+  const transactionID = newMakeTransactionID(
+    tx.from,
+    chainConfig.internalId,
+    tx.nonce,
+    tx.symbol
+  )
+  // valid is exits
+  try {
+    const makerNode = await repositoryMakerNode().findOne({
+      transactionID,
+    })
+    if (makerNode) {
+      accessLogger.info('TransactionID was exist: ' + transactionID)
+      return
     }
+  } catch (error) {
+    errorLogger.error('isHaveSqlError =', error)
+    return
+  }
+  try {
+    await confirmTransactionSendMoneyBack(market, tx)
+  } catch (error) {
+    errorLogger.error('confirmTransactionSendMoenyBack Error =', error)
   }
 }
 
+export async function confirmTransactionSendMoneyBack(
+  market: IMarket,
+  tx: ITransaction
+) {
+  const fromChainID = market.fromChain.id
+  const toChainID = market.toChain.id
+  const toChainName = market.toChain.name
+  const transactionID = newMakeTransactionID(
+    tx.from,
+    fromChainID,
+    tx.nonce,
+    tx.symbol
+  )
+  const makerAddress = market.makerAddress
+  accessLogger.info(
+    `market send money back =`,
+    JSON.stringify(tx),
+    `${market.fromChain.name} - ${market.toChain.name}`
+  )
+  accessLogger.info(`newTransacioonID =`, transactionID)
+  await repositoryMakerNode()
+    .insert({
+      transactionID: transactionID,
+      userAddress: tx.from,
+      makerAddress: makerAddress,
+      fromChain: fromChainID,
+      toChain: toChainID,
+      formTx: tx.hash,
+      fromTimeStamp: String(tx.timestamp),
+      fromAmount: tx.value.toString(),
+      formNonce: String(tx.nonce),
+      txToken: tx.tokenAddress,
+      state: 1,
+    })
+    .then(async () => {
+      const toTokenAddress = market.toChain.tokenAddress
+      const params = [
+        makerAddress,
+        transactionID,
+        fromChainID,
+        toChainID,
+        toChainName,
+        toTokenAddress,
+        tx.value.toNumber(),
+        tx.from,
+        market.pool,
+        tx.nonce,
+      ]
+      accessLogger.info(
+        'ConfirmTransactionSendMoneyBack SendTransaction Params:',
+        JSON.stringify(params)
+      )
+      sendTransaction(
+        makerAddress,
+        transactionID,
+        fromChainID,
+        toChainID,
+        toChainName,
+        toTokenAddress,
+        tx.value.toNumber(),
+        tx.from,
+        market.pool,
+        tx.nonce
+      )
+    })
+    .catch((error) => {
+      errorLogger.error('newTransactionSqlError =', error)
+      return
+    })
+}
 export function newExpanPool(pool) {
   return [
     {

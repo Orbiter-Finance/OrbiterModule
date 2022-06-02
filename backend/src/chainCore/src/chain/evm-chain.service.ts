@@ -13,7 +13,7 @@ import {
   IEVMChain,
   QueryTransactionsResponse,
 } from '../types/chain'
-import { decodeMethod, IERC20_ABI_JSON } from '../utils'
+import { decodeMethod, equals, IERC20_ABI_JSON } from '../utils'
 import logger from '../utils/logger'
 
 export abstract class EVMChain implements IEVMChain {
@@ -83,7 +83,7 @@ export abstract class EVMChain implements IEVMChain {
       input,
       ...extra
     } = trx
-    
+
     const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
     if (!trxRcceipt) {
       return null
@@ -112,7 +112,7 @@ export abstract class EVMChain implements IEVMChain {
       timestamp: Number(block.timestamp),
       confirmations,
       extra,
-      source: 'rpc'
+      source: 'rpc',
     })
     if (trxRcceipt.status) {
       newTx.status = TransactionStatus.COMPLETE
@@ -130,9 +130,8 @@ export abstract class EVMChain implements IEVMChain {
         const decodeInputData = decodeMethod(String(input), to.toLowerCase())
         // Compatible with transaction data from other chains to dydx
         if (
-          this.chainConfig.contracts.findIndex(
-            (addr) => addr.toLowerCase() === to.toLowerCase()
-          ) !== -1
+          this.chainConfig.contracts.findIndex((addr) => equals(addr, to)) !==
+          -1
         ) {
           if (decodeInputData.name === 'transferERC20') {
             decodeInputData.params.forEach((el) => {
@@ -181,11 +180,11 @@ export abstract class EVMChain implements IEVMChain {
     return new BigNumber(tokenBalance)
   }
   public async getTokenDecimals(tokenAddress: string): Promise<number> {
-    if (tokenAddress.toLowerCase() === this.chainConfig.nativeCurrency.address.toLowerCase()) {
-      return this.chainConfig.nativeCurrency.decimals;
+    if (equals(tokenAddress, this.chainConfig.nativeCurrency.address)) {
+      return this.chainConfig.nativeCurrency.decimals
     }
-    const token = await this.chainConfig.tokens.find(
-      (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+    const token = await this.chainConfig.tokens.find((token) =>
+      equals(token.address, tokenAddress)
     )
     if (token) {
       return token.decimals
@@ -203,11 +202,11 @@ export abstract class EVMChain implements IEVMChain {
     return NaN
   }
   public async getTokenSymbol(tokenAddress: string): Promise<string> {
-    if (tokenAddress.toLowerCase() === this.chainConfig.nativeCurrency.address.toLowerCase()) {
-      return this.chainConfig.nativeCurrency.symbol;
+    if (equals(tokenAddress, this.chainConfig.nativeCurrency.address)) {
+      return this.chainConfig.nativeCurrency.symbol
     }
-    const token = await this.chainConfig.tokens.find(
-      (token) => token.address.toLowerCase() === tokenAddress.toLowerCase()
+    const token = await this.chainConfig.tokens.find((token) =>
+      equals(token.address, tokenAddress)
     )
     if (token) {
       return token.symbol

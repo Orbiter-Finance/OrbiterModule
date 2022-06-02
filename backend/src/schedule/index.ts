@@ -122,7 +122,7 @@ export const startWorkerJobs = async () => {
 
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
-    waittingStartMaker()
+    // waittingStartMaker()
     startNewMakerTrxPull()
   }
 }

@@ -177,7 +177,7 @@ export abstract class EvmExplorerService extends EVMChain {
           extra,
           source: 'api'
         })
-        if (newTx.input === 'deprecated') {
+        if (equals(newTx.input,'deprecated')) {
           // is deprecated
           const rpcTx = await this.web3.eth.getTransaction(hash)
           if (rpcTx) {

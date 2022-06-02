@@ -11,7 +11,7 @@ import {
   Transaction,
   TransactionStatus,
 } from '../types'
-import { HttpGet } from '../utils'
+import { equals, HttpGet } from '../utils'
 /**
  * ZKSync 1.0
  * https://docs.zksync.io/apiv02-docs/
@@ -28,9 +28,9 @@ export class ZKSync implements IChain {
   public async getTokenList() {
     if (this.tokens.length <= 0) {
       const { status, result } = await HttpGet(
-        `${this.chainConfig.api.url}/tokens?from=0&limit=100&direction=newer`,
+        `${this.chainConfig.api.url}/tokens?from=0&limit=100&direction=newer`
       )
-      if (status === 'success' && Array.isArray(result.list)) {
+      if (equals(status, 'success') && Array.isArray(result.list)) {
         this.tokens = result.list.map((row) => {
           return {
             id: row.id,
@@ -46,21 +46,25 @@ export class ZKSync implements IChain {
     return this.tokens
   }
   public async getTokenInfo(idOrAddrsss: string | number) {
-    if (idOrAddrsss === 0 || idOrAddrsss === '0' ||idOrAddrsss === '0x0000000000000000000000000000000000000000') {
-      return this.chainConfig.nativeCurrency as Token;
+    if (
+      idOrAddrsss === 0 ||
+      idOrAddrsss === '0' ||
+      idOrAddrsss === '0x0000000000000000000000000000000000000000'
+    ) {
+      return this.chainConfig.nativeCurrency as Token
     }
     const tokens = await this.getTokenList()
     if (typeof idOrAddrsss === 'string') {
       // check local config
-      const localToken = this.chainConfig.tokens.find(
-        (t) => t.address.toLowerCase() === idOrAddrsss.toLowerCase()
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
       )
       if (localToken) {
         return localToken
       }
-      return tokens.find((token) => token.address === idOrAddrsss)
+      return tokens.find((token) => equals(token.address, idOrAddrsss))
     } else {
-      return tokens.find((token) => token.id === idOrAddrsss)
+      return tokens.find((token) => equals(token.id, idOrAddrsss))
     }
   }
   getConfirmations(hashOrHeight: HashOrBlockNumber): Promise<number> {
@@ -91,7 +95,7 @@ export class ZKSync implements IChain {
     if (result && result.list && result.list.length > 0) {
       for (const tx of result.list) {
         const { txHash, blockNumber, blockIndex, op, createdAt, ...extra } = tx
-        const { from, to, amount, fee, nonce,token } = op
+        const { from, to, amount, fee, nonce, token } = op
         let txStatus = TransactionStatus.Fail
         if (extra.status === 'committed') {
           txStatus = TransactionStatus.PENDING
@@ -116,7 +120,7 @@ export class ZKSync implements IChain {
           status: txStatus,
           symbol: '',
         })
-        const tokenInfo = await this.getTokenInfo(token);
+        const tokenInfo = await this.getTokenInfo(token)
         if (tokenInfo) {
           trx.symbol = tokenInfo.symbol
           trx.tokenAddress = tokenInfo.address
@@ -131,12 +135,15 @@ export class ZKSync implements IChain {
     tokenAddress: string,
     filter: Partial<QueryTxFilterZKSync> = {}
   ): Promise<QueryTransactionsResponse> {
-    return (await this.getTransactions(address, filter)).filter(
-      (tx) => tx.tokenAddress === tokenAddress
+    return (await this.getTransactions(address, filter)).filter((tx) =>
+      equals(tx.tokenAddress, tokenAddress)
     )
   }
   public async getBalance(address: string): Promise<BigNumber> {
-    return this.getTokenBalance(address,this.chainConfig.nativeCurrency.address)
+    return this.getTokenBalance(
+      address,
+      this.chainConfig.nativeCurrency.address
+    )
   }
   public async getDecimals(): Promise<number> {
     return this.chainConfig.nativeCurrency.decimals
@@ -145,7 +152,7 @@ export class ZKSync implements IChain {
     address: string,
     tokenAddress: string
   ): Promise<BigNumber> {
-    const token = await this.getTokenInfo(tokenAddress);
+    const token = await this.getTokenInfo(tokenAddress)
     if (!token) {
       throw new Error(`${tokenAddress} Token Not Exists`)
     }

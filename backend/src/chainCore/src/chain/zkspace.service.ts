@@ -10,7 +10,7 @@ import {
   Transaction,
   TransactionStatus,
 } from '../types'
-import { HttpGet } from '../utils'
+import { equals, HttpGet } from '../utils'
 /**
  * https://zks.app/wallet/token
  * https://zkspace.info/
@@ -52,21 +52,25 @@ export class ZKSpace implements IChain {
     return this.tokens
   }
   public async getTokenInfo(idOrAddrsss: string | number) {
-    if (idOrAddrsss === 0 || idOrAddrsss === '0' ||idOrAddrsss === '0x0000000000000000000000000000000000000000') {
-      return this.chainConfig.nativeCurrency as Token;
+    if (
+      idOrAddrsss === 0 ||
+      idOrAddrsss === '0' ||
+      idOrAddrsss === '0x0000000000000000000000000000000000000000'
+    ) {
+      return this.chainConfig.nativeCurrency as Token
     }
     const tokens = await this.getTokenList()
     if (typeof idOrAddrsss === 'string') {
       // check local config
-      const localToken = this.chainConfig.tokens.find(
-        (t) => t.address.toLowerCase() === idOrAddrsss.toLowerCase()
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
       )
       if (localToken) {
         return localToken
       }
-      return tokens.find((token) => token.address === idOrAddrsss)
+      return tokens.find((token) => equals(token.address, idOrAddrsss))
     } else {
-      return tokens.find((token) => token.id === idOrAddrsss)
+      return tokens.find((token) => equals(token.id, idOrAddrsss))
     }
   }
   getConfirmations(hashOrHeight: HashOrBlockNumber): Promise<number> {
@@ -141,7 +145,7 @@ export class ZKSpace implements IChain {
         if (tokenInfo) {
           trx.tokenAddress = tokenInfo.address
           trx.symbol = tokenInfo.symbol
-          trx.value = trx.value.multipliedBy(10**tokenInfo.decimals)
+          trx.value = trx.value.multipliedBy(10 ** tokenInfo.decimals)
         }
         response.txlist.push(trx)
       }
@@ -210,7 +214,7 @@ export class ZKSpace implements IChain {
         if (tokenInfo) {
           trx.tokenAddress = tokenInfo.address
           trx.symbol = tokenInfo.symbol
-          trx.value = trx.value.multipliedBy(10**tokenInfo.decimals)
+          trx.value = trx.value.multipliedBy(10 ** tokenInfo.decimals)
         }
         response.txlist.push(trx)
       }
@@ -238,7 +242,7 @@ export class ZKSpace implements IChain {
       `${this.chainConfig.api.url}/overview/account/${address}`
     )
     if (success && Array.isArray(data)) {
-      const mainToken = data.find((row) => row.id === token.id)
+      const mainToken = data.find((row) => equals(row.id,token.id))
       return new BigNumber(mainToken && mainToken.amount)
     }
     return new BigNumber(0)
