@@ -457,23 +457,17 @@ async function watchTransfers(pool, state) {
           return
         }
         if (
-          event.returnValues.to.toLowerCase() === makerAddress.toLowerCase()
+          event.returnValues.to.toLowerCase() === makerAddress.toLowerCase() &&
+          checkData(event.returnValues.value, event.transactionHash)
         ) {
-          if (
-            checkData(event.returnValues.value, event.transactionHash) === true
-          ) {
-            confirmFromTransaction(pool, state, event.transactionHash)
-          }
+          confirmFromTransaction(pool, state, event.transactionHash)
         } else {
           accessLogger.info('over')
         }
       })
       .on('connected', (subscriptionId: string) => {
         accessLogger.info(
-          'contract subscriptionId =',
-          subscriptionId,
-          ' time =',
-          getTime()
+          `contract subscriptionId =${subscriptionId} time =${getTime()}`
         )
       })
   }
@@ -952,8 +946,6 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           let firstTxTime = originZksList[0].created_at
             ? originZksList[0].created_at
             : 0
-            ? originZksList[0].created_at
-            : 0
           let whileTag = true
           while (whileTag) {
             if (
@@ -990,7 +982,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
           zksList = allZksList
           allZksList = []
           for (let zksTransaction of zksList) {
-            if (zksLastTimeStamp[toChain] < zksTransaction.created_at) {
+            if (zksLastTimeStamp[toChain] <= zksTransaction.created_at) {
               zksLastTimeStamp[toChain] = zksTransaction.created_at
               accessLogger.info(
                 `zksLastTimeStamp[${toChain}] = ${zksLastTimeStamp[toChain]}`
@@ -1309,18 +1301,18 @@ function confirmFromTransaction(
   accessLogger.info('confirmFromTransaction =', getTime())
   const ticker = async () => {
     const makerAddress = pool.makerAddress
-    var fromChain = state ? pool.c2Name : pool.c1Name
-    var toChain = state ? pool.c1Name : pool.c2Name
-    var tokenAddress = state ? pool.t2Address : pool.t1Address
-    var toChainID = state ? pool.c1ID : pool.c2ID
-    var fromChainID = state ? pool.c2ID : pool.c1ID
+    const fromChain = state ? pool.c2Name : pool.c1Name
+    const toChain = state ? pool.c1Name : pool.c2Name
+    const tokenAddress = state ? pool.t2Address : pool.t1Address
+    const toChainID = state ? pool.c1ID : pool.c2ID
+    const fromChainID = state ? pool.c2ID : pool.c1ID
     const trxConfirmations = await getConfirmations(fromChain, txHash)
 
     // TODO
     if (!trxConfirmations) {
       return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
-    var trx = trxConfirmations.trx
+    const trx = trxConfirmations.trx
 
     accessLogger.info(
       'Transaction with hash ' +
@@ -1330,11 +1322,24 @@ function confirmFromTransaction(
         ' confirmation(s)'
     )
     var transactionID = trx.from.toLowerCase() + fromChainID + trx.nonce
-
     // ERC20's transfer input length is 138(include 0x), when the length > 138, it is cross address transfer
     let amountStr = '0'
     let transferExt: CrossAddressExt | undefined = undefined
-    if (trx.input.length <= 138) {
+    if (fromChainID == 14 || fromChainID == 514) {
+      let amountIndex = -1
+      const theMakerAddress = makerAddress
+        .toLowerCase()
+        .substr(2, makerAddress.length - 1)
+      const thekeyIndex = trx.input.indexOf(theMakerAddress)
+      if (thekeyIndex > -1) {
+        amountIndex = thekeyIndex + theMakerAddress.length
+        const hexAmount = trx.input.slice(amountIndex, amountIndex + 64)
+        amountStr = Web3.utils.hexToNumberString('0x' + hexAmount)
+      } else {
+        errorLogger.error('from zk2 the amount is incorrect')
+        return
+      }
+    } else if (trx.input.length <= 138) {
       if (isEthTokenAddress(tokenAddress)) {
         amountStr = Web3.utils.hexToNumberString(Web3.utils.toHex(trx.value))
       } else {
@@ -1482,7 +1487,12 @@ function confirmToTransaction(
       let info = <any>{}
       try {
         let toWeb3
-        if (Chain === 'metis' || Chain === 'metis_test') {
+        if (
+          Chain === 'metis' ||
+          Chain === 'metis_test' ||
+          Chain === 'zksync2' ||
+          Chain === 'zksync2_test'
+        ) {
           //no use alchemy provider
           toWeb3 = new Web3(makerConfig[Chain].httpEndPoint)
         } else {
@@ -1763,7 +1773,12 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
   accessLogger.info('getConfirmations =', getTime())
   try {
     let web3
-    if (fromChain === 'metis' || fromChain === 'metis_test') {
+    if (
+      fromChain === 'metis' ||
+      fromChain === 'metis_test' ||
+      fromChain === 'zksync2' ||
+      fromChain === 'zksync2_test'
+    ) {
       //no use alchemy provider
       web3 = new Web3(makerConfig[fromChain].httpEndPoint)
     } else {
@@ -2005,7 +2020,6 @@ export async function sendTransaction(
         accessLogger.info(
           `sendTransaction toChain ${toChain} state = 20  update success`
         )
-
         // todo need result_nonce
         // if (response.result_nonce > 0) {
         //   // insert or update todo

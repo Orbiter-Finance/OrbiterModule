@@ -147,7 +147,7 @@ export async function saveBalanceAlarms(
 
 export async function getMakerPullStart() {
   const value = await getSettingValueJson(MAKER_PULL_START_KEY)
-  
+
   const makerPullStart = DEFAULT_MAKER_PULL_START
   if (value?.totalPull) {
     makerPullStart.totalPull = Number(value.totalPull)
@@ -160,7 +160,7 @@ export async function getMakerPullStart() {
 }
 
 export async function saveMakerPullStart(value: any) {
-  
+
 }
 
 type DoBalanceAlarmItem = {
@@ -198,9 +198,8 @@ export const doBalanceAlarm = new (class {
       alerts.push({
         labels: {
           alertname: 'Not enough balance',
-          instance: `${item.chainName}-${
-            item.tokenName
-          }: ${item.balance.toFixed(6)}`,
+          instance: `${item.chainName}-${item.tokenName
+            }: ${item.balance.toFixed(6)}`,
           serverity: 'critical',
         },
       })

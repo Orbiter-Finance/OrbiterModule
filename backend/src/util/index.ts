@@ -34,9 +34,6 @@ export function equalsIgnoreCase(value1: string, value2: string): boolean {
     return false
   }
 
-  if (value1 == value2) {
-    return true
-  }
   if (value1.toUpperCase() == value2.toUpperCase()) {
     return true
   }

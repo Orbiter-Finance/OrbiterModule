@@ -56,6 +56,12 @@ async function getTokenBalance(
           }
         }
         break
+      case 'zksync2':
+        {
+          const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+          value = await getBalanceByCommon(web3, makerAddress, tokenAddress)
+        }
+        break
       case 'loopring':
         {
           let api = makerConfig.loopring.api
@@ -73,9 +79,13 @@ async function getTokenBalance(
           if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
             accountID = accountInfo.data.accountId
           }
-          const lpTokenInfo = tokenInfos.find((item) => item.address.toLowerCase() === tokenAddress.toLowerCase())
+          const lpTokenInfo = tokenInfos.find(
+            (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
+          )
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0}`
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${
+              lpTokenInfo ? lpTokenInfo.tokenId : 0
+            }`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
             if (balanceData.data && balanceData.data.length == 0) {
@@ -104,7 +114,7 @@ async function getTokenBalance(
       case 'metis':
         const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
         if (tokenAddress) {
-          value = await getBalanceByMetis(web3, makerAddress, tokenAddress)
+          value = await getBalanceByCommon(web3, makerAddress, tokenAddress)
         } else {
           value = await web3.eth.getBalance(makerAddress)
         }
@@ -137,17 +147,27 @@ async function getTokenBalance(
           httpEndPoint = makerConfig.zkspace_test.httpEndPoint
         }
         let tokenInfos = await ZKSpaceHelper.getTokenInfos(httpEndPoint)
-        const zksTokenInfo = tokenInfos.find((item) => item.address.toLowerCase() == (tokenAddress ? tokenAddress.toLowerCase() : "0x" + "0".repeat(40)))
-        let defaultIndex = balanceInfo.findIndex((item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0))
-        value = defaultIndex > -1 ? balanceInfo[defaultIndex].amount * 10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) + '' : '0'
+        const zksTokenInfo = tokenInfos.find(
+          (item) =>
+            item.address.toLowerCase() ==
+            (tokenAddress ? tokenAddress.toLowerCase() : '0x' + '0'.repeat(40))
+        )
+        let defaultIndex = balanceInfo.findIndex(
+          (item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0)
+        )
+        value =
+          defaultIndex > -1
+            ? balanceInfo[defaultIndex].amount *
+                10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
+              ''
+            : '0'
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
           break
         }
-
-        // when empty tokenAddress or 0x00...000, get eth balances
+        // when empty tokenAddress or 0x00...000  get eth balances
         if (!tokenAddress || isEthTokenAddress(tokenAddress)) {
           value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
             makerAddress
@@ -186,7 +206,7 @@ async function getTokenBalance(
  * @param tokenAddress
  * @returns
  */
-async function getBalanceByMetis(
+async function getBalanceByCommon(
   web3: Web3,
   makerAddress: string,
   tokenAddress: string
@@ -280,21 +300,32 @@ export async function getWealthsChains(makerAddress: string) {
   for (const item of wealthsChains) {
     // add eth
     const ethBalancesItem = item.balances.find((item2) => {
-      return !item2.tokenAddress || isEthTokenAddress(item2.tokenAddress)
+      return (
+        !item2.tokenAddress ||
+        isEthTokenAddress(item2.tokenAddress) ||
+        (CHAIN_INDEX[item.chainId] == 'zksync2' &&
+          item2.tokenAddress.toLowerCase() == `0x${'e'.repeat(40)}`)
+      )
     })
+    //if zk2 eth exist,ignore
+    if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
+      continue
+    }
     if (ethBalancesItem) {
       // clear eth's tokenAddress
       ethBalancesItem.tokenAddress = ''
     } else {
       // add eth balances item
+      let theTokenName = 'ETH'
+      if (CHAIN_INDEX[item.chainId] == 'polygon') {
+        theTokenName = 'MATIC'
+      } else if (CHAIN_INDEX[item.chainId] == 'metis') {
+        theTokenName = 'METIS'
+      }
       item.balances.unshift({
-        tokenAddress: '',
-        tokenName:
-          CHAIN_INDEX[item.chainId] == 'polygon'
-            ? 'MATIC'
-            : CHAIN_INDEX[item.chainId] == 'metis'
-              ? 'METIS'
-              : 'ETH',
+        tokenAddress:
+          CHAIN_INDEX[item.chainId] == 'zksync2' ? `0x${'e'.repeat(40)}` : '',
+        tokenName: theTokenName,
         decimals: 18,
         value: '',
       })
