@@ -1967,7 +1967,18 @@ export async function sendTransaction(
     )
     return
   }
-  accessLogger.info(`${transactionID} exec send `, tokenInfo.id,tokenInfo.name,tokenInfo.address)
+  accessLogger.info(`${transactionID} exec send `, JSON.stringify({
+    makerAddress,
+    toAddress,
+    toChain,
+    fromChainID,
+    toChainID,
+    tokenAddress,
+    tAmount,
+    result_nonce,
+    nonce,
+    tokenInfo
+  }))
   await send(
     makerAddress,
     toAddress,
