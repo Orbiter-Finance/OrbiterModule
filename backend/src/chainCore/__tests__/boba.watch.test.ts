@@ -1,8 +1,8 @@
 import { getChainByInternalId } from '../src/utils'
 import BobaWatch from '../src/watch/boba.watch'
 import chains from '../src/chain'
-const bobaService = new chains.BobaChain(getChainByInternalId('13'))
-const address = '0x80C67432656d59144cEFf962E8fAF8926599bCF8'
+const bobaService = new chains.BobaChain(getChainByInternalId('513'))
+const address = '0x0043d60e87c5dd08c86c3123340705a1556c4719'
 const boba = new BobaWatch(bobaService).addWatchAddress(address)
 // describe('boba watch', () => {
 //   test('boba execGraphqlTransactions', async () => {
@@ -12,8 +12,9 @@ const boba = new BobaWatch(bobaService).addWatchAddress(address)
 // })
 
 async function run() {
-  boba.apiScan()
-  // const result = await boba.apiWatchNewTransaction(address)
-  // console.log(result)
+  // boba.apiScan()
+  // boba.rpcScan()
+  const result = await boba.apiWatchNewTransaction(address)
+  console.log(result)
 }
 run()

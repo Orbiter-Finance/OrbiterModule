@@ -40,7 +40,7 @@ export default abstract class BasetWatch implements IChainWatch {
   public abstract getApiFilter(address: Address): Promise<QueryTxFilter>
   public async init() {
     let txlist: Array<string> = (await this.cache.get(`txlist`)) || []
-    if (txlist.length>=1000) {
+    if (txlist.length >= 1000) {
       txlist.splice(1000)
     }
     if (!Array.isArray(txlist)) txlist = []
@@ -107,18 +107,20 @@ export default abstract class BasetWatch implements IChainWatch {
         `${this.chain.chainConfig.internalId}:txlist`,
         pushTrx,
         (hashList: Array<string>) => {
-          hashList.forEach((hash) => {
-            if (this.pushHistory.has(hash)) {
-              const tx = this.pushHistory.get(hash)
-              if (tx) {
-                tx.status = true
+          if (hashList && Array.isArray(hashList)) {
+            hashList.forEach((hash) => {
+              if (this.pushHistory.has(hash)) {
+                const tx = this.pushHistory.get(hash)
+                if (tx) {
+                  tx.status = true
+                }
               }
-            }
-          })
-          this.cache.set(
-            'txlist',
-            Array.from(this.pushHistory.keys()).reverse()
-          )
+            })
+            this.cache.set(
+              'txlist',
+              Array.from(this.pushHistory.keys()).reverse()
+            )
+          }
           logger.info(
             `[${this.chain.chainConfig.name}] New Transaction Pushed Save DB Success TxHash List`,
             JSON.stringify(hashList)
@@ -162,7 +164,7 @@ export default abstract class BasetWatch implements IChainWatch {
         `[${this.chain.chainConfig.name}] apiWatchNewTransaction getTransactions error: ${error.message}`
       )
     }
-    return trxList.filter(tx=> tx.value.gt(0))
+    return trxList.filter((tx) => tx.value.gt(0))
   }
   public async apiScanCursor(
     address: Address,
@@ -211,9 +213,10 @@ export default abstract class BasetWatch implements IChainWatch {
       const prevCursor = await this.apiScanCursor(address)
       if (prevCursor) {
         // exec query trx
-        logger.info(`[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`)
+        logger.info(
+          `[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`
+        )
         queryTxs = await this.apiWatchNewTransaction(address)
-        console.log(JSON.stringify(queryTxs), '===queryTxs--扫到交易：')
         await this.pushMessage(address, queryTxs)
         const latest = orderBy(
           queryTxs,

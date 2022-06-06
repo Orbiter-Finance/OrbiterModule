@@ -11,7 +11,7 @@ import {
   TransactionStatus,
 } from '../types'
 import { ExchangeAPI, UserAPI } from '@loopring-web/loopring-sdk'
-import { HttpGet } from '../utils'
+import { equals, HttpGet } from '../utils'
 import logger from '../utils/logger'
 /**
  * https://beta.loopring.io/#/
@@ -55,15 +55,15 @@ export class Loopring implements IChain {
     const tokens = await this.getTokenList()
     if (typeof idOrAddrsss === 'string') {
       // check local config
-      const localToken = this.chainConfig.tokens.find(
-        (t) => t.address.toLowerCase() === idOrAddrsss.toLowerCase()
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
       )
       if (localToken) {
         return localToken
       }
-      return tokens.find((token) => token.address === idOrAddrsss)
+      return tokens.find((token) => equals(token.address, idOrAddrsss))
     } else {
-      return tokens.find((token) => token.id === idOrAddrsss)
+      return tokens.find((token) => equals(token.id, idOrAddrsss))
     }
   }
   getConfirmations(hashOrHeight: HashOrBlockNumber): Promise<number> {
@@ -112,11 +112,18 @@ export class Loopring implements IChain {
         String(this.chainConfig.api.key)
       )
       if (resData['code']) {
-        logger.error('Loopring getUserTransferList Fail:',JSON.stringify(resData))
+        logger.error(
+          'Loopring getUserTransferList Fail:',
+          JSON.stringify(resData)
+        )
         return response
       }
-      const userTransfers:any =resData.userTransfers;
-      if (userTransfers && Array.isArray(userTransfers) && userTransfers.length>0) {
+      const userTransfers: any = resData.userTransfers
+      if (
+        userTransfers &&
+        Array.isArray(userTransfers) &&
+        userTransfers.length > 0
+      ) {
         for (const tx of userTransfers) {
           const {
             id,
@@ -168,7 +175,7 @@ export class Loopring implements IChain {
             response.txlist.push(trxDTO)
           }
         }
-      } 
+      }
     } catch (error) {
       console.error('Get loopring txlist faild: ', error.message)
     }

@@ -98,7 +98,7 @@
     "tokens": [
       {
         "name": "Ether (WETH)",
-        "symbol": "WETH",
+        "symbol": "ETH",
         "decimals": 18,
         "address": "0x420000000000000000000000000000000000000a"
       },
@@ -121,6 +121,7 @@
     "name": "ZKSync Mainnet",
     "debug":true,
     "nativeCurrency": {
+      "id":0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -131,6 +132,7 @@
     "contracts":[],
     "tokens": [
       {
+        "id":2,
         "name": "USDC",
         "symbol": "USDC",
         "decimals": 6,
@@ -161,7 +163,7 @@
     "tokens": [
       {
         "name": "Wrapped Ether",
-        "symbol": "WETH",
+        "symbol": "ETH",
         "decimals": 18,
         "address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619"
       },
@@ -212,6 +214,7 @@
     "internalId": "12",
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
+      "id":0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -222,6 +225,7 @@
     "contracts":[],
     "tokens": [
       {
+        "id":4,
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
@@ -293,6 +297,7 @@
     "internalId": "9",
     "name": "Loopring Mainnet",
     "nativeCurrency": {
+      "id":0,
       "name": "Ethereum",
       "symbol": "ETH",
       "decimals": 0,

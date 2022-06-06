@@ -22,9 +22,8 @@ import {
 } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
-import { axiosPlus } from '../util/Axios'
 import { ITransaction, TransactionStatus } from '../chainCore/src/types'
-import { getChainByChainId } from '../chainCore/src/utils'
+import { equals, getChainByChainId } from '../chainCore/src/utils'
 import logger from '../chainCore/src/utils/logger'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -427,14 +426,21 @@ export class ServiceMakerPull {
     const toAddress = makerPull.toAddress.toLowerCase()
     // if maker out
     if (fromAddress == makerAddress) {
-      const targetMP = await repositoryMakerPull().findOne({
-        makerAddress: makerAddress, //  same makerAddress
-        fromAddress: makerPull.toAddress,
-        toAddress: fromAddress,
-        amount_flag: String(makerPull.chainId),
-        nonce: makerPull.amount_flag,
-        tx_status: Not('rejected'),
-      })
+      const targetMP = await repositoryMakerPull().findOne(
+        {
+          makerAddress: makerAddress, //  same makerAddress
+          fromAddress: toAddress,
+          toAddress: fromAddress,
+          amount_flag: String(makerPull.chainId),
+          nonce: makerPull.amount_flag,
+          tx_status: Not('rejected'),
+        },
+        {
+          order: {
+            txTime: 'DESC',
+          },
+        }
+      )
       if (targetMP) {
         const transactionID = makeTransactionID(
           targetMP.fromAddress,
@@ -1740,159 +1746,6 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     BOBA_LAST[makerPullLastKey] = makerPullLastData
   }
-  /**
-   * pull zksync2
-   * @param api
-   */
-  async zksync2(chainInfo) {
-    const makerPullLastKey = `${this.makerAddress}:${this.tokenAddress}`
-    let makerPullLastData = ZKSYNC2_LAST[makerPullLastKey]
-    if (!makerPullLastData) {
-      makerPullLastData = new MakerPullLastData()
-    }
-    let { lastMakePull } = await this.getLastMakerPull(makerPullLastData)
-    //// from web3 get txList
-    // const tokenAddress = this.tokenAddress.toLowerCase()
-    // if (zk2BlockNumberInfo[tokenAddress]) {
-    //   const nowTimeStamp = new Date().getTime()
-    //   let theTimeStamp = await this.getBlockStampByNumber(chainInfo.httpEndPoint, zk2BlockNumberInfo[tokenAddress].pointBlockNumber)
-    //   if (!makerPullLastData.roundTotal && (nowTimeStamp - Number(theTimeStamp) * 1000) > totalPull) {
-    //     makerPullLastData.roundTotal++;
-    //     zk2BlockNumberInfo[tokenAddress] = undefined
-    //   } else if (makerPullLastData.roundTotal && (nowTimeStamp - Number(theTimeStamp) * 1000) > incrementPull) {
-    //     zk2BlockNumberInfo[tokenAddress] = undefined
-    //   }
-    // }
-    // let data = await this.zksync2GetTxlistByWeb3(chainInfo, this.tokenAddress, this.makerAddress)
-
-    // when endblock is empty, will end latest
-    const endblock = lastMakePull ? lastMakePull.txBlock : ''
-
-    let data = await this.zksync2GetTxlistByApi(
-      chainInfo,
-      endblock,
-      makerPullLastData.pullCount
-    )
-    const promiseMethods: (() => Promise<unknown>)[] = []
-    for (const item of data) {
-      // contractAddress = 0x0...0
-      let contractAddress = item.contractAddress
-      // checks
-      if (!equalsIgnoreCase(contractAddress, this.tokenAddress)) {
-        continue
-      }
-      const amount_flag = getAmountFlag(this.chainId, item.value)
-      // save
-      const makerPull = (lastMakePull = <MakerPull>{
-        chainId: this.chainId,
-        makerAddress: this.makerAddress,
-        tokenAddress: contractAddress,
-        data: JSON.stringify(item),
-        amount: item.value,
-        amount_flag,
-        nonce: item.nonce,
-        fromAddress: item.from,
-        toAddress: item.to,
-        txBlock: item.blockNumber,
-        txHash: item.hash,
-        txTime: new Date(Number(item.timeStamp) * 1000),
-        gasCurrency: 'ETH',
-        gasAmount: item.gasAmount ? item.gasAmount : '0',
-        tx_status:
-          item.confirmations >= FINALIZED_CONFIRMATIONS
-            ? 'finalized'
-            : 'committed',
-      })
-      promiseMethods.push(async () => {
-        await savePull(makerPull)
-        // compare
-        await this.singleCompareData(makerPull)
-      })
-    }
-    await this.doPromisePool(promiseMethods)
-    // set ZK2_LAST
-
-    if (
-      lastMakePull &&
-      makerPullLastData.makerPull &&
-      lastMakePull.txBlock == makerPullLastData.makerPull.txBlock
-    ) {
-      makerPullLastData.pullCount++
-    }
-    makerPullLastData.makerPull = lastMakePull
-    ZKSYNC2_LAST[makerPullLastKey] = makerPullLastData
-  }
-
-  private async zksync2GetTxlistByApi(chainInfo, endblock, pullCount) {
-    let startBlockNumber = 0
-    if (endblock) {
-      startBlockNumber =
-        Number(endblock) - (pullCount + 1) * 5000 > 0
-          ? Number(endblock) - (pullCount + 1) * 5000
-          : 0
-    }
-    try {
-      const respData = await axiosPlus('get', chainInfo.api.endPoint, {
-        module: 'account',
-        action: 'tokentx',
-        address: this.makerAddress,
-        page: 1,
-        offset: 0,
-        startblock: startBlockNumber,
-        endblock: endblock ? endblock : 'latest',
-        sort: 'desc',
-      })
-      if (respData.status == '1' && respData.result) {
-        const originTxList: any = respData.result
-        const realTxList: any[] = []
-        for (let item of originTxList) {
-          if (item.to.toLowerCase() == this.makerAddress.toLowerCase()) {
-            realTxList.push(item)
-          }
-        }
-        while (originTxList.length) {
-          if (
-            originTxList[0].from.toLowerCase() ==
-            this.makerAddress.toLowerCase()
-          ) {
-            let txIndex = realTxList.findIndex(
-              (item) => item.hash == originTxList[0].hash
-            )
-            if (
-              txIndex > 0 &&
-              realTxList[txIndex].logIndex < originTxList[0].hash
-            ) {
-              const temp = realTxList[txIndex].logIndex
-              realTxList[txIndex] = originTxList[0]
-              realTxList[txIndex].gasAmount = temp.value
-              realTxList[txIndex].feeTokenAddress = temp.contractAddress
-              realTxList[txIndex].feeTokenSymbol = temp.tokenSymbol
-            } else if (
-              txIndex > 0 &&
-              realTxList[txIndex].logIndex > originTxList[0].hash
-            ) {
-              realTxList[txIndex].gasAmount = originTxList[0].value
-              realTxList[txIndex].feeTokenAddress =
-                originTxList[0].contractAddress
-              realTxList[txIndex].feeTokenSymbol = originTxList[0].tokenSymbol
-            } else {
-              realTxList.push(originTxList[0])
-            }
-          }
-          originTxList.splice(0, 1)
-        }
-        return realTxList
-      } else {
-        accessLogger.warn(
-          'Get tokentx/txlist faild: ' + JSON.stringify(respData)
-        )
-        return []
-      }
-    } catch (error) {
-      accessLogger.warn(`get zk2 txList error ${error.message}`)
-      return []
-    }
-  }
 
   async handleNewScanChainTrx(
     txlist: Array<ITransaction>,
@@ -1908,17 +1761,9 @@ export class ServiceMakerPull {
         continue
       }
       let makerAddress = ''
-      if (
-        makerList.find(
-          (row) => row.makerAddress.toLowerCase() === tx.from.toLowerCase()
-        )
-      ) {
+      if (makerList.find((row) => equals(row.makerAddress, tx.from))) {
         makerAddress = tx.from
-      } else if (
-        makerList.find(
-          (row) => row.makerAddress.toLowerCase() === tx.to.toLowerCase()
-        )
-      ) {
+      } else if (makerList.find((row) => equals(row.makerAddress, tx.to))) {
         makerAddress = tx.to
       }
       const chainConfig = await getChainByChainId(tx.chainId)

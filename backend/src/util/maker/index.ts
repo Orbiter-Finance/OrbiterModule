@@ -39,6 +39,8 @@ import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
+import * as chainCoreUtils from '../../chainCore/src/utils'
+import { IChainConfig } from '../../chainCore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 // import { doSms } from '../../sms/smsSchinese'
 
@@ -118,7 +120,6 @@ async function deployStarknetMaker(makerInfo: any, chainId: number) {
     errorLogger.error('Deploy starknet maker error: ' + err.message)
   }
 }
-
 
 export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
@@ -411,12 +412,7 @@ async function watchTransfers(pool, state) {
     )
     return
   }
-  const isPolygon =
-    (fromChainID == 6 || fromChainID == 66) &&
-    tokenAddress == '0x0000000000000000000000000000000000001010'
-  // const isMetis =
-  //   (fromChainID == 10 || fromChainID == 510) &&
-  //   tokenAddress == '0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000'
+  const isPolygon = fromChainID == 6 || fromChainID == 66
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
     new EthListen(
@@ -1956,14 +1952,39 @@ export async function sendTransaction(
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
   accessLogger.info(
-    `makerAddress=${makerAddress}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+    `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+  )
+  const toChainConfig: IChainConfig = chainCoreUtils.getChainByInternalId(
+    String(toChainID)
+  )
+  if (!toChainConfig || !toChainConfig.tokens) {
+    accessLogger.error(
+      `The public chain configuration for the payment does not exist, toChainId ${toChainID} `
+    )
+    return
+  }
+  const tokenInfo = toChainConfig.tokens.find((token) =>
+    chainCoreUtils.equals(token.address, tokenAddress)
+  )
+  if (!tokenInfo) {
+    accessLogger.error(
+      `The public chain Token configuration for the payment does not exist, toChainId ${toChainID} ${tokenAddress} `
+    )
+    return
+  }
+  accessLogger.info(
+    `${transactionID} exec send `,
+    tokenInfo.id,
+    tokenInfo.name,
+    tokenInfo.address
   )
   await send(
     makerAddress,
     toAddress,
     toChain,
     toChainID,
-    getTokenInfo(toChainID, tokenAddress),
+    tokenInfo,
+    // getTokenInfo(toChainID, tokenAddress),
     tokenAddress,
     tAmount,
     result_nonce,
@@ -2030,7 +2051,6 @@ export async function sendTransaction(
           accessLogger.info(
             `sendTransaction toChain ${toChain} state = 20  update success`
           )
-
           // todo need result_nonce
           // if (response.result_nonce > 0) {
           //   // insert or update todo

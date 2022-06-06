@@ -11,7 +11,8 @@ export interface Token {
   name: string
   symbol: string
   decimals: 18
-  address: string
+  address: string,
+  mainCoin?:boolean
 }
 export interface IChainConfig {
   name: string

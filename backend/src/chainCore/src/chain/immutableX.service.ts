@@ -11,7 +11,7 @@ import {
 } from '../types'
 import { ImmutableXClient } from '@imtbl/imx-sdk'
 import dayjs from 'dayjs'
-import { isEmpty, orderBy } from '../utils'
+import { equals, isEmpty, orderBy } from '../utils'
 /**
  * https://immutascan.io/
  * https://docs.x.immutable.com/docs/welcome
@@ -61,15 +61,15 @@ export class ImmutableX implements IChain {
     const tokens = await this.getTokenList()
     if (typeof idOrAddrsss === 'string') {
       // check local config
-      const localToken = this.chainConfig.tokens.find(
-        (t) => t.address.toLowerCase() === idOrAddrsss.toLowerCase()
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
       )
       if (localToken) {
         return localToken
       }
-      return tokens.find((token) => token.address === idOrAddrsss)
+      return tokens.find((token) => equals(token.address, idOrAddrsss))
     } else {
-      return tokens.find((token) => token.id === idOrAddrsss)
+      return tokens.find((token) => equals(token.id, idOrAddrsss))
     }
   }
 
