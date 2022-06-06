@@ -1557,7 +1557,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       'transactionID =',
       transactionID,
       'transferReceipt =',
-      transferReceipt
+      JSON.stringify(transferReceipt)
     )
 
     if (
@@ -1565,7 +1565,6 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       transferReceipt.success &&
       !transferReceipt.failReason
     ) {
-      accessLogger.info({ transferReceipt })
       accessLogger.info(
         'zk_Transaction with hash ' + txID + ' has been successfully confirmed'
       )
@@ -1734,7 +1733,7 @@ function confirmToZKSTransaction(
       'transactionID =',
       transactionID,
       'transferReceipt =',
-      transferReceipt
+      JSON.stringify(transferReceipt)
     )
 
     if (
@@ -1744,7 +1743,6 @@ function confirmToZKSTransaction(
       (transferReceipt.data.status === 'verified' ||
         transferReceipt.data.status === 'pending')
     ) {
-      accessLogger.info({ transferReceipt })
       accessLogger.info(
         'zks_Transaction with hash ' + txID + ' has been successfully confirmed'
       )
@@ -1949,11 +1947,12 @@ export async function sendTransaction(
     return
   }
   const tAmount = amountToSend.tAmount
+  accessLogger.info('transactionID =', transactionID)
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
-  accessLogger.info(
-    `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
-  )
+  // accessLogger.info(
+  // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+  // )
   const toChainConfig: IChainConfig = chainCoreUtils.getChainByInternalId(
     String(toChainID)
   )
@@ -1974,9 +1973,18 @@ export async function sendTransaction(
   }
   accessLogger.info(
     `${transactionID} exec send `,
-    tokenInfo.id,
-    tokenInfo.name,
-    tokenInfo.address
+    JSON.stringify({
+      makerAddress,
+      toAddress,
+      toChain,
+      fromChainID,
+      toChainID,
+      tokenAddress,
+      tAmount,
+      result_nonce,
+      nonce,
+      tokenInfo,
+    })
   )
   await send(
     makerAddress,

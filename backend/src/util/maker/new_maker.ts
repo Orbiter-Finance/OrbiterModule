@@ -80,7 +80,6 @@ export async function startNewMakerTrxPull() {
     pullTrxMap.set(intranetId, [])
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
   }
-
   scanChain.run()
 }
 async function isExistsMakerAddress(address: string) {
@@ -100,7 +99,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (!(await isExistsMakerAddress(tx.to))) {
         continue
       }
-      accessLogger.info('subscribeNewTransaction：', tx.chainId, tx.hash)
+      accessLogger.info('subscribeNewTransaction：', JSON.stringify(tx))
       const fromChain = await getChainByChainId(tx.chainId)
       if (!fromChain) {
         accessLogger.info(
@@ -198,20 +197,21 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      if (!['12', '512', '9', '99'].includes(fromChain.internalId)) {
+      if (!['9', '99'].includes(fromChain.internalId)) {
         const checkAmountResult = checkAmount(
           Number(fromChain.internalId),
           Number(toChain.internalId),
           tx.value.toString(),
           market
         )
-        if (checkAmountResult) {
+        if (!checkAmountResult) {
           accessLogger.error(
-            'checkAmount Fail',
+            'checkAmount Fail:',
             fromChain.name,
             tx.hash,
             JSON.stringify(tx)
           )
+          continue
         }
       }
       await confirmTransactionSendMoneyBack(market, tx)
@@ -249,12 +249,6 @@ export async function confirmTransactionSendMoneyBack(
   const toChainID = market.toChain.id
   const toChainName = market.toChain.name
   const makerAddress = market.makerAddress
-  accessLogger.info(
-    `market send money back =`,
-    JSON.stringify(tx),
-    `${market.fromChain.name} - ${market.toChain.name}`
-  )
-  accessLogger.info(`newTransacioonID =`, transactionID)
   await repositoryMakerNode()
     .insert({
       transactionID: transactionID,
@@ -281,13 +275,18 @@ export async function confirmTransactionSendMoneyBack(
         tx.value.toNumber(),
         tx.from,
         market.pool,
-        tx.nonce,
+        tx.nonce
       ]
       accessLogger.info(
-        'ConfirmTransactionSendMoneyBack SendTransaction Params:',
-        JSON.stringify(params)
+        `market send money back =`,
+        tx.hash,
+        `${market.fromChain.name} - ${market.toChain.name}`
       )
-      accessLogger.log('exec sendTransaction trx', JSON.stringify(tx))
+      accessLogger.info(
+        'ConfirmTransactionSendMoneyBack SendTransaction Params:',
+        tx.hash,
+          JSON.stringify(params)
+      )
       await sendTransaction(
         makerAddress,
         transactionID,
