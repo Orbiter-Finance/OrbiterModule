@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { Address, ITransaction, QueryTxFilterZKSpace } from '../types'
 import AbstractWatch from './base.watch'
 /**
@@ -33,6 +34,7 @@ export default class ZKSpaceWatch extends AbstractWatch {
       limit: 100,
       start: 0
     }
+    await this.apiScanCursor(address)
     return params as QueryTxFilterZKSpace
   }
 
@@ -41,6 +43,8 @@ export default class ZKSpaceWatch extends AbstractWatch {
   ): Promise<Array<ITransaction>> {
     const filter = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
-    return response.txlist
+    const cursor = await this.apiScanCursor(address)
+    const prevTxTime = cursor?.timestamp || dayjs().unix();
+    return response.txlist.filter((tx) => tx.timestamp > prevTxTime);
   }
 }
