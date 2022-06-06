@@ -102,7 +102,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       accessLogger.info('subscribeNewTransaction：', JSON.stringify(tx))
       const fromChain = await getChainByChainId(tx.chainId)
       if (!fromChain) {
-        accessLogger.info(
+        accessLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
           tx.chainId,
           tx.hash
@@ -116,7 +116,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         tx.status = TransactionStatus.COMPLETE
       }
       if (tx.status != TransactionStatus.COMPLETE) {
-        accessLogger.info(
+        accessLogger.error(
           'Incorrect transaction status: ',
           fromChain.name,
           tx.chainId,
@@ -125,10 +125,9 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-
       let result = orbiterCore.getPTextFromTAmount(
         Number(fromChain.internalId),
-        tx.value.toNumber()
+        tx.value.toString()
       )
       if (['9', '99'].includes(fromChain.internalId)) {
         result = {
@@ -137,7 +136,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         }
       }
       if (!result.state) {
-        accessLogger.info(
+        accessLogger.error(
           'Incorrect transaction getPTextFromTAmount: ',
           fromChain.name,
           tx.chainId,
@@ -148,7 +147,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
-        accessLogger.info(
+        accessLogger.error(
           `Transaction Amount Value Format Error: `,
           fromChain.name,
           tx.chainId,
@@ -164,7 +163,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         equals(row.address, String(tx.tokenAddress))
       )
       if (isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
-        accessLogger.info(
+        accessLogger.error(
           'Refund The query currency information does not exist: ' +
             JSON.stringify(tx)
         )
@@ -275,7 +274,7 @@ export async function confirmTransactionSendMoneyBack(
         tx.value.toNumber(),
         tx.from,
         market.pool,
-        tx.nonce
+        tx.nonce,
       ]
       accessLogger.info(
         `market send money back =`,
@@ -285,7 +284,7 @@ export async function confirmTransactionSendMoneyBack(
       accessLogger.info(
         'ConfirmTransactionSendMoneyBack SendTransaction Params:',
         tx.hash,
-          JSON.stringify(params)
+        JSON.stringify(params)
       )
       await sendTransaction(
         makerAddress,
