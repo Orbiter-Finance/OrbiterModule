@@ -147,11 +147,9 @@ function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
     new BigNumber(selectMakerInfo.tradingFee)
   )
-  // accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
   let gasFee = toAmount_tradingFee
     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
     .dividedBy(new BigNumber(1000))
-  // accessLogger.info('gasFee =', gasFee.toString())
   let digit = selectMakerInfo.precision === 18 ? 5 : 2
   // accessLogger.info('digit =', digit)
   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP)

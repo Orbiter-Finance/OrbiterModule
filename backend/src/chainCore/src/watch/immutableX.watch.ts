@@ -1,3 +1,4 @@
+import dayjs from 'dayjs'
 import { Address, QueryTxFilterIMX, ITransaction } from '../types'
 import BasetWatch from './base.watch'
 export default class ImmutableXWatch extends BasetWatch {
@@ -6,6 +7,7 @@ export default class ImmutableXWatch extends BasetWatch {
       page_size: 100,
       direction: 'desc',
     }
+    await this.apiScanCursor(address)
     return params as QueryTxFilterIMX
   }
 
@@ -14,7 +16,9 @@ export default class ImmutableXWatch extends BasetWatch {
   ): Promise<Array<ITransaction>> {
     const filter: any = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
-    return response.txlist
+    const cursor = await this.apiScanCursor(address)
+    const prevTxTime = cursor?.timestamp || dayjs().unix();
+    return response.txlist.filter((tx) => tx.timestamp > prevTxTime);
   }
   public async rpcScan() {
     throw new Error('Method not implemented.')

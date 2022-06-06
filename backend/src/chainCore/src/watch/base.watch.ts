@@ -181,7 +181,11 @@ export default abstract class BasetWatch implements IChainWatch {
       ) {
         return null
       }
-      this.cache.set(cursorKey, trx)
+      this.cache.set(cursorKey, {
+        blockNumber: trx.blockNumber,
+        hash: trx.hash,
+        timestamp:trx.timestamp,
+      })
       return trx
     } else {
       // get cursor
@@ -191,8 +195,9 @@ export default abstract class BasetWatch implements IChainWatch {
       // init
       const blockNumber = await this.chain.getLatestHeight()
       // TAG:blockNumber Whether + 1 is needed needs to be considered
-      const nowTx: Pick<Transaction, 'blockNumber' | 'timestamp'> = {
+      const nowTx: Pick<Transaction, 'blockNumber' | 'timestamp' | 'hash'> = {
         blockNumber: blockNumber,
+        hash: '',
         timestamp: dayjs().unix(),
       }
       this.cache.set(cursorKey, nowTx)
