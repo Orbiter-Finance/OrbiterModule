@@ -16,17 +16,24 @@ export function getChain(chainId: string): IChainConfig {
   if (!chain || typeof chain === 'undefined') {
     throw new Error(`No chain found matching chainId: ${chainId}`)
   }
-  chain.tokens.unshift({
-    name: chain.nativeCurrency.name,
-    symbol: chain.nativeCurrency.symbol,
-    decimals: chain.nativeCurrency.decimals,
-    address: chain.nativeCurrency.address,
-    mainCoin: true,
-  })
   chain.tokens = chain.tokens.map((row) => {
     row.mainCoin = equals(row.address, chain.nativeCurrency.address)
     return row
   })
+  if (
+    chain.tokens.findIndex((token) =>
+      equals(token.address, chain.nativeCurrency.address)
+    ) == -1
+  ) {
+    chain.tokens.unshift({
+      name: chain.nativeCurrency.name,
+      symbol: chain.nativeCurrency.symbol,
+      decimals: chain.nativeCurrency.decimals,
+      address: chain.nativeCurrency.address,
+      mainCoin: true,
+    })
+  }
+
   return chain as IChainConfig
 }
 export function getChainByInternalId(

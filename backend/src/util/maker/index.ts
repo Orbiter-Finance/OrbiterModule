@@ -39,6 +39,8 @@ import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { factoryStarknetListen } from './starknet_listen'
+import * as chainCoreUtils from '../../chainCore/src/utils'
+import { IChainConfig } from '../../chainCore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const zkTokenInfo: any[] = []
@@ -1946,8 +1948,26 @@ export async function sendTransaction(
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
   accessLogger.info(
-    `makerAddress=${makerAddress}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+    `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   )
+  const toChainConfig: IChainConfig = chainCoreUtils.getChainByInternalId(
+    String(toChainID)
+  )
+  if (!toChainConfig || !toChainConfig.tokens) {
+    accessLogger.error(
+      `The public chain configuration for the payment does not exist, toChainId ${toChainID} `
+    )
+    return
+  }
+  const tokenInfo = toChainConfig.tokens.find((token) =>
+    chainCoreUtils.equals(token.address, tokenAddress)
+  )
+  if (!tokenInfo) {
+    accessLogger.error(
+      `The public chain Token configuration for the payment does not exist, toChainId ${toChainID} ${tokenAddress} `
+    )
+    return
+  }
   await send(
     makerAddress,
     toAddress,
