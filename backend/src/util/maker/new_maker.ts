@@ -51,23 +51,32 @@ export function checkAmount(
   const pText = ptext.pText
   let validPText = (9000 + Number(toChainId)).toString()
   const realAmount = orbiterCore.getRAmountFromTAmount(fromChainId, amount)
+
   if (realAmount.state === false) {
     return false
   }
   const rAmount = <any>realAmount.rAmount
-  if (
-    new BigNumber(rAmount).comparedTo(
-      new BigNumber(market.pool.maxPrice)
-        .plus(new BigNumber(market.pool.tradingFee))
-        .multipliedBy(new BigNumber(10 ** market.pool.precision))
-    ) === 1 ||
-    new BigNumber(rAmount).comparedTo(
-      new BigNumber(market.pool.minPrice)
-        .plus(new BigNumber(market.pool.tradingFee))
-        .multipliedBy(new BigNumber(10 ** market.pool.precision))
-    ) === -1 ||
-    pText !== validPText
-  ) {
+  const minPrice = new BigNumber(market.pool.minPrice)
+    .plus(new BigNumber(market.pool.tradingFee))
+    .multipliedBy(new BigNumber(10 ** market.pool.precision))
+  const maxPrice = new BigNumber(market.pool.maxPrice)
+    .plus(new BigNumber(market.pool.tradingFee))
+    .multipliedBy(new BigNumber(10 ** market.pool.precision))
+  if (pText !== validPText) {
+    accessLogger.error(
+      `Payment checkAmount inconsistent: ${pText}!=${validPText}`
+    )
+    return false
+  }
+  if (new BigNumber(rAmount).comparedTo(maxPrice) === 1) {
+    accessLogger.error(
+      `Payment checkAmount Amount exceeds maximum limit: ${new BigNumber(rAmount).dividedBy(10 ** market.pool.precision)} > ${maxPrice.dividedBy(10**market.pool.precision)}`
+    )
+    return false
+  } else if (new BigNumber(rAmount).comparedTo(minPrice) === -1) {
+    accessLogger.error(
+      `Payment checkAmount The amount is below the minimum limit: ${new BigNumber(rAmount).dividedBy(10 ** market.pool.precision)} < ${minPrice.dividedBy(10**market.pool.precision)}`
+    )
     return false
   }
   return true
@@ -80,7 +89,36 @@ export async function startNewMakerTrxPull() {
     pullTrxMap.set(intranetId, [])
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
   }
-  scanChain.run()
+  subscribeNewTransaction([
+    {
+      chainId: 'zksync_test',
+      hash: '0x04316af0a9728fca6c83fc7aae35072242b539d39c84e6a5606f4cd79a595750',
+      nonce: 19,
+      blockHash: '1',
+      blockNumber: 121332,
+      transactionIndex: 0,
+      from: '0xe21a744efcb0ee65d6875c698f5268f4a985ac41',
+      to: '0x0043d60e87c5dd08c86c3123340705a1556c4719',
+      value: new BigNumber('100000095130000'),
+      symbol: 'ETH',
+      gasPrice: 0,
+      gas: 0,
+      input: '',
+      status: 1,
+      tokenAddress: '0x0000000000000000000000000000000000000000',
+      timestamp: 1654521531,
+      fee: 10400000000000,
+      feeToken: 'ETH',
+      extra: {
+        status: 'committed',
+        failReason: null,
+        batchId: 215590,
+      },
+      source: '',
+      confirmations: 1,
+    },
+  ])
+  // scanChain.run()
 }
 async function isExistsMakerAddress(address: string) {
   const makerList = await getMakerList()
