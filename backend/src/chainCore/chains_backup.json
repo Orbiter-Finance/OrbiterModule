@@ -121,6 +121,7 @@
     "name": "ZKSync Mainnet",
     "debug":true,
     "nativeCurrency": {
+      "id":0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -131,6 +132,7 @@
     "contracts":[],
     "tokens": [
       {
+        "id":2,
         "name": "USDC",
         "symbol": "USDC",
         "decimals": 6,
@@ -212,6 +214,7 @@
     "internalId": "12",
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
+      "id":0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -222,6 +225,7 @@
     "contracts":[],
     "tokens": [
       {
+        "id":4,
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
@@ -293,6 +297,7 @@
     "internalId": "9",
     "name": "Loopring Mainnet",
     "nativeCurrency": {
+      "id":0,
       "name": "Ethereum",
       "symbol": "ETH",
       "decimals": 0,
