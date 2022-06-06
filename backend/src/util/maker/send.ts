@@ -555,7 +555,7 @@ async function sendConsumer(value: any) {
       // step 3 get storageId
       const GetNextStorageIdRequest = {
         accountId: accountInfo.accountId,
-        sellTokenId: tokenInfo.tokenId,
+        sellTokenId: tokenInfo.id,
       }
       const storageId = await userApi.getNextStorageId(
         GetNextStorageIdRequest,
@@ -587,7 +587,7 @@ async function sendConsumer(value: any) {
         payeeId: 0,
         storageId: result_nonce,
         token: {
-          tokenId: tokenInfo.tokenId,
+          tokenId: tokenInfo.id,
           volume: amountToSend + '',
         },
         maxFee: {
