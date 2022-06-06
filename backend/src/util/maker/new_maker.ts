@@ -39,8 +39,8 @@ export interface IMarket {
 }
 // checkData
 export function checkAmount(
-  fromChainId: string,
-  toChainId: string,
+  fromChainId: number,
+  toChainId: number,
   amount: string,
   market: IMarket
 ) {
@@ -80,41 +80,7 @@ export async function startNewMakerTrxPull() {
     pullTrxMap.set(intranetId, [])
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
   }
-  // subscribeNewTransaction([
-  //   {
-  //     chainId: '4',
-  //     hash: '0x3f37651aa30e3119862bf5d1d50a0416a8f2568d3341ebce09c9b26d48b2925d',
-  //     nonce: 43,
-  //     blockHash:
-  //       '0x1a4244872541098b715a0fc183b040c7b9b5ffa134bd509e03cb2095f52c6355',
-  //     blockNumber: 10776477,
-  //     transactionIndex: 40,
-  //     from: '0x60487D8C53FEEe09F3df2e3A54A5c405be042484',
-  //     to: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
-  //     value: new BigNumber('10100000000009514'),
-  //     symbol: 'ETH',
-  //     gasPrice: 1162230819,
-  //     gas: 21000,
-  //     input: '0x',
-  //     status: 1,
-  //     tokenAddress: '0x0000000000000000000000000000000000000000',
-  //     timestamp: 1654066306,
-  //     fee: 24406847199000,
-  //     feeToken: 'ETH',
-  //     extra: {
-  //       accessList: [],
-  //       chainId: '0x4',
-  //       maxFeePerGas: '1162230819',
-  //       maxPriorityFeePerGas: '1162230819',
-  //       r: '0x4a8e8ffd58724185ca789c8c8e8ffbc505e85598ef489b4d93f027dda2903caa',
-  //       s: '0x211bcaf7210db28979f884a671bd39801f142d53c94dbe67cafeebd6696a89f1',
-  //       type: 2,
-  //       v: '0x1',
-  //     },
-  //     source: 'rpc',
-  //     confirmations: 5149,
-  //   },
-  // ])
+
   scanChain.run()
 }
 async function isExistsMakerAddress(address: string) {
@@ -134,6 +100,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (!(await isExistsMakerAddress(tx.to))) {
         continue
       }
+      accessLogger.info('subscribeNewTransaction：', tx.chainId, tx.hash)
       const fromChain = await getChainByChainId(tx.chainId)
       if (!fromChain) {
         accessLogger.info(
@@ -152,19 +119,29 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (tx.status != TransactionStatus.COMPLETE) {
         accessLogger.info(
           'Incorrect transaction status: ',
+          fromChain.name,
           tx.chainId,
           tx.hash,
           tx.status
         )
         continue
       }
-      const result = orbiterCore.getPTextFromTAmount(
-        fromChain.internalId,
-        tx.value.toString()
+
+      let result = orbiterCore.getPTextFromTAmount(
+        Number(fromChain.internalId),
+        tx.value.toNumber()
       )
+      if (['9', '99'].includes(fromChain.internalId)) {
+        result = {
+          state: true,
+          pText: tx.extra['memo'],
+        }
+      }
       if (!result.state) {
         accessLogger.info(
           'Incorrect transaction getPTextFromTAmount: ',
+          fromChain.name,
+          tx.chainId,
           tx.hash,
           tx.value.toString(),
           JSON.stringify(result)
@@ -173,7 +150,9 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.info(
-          'Transaction Amount Value Format Error: ',
+          `Transaction Amount Value Format Error: `,
+          fromChain.name,
+          tx.chainId,
           tx.hash,
           tx.value.toString(),
           JSON.stringify(result)
@@ -207,7 +186,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         }
       }
       if (isEmpty(makerConfig.privateKeys[market!.makerAddress])) {
-        accessLogger.info(
+        accessLogger.error(
           'Your private key is not injected into the coin dealer address',
           market?.makerAddress
         )
@@ -219,17 +198,23 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      if (
-        checkAmount(
-          fromChain.internalId,
-          toChain.internalId,
+      if (!['12', '512', '9', '99'].includes(fromChain.internalId)) {
+        const checkAmountResult = checkAmount(
+          Number(fromChain.internalId),
+          Number(toChain.internalId),
           tx.value.toString(),
           market
         )
-      ) {
-        // pullTrxList!.unshift(tx.hash.toLowerCase())
-        await confirmTransactionSendMoneyBack(market, tx)
+        if (checkAmountResult) {
+          accessLogger.error(
+            'checkAmount Fail',
+            fromChain.name,
+            tx.hash,
+            JSON.stringify(tx)
+          )
+        }
       }
+      await confirmTransactionSendMoneyBack(market, tx)
     }
     // cache.set('hashList', pullTrxList)
   }
