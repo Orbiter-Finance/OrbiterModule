@@ -284,8 +284,7 @@ export async function getTargetMakerPool(
       pool1.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
       (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
         equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
-      ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId) ||
-        (pool1.c2ID == fromChainId && pool1.c1ID == toChainId)) &&
+      ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId)) &&
       transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool1.avalibleTimes[0].endTime
     ) {
@@ -293,9 +292,9 @@ export async function getTargetMakerPool(
     }
     if (
       pool2.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
-      equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
-      ((pool2.c1ID == fromChainId && pool2.c2ID == toChainId) ||
-        (pool2.c2ID == fromChainId && pool2.c1ID == toChainId)) &&
+      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
+        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
+      ((pool2.c2ID == fromChainId && pool2.c1ID == toChainId)) &&
       transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool2.avalibleTimes[0].endTime
     ) {
