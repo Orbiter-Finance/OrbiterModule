@@ -294,7 +294,7 @@ export async function confirmTransactionSendMoneyBack(
         'ConfirmTransactionSendMoneyBack SendTransaction Params:',
         JSON.stringify(params)
       )
-      console.log('send trx', JSON.stringify(tx))
+      accessLogger.log('exec sendTransaction trx', JSON.stringify(tx))
       await sendTransaction(
         makerAddress,
         transactionID,

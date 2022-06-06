@@ -1968,6 +1968,7 @@ export async function sendTransaction(
     )
     return
   }
+  accessLogger.info(`${transactionID} exec send `, tokenInfo.id,tokenInfo.name,tokenInfo.address)
   await send(
     makerAddress,
     toAddress,
