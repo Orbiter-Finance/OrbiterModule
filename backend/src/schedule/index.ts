@@ -35,7 +35,7 @@ export async function waittingStartMaker() {
         makerConfig.privateKeys[makerAddress] &&
         startedIndexs.indexOf(index) === -1
       ) {
-        startMaker(item)
+        // startMaker(item)
         // jobMakerNodeTodo(item.makerAddress)
 
         startedIndexs.push(index)
@@ -125,7 +125,7 @@ export const startWorkerJobs = async () => {
   jobGetMakerList()
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
-    // waittingStartMaker()
+    waittingStartMaker()
     startNewMakerTrxPull()
   }
 }

@@ -7,6 +7,7 @@ import {
   getChainByChainId,
   getChainByInternalId,
   groupBy,
+  isEmpty,
 } from '../../chainCore/src/utils'
 import BigNumber from 'bignumber.js'
 import { newMakeTransactionID } from '../../service/maker'
@@ -14,7 +15,7 @@ import { accessLogger, errorLogger } from '../logger'
 import { Core } from '../core'
 import { Repository } from 'typeorm'
 import { MakerNode } from '../../model/maker_node'
-import { isEmpty } from 'class-validator'
+import { makerConfig } from '../../config'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -204,6 +205,13 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         if (market) {
           break
         }
+      }
+      if (isEmpty(makerConfig.privateKeys[market!.makerAddress])) {
+        accessLogger.info(
+          'Your private key is not injected into the coin dealer address',
+          market?.makerAddress
+        )
+        continue
       }
       if (isEmpty(market) || !market) {
         accessLogger.info(
