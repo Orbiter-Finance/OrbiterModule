@@ -13,6 +13,7 @@ import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
+import * as zksync2 from "zksync-web3"
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
@@ -109,6 +110,7 @@ async function sendConsumer(value: any) {
     toAddress,
     toChain,
     chainID,
+    tokenInfo,
     tokenAddress,
     amountToSend,
     result_nonce,
@@ -245,7 +247,94 @@ async function sendConsumer(value: any) {
     }
     return
   }
+  // zk2 || zk2_test
+  if (chainID === 14 || chainID === 514) {
+    try {
+      let ethProvider
+      let syncProvider
+      if (chainID === 514) {
+        const httpEndPoint = makerConfig["zksync2_test"].httpEndPoint
+        ethProvider = ethers.getDefaultProvider("goerli");
+        syncProvider = new zksync2.Provider(httpEndPoint);
+      } else {
+        const httpEndPoint = makerConfig["zksync2"].httpEndPoint//official httpEndpoint is not exists now 
+        ethProvider = ethers.getDefaultProvider('homestead');
+        syncProvider = new zksync2.Provider(httpEndPoint);
+      }
+      const syncWallet = new zksync2.Wallet(makerConfig.privateKeys[makerAddress], syncProvider, ethProvider);
+      let tokenBalanceWei = await syncWallet.getBalance(
+        tokenAddress,
+        'finalized'
+      )
+      if (!tokenBalanceWei) {
+        errorLogger.error('zk2 Insufficient balance 0')
+        return {
+          code: 1,
+          txid: 'ZK2 Insufficient balance 0',
+        }
+      }
+      accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
+      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+        errorLogger.error('zk2 Insufficient balance')
+        return {
+          code: 1,
+          txid: 'zk2 Insufficient balance',
+        }
+      }
+      const has_result_nonce = result_nonce > 0
+      if (!has_result_nonce) {
+        let zk_nonce = await syncWallet.getNonce('committed')
+        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
+        if (!zk_sql_nonce) {
+          result_nonce = zk_nonce
+        } else {
+          if (zk_nonce > zk_sql_nonce) {
+            result_nonce = zk_nonce
+          } else {
+            result_nonce = zk_sql_nonce + 1
+          }
+        }
+        accessLogger.info('zk2_nonce =', zk_nonce)
+        accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
+        accessLogger.info('result_nonde =', result_nonce)
+      }
 
+      const transfer = await syncWallet.transfer({
+        to: toAddress,
+        token: tokenAddress,
+        amount: amountToSend,
+        // feeToken: tokenAddress,
+      });
+      if (!has_result_nonce) {
+        if (!nonceDic[makerAddress]) {
+          nonceDic[makerAddress] = {}
+        }
+        nonceDic[makerAddress][chainID] = result_nonce
+      }
+      return new Promise((resolve, reject) => {
+        if (transfer.hash) {
+          resolve({
+            code: 0,
+            txid: transfer.hash,
+            chainID: chainID,
+            zk2Nonce: result_nonce,
+          })
+        } else {
+          resolve({
+            code: 1,
+            error: 'zk2 transfer error',
+            result_nonce,
+          })
+        }
+      })
+    } catch (error) {
+      return {
+        code: 1,
+        txid: error,
+        result_nonce,
+      }
+    }
+  }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     try {
@@ -356,13 +445,7 @@ async function sendConsumer(value: any) {
         accessLogger.info('imx_sql_nonce =', imx_sql_nonce)
         accessLogger.info('result_nonde =', result_nonce)
       }
-
-      // IMX transfer(Only ETH)
-      if (!isEthTokenAddress(tokenAddress)) {
-        return
-      }
-
-      let tokenInfo: any = {
+      let imxTokenInfo: any = {
         type: ETHTokenType.ETH,
         data: {
           decimals: 18,
@@ -375,7 +458,7 @@ async function sendConsumer(value: any) {
           fromChainID,
           chainID
         )
-        tokenInfo = {
+        imxTokenInfo = {
           type: ERC20TokenType.ERC20,
           data: {
             symbol: makerPool?.tName,
@@ -384,9 +467,10 @@ async function sendConsumer(value: any) {
           },
         }
       }
+
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
-        token: tokenInfo,
+        token: imxTokenInfo,
         quantity: amountToSend,
         receiver: toAddress,
       })
@@ -428,7 +512,6 @@ async function sendConsumer(value: any) {
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
-
     try {
       let netWorkID = chainID == 9 ? 1 : 5
       const exchangeApi = new ExchangeAPI({ chainId: netWorkID })
@@ -472,7 +555,7 @@ async function sendConsumer(value: any) {
       // step 3 get storageId
       const GetNextStorageIdRequest = {
         accountId: accountInfo.accountId,
-        sellTokenId: 0,
+        sellTokenId: tokenInfo.id,
       }
       const storageId = await userApi.getNextStorageId(
         GetNextStorageIdRequest,
@@ -504,7 +587,7 @@ async function sendConsumer(value: any) {
         payeeId: 0,
         storageId: result_nonce,
         token: {
-          tokenId: 0,
+          tokenId: tokenInfo.id,
           volume: amountToSend + '',
         },
         maxFee: {
@@ -527,10 +610,8 @@ async function sendConsumer(value: any) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
         }
-
         nonceDic[makerAddress][chainID] = result_nonce
       }
-
       return new Promise((resolve, reject) => {
         if (transactionResult['hash']) {
           resolve({
@@ -663,7 +744,7 @@ async function sendConsumer(value: any) {
       if (
         !balanceInfo ||
         !balanceInfo.length ||
-        balanceInfo.findIndex((item) => item.id == 0) == -1
+        balanceInfo.findIndex((item) => item.id == tokenInfo.id) == -1
       ) {
         errorLogger.error('zks Insufficient balance 0')
         return {
@@ -671,8 +752,11 @@ async function sendConsumer(value: any) {
           txid: 'ZKS Insufficient balance 0',
         }
       }
-      let defaultIndex = balanceInfo.findIndex((item) => item.id == 0)
-      const tokenBalanceWei = balanceInfo[defaultIndex].amount * 10 ** 18
+      let defaultIndex = balanceInfo.findIndex(
+        (item) => item.id == tokenInfo.id
+      )
+      const tokenBalanceWei =
+        balanceInfo[defaultIndex].amount * 10 ** tokenInfo.decimals
       if (!tokenBalanceWei) {
         errorLogger.error('zks Insufficient balance 00')
         return {
@@ -693,22 +777,20 @@ async function sendConsumer(value: any) {
         zksync.utils.closestPackableTransactionAmount(amountToSend)
 
       //here has changed a lager from old
-      let accountInfo = await zkspace_help.getNormalAccountInfo(wallet, privateKey,
+      let accountInfo = await zkspace_help.getNormalAccountInfo(
+        wallet,
+        privateKey,
         chainID,
         makerAddress
       )
 
-
-      const tokenId = 0
+      const tokenId = tokenInfo.id
       const feeTokenId = 0
       const zksNetworkID =
         chainID === 512
           ? makerConfig.zkspace_test.api.chainID
           : makerConfig.zkspace.api.chainID
-      let fee = await zkspace_help.getZKSTransferGasFee(
-        chainID,
-        makerAddress
-      )
+      let fee = await zkspace_help.getZKSTransferGasFee(chainID, makerAddress)
       const transferFee = zksync.utils.closestPackableTransactionFee(
         ethers.utils.parseUnits(fee.toString(), 18)
       )
@@ -755,8 +837,11 @@ async function sendConsumer(value: any) {
       const tx = {
         accountId: accountInfo.id,
         to: toAddress,
-        tokenSymbol: 'ETH',
-        tokenAmount: ethers.utils.formatUnits(transferValue, 18),
+        tokenSymbol: tokenInfo.symbol,
+        tokenAmount: ethers.utils.formatUnits(
+          transferValue,
+          tokenInfo.decimals
+        ),
         feeSymbol: 'ETH',
         fee: fee.toString(),
         zksNetworkID,
@@ -792,7 +877,7 @@ async function sendConsumer(value: any) {
           signature: ethSignature,
         },
         fastProcessing: false,
-        tx: txParams
+        tx: txParams,
       }
       let transferResult = await axios.post(
         (chainID === 512
@@ -805,7 +890,7 @@ async function sendConsumer(value: any) {
         }
       )
       const txHash = transferResult.data.data.replace('sync-tx:', '0x')
-      await zkspace_help.getFristResult(chainID, txHash)
+      await zkspace_help.getFristTransferResult(chainID, txHash)
       nonceDic[makerAddress][chainID] = result_nonce
       return {
         code: 0,
@@ -852,9 +937,11 @@ async function sendConsumer(value: any) {
       txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
     }
   }
-  accessLogger.info('tokenBalance =', tokenBalanceWei)
+  accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
   if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error(`${toChain}->tokenBalanceWei<amountToSend Insufficient balance`)
+    errorLogger.error(
+      `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
+    )
     return {
       code: 1,
       txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
@@ -952,14 +1039,17 @@ async function sendConsumer(value: any) {
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
-    isEthTokenAddress(tokenAddress) ? maxPrice : undefined
+    // isEthTokenAddress(tokenAddress) ? maxPrice : undefined
+    maxPrice
   )
   let gasLimit = 100000
   if (
     toChain === 'arbitrum_test' ||
     toChain === 'arbitrum' ||
     toChain === 'metis' ||
-    toChain === 'metis_test'
+    toChain === 'metis_test' ||
+    toChain === 'boba_test' ||
+    toChain === 'boba'
   ) {
     gasLimit = 1000000
   }
@@ -1061,7 +1151,7 @@ async function send(
   toAddress,
   toChain,
   chainID,
-  tokenID, // 3 33 use
+  tokenInfo, // 12 512 use
   tokenAddress,
   amountToSend,
   result_nonce = 0,
@@ -1077,7 +1167,7 @@ async function send(
       toAddress,
       toChain,
       chainID,
-      tokenID,
+      tokenInfo,
       tokenAddress,
       amountToSend,
       result_nonce,

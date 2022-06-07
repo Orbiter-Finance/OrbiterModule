@@ -228,6 +228,16 @@ export default {
     gasPrice: 2,
     customChainId: 28,
   },
+  zksync2_test: {
+    wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
+    httpEndPoint: 'https://zksync2-testnet.zksync.dev',
+    api: {
+      endPoint: 'https://zksync2-testnet.zkscan.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 280,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [

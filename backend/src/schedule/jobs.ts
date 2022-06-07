@@ -9,7 +9,7 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-
+import { ScanChainMain } from '../chainCore'
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -120,62 +120,62 @@ export function jobMakerPull() {
       )
 
       switch (CHAIN_INDEX[toChain]) {
-        case 'eth':
-          let apiEth = makerConfig.mainnet.api
-          if (toChain == 4 || toChain == 5) {
-            apiEth = makerConfig.rinkeby.api
-          }
-          await serviceMakerPull.etherscan(apiEth)
-          break
-        case 'arbitrum':
-          let apiArbitrum = makerConfig.arbitrum.api
-          if (toChain == 22) {
-            apiArbitrum = makerConfig.arbitrum_test.api
-          }
-          await serviceMakerPull.arbitrum(apiArbitrum)
-          break
-        case 'polygon':
-          let apiPolygon = makerConfig.polygon.api
-          if (toChain == 66) {
-            apiPolygon = makerConfig.polygon_test.api
-          }
-          await serviceMakerPull.polygon(apiPolygon)
-          break
-        case 'zksync':
-          let apiZksync = makerConfig.zksync.api
-          if (toChain == 33) {
-            apiZksync = makerConfig.zksync_test.api
-          }
-          await serviceMakerPull.zkSync(apiZksync)
-          break
-        case 'optimism':
-          let apiOptimism = makerConfig.optimism.api
-          if (toChain == 77) {
-            apiOptimism = makerConfig.optimism_test.api
-          }
-          await serviceMakerPull.optimism(apiOptimism)
-          break
-        case 'immutablex':
-          let apiImmutableX = makerConfig.immutableX.api
-          if (toChain == 88) {
-            apiImmutableX = makerConfig.immutableX_test.api
-          }
-          await serviceMakerPull.immutableX(apiImmutableX)
-          break
-        case 'loopring':
-          let apiLoopring = makerConfig.loopring.api
-          if (toChain == 99) {
-            apiLoopring = makerConfig.loopring_test.api
-          }
-          await serviceMakerPull.loopring(apiLoopring)
-          break
-        case 'metis':
-          let apiMetis = makerConfig.metis.api
-          if (toChain == 510) {
-            apiMetis = makerConfig.metis_test.api
-          }
-          await serviceMakerPull.metis(apiMetis)
-          break
+        // case 'eth':
+        //   let apiEth = makerConfig.mainnet.api
+        //   if (toChain == 4 || toChain == 5) {
+        //     apiEth = makerConfig.rinkeby.api
+        //   }
+        //   await serviceMakerPull.etherscan(apiEth)
+        //   break
+        // case 'arbitrum':
+        //   let apiArbitrum = makerConfig.arbitrum.api
+        //   if (toChain == 22) {
+        //     apiArbitrum = makerConfig.arbitrum_test.api
+        //   }
+        //   await serviceMakerPull.arbitrum(apiArbitrum)
+        //   break
+        // case 'polygon':
+        //   let apiPolygon = makerConfig.polygon.api
+        //   if (toChain == 66) {
+        //     apiPolygon = makerConfig.polygon_test.api
+        //   }
+        //   await serviceMakerPull.polygon(apiPolygon)
+        //   break
+        // case 'zksync':
+        //   let apiZksync = makerConfig.zksync.api
+        //   if (toChain == 33) {
+        //     apiZksync = makerConfig.zksync_test.api
+        //   }
+        //   await serviceMakerPull.zkSync(apiZksync)
+        //   break
+        // case 'optimism':
+        //   let apiOptimism = makerConfig.optimism.api
+        //   if (toChain == 77) {
+        //     apiOptimism = makerConfig.optimism_test.api
+        //   }
+        //   await serviceMakerPull.optimism(apiOptimism)
+        //   break
+        // case 'immutablex':
+        //   let apiImmutableX = makerConfig.immutableX.api
+        //   if (toChain == 88) {
+        //     apiImmutableX = makerConfig.immutableX_test.api
+        //   }
+        //   await serviceMakerPull.immutableX(apiImmutableX)
+        //   break
+        // case 'loopring':
+        //   let apiLoopring = makerConfig.loopring.api
+        //   if (toChain == 99) {
+        //     apiLoopring = makerConfig.loopring_test.api
+        //   }
+        //   await serviceMakerPull.loopring(apiLoopring)
+        //   break
+        // case 'metis':
+        //   let apiMetis = makerConfig.metis.api
+        //   if (toChain == 510) {
+        //     apiMetis = makerConfig.metis_test.api
+        //   }
+        //   await serviceMakerPull.metis(apiMetis)
+        //   break
         case 'dydx':
           let apiDydx = makerConfig.dydx.api
           if (toChain == 511) {
@@ -183,18 +183,18 @@ export function jobMakerPull() {
           }
           await serviceMakerPull.dydx(apiDydx)
           break
-        case 'boba':
-          const network =
-            toChain === 13 ? makerConfig.boba : makerConfig.boba_test
-          await serviceMakerPull.boba(network.api, network.wsEndPoint)
-          break
-        case 'zkspace':
-          let apiZkspace = makerConfig.zkspace.api
-          if (toChain == 512) {
-            apiZkspace = makerConfig.zkspace_test.api
-          }
-          await serviceMakerPull.zkspace(apiZkspace)
-          break
+        // case 'boba':
+        //   const network =
+        //     toChain === 13 ? makerConfig.boba : makerConfig.boba_test
+        //   await serviceMakerPull.boba(network.api, network.wsEndPoint)
+        //   break
+        // case 'zkspace':
+        //   let apiZkspace = makerConfig.zkspace.api
+        //   if (toChain == 512) {
+        //     apiZkspace = makerConfig.zkspace_test.api
+        //   }
+        //   await serviceMakerPull.zkspace(apiZkspace)
+        //   break
       }
     } catch (error) {
       errorLogger.error(
@@ -202,40 +202,6 @@ export function jobMakerPull() {
       )
     }
   }
-
-  // Concurrent pull
-  // const callback = async () => {
-  //   const promises: Promise<void>[] = []
-
-  //   // Add promise
-  //   const runningKeyArr: string[] = []
-  //   const addPromise = (
-  //     chainId: number,
-  //     makerAddress: string,
-  //     tokenAddress: string,
-  //     tName: string
-  //   ) => {
-  //     const runningKey = `${chainId}:${makerAddress}:${tokenAddress}:${tName}`
-  //     if (runningKeyArr.indexOf(runningKey) > -1) {
-  //       return
-  //     }
-  //     runningKeyArr.push(runningKey)
-
-  //     promises.push(startPull(chainId, makerAddress, tokenAddress, tName))
-  //   }
-
-  //   const makerList = await getMakerList()
-  //   for (const item of makerList) {
-  //     const { pool1, pool2 } = expanPool(item)
-  //     addPromise(pool1.c1ID, pool1.makerAddress, pool1.t1Address, pool1.tName)
-  //     addPromise(pool2.c2ID, pool2.makerAddress, pool2.t2Address, pool2.tName)
-  //   }
-
-  //   await Promise.all(promises)
-
-  //   // Reset ServiceMakerPull.compareDataPromise
-  //   ServiceMakerPull.resetCompareDataPromise()
-  // }
 
   const callback = async () => {
     const makerList = await getMakerList()
@@ -296,4 +262,18 @@ export function jobBalanceAlarm() {
   }
 
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
+}
+
+export async function startNewDashboardPull() {
+  const makerList = await getMakerList()
+  const convertMakerList = ScanChainMain.convertTradingList(makerList)
+  const scanChain = new ScanChainMain(convertMakerList)
+  const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
+  for (const intranetId in convertMakerList) {
+    //
+    scanChain.mq.subscribe(`${intranetId}:txlist`, async (result) => {
+      return await serviceMakerPull.handleNewScanChainTrx(result, makerList)
+    })
+  }
+  scanChain.run()
 }

@@ -13,5 +13,8 @@ dist/
 mysql*/
 local.*
 .vscode/
+cache/
 backend/src/config/maker.ts
-.env
+backend/src/chainCore/chains.json
+backend/src/chainCore/testnet.json
+chainlogs/
