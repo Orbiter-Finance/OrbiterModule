@@ -19,8 +19,7 @@ import { makerConfig } from '../../config'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
-const pullTrxMap: Map<string, Array<string>> = new Map()
-
+const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
   makerAddress: string
   fromChain: {
@@ -70,12 +69,20 @@ export function checkAmount(
   }
   if (new BigNumber(rAmount).comparedTo(maxPrice) === 1) {
     accessLogger.error(
-      `Payment checkAmount Amount exceeds maximum limit: ${new BigNumber(rAmount).dividedBy(10 ** market.pool.precision)} > ${maxPrice.dividedBy(10**market.pool.precision)}`
+      `Payment checkAmount Amount exceeds maximum limit: ${new BigNumber(
+        rAmount
+      ).dividedBy(10 ** market.pool.precision)} > ${maxPrice.dividedBy(
+        10 ** market.pool.precision
+      )}`
     )
     return false
   } else if (new BigNumber(rAmount).comparedTo(minPrice) === -1) {
     accessLogger.error(
-      `Payment checkAmount The amount is below the minimum limit: ${new BigNumber(rAmount).dividedBy(10 ** market.pool.precision)} < ${minPrice.dividedBy(10**market.pool.precision)}`
+      `Payment checkAmount The amount is below the minimum limit: ${new BigNumber(
+        rAmount
+      ).dividedBy(10 ** market.pool.precision)} < ${minPrice.dividedBy(
+        10 ** market.pool.precision
+      )}`
     )
     return false
   }
@@ -86,39 +93,15 @@ export async function startNewMakerTrxPull() {
   const convertMakerList = ScanChainMain.convertTradingList(makerList)
   const scanChain = new ScanChainMain(convertMakerList)
   for (const intranetId in convertMakerList) {
-    pullTrxMap.set(intranetId, [])
+    convertMakerList[intranetId].forEach((row) => {
+      const pullKey = `${intranetId}:${row.address.toLowerCase()}`
+      if (!LastPullTxMap.has(pullKey)) {
+        LastPullTxMap.set(pullKey, Date.now())
+      }
+    })
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
   }
-  subscribeNewTransaction([
-    {
-      chainId: 'zksync_test',
-      hash: '0x04316af0a9728fca6c83fc7aae35072242b539d39c84e6a5606f4cd79a595750',
-      nonce: 19,
-      blockHash: '1',
-      blockNumber: 121332,
-      transactionIndex: 0,
-      from: '0xe21a744efcb0ee65d6875c698f5268f4a985ac41',
-      to: '0x0043d60e87c5dd08c86c3123340705a1556c4719',
-      value: new BigNumber('100000095130000'),
-      symbol: 'ETH',
-      gasPrice: 0,
-      gas: 0,
-      input: '',
-      status: 1,
-      tokenAddress: '0x0000000000000000000000000000000000000000',
-      timestamp: 1654521531,
-      fee: 10400000000000,
-      feeToken: 'ETH',
-      extra: {
-        status: 'committed',
-        failReason: null,
-        batchId: 215590,
-      },
-      source: '',
-      confirmations: 1,
-    },
-  ])
-  // scanChain.run()
+  scanChain.run()
 }
 async function isExistsMakerAddress(address: string) {
   const makerList = await getMakerList()
@@ -129,24 +112,40 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   const makerList = await getMakerList()
   const groupData = groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
-    // const chainConfig = getChainByChainId(chainId)
-    // const pullTrxList = pullTrxMap.get(chainConfig.internalId)
-    //
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
       if (!(await isExistsMakerAddress(tx.to))) {
+        // accessLogger.error(
+        //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
+        // )
         continue
       }
-      accessLogger.info('subscribeNewTransaction：', JSON.stringify(tx))
+
+      accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       const fromChain = await getChainByChainId(tx.chainId)
+      // check send
       if (!fromChain) {
         accessLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
-          tx.chainId,
           tx.hash
         )
         continue
       }
+      const startTimeTimeStamp = LastPullTxMap.get(
+        `${fromChain.internalId}:${tx.to.toLowerCase()}`
+      )
+      if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
+        accessLogger.error(
+          `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
+        )
+        continue
+      }
+      const transactionID = newMakeTransactionID(
+        tx.from,
+        fromChain.internalId,
+        tx.nonce,
+        tx.symbol
+      )
       if (
         ['3', '33', '8', '88', '12', '512'].includes(fromChain.internalId) &&
         tx.status === TransactionStatus.PENDING
@@ -155,11 +154,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (tx.status != TransactionStatus.COMPLETE) {
         accessLogger.error(
-          'Incorrect transaction status: ',
-          fromChain.name,
-          tx.chainId,
-          tx.hash,
-          tx.status
+          `[${transactionID}] Incorrect transaction status: fromChain=${fromChain.name},fromChainId=${fromChain.internalId},hash=${tx.hash},value=${tx.status}`
         )
         continue
       }
@@ -175,22 +170,22 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (!result.state) {
         accessLogger.error(
-          'Incorrect transaction getPTextFromTAmount: ',
-          fromChain.name,
-          tx.chainId,
-          tx.hash,
-          tx.value.toString(),
+          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${
+            fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${
+            tx.hash
+          },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
         continue
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.error(
-          `Transaction Amount Value Format Error: `,
-          fromChain.name,
-          tx.chainId,
-          tx.hash,
-          tx.value.toString(),
+          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${
+            fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${
+            tx.hash
+          },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
         continue
@@ -202,7 +197,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       )
       if (isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
-          'Refund The query currency information does not exist: ' +
+          `[${transactionID}] Refund The query currency information does not exist: ` +
             JSON.stringify(tx)
         )
         continue
@@ -223,14 +218,14 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (isEmpty(makerConfig.privateKeys[market!.makerAddress])) {
         accessLogger.error(
-          'Your private key is not injected into the coin dealer address',
-          market?.makerAddress
+          `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${market?.makerAddress}`
         )
         continue
       }
       if (isEmpty(market) || !market) {
         accessLogger.info(
-          'Payment collection query Market  does not exist' + JSON.stringify(tx)
+          `[${transactionID}] Payment collection query Market  does not exist` +
+            JSON.stringify(tx)
         )
         continue
       }
@@ -243,32 +238,28 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         if (!checkAmountResult) {
           accessLogger.error(
-            'checkAmount Fail:',
-            fromChain.name,
-            tx.hash,
+            `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash}`,
             JSON.stringify(tx)
           )
           continue
         }
       }
-      await confirmTransactionSendMoneyBack(market, tx)
+      await confirmTransactionSendMoneyBack(transactionID, market, tx)
     }
-    // cache.set('hashList', pullTrxList)
   }
   return newTxList.map((tx) => tx.hash)
 }
 export async function confirmTransactionSendMoneyBack(
+  transactionID: string,
   market: IMarket,
   tx: ITransaction
 ) {
-  const chainConfig = getChainByChainId(tx.chainId)
+  const fromChainID = market.fromChain.id
+  const toChainID = market.toChain.id
+  const toChainName = market.toChain.name
+  const makerAddress = market.makerAddress
+  LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
   // check send
-  const transactionID = newMakeTransactionID(
-    tx.from,
-    chainConfig.internalId,
-    tx.nonce,
-    tx.symbol
-  )
   // valid is exits
   try {
     const makerNode = await repositoryMakerNode().findOne({
@@ -279,13 +270,9 @@ export async function confirmTransactionSendMoneyBack(
       return
     }
   } catch (error) {
-    errorLogger.error('isHaveSqlError =', error)
+    errorLogger.error(`[${transactionID}] isHaveSqlError =`, error)
     return
   }
-  const fromChainID = market.fromChain.id
-  const toChainID = market.toChain.id
-  const toChainName = market.toChain.name
-  const makerAddress = market.makerAddress
   await repositoryMakerNode()
     .insert({
       transactionID: transactionID,
@@ -315,12 +302,7 @@ export async function confirmTransactionSendMoneyBack(
         tx.nonce,
       ]
       accessLogger.info(
-        `market send money back =`,
-        tx.hash,
-        `${market.fromChain.name} - ${market.toChain.name}`
-      )
-      accessLogger.info(
-        'ConfirmTransactionSendMoneyBack SendTransaction Params:',
+        `[${transactionID}] ConfirmTransactionSendMoneyBack SendTransaction [${market.fromChain.id} - ${market.toChain.id}] Params:`,
         tx.hash,
         JSON.stringify(params)
       )
@@ -338,7 +320,7 @@ export async function confirmTransactionSendMoneyBack(
       )
     })
     .catch((error) => {
-      errorLogger.error('newTransactionSqlError =', error)
+      errorLogger.error(`[${transactionID}] newTransactionSqlError =`, error)
       return
     })
 }

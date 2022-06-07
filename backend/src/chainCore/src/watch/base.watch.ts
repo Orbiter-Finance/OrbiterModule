@@ -170,7 +170,6 @@ export default abstract class BasetWatch implements IChainWatch {
     address: Address,
     trx?: ITransaction
   ): Promise<ITransaction | null> {
-    await this.init()
     const cursorKey = `ApiCursor:${address}`
     let cursorTx: ITransaction = await this.cache.get(cursorKey)
     if (trx && trx.hash) {
@@ -184,7 +183,7 @@ export default abstract class BasetWatch implements IChainWatch {
       this.cache.set(cursorKey, {
         blockNumber: trx.blockNumber,
         hash: trx.hash,
-        timestamp:trx.timestamp,
+        timestamp: trx.timestamp,
       })
       return trx
     } else {
@@ -192,8 +191,16 @@ export default abstract class BasetWatch implements IChainWatch {
       if (!isEmpty(cursorTx)) {
         return cursorTx
       }
-      // init
-      const blockNumber = await this.chain.getLatestHeight()
+      //
+      let blockNumber: number = 0
+      try {
+        blockNumber = await this.chain.getLatestHeight()
+      } catch (error) {
+        logger.error(
+          `[${this.chain.chainConfig.name}] init apiScanCursor get LastHeight error:`,
+          error.message
+        )
+      }
       // TAG:blockNumber Whether + 1 is needed needs to be considered
       const nowTx: Pick<Transaction, 'blockNumber' | 'timestamp' | 'hash'> = {
         blockNumber: blockNumber,

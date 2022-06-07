@@ -34,7 +34,7 @@ export class ScanChainMain {
   constructor(
     private readonly scanChainConfig: { [key: string]: Array<IScanChainItem> }
   ) {}
-  run() {
+  async run() {
     logger.info(`ScanChainMain Run:`, JSON.stringify(this.scanChainConfig))
     for (const intranetId in this.scanChainConfig) {
       const addressList = this.scanChainConfig[intranetId].map(
@@ -45,23 +45,27 @@ export class ScanChainMain {
           `ScanChainMain Run in Progress:`,
           JSON.stringify(this.scanChainConfig[intranetId])
         )
-        if (addressList.length > 0) {
-          const chain =
-            ChainFactory.createWatchChainByIntranetId(
-              intranetId
-            ).addWatchAddress(addressList)
+        if (addressList.length <= 0) {
+          logger.info(
+            `ScanChainMain Run in Market address not address:`,
+            JSON.stringify(this.scanChainConfig[intranetId])
+          )
+          continue
+        }
+        const chain =
+          ChainFactory.createWatchChainByIntranetId(intranetId).addWatchAddress(
+            addressList
+          )
+        const chainConfig = chain.chain.chainConfig
+        if (Array.isArray(chainConfig.watch) && chainConfig.watch.length > 0) {
+          await chain.init();
           try {
-            if (chain.chain.chainConfig.watch.includes('api')) {
-              chain.apiScan()
-            }
+            chainConfig.watch.includes('api') && chain.apiScan()
           } catch (error) {
             logger.error('Start API Scan Exception:', error.message)
           }
-
           try {
-            if (chain.chain.chainConfig.watch.includes('rpc')) {
-              chain.rpcScan()
-            }
+            chainConfig.watch.includes('rpc') && chain.rpcScan()
           } catch (error) {
             logger.error('Start RPC Scan Exception:', error.message)
           }

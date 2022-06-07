@@ -173,7 +173,7 @@ export function newMakeTransactionID(
     String(fromChainId),
     4,
     '00'
-  )}${fromTxNonce}${symbol || ''}`.toLowerCase()
+  )}${symbol || 'NULL'}${fromTxNonce}`.toLowerCase()
 }
 
 /**

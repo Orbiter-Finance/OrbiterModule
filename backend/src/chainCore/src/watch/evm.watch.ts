@@ -151,7 +151,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
   }
   @IntervalTimerDecorator
   public async rpcScan() {
-    await this.init()
     const currentBlockCacheKey = `rpcScan:${this.chain.chainConfig.chainId}`
     const latestHeight = await this.chain.getLatestHeight()
     if (!this.getCurrentBlock || this.getCurrentBlock <= 0) {
