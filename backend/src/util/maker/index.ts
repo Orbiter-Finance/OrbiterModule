@@ -1468,8 +1468,7 @@ function confirmToTransaction(
   transactionID,
   confirmations = 3
 ) {
-  accessLogger.info('confirmToTransaction =', getTime())
-
+  accessLogger.info(`[${transactionID}] confirmToTransaction =`, getTime())
   setTimeout(async () => {
     const trxConfirmations = await getConfirmations(Chain, txHash)
     if (!trxConfirmations) {
@@ -1482,7 +1481,7 @@ function confirmToTransaction(
       )
     }
     accessLogger.info(
-      'Transaction with hash ' +
+      `[${transactionID}] Transaction with hash ` +
         txHash +
         ' has ' +
         trxConfirmations.confirmations +
@@ -1514,7 +1513,9 @@ function confirmToTransaction(
       )
 
       accessLogger.info(
-        'Transaction with hash ' + txHash + ' has been successfully confirmed'
+        `[${transactionID}] Transaction with hash ` +
+          txHash +
+          ' has been successfully confirmed'
       )
       accessLogger.info(
         'update maker_node =',
@@ -1525,9 +1526,11 @@ function confirmToTransaction(
           { transactionID: transactionID },
           { toTimeStamp: timestamp, state: 3 }
         )
-        accessLogger.info(`confirmToTransaction->Chain:${Chain} update success`)
+        accessLogger.info(
+          `[${transactionID}]  confirmToTransaction->Chain:${Chain} update success`
+        )
       } catch (error) {
-        errorLogger.error('updateToSqlError =', error)
+        errorLogger.error(`[${transactionID}]  updateToSqlError =`, error)
         return
       }
       return
@@ -1958,7 +1961,7 @@ export async function sendTransaction(
   )
   if (!toChainConfig || !toChainConfig.tokens) {
     accessLogger.error(
-      `The public chain configuration for the payment does not exist, toChainId ${toChainID} `
+      `[${transactionID}] The public chain configuration for the payment does not exist, toChainId ${toChainID} `
     )
     return
   }
@@ -1967,12 +1970,12 @@ export async function sendTransaction(
   )
   if (!tokenInfo) {
     accessLogger.error(
-      `The public chain Token configuration for the payment does not exist, toChainId ${toChainID} ${tokenAddress} `
+      `[${transactionID}] The public chain Token configuration for the payment does not exist, toChainId ${toChainID} ${tokenAddress} `
     )
     return
   }
   accessLogger.info(
-    `${transactionID} exec send `,
+    `${transactionID} Exec Send Transfer`,
     JSON.stringify({
       makerAddress,
       toAddress,
@@ -2016,9 +2019,11 @@ export async function sendTransaction(
               state: 2,
             }
           )
-          accessLogger.info(`sendTransaction toChain ${toChain} update success`)
+          accessLogger.info(
+            `[${transactionID}] sendTransaction toChain ${toChain} update success`
+          )
         } catch (error) {
-          errorLogger.error('updateToSqlError =', error)
+          errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
           return
         }
         if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
@@ -2057,7 +2062,7 @@ export async function sendTransaction(
             { state: 20 }
           )
           accessLogger.info(
-            `sendTransaction toChain ${toChain} state = 20  update success`
+            `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
           )
           // todo need result_nonce
           // if (response.result_nonce > 0) {
@@ -2092,14 +2097,17 @@ export async function sendTransaction(
           //   }
           // }
         } catch (error) {
-          errorLogger.error('updateErrorSqlError =', error)
+          errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
           return
         }
         let alert = 'Send Transaction Error ' + transactionID
         try {
           // doSms(alert)
         } catch (error) {
-          errorLogger.error('sendTransactionErrorMessage =', error)
+          errorLogger.error(
+            `[${transactionID}] sendTransactionErrorMessage =`,
+            error
+          )
         }
       }
     })
