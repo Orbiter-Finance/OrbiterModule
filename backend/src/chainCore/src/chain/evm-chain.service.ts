@@ -1,5 +1,4 @@
 import { AlchemyWeb3, createAlchemyWeb3 } from '@alch/alchemy-web3'
-import { isEmpty } from '@loopring-web/loopring-sdk'
 import BigNumber from 'bignumber.js'
 import {
   HashOrBlockNumber,
@@ -13,7 +12,7 @@ import {
   IEVMChain,
   QueryTransactionsResponse,
 } from '../types/chain'
-import { decodeMethod, equals, IERC20_ABI_JSON } from '../utils'
+import { decodeMethod, equals, IERC20_ABI_JSON, isEmpty } from '../utils'
 import logger from '../utils/logger'
 
 export abstract class EVMChain implements IEVMChain {
@@ -68,6 +67,47 @@ export abstract class EVMChain implements IEVMChain {
     }
     return null
   }
+  protected async decodeInputContractTransfer(
+    input: string,
+    contractAddress: string
+  ) {
+    const decodeInputData = decodeMethod(
+      String(input),
+      contractAddress.toLowerCase()
+    )
+    const result = {
+      //...
+      name: '',
+      data: {},
+    }
+    if (!decodeInputData || !decodeInputData.params) {
+      return result
+    }
+    result.name = decodeInputData.name
+    switch (decodeInputData.name) {
+      case 'transferERC20':
+        if (
+          this.chainConfig.contracts.findIndex((addr) =>
+            equals(addr, contractAddress)
+          ) !== -1
+        ) {
+          decodeInputData.params.forEach((el) => {
+            const filedName = el.name.replace('_', '')
+            result.data[filedName] = el.value
+            result[filedName] = el
+          })
+        }
+        break
+      case 'transfer':
+        decodeInputData.params.forEach((el) => {
+          const filedName = el.name.replace('_', '')
+          result.data[filedName] = el.value
+          result[filedName] = el
+        })
+        break
+    }
+    return result
+  }
   public async convertTxToEntity(trx: any): Promise<Transaction | null> {
     const {
       hash,
@@ -82,12 +122,11 @@ export abstract class EVMChain implements IEVMChain {
       input,
       ...extra
     } = trx
-
     const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
-    const gas = trxRcceipt.gasUsed;
     if (!trxRcceipt) {
       return null
     }
+    const gas = trxRcceipt.gasUsed
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)
     const confirmations = await this.getConfirmations(blockNumber)
@@ -95,7 +134,7 @@ export abstract class EVMChain implements IEVMChain {
       chainId: this.chainConfig.chainId,
       hash,
       from,
-      to: String(to),
+      to: '',
       value: new BigNumber(value),
       nonce,
       blockHash: String(blockHash),
@@ -121,42 +160,24 @@ export abstract class EVMChain implements IEVMChain {
     if (!isEmpty(to)) {
       const code = await this.web3.eth.getCode(to)
       if (code === '0x') {
+        newTx.to = to;
         newTx.tokenAddress = this.chainConfig.nativeCurrency.address
         newTx.symbol = this.chainConfig.nativeCurrency.symbol
       } else {
         // contract token
         newTx.tokenAddress = to
         newTx.to = ''
-        const decodeInputData = decodeMethod(String(input), to.toLowerCase())
-        // Compatible with transaction data from other chains to dydx
-        if (
-          this.chainConfig.contracts.findIndex((addr) => equals(addr, to)) !==
-          -1
-        ) {
-          if (decodeInputData.name === 'transferERC20') {
-            decodeInputData.params.forEach((el) => {
-              if (el.name === '_token') {
-                newTx.tokenAddress = el.value
-              } else if (el.name === '_to') {
-                newTx.to = el.value
-              } else if (el.name === '_amount') {
-                newTx.value = new BigNumber(el.value)
-              }
-            })
-            newTx.symbol = await this.getTokenSymbol(String(newTx.tokenAddress))
-          }
+        const contractData = await this.decodeInputContractTransfer(input, to)
+        if (contractData.name === 'transferERC20') {
+          newTx.tokenAddress = contractData.data['token']
+          newTx.to = contractData.data['to']
+          newTx.value = new BigNumber(contractData.data['amount'])
+        } else if (contractData.name === 'transfer') {
+          newTx.tokenAddress = to
+          newTx.to = contractData.data['recipient']
+          newTx.value = new BigNumber(contractData.data['amount'])
         }
-        if (decodeInputData && decodeInputData.name === 'transfer') {
-          decodeInputData.params.forEach((el) => {
-            if (el.type === 'address' && el.name === 'recipient') {
-              newTx.to = el.value
-            } else if (el.type === 'uint256' && el.name ==='amount') {
-              newTx.value = new BigNumber(el.value)
-            }
-          })
-          // get token symbol
-          newTx.symbol = await this.getTokenSymbol(String(newTx.tokenAddress))
-        }
+        newTx.symbol = await this.getTokenSymbol(String(newTx.tokenAddress))
       }
     }
     return newTx
