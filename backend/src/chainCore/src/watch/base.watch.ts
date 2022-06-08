@@ -228,7 +228,7 @@ export default abstract class BasetWatch implements IChainWatch {
       const prevCursor = await this.apiScanCursor(address)
       if (prevCursor) {
         // exec query trx
-        logger.info(
+        this.chain.chainConfig.debug && logger.info(
           `[${this.chain.chainConfig.name}] API Query Transaction in Progress : makerAddress=${address},blockNumber=${prevCursor.blockNumber},timestamp=${prevCursor.timestamp}`
         )
         queryTxs = await this.apiWatchNewTransaction(address)

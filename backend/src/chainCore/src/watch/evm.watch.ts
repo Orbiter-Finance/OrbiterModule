@@ -147,7 +147,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
     try {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
-      logger.info(`[${config.name}] Start replayBlock ${start} to ${end}`)
+      config.debug && logger.info(`[${config.name}] Start replayBlock ${start} to ${end}`)
 
       while (start < end) {
         try {
@@ -222,7 +222,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
             txmap.forEach(async (txlist, address) => {
               this.pushMessage(address, txlist)
               if (txlist.length > 0) {
-                logger.info(
+                this.chain.chainConfig.debug && logger.info(
                   `[${this.chain.chainConfig.name}] RpcScan New Transaction: Cursor = ${blockNumber} `,
                   txlist.map((tx) => tx.hash)
                 )
@@ -231,7 +231,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
           }
         }
       )
-      logger.info(
+      this.chain.chainConfig.debug && logger.info(
         `[${this.chain.chainConfig.name}] rpcScan End of scan result：`,
         result
       )
