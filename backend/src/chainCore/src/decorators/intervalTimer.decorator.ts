@@ -1,4 +1,6 @@
+import dayjs from 'dayjs'
 import logger from '../utils/logger'
+import schedule from 'node-schedule'
 export const IntervalTimerDecorator = (
   target: Object,
   propertyKey: string | symbol,
@@ -6,16 +8,15 @@ export const IntervalTimerDecorator = (
 ) => {
   try {
     const methods: Function = descriptor.value
+
     descriptor.value = async function () {
       let execTime = Date.now()
       let isLock = false
       const that = this
-      const config = that.chain.chainConfig ;
       const intervalSeconds =
-        (config.api.intervalTime) ||
+        (that.chain.chainConfig && that.chain.chainConfig.api.intervalTime) ||
         1000 * 4
       setInterval(async () => {
-        // config.debug && console.debug(`[${config.name}] time:${Date.now() - execTime},intervalSeconds:${intervalSeconds}, isLock:${isLock}`)
         if (Date.now() - execTime > intervalSeconds && !isLock) {
           try {
             isLock = true

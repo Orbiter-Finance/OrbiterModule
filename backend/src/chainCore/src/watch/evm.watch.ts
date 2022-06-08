@@ -44,77 +44,24 @@ export default abstract class EVMWatchBase extends BasetWatch {
     hashOrTx: string | any
   ): Promise<AddressMapTransactions> {
     const txmap: AddressMapTransactions = new Map()
-    let originTx =
-      typeof hashOrTx === 'string'
-        ? await (<EVMChain>this.chain).getWeb3().eth.getTransaction(hashOrTx)
-        : hashOrTx
-    if (!hashOrTx.to) {
-      return txmap
-    }
     try {
-      let isMatchTx = await this.isWatchWalletAddress(originTx.from)
-      if (!isMatchTx && (await this.isWatchWalletAddress(originTx.to))) {
-        isMatchTx = true
-      }
-      if (await this.isWatchContractAddress(hashOrTx.to)) {
-        isMatchTx = true
-      }
-      if (!isMatchTx && originTx.input.length >= 138) {
-        // match 1
-        // if (await this.isWatchTokenAddress(originTx.to)) {
-        //   const decodeInputData = decodeMethod(originTx.input)
-        //   if (
-        //     decodeInputData &&
-        //     decodeInputData.params.length == 2 &&
-        //     decodeInputData.name === 'transfer'
-        //   ) {
-        //     const addressRow = decodeInputData.params.find(
-        //       (row) => row.name === 'recipient' || row.type === 'address'
-        //     )
-        //     if (
-        //       (await this.isWatchTokenAddress(originTx.to)) &&
-        //       (await this.isWatchWalletAddress(addressRow.value))
-        //     ) {
-        //       isMatchTx = true
-        //     }
-        //   }
-        // }
-        // match2
-        for (const address of Array.from(this.watchAddress.keys())) {
-          if (originTx.input.includes(address.substring(2))) {
-            if (await this.isWatchTokenAddress(originTx.to)) {
-              isMatchTx = true
-              break
-            }
-          }
-        }
-      }
-      if (!isMatchTx) {
-        return txmap
-      }
-      const trx = await this.chain.convertTxToEntity(originTx)
+      const trx =
+        typeof hashOrTx === 'string'
+          ? await this.chain.getTransactionByHash(hashOrTx)
+          : await this.chain.convertTxToEntity(hashOrTx)
       if (!trx) {
         return txmap
       }
-      let matchAddress = ''
-      if (await this.isWatchWalletAddress(trx.from)) {
-        matchAddress = trx.from
-      } else if (await this.isWatchWalletAddress(trx.to)) {
-        matchAddress = trx.to
+      const from = trx.from.toLowerCase()
+      const to = trx.to.toLowerCase()
+      //
+      if (await this.isWatchWalletAddress(from)) {
+        if (!txmap.has(from)) txmap.set(from, [])
+        txmap.get(from)?.push(trx)
+      } else if (await this.isWatchWalletAddress(to)) {
+        if (!txmap.has(to)) txmap.set(to, [])
+        txmap.get(to)?.push(trx)
       }
-      if (!matchAddress) {
-        logger.info(
-          `[${this.chain.chainConfig.name}] Matched but the resolved transaction failed to match: Addrss=${matchAddress}`,
-          JSON.stringify(trx)
-        )
-        return txmap
-      }
-      matchAddress = matchAddress.toLowerCase()
-      logger.info(
-        `[${this.chain.chainConfig.name}] replayBlock Match Transaction:Addrss=${matchAddress},matchAddress Hash=${originTx.hash}`
-      )
-      if (!txmap.has(matchAddress)) txmap.set(matchAddress, [])
-      txmap.get(matchAddress)?.push(trx)
       return txmap
     } catch (error) {
       throw error
@@ -139,6 +86,19 @@ export default abstract class EVMWatchBase extends BasetWatch {
       -1
     return isWatchToken
   }
+  public async isWatchToAddress(to: string) {
+    const lowerToAddress = to.toLowerCase()
+    // is watch wallet address
+    const isWatchWallet = await this.isWatchWalletAddress(lowerToAddress)
+    if (isWatchWallet) return true
+    // is watch token address
+    const isWatchToken = await this.isWatchTokenAddress(lowerToAddress)
+    if (isWatchToken) return true
+    // is watch contract address
+    const isWatchContract = await this.isWatchContractAddress(lowerToAddress)
+    if (isWatchContract) return true
+    return false
+  }
   public async replayBlock(
     start: number,
     end: number,
@@ -148,21 +108,9 @@ export default abstract class EVMWatchBase extends BasetWatch {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
       logger.info(`[${config.name}] Start replayBlock ${start} to ${end}`)
-
       while (start < end) {
         try {
-          let timestamp = Date.now()
-          config.debug &&
-            logger.debug(
-              `[replayBlock - GgetBlockBefore] Block:${start}, Latest:${end}, timestamp:${timestamp}`
-            )
           const block = await web3.eth.getBlock(start, true)
-          config.debug &&
-            logger.debug(
-              `[replayBlock - GetBlockAfter] Block:${start}, Latest:${end}, timestamp:${timestamp},Spend time:${
-                (Date.now() - timestamp) / 1000 + '/s'
-              }`
-            )
           if (block) {
             const { transactions } = block
             logger.info(
@@ -171,6 +119,17 @@ export default abstract class EVMWatchBase extends BasetWatch {
             const txmap: AddressMapTransactions = new Map()
             for (const tx of transactions) {
               // Filter non whitelist address transactions
+              const watchToAddress = await this.isWatchToAddress(String(tx.to))
+              const watchFromAddress = await this.isWatchToAddress(
+                String(tx.from)
+              )
+              if (!watchToAddress && !watchFromAddress) {
+                continue
+              }
+              config.debug &&
+                logger.debug(
+                  `[${config.name}] replayBlock Handle Tx (${start}/${end}), trx index:${tx.transactionIndex}, hash:${tx.hash}`
+                )
               const matchTxList = await this.replayBlockTransaction(tx)
               matchTxList.forEach((txlist, address) => {
                 if (!txmap.has(address)) txmap.set(address, [])
@@ -178,14 +137,6 @@ export default abstract class EVMWatchBase extends BasetWatch {
               })
             }
             changeBlock && changeBlock(start, txmap)
-            config.debug &&
-              logger.debug(
-                `[replayBlock - complete] Block:${start}, Latest:${end}, Next Block:${
-                  start + 1
-                }, timestamp:${timestamp},Spend time:${
-                  (Date.now() - timestamp) / 1000 + '/s'
-                }`
-              )
             start++
           }
         } catch (error) {

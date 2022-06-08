@@ -9,7 +9,7 @@ async function run() {
 //   console.log(result)
 // watch.replayBlock()
 watch.apiScan()
-    const tx = await watch.chain.getTransactionByHash('0x677080bd7422a7436e96f7d5756436f34494dd7247644681a62c9e97c151fc9b');
-    console.log(tx);
+    // const tx = await watch.chain.getTransactionByHash('0x677080bd7422a7436e96f7d5756436f34494dd7247644681a62c9e97c151fc9b');
+    // console.log(tx);
 }
 run()
