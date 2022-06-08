@@ -79,12 +79,12 @@ export abstract class EVMChain implements IEVMChain {
       to,
       value,
       gasPrice,
-      gas,
       input,
       ...extra
     } = trx
 
     const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
+    const gas = trxRcceipt.gasUsed;
     if (!trxRcceipt) {
       return null
     }
