@@ -147,26 +147,26 @@ export default abstract class EVMWatchBase extends BasetWatch {
     try {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
-      config.debug && logger.info(`[${config.name}] Start replayBlock ${start}/${end - this.minConfirmations}, Latest:${end}`)
+      config.debug && logger.info(`[${config.name}] Start replayBlock ${start}/${end - this.minConfirmations}/${end}`)
 
-      while (start < end - this.minConfirmations) {
+      while (start <= end - this.minConfirmations) {
         try {
           let timestamp = Date.now()
           config.debug &&
             logger.debug(
-              `[replayBlock - GgetBlockBefore] Block:${start}/${end - this.minConfirmations}, Latest:${end}, timestamp:${timestamp}`
+              `[replayBlock - GgetBlockBefore] Block:${start}/${end - this.minConfirmations}/${end},, timestamp:${timestamp}`
             )
           const block = await web3.eth.getBlock(start, true)
           config.debug &&
             logger.debug(
-              `[replayBlock - GetBlockAfter] Block:${start}/${end - this.minConfirmations}, Latest:${end}, timestamp:${timestamp},Spend time:${
+              `[replayBlock - GetBlockAfter] Block:${start}/${end - this.minConfirmations}/${end}, timestamp:${timestamp},Spend time:${
                 (Date.now() - timestamp) / 1000 + '/s'
               }`
             )
           if (block) {
             const { transactions } = block
             config.debug && logger.info(
-              `[${config.name}] replayBlock (${start}/${end}), Trxs Count : ${transactions.length}`
+              `[${config.name}] replayBlock (${start}/${end- this.minConfirmations}/${end}), Trxs Count : ${transactions.length}`
             )
             const txmap: AddressMapTransactions = new Map()
             for (const tx of transactions) {
