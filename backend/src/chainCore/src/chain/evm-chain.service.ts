@@ -143,19 +143,19 @@ export abstract class EVMChain implements IEVMChain {
                 newTx.value = new BigNumber(el.value)
               }
             })
-            newTx.symbol = await this.getTokenSymbol(to)
+            newTx.symbol = await this.getTokenSymbol(String(newTx.tokenAddress))
           }
         }
         if (decodeInputData && decodeInputData.name === 'transfer') {
           decodeInputData.params.forEach((el) => {
-            if (el.type === 'address') {
+            if (el.type === 'address' && el.name === 'recipient') {
               newTx.to = el.value
-            } else if (el.type === 'uint256') {
+            } else if (el.type === 'uint256' && el.name ==='amount') {
               newTx.value = new BigNumber(el.value)
             }
           })
           // get token symbol
-          newTx.symbol = await this.getTokenSymbol(to)
+          newTx.symbol = await this.getTokenSymbol(String(newTx.tokenAddress))
         }
       }
     }
@@ -212,6 +212,7 @@ export abstract class EVMChain implements IEVMChain {
       return token.symbol
     }
     try {
+      console.log(tokenAddress, '===tokenAddress')
       const tokenContract = new this.web3.eth.Contract(
         IERC20_ABI_JSON as any,
         tokenAddress

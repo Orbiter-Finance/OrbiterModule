@@ -103,30 +103,33 @@ export default abstract class BasetWatch implements IChainWatch {
         `[${this.chain.chainConfig.name}] New Transaction Pushed`,
         JSON.stringify(pushTrx)
       )
-      PubSubMQ.publish(
-        `${this.chain.chainConfig.internalId}:txlist`,
-        pushTrx,
-        (hashList: Array<string>) => {
-          if (hashList && Array.isArray(hashList)) {
-            hashList.forEach((hash) => {
-              if (this.pushHistory.has(hash)) {
-                const tx = this.pushHistory.get(hash)
-                if (tx) {
-                  tx.status = true
-                }
-              }
-            })
-            this.cache.set(
-              'txlist',
-              Array.from(this.pushHistory.keys()).reverse()
-            )
-          }
-          logger.info(
-            `[${this.chain.chainConfig.name}] New Transaction Pushed Save DB Success TxHash List`,
-            JSON.stringify(hashList)
-          )
-        }
-      )
+      PubSubMQ.publish(`${this.chain.chainConfig.internalId}:txlist`, pushTrx)
+      this.cache.set('txlist', Array.from(this.pushHistory.keys()).reverse())
+      // PubSubMQ.publish(
+      //   `${this.chain.chainConfig.internalId}:txlist`,
+      //   pushTrx,
+      //   (hashList: Array<string>) => {
+      //     if (hashList && Array.isArray(hashList)) {
+      //       hashList.forEach((hash) => {
+      //         if (this.pushHistory.has(hash)) {
+      //           const tx = this.pushHistory.get(hash)
+      //           if (tx) {
+      //             tx.status = true
+      //           }
+      //         }
+      //       })
+      //       this.cache.set(
+      //         'txlist',
+      //         Array.from(this.pushHistory.keys()).reverse()
+      //       )
+      //     }
+      //     logger.info(
+      //       `[${this.chain.chainConfig.name}] New Transaction Pushed Save DB Success TxHash List`,
+      //       JSON.stringify(hashList)
+      //     )
+      //   }
+      // )
+      //
       pushTrx = orderBy(pushTrx, ['timestamp', 'blockNumber'], ['desc', 'desc'])
       this.pushAfter(address, pushTrx)
     }

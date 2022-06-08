@@ -133,7 +133,6 @@ export async function getMakerPulls(
   queryBuilder.addOrderBy(`${ALIAS_MP}.txTime`, 'DESC')
 
   const list = await queryBuilder.getRawMany()
-
   // clear
   const newList: any[] = []
   for (const item of list) {
@@ -459,8 +458,7 @@ export class ServiceMakerPull {
         )
       } else {
         logger.error(
-          'Collection transaction, user transfer targetMP  not found:',
-          JSON.stringify(makerPull)
+          `Collection transaction, user transfer targetMP  not found:id:${makerPull.id},chainId:${makerPull.chainId},amount_flag:${makerPull.amount_flag},txHash${ makerPull.txHash}`,
         )
       }
     }
@@ -1771,11 +1769,17 @@ export class ServiceMakerPull {
         txTime: new Date(tx.timestamp * 1000),
         gasCurrency: tx.feeToken,
         gasAmount: String(tx.fee),
-        tx_status:
-          tx.status === TransactionStatus.COMPLETE ? 'finalized' : 'committed',
+        tx_status: 'rejected',
       }
       if ([9, 99].includes(Number(makerPull.chainId)) && tx.extra) {
         makerPull.amount_flag = (<any>tx.extra.memo % 9000) + ''
+      }
+      if (tx.status === TransactionStatus.COMPLETE) {
+        makerPull.tx_status = 'finalized'
+      } else if (tx.status === TransactionStatus.PENDING) {
+        makerPull.tx_status = 'committed'
+      } else if (tx.status === TransactionStatus.Fail) {
+        makerPull.tx_status = 'rejected'
       }
       if (
         [3, 33, 8, 88, 12, 512].includes(makerPull.chainId) &&
@@ -1783,6 +1787,7 @@ export class ServiceMakerPull {
       ) {
         makerPull.tx_status = 'finalized'
       }
+
       accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
       //
       promiseMethods.push(async () => {
