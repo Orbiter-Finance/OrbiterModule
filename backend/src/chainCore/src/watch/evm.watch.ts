@@ -147,7 +147,7 @@ export default abstract class EVMWatchBase extends BasetWatch {
     try {
       const web3 = (<EVMChain>this.chain).getWeb3()
       const config = this.chain.chainConfig
-      config.debug && logger.info(`[${config.name}] Start replayBlock ${start} to ${end}`)
+      config.debug && logger.info(`[${config.name}] Start replayBlock ${start}/${end - this.minConfirmations}, Latest:${end}`)
 
       while (start < end - this.minConfirmations) {
         try {

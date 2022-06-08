@@ -15,7 +15,7 @@ export const IntervalTimerDecorator = (
         (config.api.intervalTime) ||
         1000 * 4
       setInterval(async () => {
-        config.debug && console.debug(`[${config.name}] time:${Date.now() - execTime},intervalSeconds:${intervalSeconds}, isLock:${isLock}`)
+        // config.debug && console.debug(`[${config.name}] time:${Date.now() - execTime},intervalSeconds:${intervalSeconds}, isLock:${isLock}`)
         if (Date.now() - execTime > intervalSeconds && !isLock) {
           try {
             isLock = true
