@@ -39,19 +39,19 @@ export default abstract class BasetWatch implements IChainWatch {
   }
   public abstract getApiFilter(address: Address): Promise<QueryTxFilter>
   public async init() {
-    let txlist: Array<string> = (await this.cache.get(`txlist`)) || []
-    if (txlist.length >= 1000) {
-      txlist.splice(1000)
-    }
-    if (!Array.isArray(txlist)) txlist = []
-    txlist.forEach((hash) => {
-      if (!this.pushHistory.has(hash.toLowerCase())) {
-        this.pushHistory.set(hash, {
-          status: true,
-          time: 0,
-        })
-      }
-    })
+    // let txlist: Array<string> = (await this.cache.get(`txlist`)) || []
+    // if (txlist.length >= 1000) {
+    //   txlist.splice(1000)
+    // }
+    // if (!Array.isArray(txlist)) txlist = []
+    // txlist.forEach((hash) => {
+    //   if (!this.pushHistory.has(hash.toLowerCase())) {
+    //     this.pushHistory.set(hash, {
+    //       status: true,
+    //       time: 0,
+    //     })
+    //   }
+    // })
     return this
   }
   public addWatchAddress(address: Array<Address> | Address) {
@@ -104,7 +104,8 @@ export default abstract class BasetWatch implements IChainWatch {
         JSON.stringify(pushTrx)
       )
       PubSubMQ.publish(`${this.chain.chainConfig.internalId}:txlist`, pushTrx)
-      this.cache.set('txlist', Array.from(this.pushHistory.keys()).reverse())
+      // const hashList = (Array.from(this.pushHistory.keys()).reverse()).splice(10);
+      // this.cache.set('txlist',hashList)
       // PubSubMQ.publish(
       //   `${this.chain.chainConfig.internalId}:txlist`,
       //   pushTrx,
