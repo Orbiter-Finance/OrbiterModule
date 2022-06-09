@@ -95,12 +95,15 @@ export class ZKSync implements IChain {
     if (result && result.list && result.list.length > 0) {
       for (const tx of result.list) {
         const { txHash, blockNumber, blockIndex, op, createdAt, ...extra } = tx
-        const { from, to, amount, fee, nonce, token } = op
+        const { from, to, amount, fee, nonce, token,type } = op
         let txStatus = TransactionStatus.Fail
         if (extra.status === 'committed') {
           txStatus = TransactionStatus.PENDING
         } else if (extra.status === 'finalized') {
           txStatus = TransactionStatus.COMPLETE
+        }
+        if (!equals('Transfer', type)) {
+          continue
         }
         const trx = new Transaction({
           chainId: this.chainConfig.chainId,
