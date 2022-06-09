@@ -177,7 +177,6 @@ export class ZKSpace implements IChain {
     const response: QueryTransactionsResponse = {
       txlist: [],
     }
-    console.log(token,'===token')
     const { data, success, ...resExtra } = await HttpGet(
       `${this.chainConfig.api.url}/txs`,
       Object.assign({ address, token: token.id }, filter)
