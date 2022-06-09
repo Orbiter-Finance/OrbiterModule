@@ -14,17 +14,21 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": [
-      "wss://eth-mainnet.alchemyapi.io/v2/{You Key}"
-    ],
+    "rpc": ["wss://eth-mainnet.alchemyapi.io/v2/{You Key}"],
     "watch": ["rpc", "api"],
-    "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
+    "contracts": ["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
     "tokens": [
       {
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
         "address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48"
+      },
+      {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0xdAC17F958D2ee523a2206206994597C13D831ec7"
       }
     ]
   },
@@ -36,7 +40,6 @@
     "chainId": "42161",
     "networkId": "42161",
     "internalId": "2",
-    "debug":true,
     "name": "Arbitrum One",
     "nativeCurrency": {
       "name": "Ether",
@@ -46,13 +49,19 @@
     },
     "rpc": ["wss://arb1.arbitrum.io/ws"],
     "watch": ["rpc", "api"],
-    "contracts":["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
+    "contracts": ["0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"],
     "tokens": [
       {
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
         "address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8"
+      },
+      {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0xFd086bC7CD5C481DCC9C85ebE478A1C0b69FCbb9"
       }
     ]
   },
@@ -73,7 +82,7 @@
     "networkId": "288",
     "rpc": ["wss://ws.mainnet.boba.network"],
     "watch": ["rpc", "api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": []
   },
   {
@@ -94,7 +103,7 @@
     },
     "rpc": ["wss://andromeda-ws.metis.io"],
     "watch": ["api", "rpc"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
         "name": "Ether (WETH)",
@@ -119,9 +128,8 @@
     "networkId": "zksync",
     "internalId": "3",
     "name": "ZKSync Mainnet",
-    "debug":true,
     "nativeCurrency": {
-      "id":0,
+      "id": 0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -129,10 +137,10 @@
     },
     "rpc": [],
     "watch": ["api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
-        "id":2,
+        "id": 2,
         "name": "USDC",
         "symbol": "USDC",
         "decimals": 6,
@@ -149,9 +157,7 @@
     "networkId": "137",
     "internalId": "6",
     "name": "Polygon Mainnet",
-    "rpc": [
-      "wss://polygon-mainnet.g.alchemy.com/v2/{You Key}"
-    ],
+    "rpc": ["wss://polygon-mainnet.g.alchemy.com/v2/{You Key}"],
     "nativeCurrency": {
       "name": "MATIC",
       "symbol": "MATIC",
@@ -159,7 +165,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "watch": ["api", "rpc"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
         "name": "Wrapped Ether",
@@ -172,6 +178,12 @@
         "symbol": "USDC",
         "decimals": 6,
         "address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174"
+      },
+      {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0xc2132D05D31c914a87C6611C10748AEb04B58e8F"
       }
     ]
   },
@@ -190,17 +202,21 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": [
-      "wss://opt-mainnet.g.alchemy.com/v2/{You Key}"
-    ],
+    "rpc": ["wss://opt-mainnet.g.alchemy.com/v2/{You Key}"],
     "watch": ["api", "rpc"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
         "address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607"
+      },
+      {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0x94b008aA00579c1307B0EF2c499aD98a8ce58e58"
       }
     ]
   },
@@ -214,7 +230,7 @@
     "internalId": "12",
     "name": "ZKSpace Mainnet",
     "nativeCurrency": {
-      "id":0,
+      "id": 0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
@@ -222,10 +238,10 @@
     },
     "rpc": [],
     "watch": ["api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
-        "id":4,
+        "id": 4,
         "name": "USD Coin",
         "symbol": "USDC",
         "decimals": 6,
@@ -250,7 +266,7 @@
     },
     "rpc": [],
     "watch": ["api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
         "name": "USD Coin",
@@ -277,7 +293,7 @@
     },
     "rpc": [],
     "watch": ["api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": [
       {
         "name": "USD Coin",
@@ -297,7 +313,7 @@
     "internalId": "9",
     "name": "Loopring Mainnet",
     "nativeCurrency": {
-      "id":0,
+      "id": 0,
       "name": "Ethereum",
       "symbol": "ETH",
       "decimals": 0,
@@ -305,7 +321,7 @@
     },
     "rpc": ["wss://ws.api3.loopring.io/v3/ws"],
     "watch": ["api"],
-    "contracts":[],
+    "contracts": [],
     "tokens": []
   }
 ]
