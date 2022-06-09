@@ -120,7 +120,9 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         // )
         continue
       }
-
+      if (equals(tx.to, tx.from) || tx.value.lt(0)) {
+        continue;
+      }
       accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       const fromChain = await getChainByChainId(tx.chainId)
       // check send
