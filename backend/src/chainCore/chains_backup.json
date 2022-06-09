@@ -255,7 +255,7 @@
       "key": ""
     },
     "chainId": "dydx",
-    "networkId": "dydx",
+    "networkId": "1",
     "internalId": "11",
     "name": "Dydx Mainnet",
     "nativeCurrency": {

@@ -75,8 +75,81 @@ export class Loopring implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<Transaction> {
-    throw new Error('Method not implemented.')
+  public async convertTxToEntity(data: any): Promise<Transaction | null> {
+    if (!data) return data
+    const {
+      id,
+      hash,
+      amount,
+      blockId,
+      indexInBlock,
+      senderAddress,
+      receiverAddress,
+      feeAmount,
+      feeTokenSymbol,
+      timestamp,
+      status,
+      ...extra
+    } = data
+    const storageInfo = data['storageInfo']
+    if (!storageInfo) {
+      return null
+    }
+    // nonce
+    const nonce = (storageInfo.storageId - 1) / 2
+    const trxDTO = new Transaction({
+      chainId: this.chainConfig.chainId,
+      hash,
+      from: senderAddress,
+      to: receiverAddress,
+      value: new BigNumber(amount),
+      nonce,
+      blockHash: '',
+      blockNumber: Number(blockId),
+      transactionIndex: Number(indexInBlock),
+      gas: 0,
+      gasPrice: 0,
+      fee: Number(feeAmount || 0),
+      feeToken: feeTokenSymbol,
+      input: '',
+      symbol: '',
+      tokenAddress: '',
+      status: TransactionStatus.Fail,
+      timestamp: parseInt(String(timestamp / 1000)),
+      extra,
+    })
+    const token = await this.getTokenInfo(storageInfo.tokenId)
+    if (token) {
+      trxDTO.symbol = token.symbol
+      trxDTO.tokenAddress = token.address
+    }
+    if (status === 'processed') {
+      trxDTO.status = TransactionStatus.COMPLETE
+    } else if (status === 'received') {
+      trxDTO.status = TransactionStatus.PENDING
+    }
+    return trxDTO
+  }
+  async getTransactionByHash(hash: string): Promise<Transaction | null> {
+    const networkId = Number(this.chainConfig.networkId)
+    const userApi = new UserAPI({
+      chainId: networkId,
+    })
+    const resData = await userApi.getUserTransferList(
+      {
+        hashes: hash,
+      },
+      String(this.chainConfig.api.key)
+    )
+    const userTransfers: any = resData.userTransfers
+    if (
+      userTransfers &&
+      Array.isArray(userTransfers) &&
+      userTransfers.length > 0
+    ) {
+      return await this.convertTxToEntity(userTransfers[0])
+    }
+    return null
   }
   private async getAccountInfo(address: string) {
     const networkId = Number(this.chainConfig.networkId)
@@ -125,54 +198,9 @@ export class Loopring implements IChain {
         userTransfers.length > 0
       ) {
         for (const tx of userTransfers) {
-          const {
-            id,
-            hash,
-            amount,
-            senderAddress,
-            receiverAddress,
-            feeAmount,
-            feeTokenSymbol,
-            timestamp,
-            status,
-            ...extra
-          } = tx
-          const storageInfo = tx['storageInfo']
-          if (storageInfo) {
-            // nonce
-            const nonce = (storageInfo.storageId - 1) / 2
-            const trxDTO = new Transaction({
-              chainId: this.chainConfig.chainId,
-              hash,
-              from: senderAddress,
-              to: receiverAddress,
-              value: new BigNumber(amount),
-              nonce,
-              blockHash: '',
-              blockNumber: Number(tx['blockId'] || 0),
-              transactionIndex: Number(tx['indexInBlock'] || 0),
-              gas: 0,
-              gasPrice: 0,
-              fee: Number(feeAmount || 0),
-              feeToken: feeTokenSymbol,
-              input: '',
-              symbol: '',
-              tokenAddress: '',
-              status: TransactionStatus.Fail,
-              timestamp: parseInt(String(timestamp / 1000)),
-              extra,
-            })
-            const token = await this.getTokenInfo(storageInfo.tokenId)
-            if (token) {
-              trxDTO.symbol = token.symbol
-              trxDTO.tokenAddress = token.address
-            }
-            if (status === 'processed') {
-              trxDTO.status = TransactionStatus.COMPLETE
-            } else if (status === 'received') {
-              trxDTO.status = TransactionStatus.PENDING
-            }
-            response.txlist.push(trxDTO)
+          const trx = await this.convertTxToEntity(tx)
+          if (trx) {
+            response.txlist.push(trx)
           }
         }
       }

@@ -193,7 +193,7 @@
       "key": ""
     },
     "chainId": "dydx_test",
-    "networkId": "dydx",
+    "networkId": "5",
     "internalId": "511",
     "name": "Dydx Testnet",
     "nativeCurrency": {

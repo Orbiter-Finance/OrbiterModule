@@ -66,8 +66,31 @@ export class Dydx implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<ITransaction> {
+  async getTransactionByHash(hash: string): Promise<ITransaction> {
     throw new Error('Method not implemented.')
+  }
+  /**
+   * The api does not return the nonce value, timestamp(ms) last three number is the nonce
+   *  (warnning: there is a possibility of conflict)
+   * @param  timestamp ms
+   * @returns
+   */
+  static timestampToNonce(timestamp: number | string) {
+    let nonce = 0
+
+    if (timestamp) {
+      timestamp = String(timestamp)
+      const match = timestamp.match(/(\d{3})$/i)
+      if (match && match.length > 1) {
+        nonce = Number(match[1]) || 0
+      }
+
+      if (nonce > 900) {
+        nonce = nonce - 100
+      }
+    }
+
+    return nonce + ''
   }
   async getTransactions(
     _address: string,
@@ -91,16 +114,18 @@ export class Dydx implements IChain {
 
     for (const row of transfers) {
       const value = new BigNumber(
-        row.type.includes('TRANSFER_IN') ? row.creditAmount : row.debitAmount
+        equals(row.type, 'TRANSFER_IN') ? row.creditAmount : row.debitAmount
       )
-      const symbol = row.type.includes('TRANSFER_IN')
+      const symbol = equals(row.type, 'TRANSFER_IN')
         ? row.creditAsset
         : row.debitAsset
       const { id, fromAddress, toAddress, createdAt, ...extra } = row
+      const nonce = Dydx.timestampToNonce(new Date(row.createdAt).getTime())
+      const token = await this.chainConfig.tokens.find(t => equals(String(symbol), t.symbol));
       const tx = new Transaction({
         chainId: this.chainConfig.chainId,
         hash: id,
-        nonce: 0,
+        nonce: Number(nonce),
         from: fromAddress || '',
         to: toAddress || '',
         blockNumber: 0,
@@ -108,8 +133,8 @@ export class Dydx implements IChain {
         status: TransactionStatus.Fail,
         timestamp: dayjs(createdAt).unix(),
         fee: 0,
-        feeToken: '',
-        tokenAddress: '',
+        feeToken: String(token?.symbol),
+        tokenAddress: token?.address,
         extra,
         symbol,
       })

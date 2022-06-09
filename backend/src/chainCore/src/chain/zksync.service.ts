@@ -76,8 +76,51 @@ export class ZKSync implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<ITransaction> {
-    throw new Error('Method not implemented.')
+  public async convertTxToEntity(data: any): Promise<Transaction | null> {
+    if (!data) return data
+    const { txHash, blockNumber, blockIndex, op, createdAt, ...extra } = data;
+    const { from, to, amount, fee, nonce, token,...opExtra } = op
+    let txStatus = TransactionStatus.Fail
+    if (extra.status === 'committed') {
+      txStatus = TransactionStatus.PENDING
+    } else if (extra.status === 'finalized') {
+      txStatus = TransactionStatus.COMPLETE
+    }
+    const trx = new Transaction({
+      chainId: this.chainConfig.chainId,
+      hash: txHash,
+      nonce,
+      blockHash: blockIndex,
+      blockNumber,
+      transactionIndex: 0,
+      from,
+      to,
+      value: new BigNumber(amount),
+      fee,
+      feeToken: this.chainConfig.nativeCurrency.symbol,
+      tokenAddress: '',
+      timestamp: dayjs(createdAt).unix(),
+      extra:{
+        ...extra,
+        ...opExtra
+      },
+      status: txStatus,
+      symbol: '',
+    })
+    const tokenInfo = await this.getTokenInfo(token)
+    if (tokenInfo) {
+      trx.symbol = tokenInfo.symbol
+      trx.tokenAddress = tokenInfo.address
+    }
+    return trx;
+  }
+  async getTransactionByHash(hash: string): Promise<ITransaction | null> {
+    const {status,error,result} = await HttpGet(`${this.chainConfig.api.url}/transactions/${hash}/data`);
+    if (status === 'success' && !error) {
+      // 
+      return await this.convertTxToEntity(result.tx);
+    }
+    return null;
   }
   public async getTransactions(
     address: string,
@@ -94,41 +137,10 @@ export class ZKSync implements IChain {
     Object.assign(response, resExtra)
     if (result && result.list && result.list.length > 0) {
       for (const tx of result.list) {
-        const { txHash, blockNumber, blockIndex, op, createdAt, ...extra } = tx
-        const { from, to, amount, fee, nonce, token,type } = op
-        let txStatus = TransactionStatus.Fail
-        if (extra.status === 'committed') {
-          txStatus = TransactionStatus.PENDING
-        } else if (extra.status === 'finalized') {
-          txStatus = TransactionStatus.COMPLETE
+        const trx = await this.convertTxToEntity(tx);
+        if (trx) {
+          response.txlist.push(trx)
         }
-        if (!equals('Transfer', type)) {
-          continue
-        }
-        const trx = new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash: txHash,
-          nonce,
-          blockHash: blockIndex,
-          blockNumber,
-          transactionIndex: 0,
-          from,
-          to,
-          value: new BigNumber(amount),
-          fee,
-          feeToken: this.chainConfig.nativeCurrency.symbol,
-          tokenAddress: '',
-          timestamp: dayjs(tx.createdAt).unix(),
-          extra,
-          status: txStatus,
-          symbol: '',
-        })
-        const tokenInfo = await this.getTokenInfo(token)
-        if (tokenInfo) {
-          trx.symbol = tokenInfo.symbol
-          trx.tokenAddress = tokenInfo.address
-        }
-        response.txlist.push(trx)
       }
     }
     return response
