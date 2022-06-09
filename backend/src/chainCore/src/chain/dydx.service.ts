@@ -6,6 +6,7 @@ import {
   ITransaction,
   QueryTransactionsResponse,
   QueryTxFilterDydx,
+  Token,
   Transaction,
   TransactionStatus,
 } from '../types'
@@ -32,7 +33,25 @@ export class Dydx implements IChain {
       this.apiKeyCredentials.passphrase = keys[2]
     }
   }
-
+  public async getTokenInfo(idOrAddrsss: string | number) {
+    if (
+      idOrAddrsss === 0 ||
+      idOrAddrsss === '0' ||
+      idOrAddrsss === '0x0000000000000000000000000000000000000000'
+    ) {
+      return this.chainConfig.nativeCurrency as Token
+    }
+    if (typeof idOrAddrsss === 'string') {
+      // check local config
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
+      )
+      if (localToken) {
+        return localToken
+      }
+    }
+    return null;
+  }
   public getDydxClient() {
     const apiKeyCredentials = this.apiKeyCredentials
     if (
@@ -121,7 +140,9 @@ export class Dydx implements IChain {
         : row.debitAsset
       const { id, fromAddress, toAddress, createdAt, ...extra } = row
       const nonce = Dydx.timestampToNonce(new Date(row.createdAt).getTime())
-      const token = await this.chainConfig.tokens.find(t => equals(String(symbol), t.symbol));
+      const token = await this.chainConfig.tokens.find((t) =>
+        equals(String(symbol), t.symbol)
+      )
       const tx = new Transaction({
         chainId: this.chainConfig.chainId,
         hash: id,
@@ -154,19 +175,32 @@ export class Dydx implements IChain {
   ): Promise<QueryTransactionsResponse> {
     throw new Error('Method not implemented.')
   }
-  getBalance(address: string): Promise<BigNumber> {
-    throw new Error('Method not implemented.')
+  async getBalance(address: string): Promise<BigNumber> {
+    const dydxClient = this.getDydxClient()
+    const { account } = await dydxClient.private.getAccount(address)
+    return new BigNumber(account.freeCollateral)
   }
-  getDecimals(): Promise<number> {
-    throw new Error('Method not implemented.')
+  public async getDecimals(): Promise<number> {
+    return this.chainConfig.nativeCurrency.decimals
   }
   getTokenBalance(address: string, tokenAddress: string): Promise<BigNumber> {
     throw new Error('Method not implemented.')
   }
-  getTokenDecimals(tokenAddress: string): Promise<number> {
-    throw new Error('Method not implemented.')
+  async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const token = await this.getTokenInfo(tokenAddress)
+    if (!token) {
+      throw new Error(`${tokenAddress} Token Not Exists`)
+    }
+    if (token) {
+      return Number(token.decimals)
+    }
+    return 0
   }
-  getTokenSymbol(tokenAddress: string): Promise<string> {
-    throw new Error('Method not implemented.')
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const token = await this.getTokenInfo(tokenAddress)
+    if (!token) {
+      throw new Error(`${tokenAddress} Token Not Exists`)
+    }
+    return token && token.symbol
   }
 }
