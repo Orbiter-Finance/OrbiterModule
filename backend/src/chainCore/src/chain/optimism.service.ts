@@ -22,7 +22,6 @@ export class Optimism extends EvmExplorerService {
     if (!trxRcceipt) {
       return null
     }
-    console.log(trxRcceipt, '===',trx)
     const gas = trxRcceipt.gasUsed
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)

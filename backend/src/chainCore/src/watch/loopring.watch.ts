@@ -23,7 +23,6 @@ export default class LoopringWatch extends AbstractWatch {
   ): Promise<Array<ITransaction>> {
     const filter = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
-    // console.log('露营交易：', filter, response)
     return response.txlist
   }
 }

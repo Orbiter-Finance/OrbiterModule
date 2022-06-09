@@ -233,7 +233,6 @@ export abstract class EVMChain implements IEVMChain {
       return token.symbol
     }
     try {
-      console.log(tokenAddress, '===tokenAddress')
       const tokenContract = new this.web3.eth.Contract(
         IERC20_ABI_JSON as any,
         tokenAddress
