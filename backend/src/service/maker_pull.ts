@@ -458,7 +458,7 @@ export class ServiceMakerPull {
         )
       } else {
         logger.error(
-          `Collection transaction, user transfer targetMP  not found:id:${makerPull.id},chainId:${makerPull.chainId},amount_flag:${makerPull.amount_flag},txHash${ makerPull.txHash}`,
+          `Collection transaction, user transfer targetMP  not found:id:${makerPull.id},chainId:${makerPull.chainId},amount_flag:${makerPull.amount_flag},txHash${makerPull.txHash}`
         )
       }
     }
@@ -1793,7 +1793,9 @@ export class ServiceMakerPull {
       promiseMethods.push(async () => {
         await savePull(makerPull)
         // compare
-        await this.newCompareData(makerPull)
+        if (makerPull.tx_status != 'rejected') {
+          await this.newCompareData(makerPull)
+        }
       })
     }
     await PromisePool.for(promiseMethods)
