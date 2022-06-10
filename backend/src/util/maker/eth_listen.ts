@@ -53,7 +53,6 @@ export class EthListen {
     this.address = address
     this.blockProvider = blockProvider
     this.action = action
-
     this.transferReceivedHashs = {}
     this.transferConfirmationedHashs = {}
   }

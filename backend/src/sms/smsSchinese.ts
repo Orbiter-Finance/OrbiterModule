@@ -19,7 +19,6 @@ export const doSms = async function (alert) {
     smsText,
   }
   const rst = await axios.get(options.Endpoint, { params })
-  console.log({ params: JSON.stringify(params), result: rst.data })
 
   return true
 }

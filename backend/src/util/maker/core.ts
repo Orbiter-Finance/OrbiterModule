@@ -5,6 +5,7 @@ const MAX_BITS = {
   eth: 256,
   arbitrum: 256,
   zksync: 35,
+  zksync2: 256,
   starknet: 256,
   polygon: 256,
   optimism: 256,
@@ -41,6 +42,7 @@ export const CHAIN_INDEX = {
   512: 'zkspace',
   13: 'boba',
   513: 'boba',
+  514: 'zksync2',
 }
 
 export const SIZE_OP = {
@@ -145,11 +147,9 @@ function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
     new BigNumber(selectMakerInfo.tradingFee)
   )
-  // accessLogger.info('toAmount_tradingFee =', toAmount_tradingFee.toString())
   let gasFee = toAmount_tradingFee
     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
     .dividedBy(new BigNumber(1000))
-  // accessLogger.info('gasFee =', gasFee.toString())
   let digit = selectMakerInfo.precision === 18 ? 5 : 2
   // accessLogger.info('digit =', digit)
   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP)

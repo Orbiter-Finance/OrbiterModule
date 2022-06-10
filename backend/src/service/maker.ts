@@ -1,5 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
+import { padStart } from '../chainCore/src/utils'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
@@ -160,7 +161,19 @@ export function makeTransactionID(
   chainId: number,
   nonce: string
 ) {
-  return `${fromAddress}${chainId}${nonce}`
+  return `${fromAddress.toLowerCase()}${chainId}${nonce}`
+}
+export function newMakeTransactionID(
+  fromAddress: string,
+  fromChainId: number | string,
+  fromTxNonce: string | number,
+  symbol: string | undefined
+) {
+  return `${fromAddress}${padStart(
+    String(fromChainId),
+    4,
+    '00'
+  )}${symbol || 'NULL'}${fromTxNonce}`.toLowerCase()
 }
 
 /**
@@ -265,25 +278,23 @@ export async function getTargetMakerPool(
     transactionTime = new Date()
   }
   const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
-
   for (const maker of await getAllMakerList()) {
     const { pool1, pool2 } = expanPool(maker)
     if (
-      pool1.makerAddress == makerAddress &&
-      equalsIgnoreCase(pool1.t1Address, tokenAddress) &&
-      pool1.c1ID == fromChainId &&
-      pool1.c2ID == toChainId &&
+      pool1.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
+      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
+        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
+      ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId)) &&
       transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool1.avalibleTimes[0].endTime
     ) {
       return pool1
     }
-
     if (
-      pool2.makerAddress == makerAddress &&
-      equalsIgnoreCase(pool2.t2Address, tokenAddress) &&
-      pool2.c1ID == toChainId &&
-      pool2.c2ID == fromChainId &&
+      pool2.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
+      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
+        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
+      ((pool2.c2ID == fromChainId && pool2.c1ID == toChainId)) &&
       transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool2.avalibleTimes[0].endTime
     ) {
