@@ -8,7 +8,7 @@ export function getAllChains(): IChainConfig[] {
   return chains as IChainConfig[]
 }
 export function getTokenByAddress(chainId: string, tokenAddress: string) {
-  const chain: IChainConfig = this.getChain(chainId)
+  const chain: IChainConfig = getChain(chainId)
   return chain.tokens.find((row) => equals(row.address, tokenAddress))
 }
 export function getChain(chainId: string): IChainConfig {
