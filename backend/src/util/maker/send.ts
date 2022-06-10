@@ -254,15 +254,19 @@ async function sendConsumer(value: any) {
       let ethProvider
       let syncProvider
       if (chainID === 514) {
-        const httpEndPoint = makerConfig["zksync2_test"].httpEndPoint
-        ethProvider = ethers.getDefaultProvider("goerli");
-        syncProvider = new zksync2.Provider(httpEndPoint);
+        const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
+        ethProvider = ethers.getDefaultProvider('goerli')
+        syncProvider = new zksync2.Provider(httpEndPoint)
       } else {
-        const httpEndPoint = makerConfig["zksync2"].httpEndPoint//official httpEndpoint is not exists now 
-        ethProvider = ethers.getDefaultProvider('homestead');
-        syncProvider = new zksync2.Provider(httpEndPoint);
+        const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
+        ethProvider = ethers.getDefaultProvider('homestead')
+        syncProvider = new zksync2.Provider(httpEndPoint)
       }
-      const syncWallet = new zksync2.Wallet(makerConfig.privateKeys[makerAddress], syncProvider, ethProvider);
+      const syncWallet = new zksync2.Wallet(
+        makerConfig.privateKeys[makerAddress],
+        syncProvider,
+        ethProvider
+      )
       let tokenBalanceWei = await syncWallet.getBalance(
         tokenAddress,
         'finalized'
@@ -305,7 +309,7 @@ async function sendConsumer(value: any) {
         token: tokenAddress,
         amount: amountToSend,
         // feeToken: tokenAddress,
-      });
+      })
       if (!has_result_nonce) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
@@ -536,9 +540,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -1063,6 +1067,20 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 90
+    }
+  }
+  if (tokenInfo && tokenInfo.symbol === 'USDT') {
+    if ((fromChainID === 1 && chainID === 3) || (fromChainID === 3 && chainID === 1)) {
+      maxPrice = 110
+    }
+    if ((fromChainID === 1 && chainID === 2) || (fromChainID === 2 && chainID === 1)) {
+      maxPrice = 110
+    }
+    if ((fromChainID === 1 && chainID === 7) || (fromChainID === 7 && chainID === 1)) {
+      maxPrice = 110
+    }
+    if ((fromChainID === 1 && chainID === 6) || (fromChainID === 6 && chainID === 1)) {
+      maxPrice = 110
     }
   }
   const gasPrices = await getCurrentGasPrices(
