@@ -13,7 +13,7 @@ import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
-import * as zksync2 from "zksync-web3"
+import * as zksync2 from 'zksync-web3'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
@@ -1070,16 +1070,16 @@ async function sendConsumer(value: any) {
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
-    if ((fromChainID === 1 && chainID === 3) || (fromChainID === 3 && chainID === 1)) {
+    if (fromChainID === 3 && chainID === 1) {
       maxPrice = 110
     }
-    if ((fromChainID === 1 && chainID === 2) || (fromChainID === 2 && chainID === 1)) {
+    if (fromChainID === 2 && chainID === 1) {
       maxPrice = 110
     }
-    if ((fromChainID === 1 && chainID === 7) || (fromChainID === 7 && chainID === 1)) {
+    if (fromChainID === 7 && chainID === 1) {
       maxPrice = 110
     }
-    if ((fromChainID === 1 && chainID === 6) || (fromChainID === 6 && chainID === 1)) {
+    if (fromChainID === 6 && chainID === 1) {
       maxPrice = 110
     }
   }
