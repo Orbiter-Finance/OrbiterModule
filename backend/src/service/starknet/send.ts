@@ -2,10 +2,6 @@ import { Account, Contract, ec, number, Provider, uint256 } from 'starknet'
 import l2_abi_erc20 from './erc20_abi.json'
 import ob_source_abi from './ob_source_abi.json'
 import { Uint256 } from 'starknet/dist/utils/uint256'
-import { BigNumberish } from 'starknet/dist/utils/number'
-function getUint256CalldataFromBN(bn: BigNumberish) {
-  return { type: 'struct' as const, ...uint256.bnToUint256(String(bn)) }
-}
 export async function sendStarknetTx(
   network: string,
   privateKey: string,
@@ -40,16 +36,19 @@ export async function sendStarknetTx(
   const balanceSender: Uint256 = (
     await ethContract.balanceOf(userSender.address)
   ).balance
+  console.log(balanceSender.low.toString(), '======balanceSender')
   console.warn(
     'balanceSender.balance: ',
     Number(balanceSender.low) / 10 ** 18 + ''
   )
-
   const toAmount = number.toBN(Number(params.amount) * 10 ** 18)
+  if (toAmount.gt(number.toBN(params.amount))) {
+    throw new Error(`${userSender.address} Insufficient funds ${balanceSender.low}/${toAmount}`)
+  }
   // Approve
   const approveResp = await ethContract.approve(
     receiveContractAddress,
-    uint256.bnToUint256(String(toAmount))
+    uint256.bnToUint256(toAmount)
     // getUint256CalldataFromBN(toAmount)
   )
   console.warn('Waitting approve transaction:', approveResp.transaction_hash)
@@ -58,7 +57,7 @@ export async function sendStarknetTx(
   const transferResp = await obSourceContract.transferERC20(
     params.tokenAddress,
     params.to,
-    getUint256CalldataFromBN(toAmount),
+    uint256.bnToUint256(toAmount),
     ext
   )
   console.warn('Waitting transfer transaction:', transferResp.transaction_hash)
