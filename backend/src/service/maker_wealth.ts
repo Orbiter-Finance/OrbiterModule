@@ -14,7 +14,7 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
-import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
+import { getErc20Balance } from './starknet/helper'
 
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
@@ -100,9 +100,8 @@ async function getTokenBalance(
         }
         break
       case 'starknet':
-        const networkId = getNetworkIdByChainId(chainId)
         value = String(
-          await getErc20BalanceByL1(makerAddress, tokenAddress, networkId)
+          await getErc20Balance(makerAddress, tokenAddress, chainId)
         )
         break
       case 'immutablex':

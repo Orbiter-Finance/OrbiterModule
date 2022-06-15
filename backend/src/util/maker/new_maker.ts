@@ -351,7 +351,7 @@ export function newExpanPool(pool) {
       // avalibleTimes: pool.c1AvalibleTimes,
       pool: {
         //Subsequent versions will modify the structure
-        makerAddress: pool.makerAddress,
+        makerAddress:pool.makerAddress,
         c1ID: pool.c1ID,
         c2ID: pool.c2ID,
         c1Name: pool.c1Name,
@@ -408,5 +408,14 @@ export function newExpanPool(pool) {
         avalibleTimes: pool.c2AvalibleTimes,
       },
     },
-  ]
+  ].map(row => {
+    if ([4,44].includes(row.toChain.id)) {
+      // starknet mapping
+      if (makerConfig.starknetAddressMap[row.makerAddress]) {
+        row.makerAddress = makerConfig.starknetAddressMap[row.makerAddress];
+        row.pool.makerAddress = row.makerAddress;
+      }
+    }
+    return row;
+  })
 }

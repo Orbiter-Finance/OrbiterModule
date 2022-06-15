@@ -14,6 +14,7 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
+import {newExpanPool} from '../util/maker/new_maker'
 import {
   getAmountFlag,
   getTargetMakerPool,
@@ -1519,7 +1520,7 @@ export class ServiceMakerPull {
             )
           }
         }
-        item['symbol'] = transaction.symbol;
+        item['symbol'] = transaction.symbol
         // save
         const makerPull = (lastMakePull = <MakerPull>{
           chainId: this.chainId,
@@ -1721,7 +1722,7 @@ export class ServiceMakerPull {
     makerPullLastData.makerPull = lastMakePull
     BOBA_LAST[makerPullLastKey] = makerPullLastData
   }
-
+  async isValidMakerAddress(address: string) {}
   async handleNewScanChainTrx(
     txlist: Array<ITransaction>,
     makerList: Array<any>
@@ -1736,10 +1737,15 @@ export class ServiceMakerPull {
         continue
       }
       let makerAddress = ''
-      if (makerList.find((row) => equals(row.makerAddress, tx.from))) {
-        makerAddress = tx.from
-      } else if (makerList.find((row) => equals(row.makerAddress, tx.to))) {
-        makerAddress = tx.to
+      for(const market of makerList) {
+        const newMakerList = newExpanPool(market);
+        if (newMakerList.find(m => equals(m.makerAddress, tx.from))) {
+          makerAddress = tx.from;
+          break;
+        } else if (newMakerList.find((row) => equals(row.makerAddress, tx.to))) {
+          makerAddress = tx.to
+          break;
+        }
       }
       const chainConfig = await getChainByChainId(tx.chainId)
       const value = tx.value.toString()
