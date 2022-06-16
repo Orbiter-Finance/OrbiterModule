@@ -6,6 +6,24 @@ networks:
     driver: bridge
 
 services:
+  history:
+    build: ./history
+    command: yarn run start:prod
+    environment:
+      NODE_ENV: 'development' # production
+      DB_HOST: db
+      DB_PORT: '${DB_PORT}'
+      DB_USER: '${DB_USER}'
+      DB_PASS: '${DB_PASS}'
+      DB_NAME: '${DB_NAME}'
+    # volumes:
+    #   - './history/logs:/app/logs'
+    ports:
+      - '3000:3000'
+    restart: always
+    networks:
+      - app-network
+
   backend:
     build: ./backend
     command: yarn run start
