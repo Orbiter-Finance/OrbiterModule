@@ -7,7 +7,7 @@
           <div>Orbiter Dashboard</div>
         </div>
         <el-menu
-          :default-active="navActive"
+          :default-active="route.path"
           class="header-navs"
           mode="horizontal"
           :router="true"
@@ -53,67 +53,47 @@
   </el-container>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import { ArrowDown } from '@element-plus/icons'
-import { defineComponent, provide, reactive, toRefs, watch } from 'vue'
+import { provide, reactive, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 
-export default defineComponent({
-  components: {
-    ArrowDown,
-  },
+const route = useRoute()
+const router = useRouter()
+const navs = router.getRoutes()
 
-  setup() {
-    const route = useRoute()
-    const router = useRouter()
+const state = reactive({
+  makerAddresses: [] as string[],
+  makerAddressSelected: '',
+  exchangeRates: {} as { [key: string]: string },
+})
+const makerAddressSelected = toRef(state, 'makerAddressSelected')
+const makerAddresses = toRef(state, 'makerAddresses')
+const exchangeRates = toRef(state, 'exchangeRates')
 
-    const state = reactive({
-      navs: router.getRoutes(),
-      navActive: '/',
-      makerAddresses: [] as string[],
-      makerAddressSelected: '',
-      exchangeRates: {} as { [key: string]: string },
-    })
+provide('makerAddressSelected', makerAddressSelected)
+provide('exchangeRates', exchangeRates)
 
-    provide('makerAddressSelected', toRefs(state).makerAddressSelected)
-    provide('exchangeRates', toRefs(state).exchangeRates)
+const getGlobalInfo = async () => {
+  const resp = await $axios.get('global')
+  state.makerAddresses = resp.data.makerAddresses
+  state.exchangeRates = resp.data.exchangeRates
 
-    const getGlobalInfo = async () => {
-      const resp = await $axios.get('global')
-      state.makerAddresses = resp.data.makerAddresses
-      state.exchangeRates = resp.data.exchangeRates
+  state.makerAddressSelected = state.makerAddresses?.[0] || ''
 
-      state.makerAddressSelected = state.makerAddresses?.[0] || ''
-
-      // Set makerAddressSelected from route.query.makerAddress
-      setTimeout(() => {
-        const makerAddress = String(route.query.makerAddress)
-        if (state.makerAddresses.indexOf(makerAddress) > -1) {
-          state.makerAddressSelected = makerAddress
-        }
-      }, 1)
-    }
-    getGlobalInfo()
-    const onClickMakerAddressItem = (makerAddress: string) => {
+  // Set makerAddressSelected from route.query.makerAddress
+  setTimeout(() => {
+    const makerAddress = String(route.query.makerAddress)
+    if (state.makerAddresses.indexOf(makerAddress) > -1) {
       state.makerAddressSelected = makerAddress
     }
-
-    // watch
-    watch(
-      () => route.path,
-      (nv) => {
-        state.navActive = nv
-      }
-    )
-
-    return {
-      ...toRefs(state),
-
-      onClickMakerAddressItem,
-    }
-  },
-})
+  }, 1)
+}
+const onClickMakerAddressItem = (makerAddress: string) => {
+  state.makerAddressSelected = makerAddress
+}
+getGlobalInfo()
 </script>
 
 <style lang="scss" scoped>

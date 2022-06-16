@@ -135,102 +135,78 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
 import { makerPulls } from '@/hooks/maker-history'
 import dayjs from 'dayjs'
 import {
   computed,
-  defineComponent,
   inject,
   reactive,
-  toRefs,
+  toRef,
   watch,
 } from 'vue'
 
-export default defineComponent({
-  components: { TextLong },
-  setup() {
-    const makerAddressSelected: any = inject('makerAddressSelected')
-
-    const state = reactive({
-      showSuccessed: false,
-      showRejected: true,
-      showCannotMatched: true,
-      startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
-    })
-
-    const fromMakerPulls = makerPulls()
-    const toMakerPulls = makerPulls()
-
-    const getMakerPulls = () => {
-      const rangeDate = [state.startTime]
-      fromMakerPulls.get(makerAddressSelected?.value, 1, rangeDate)
-      toMakerPulls.get(makerAddressSelected?.value, 0, rangeDate)
-    }
-    getMakerPulls()
-
-    const tableRowClassName = ({ row }) => {
-      if (row.tx_status == 'rejected') {
-        return 'warning-row'
-      }
-      if (!row.target_tx) {
-        return 'danger-row'
-      }
-
-      return ''
-    }
-
-    const listFilter = ({ tx_status, target_tx }) => {
-      const conditions: boolean[] = []
-
-      if (state.showSuccessed) {
-        conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
-      }
-      if (state.showRejected) {
-        conditions.push(tx_status == 'rejected')
-      }
-      if (state.showCannotMatched) {
-        conditions.push(!target_tx && tx_status != 'rejected')
-      }
-
-      return conditions.indexOf(true) > -1
-    }
-    const fromList = computed(() => {
-      return fromMakerPulls.state.list.value.filter(listFilter)
-    })
-    const toList = computed(() => {
-      return toMakerPulls.state.list.value.filter(listFilter)
-    })
-
-    // watchs
-    watch(
-      () => makerAddressSelected?.value,
-      () => {
-        getMakerPulls()
-      }
-    )
-
-    // methods
-    const onChangeStartTime = () => {
-      getMakerPulls()
-    }
-
-    return {
-      ...toRefs(state),
-
-      fromList,
-      fromLoading: fromMakerPulls.state.loading,
-
-      toList,
-      toLoading: toMakerPulls.state.loading,
-
-      tableRowClassName,
-
-      onChangeStartTime,
-    }
-  },
+const makerAddressSelected: any = inject('makerAddressSelected')
+const state = reactive({
+  showSuccessed: false,
+  showRejected: true,
+  showCannotMatched: true,
+  startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
 })
+const showSuccessed = toRef(state, 'showSuccessed')
+const showRejected = toRef(state, 'showRejected')
+const showCannotMatched = toRef(state, 'showCannotMatched')
+const startTime = toRef(state, 'startTime')
+const fromMakerPulls = makerPulls()
+const toMakerPulls = makerPulls()
+const getMakerPulls = () => {
+  const rangeDate = [state.startTime]
+  fromMakerPulls.get(makerAddressSelected?.value, 1, rangeDate)
+  toMakerPulls.get(makerAddressSelected?.value, 0, rangeDate)
+}
+const tableRowClassName = ({ row }) => {
+  if (row.tx_status == 'rejected') {
+    return 'warning-row'
+  }
+  if (!row.target_tx) {
+    return 'danger-row'
+  }
+
+  return ''
+}
+
+const listFilter = ({ tx_status, target_tx }) => {
+  const conditions: boolean[] = []
+
+  if (state.showSuccessed) {
+    conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
+  }
+  if (state.showRejected) {
+    conditions.push(tx_status == 'rejected')
+  }
+  if (state.showCannotMatched) {
+    conditions.push(!target_tx && tx_status != 'rejected')
+  }
+
+  return conditions.indexOf(true) > -1
+}
+const fromList = computed(() => {
+  return fromMakerPulls.state.list.value.filter(listFilter)
+})
+const toList = computed(() => {
+  return toMakerPulls.state.list.value.filter(listFilter)
+})
+
+getMakerPulls()
+// watchs
+watch(() => makerAddressSelected?.value, getMakerPulls)
+// methods
+const onChangeStartTime = () => {
+  getMakerPulls()
+}
+const fromLoading = fromMakerPulls.state.loading
+const toLoading = toMakerPulls.state.loading
 </script>
 
 <style lang="scss">

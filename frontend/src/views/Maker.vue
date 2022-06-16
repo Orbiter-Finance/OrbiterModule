@@ -51,9 +51,9 @@
       v-loading="loadingNodes"
     >
       <el-row :gutter="20">
-        <el-col :span="3" class="maker-search__item">
+        <el-col :span="4" class="maker-search__item">
           <div class="title">From chain</div>
-          <el-select v-model="fromChainId" placeholder="Select">
+          <el-select v-model="state.fromChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -64,7 +64,7 @@
         </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">To chain</div>
-          <el-select v-model="toChainId" placeholder="Select">
+          <el-select v-model="state.toChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -73,10 +73,10 @@
             ></el-option>
           </el-select>
         </el-col>
-        <el-col :span="7" class="maker-search__item">
+        <el-col :span="8" class="maker-search__item">
           <div class="title">From date range</div>
           <el-date-picker
-            v-model="rangeDate"
+            v-model="state.rangeDate"
             type="datetimerange"
             range-separator="To"
             start-placeholder="Start date"
@@ -86,28 +86,41 @@
             :show-arrow="false"
           ></el-date-picker>
         </el-col>
-        <el-col :span="6" class="maker-search__item">
+        <el-col :span="8" class="maker-search__item">
           <div class="title">TransactionID | User | FromTx | ToTx</div>
           <el-input
-            v-model="keyword"
+            v-model="state.keyword"
             placeholder="Input search keyword."
             :clearable="true"
           />
         </el-col>
+      </el-row>
+      <el-row :gutter="20">
+        <el-col :span="16">
+          <div class="title">state</div>
+          <el-select v-model="state.status" placeholder="Select">
+            <el-option
+              v-for="(item, index) in status"
+              :key="index"
+              :label="item.label"
+              :value="item.value"
+            ></el-option>
+          </el-select>
+        </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
-          <el-button type="primary" @click="getMakerNodes">Apply</el-button>
+          <el-button type="primary" @click="() => getMakerNodes()">Apply</el-button>
         </el-col>
       </el-row>
-      <el-row v-if="userAddressSelected">
-        <el-tag closable @close="userAddressSelected = ''"
-          >UserAddress: {{ userAddressSelected }}</el-tag
-        >
+      <el-row v-if="state.userAddressSelected">
+        <el-tag closable @close="state.userAddressSelected = ''">
+          UserAddress: {{ state.userAddressSelected }}
+        </el-tag>
       </el-row>
     </div>
     <div class="maker-block maker-header maker-header__statistics">
-      <el-button-group>
+      <el-button-group v-if="false">
         <el-button
           :disabled="loadingNodes"
           size="small"
@@ -123,8 +136,8 @@
           Next Page
         </el-button>
       </el-button-group>
-
-      <div>TransactionTotal: {{ list.length }}</div>
+      <div v-if="false">TransactionTotal: {{ list.length }}</div>
+      
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
@@ -132,7 +145,7 @@
               <div
                 v-for="(item, index) in userAddressList"
                 :key="index"
-                @click="userAddressSelected = item.address"
+                @click="state.userAddressSelected = item.address"
               >
                 {{ item.address }}
                 <span>&nbsp;({{ item.count }})</span>
@@ -166,6 +179,19 @@
     </div>
     <div class="maker-block">
       <template v-if="list.length > 0">
+        <div v-if="!state.userAddressSelected" style="display:flex;justify-content:center;item-align:center;margin: 10px;">
+          <el-pagination
+            v-model:currentPage="currentPage"
+            v-model:page-size="pageSize"
+            :page-sizes="[100, 200, 300, 400]"
+            :background="true"
+            layout="total, sizes, prev, pager, next, jumper"
+            :total="total"
+            @size-change="handleSizeChange"
+            @current-change="handleCurrentChange"
+          />
+        </div>
+        
         <el-table :data="list" stripe style="width: 100%">
           <el-table-column label="TransactionID">
             <template #default="scope">
@@ -324,9 +350,9 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerInfo, MakerNode, makerNodes, makerWealth } from '@/hooks/maker'
+import { makerInfo, MakerNode, makerWealth, useTransactionHistory } from '@/hooks/maker'
 import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
 import { BigNumberish, ethers, providers } from 'ethers'
@@ -339,12 +365,11 @@ import {
   utils,
 } from 'orbiter-sdk'
 import {
+  ref,
   computed,
-  defineComponent,
   inject,
   reactive,
   toRef,
-  toRefs,
   watch,
 } from 'vue'
 import Web3 from 'web3'
@@ -357,321 +382,305 @@ const CHAIN_NAME_MAPPING = {
   polygon: 'Polygon',
   optimism: 'Optimism',
 }
-
+const stateTags = {
+  0: { label: 'From: check', type: 'info' },
+  1: { label: 'From: okay', type: 'warning' },
+  2: { label: 'To: check', type: 'info' },
+  3: { label: 'To: okay', type: 'success' },
+  20: { label: 'To: failed', type: 'danger' },
+}
+const status = [
+  {
+    value: -1,
+    label: 'All'
+  }
+].concat(Object.keys(stateTags).map(key => ({value: +key, label: stateTags[key].label})))
 // Default time duration
 const DEFAULT_TIME_DURATION = 10800000
 
-export default defineComponent({
-  components: {
-    TextLong,
+const makerAddressSelected: any = inject('makerAddressSelected')
+const exchangeRates: any = inject('exchangeRates')
+const state = reactive({
+  rangeDate: [] as Date[],
+  fromChainId: '',
+  toChainId: '',
+  userAddressSelected: '',
+  keyword: '',
+  status: -1
+})
+const makerNodes: any = ref([])
+// computeds
+const list = computed(() => makerNodes.value.filter(item => !state.userAddressSelected || item.userAddress == state.userAddressSelected))
+const userAddressList = computed(() => {
+  const userAddressList: { address: string; count: number }[] = []
+  for (const item of makerNodes.value) {
+    if (!item.userAddress) {
+      continue
+    }
+
+    const userAddress = userAddressList.find(
+      (item1) => item.userAddress == item1.address
+    )
+    if (userAddress) {
+      userAddress.count++
+      continue
+    }
+
+    userAddressList.push({ address: item.userAddress, count: 1 })
+  }
+
+  // Sort by count desc
+  userAddressList.sort((a, b) => b.count - a.count)
+
+  return userAddressList
+})
+const fromAmountTotal = computed(() => {
+  let num = new BigNumber(0)
+  for (const item of list.value) {
+    num = num.plus(item.fromAmountFormat)
+  }
+  return num.toFixed(5)
+})
+const toAmountTotal = computed(() => {
+  let num = new BigNumber(0)
+  for (const item of list.value) {
+    num = num.plus(item.toAmountFormat)
+  }
+  return num.toFixed(5)
+})
+const diffAmountTotal = computed(() => {
+  let num = new BigNumber(0)
+  for (const item of list.value) {
+    if (!item.profitUSD) {
+      continue
+    }
+
+    num = num.plus(item.profitUSD)
+  }
+  return num.toNumber().toFixed(2)
+})
+const diffAmountTotalETH = computed(() => {
+  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+    exchangeRates?.value?.ETH || 0
+  )
+  return num.toFixed(5)
+})
+const diffAmountTotalCNY = computed(() => {
+  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+    exchangeRates?.value?.CNY || 0
+  )
+  return num.toFixed(2)
+})
+const chains = toRef(makerInfo.state, 'chains')
+const loadingWealths = toRef(makerWealth.state, 'loading')
+const wealths = toRef(makerWealth.state, 'list')
+const loadingNodes = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(300)
+const total = ref(0)
+
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  getMakerNodes({size: val})
+}
+const handleCurrentChange = (val: number) => {
+  currentPage.value = val
+  getMakerNodes({current: val})
+}
+const getMakerWealth = () => makerWealth.get(makerAddressSelected?.value)
+const reset = () => {
+  const endTime = new Date()
+  const startTime = new Date(endTime.getTime() - DEFAULT_TIME_DURATION)
+  state.rangeDate = [startTime, endTime]
+  state.fromChainId = ''
+  state.toChainId = ''
+  state.userAddressSelected = ''
+  state.keyword = ''
+}
+/*
+const getMakerNodes = async (more: any = {}) => {
+  const { list, loading } = await useMakerNodes(
+    makerAddressSelected?.value, 
+    Number(state.fromChainId),
+    Number(state.toChainId),
+    state.rangeDate,
+    state.keyword
+  )
+  loadingNodes.value = loading.value
+  makerNodes.value = list.value
+}
+*/
+const getMakerNodes = async (more: any = {}) => {
+  const {
+    list: _list,
+    loading,
+    total: _total
+  } = await useTransactionHistory({
+    makerAddress: makerAddressSelected?.value,
+    fromChain: Number(state.fromChainId),
+    toChain: Number(state.toChainId),
+    rangeDate: state.rangeDate,
+    keyword: state.keyword.trim(),
+    ...more,
+  });
+  loadingNodes.value = loading.value
+  makerNodes.value = _list.value
+  total.value = _total.value
+}
+// Methods
+const mappingChainName = (chainName: string) => {
+  if (CHAIN_NAME_MAPPING[chainName]) {
+    return CHAIN_NAME_MAPPING[chainName]
+  }
+  return chainName
+}
+const transferNeedTo = async (
+  fromAddress: string,
+  toAddress: string,
+  needTo: {
+    chainId: number
+    amount: BigNumberish
+    decimals: number
+    tokenAddress: string
   },
-  setup() {
-    const makerAddressSelected: any = inject('makerAddressSelected')
-    const exchangeRates: any = inject('exchangeRates')
+  fromExt: any
+) => {
+  const ethereum = (window as any).ethereum
+  if (!ethereum) {
+    throw new Error('Please install metamask wallet first!')
+  }
 
-    const state = reactive({
-      rangeDate: [] as Date[],
-      fromChainId: '',
-      toChainId: '',
-      userAddressSelected: '',
-      keyword: '',
-    })
-    const stateTags = {
-      0: { label: 'From: check', type: 'info' },
-      1: { label: 'From: okay', type: 'warning' },
-      2: { label: 'To: check', type: 'info' },
-      3: { label: 'To: okay', type: 'success' },
-      20: { label: 'To: failed', type: 'danger' },
+  // Check wallet
+  const walletAccount = (
+    await ethereum.request({ method: 'eth_requestAccounts' })
+  )?.[0]
+  if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+    throw new Error(
+      `Please switch the address to ${fromAddress} in the wallet!`
+    )
+  }
+
+  // Ensure networkId
+  await utils.ensureMetamaskNetwork(needTo.chainId, ethereum)
+
+  // Get signer and make transfer's options
+  const signer = new providers.Web3Provider(ethereum).getSigner()
+  const transferOptions = {
+    amount: ethers.BigNumber.from(needTo.amount),
+    toAddress,
+    tokenAddress: needTo.tokenAddress,
+  }
+
+  // Transfer
+  let txHash = ''
+  switch (needTo.chainId) {
+    case 3:
+    case 33: {
+      const tZksync = new TransactionZksync(needTo.chainId, signer)
+      await tZksync.transfer(transferOptions)
+      break
     }
 
-    // computeds
-    const list = computed(() => {
-      return makerNodes.state.list.filter((item) => {
-        if (!state.userAddressSelected) {
-          return true
-        }
-        return item.userAddress == state.userAddressSelected
+    case 4:
+    case 44: {
+      console.warn('do starknet')
+      break
+    }
+
+    case 8:
+    case 88: {
+      const tImx = new TransactionImmutablex(needTo.chainId, signer)
+      await tImx.transfer({
+        ...transferOptions,
+        decimals: needTo.decimals,
       })
-    })
-    const userAddressList = computed(() => {
-      const userAddressList: { address: string; count: number }[] = []
-      for (const item of makerNodes.state.list) {
-        if (!item.userAddress) {
-          continue
-        }
-
-        const userAddress = userAddressList.find(
-          (item1) => item.userAddress == item1.address
-        )
-        if (userAddress) {
-          userAddress.count++
-          continue
-        }
-
-        userAddressList.push({ address: item.userAddress, count: 1 })
-      }
-
-      // Sort by count desc
-      userAddressList.sort((a, b) => b.count - a.count)
-
-      return userAddressList
-    })
-    const fromAmountTotal = computed(() => {
-      let num = new BigNumber(0)
-      for (const item of list.value) {
-        num = num.plus(item.fromAmountFormat)
-      }
-      return num.toFixed(5)
-    })
-    const toAmountTotal = computed(() => {
-      let num = new BigNumber(0)
-      for (const item of list.value) {
-        num = num.plus(item.toAmountFormat)
-      }
-      return num.toFixed(5)
-    })
-    const diffAmountTotal = computed(() => {
-      let num = new BigNumber(0)
-      for (const item of list.value) {
-        if (!item.profitUSD) {
-          continue
-        }
-
-        num = num.plus(item.profitUSD)
-      }
-      return num.toNumber().toFixed(2)
-    })
-    const diffAmountTotalETH = computed(() => {
-      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-        exchangeRates?.value?.ETH || 0
-      )
-      return num.toFixed(5)
-    })
-    const diffAmountTotalCNY = computed(() => {
-      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-        exchangeRates?.value?.CNY || 0
-      )
-      return num.toFixed(2)
-    })
-
-    makerInfo.get()
-
-    const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected?.value)
-    }
-    getMakerWealth()
-
-    const reset = () => {
-      const endTime = new Date()
-      const startTime = new Date(endTime.getTime() - DEFAULT_TIME_DURATION)
-      state.rangeDate = [startTime, endTime]
-      state.fromChainId = ''
-      state.toChainId = ''
-      state.userAddressSelected = ''
-      state.keyword = ''
-    }
-    reset()
-
-    const getMakerNodes = () => {
-      makerNodes.get(
-        makerAddressSelected?.value,
-        Number(state.fromChainId),
-        Number(state.toChainId),
-        state.rangeDate,
-        state.keyword
-      )
+      break
     }
 
-    getMakerNodes()
+    case 9:
+    case 99: {
+      const tLoopring = new TransactionLoopring(
+        needTo.chainId,
+        new Web3(ethereum)
+      )
+      await tLoopring.transfer({ ...transferOptions, fromAddress })
+      break
+    }
 
-    // When makerAddressSelected changed, get maker's data
-    watch(
-      () => makerAddressSelected?.value,
-      () => {
-        getMakerWealth()
-        getMakerNodes()
-      }
+    case 11:
+    case 511: {
+      const tDydx = new TransactionDydx(needTo.chainId, new Web3(ethereum))
+      await tDydx.transfer({
+        ...transferOptions,
+        fromAddress,
+        receiverPublicKey: fromExt.dydxInfo?.starkKey,
+        receiverPositionId: fromExt.dydxInfo?.positionId,
+      })
+      break
+    }
+
+    default: {
+      const tEvm = new TransactionEvm(needTo.chainId, signer)
+      await tEvm.transfer(transferOptions)
+      break
+    }
+  }
+
+  return { txHash }
+}
+// Events
+const onClickStateTag = async (item: MakerNode) => {
+  try {
+    if (item.state != 1 || !item.needTo) {
+      return
+    }
+
+    await transferNeedTo(
+      item.makerAddress,
+      item.userAddress,
+      item.needTo,
+      item.fromExt
     )
 
-    // Methods
-    const mappingChainName = (chainName: string) => {
-      if (CHAIN_NAME_MAPPING[chainName]) {
-        return CHAIN_NAME_MAPPING[chainName]
-      }
-      return chainName
-    }
-    const transferNeedTo = async (
-      fromAddress: string,
-      toAddress: string,
-      needTo: {
-        chainId: number
-        amount: BigNumberish
-        decimals: number
-        tokenAddress: string
-      },
-      fromExt: any
-    ) => {
-      const ethereum = (window as any).ethereum
-      if (!ethereum) {
-        throw new Error('Please install metamask wallet first!')
-      }
+    // Update item.state
+    // item.toTx = txHash
+    // item.toTxHref = $env.txExploreUrl[item.toChain] + item['toTx']
+    item.state = 2
 
-      // Check wallet
-      const walletAccount = (
-        await ethereum.request({ method: 'eth_requestAccounts' })
-      )?.[0]
-      if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
-        throw new Error(
-          `Please switch the address to ${fromAddress} in the wallet!`
-        )
-      }
+    ElNotification({
+      title: 'Transfer Succeed',
+      message:
+        'The transfer was successful! Dashboard will update data list in 15 minutes!',
+      type: 'success',
+    })
+  } catch (err) {
+    ElNotification({
+      title: 'Error',
+      message: `Fail: ${err.message}`,
+      type: 'error',
+    })
+  }
+}
+const onClickPageButton = (next: boolean) => {
+  const startTime: Date = state.rangeDate[0]
+  const endTime: Date = state.rangeDate[1]
+  if (!startTime || !endTime) {
+    return
+  }
+  const duration = next ? DEFAULT_TIME_DURATION : -DEFAULT_TIME_DURATION
+  state.rangeDate = [
+    new Date(startTime.getTime() + duration),
+    new Date(endTime.getTime() + duration),
+  ]
+  getMakerNodes()
+}
+const init = () => getMakerWealth() + getMakerNodes()
 
-      // Ensure networkId
-      await utils.ensureMetamaskNetwork(needTo.chainId, ethereum)
-
-      // Get signer and make transfer's options
-      const signer = new providers.Web3Provider(ethereum).getSigner()
-      const transferOptions = {
-        amount: ethers.BigNumber.from(needTo.amount),
-        toAddress,
-        tokenAddress: needTo.tokenAddress,
-      }
-
-      // Transfer
-      let txHash = ''
-      switch (needTo.chainId) {
-        case 3:
-        case 33: {
-          const tZksync = new TransactionZksync(needTo.chainId, signer)
-          await tZksync.transfer(transferOptions)
-          break
-        }
-
-        case 4:
-        case 44: {
-          console.warn('do starknet')
-          break
-        }
-
-        case 8:
-        case 88: {
-          const tImx = new TransactionImmutablex(needTo.chainId, signer)
-          await tImx.transfer({
-            ...transferOptions,
-            decimals: needTo.decimals,
-          })
-          break
-        }
-
-        case 9:
-        case 99: {
-          const tLoopring = new TransactionLoopring(
-            needTo.chainId,
-            new Web3(ethereum)
-          )
-          await tLoopring.transfer({ ...transferOptions, fromAddress })
-          break
-        }
-
-        case 11:
-        case 511: {
-          const tDydx = new TransactionDydx(needTo.chainId, new Web3(ethereum))
-          await tDydx.transfer({
-            ...transferOptions,
-            fromAddress,
-            receiverPublicKey: fromExt.dydxInfo?.starkKey,
-            receiverPositionId: fromExt.dydxInfo?.positionId,
-          })
-          break
-        }
-
-        default: {
-          const tEvm = new TransactionEvm(needTo.chainId, signer)
-          await tEvm.transfer(transferOptions)
-          break
-        }
-      }
-
-      return { txHash }
-    }
-
-    // Events
-    const onClickStateTag = async (item: MakerNode) => {
-      try {
-        if (item.state != 1 || !item.needTo) {
-          return
-        }
-
-        await transferNeedTo(
-          item.makerAddress,
-          item.userAddress,
-          item.needTo,
-          item.fromExt
-        )
-
-        // Update item.state
-        // item.toTx = txHash
-        // item.toTxHref = $env.txExploreUrl[item.toChain] + item['toTx']
-        item.state = 2
-
-        ElNotification({
-          title: 'Transfer Succeed',
-          message:
-            'The transfer was successful! Dashboard will update data list in 15 minutes!',
-          type: 'success',
-        })
-      } catch (err) {
-        ElNotification({
-          title: 'Error',
-          message: `Fail: ${err.message}`,
-          type: 'error',
-        })
-      }
-    }
-    const onClickPageButton = (next: boolean) => {
-      const startTime: Date = state.rangeDate[0]
-      const endTime: Date = state.rangeDate[1]
-      if (!startTime || !endTime) {
-        return
-      }
-      const duration = next ? DEFAULT_TIME_DURATION : -DEFAULT_TIME_DURATION
-      state.rangeDate = [
-        new Date(startTime.getTime() + duration),
-        new Date(endTime.getTime() + duration),
-      ]
-      getMakerNodes()
-    }
-
-    return {
-      makerAddressSelected,
-
-      ...toRefs(state),
-      stateTags,
-      reset,
-
-      chains: toRef(makerInfo.state, 'chains'),
-
-      loadingWealths: toRef(makerWealth.state, 'loading'),
-      wealths: toRef(makerWealth.state, 'list'),
-
-      loadingNodes: toRef(makerNodes.state, 'loading'),
-      list,
-      getMakerNodes,
-
-      userAddressList,
-      fromAmountTotal,
-      toAmountTotal,
-      diffAmountTotal,
-      diffAmountTotalETH,
-      diffAmountTotalCNY,
-
-      mappingChainName,
-
-      onClickStateTag,
-      onClickPageButton,
-    }
-  },
-})
+makerInfo.get()
+reset()
+init()
+// When makerAddressSelected changed, get maker's data
+watch(() => makerAddressSelected?.value, init)
 </script>
 
 <style lang="scss">
