@@ -63,6 +63,9 @@ export default class StarknetWatch extends AbstractWatch {
         extra,
         source: 'rpc',
       })
+      if (!originTx.calldata) {
+        return txmap;
+      }
       if (originTx.calldata.length === 12) {
         // match2
         const recipientAddr = this.fixFillAddress(originTx.calldata[7])
@@ -83,20 +86,21 @@ export default class StarknetWatch extends AbstractWatch {
             isMatchTx = true
           }
         }
-      } else if (originTx.calldata.length === 10) {
+      } 
+      if (isMatchTx && originTx.calldata.length === 10) {
         const recipientAddr = this.fixFillAddress(originTx.calldata[6])
-        if (await this.isWatchWalletAddress(recipientAddr)) {
-          const tokenAddr = this.fixFillAddress(originTx.calldata[1])
-          if (await this.isWatchTokenAddress(tokenAddr)) {
-            TxData.symbol = await this.chain.getTokenSymbol(tokenAddr)
-            TxData.tokenAddress = tokenAddr
-            TxData.to = recipientAddr
-            const nonce = originTx.calldata[9]
-            TxData.nonce = Number(nonce)
-            TxData.value = new BigNumber(originTx.calldata[7])
-            isMatchTx = true
-          }
+        // if (await this.isWatchWalletAddress(recipientAddr)) {
+        const tokenAddr = this.fixFillAddress(originTx.calldata[1])
+        if (await this.isWatchTokenAddress(tokenAddr)) {
+          TxData.symbol = await this.chain.getTokenSymbol(tokenAddr)
+          TxData.tokenAddress = tokenAddr
+          TxData.to = recipientAddr
+          const nonce = originTx.calldata[9]
+          TxData.nonce = Number(nonce)
+          TxData.value = new BigNumber(originTx.calldata[7])
+          isMatchTx = true
         }
+        // }
       }
       if (!isMatchTx || !TxData.from || !TxData.to) {
         return txmap
@@ -124,7 +128,6 @@ export default class StarknetWatch extends AbstractWatch {
     } catch (error) {
       throw error
     }
-    return txmap
   }
   public async replayBlock(
     start: number,
@@ -169,16 +172,8 @@ export default class StarknetWatch extends AbstractWatch {
                 }/${end}), Trxs Count : ${transactions.length}`
               )
             const txmap: AddressMapTransactions = new Map()
-            for (const tx of transactions.filter(
-              (tx) => tx.type === 'INVOKE_FUNCTION'
-            )) {
-              //   // Filter non whitelist address transactions
-              // if (
-              //   tx.transaction_hash !=
-              //   '0x5ec09c04e223ec0c07f0bbb4d19737bbefcf58361812f1405017c19ae5b175f'
-              // ) {
-              //   continue
-              // }
+            for (const tx of transactions.filter(tx=> tx.type === 'INVOKE_FUNCTION')) {
+              // Filter non whitelist address transactions
               const matchTxList = await this.replayBlockTransaction(tx)
               matchTxList.forEach((txlist, address) => {
                 if (!txmap.has(address)) txmap.set(address, [])
@@ -186,6 +181,11 @@ export default class StarknetWatch extends AbstractWatch {
                   tx.blockHash = block.block_hash
                   tx.blockNumber = block.block_number
                   tx.timestamp = block.timestamp
+                  tx.status = ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+                    block.status
+                  )
+                    ? TransactionStatus.COMPLETE
+                    : TransactionStatus.Fail
                   const transactionReceipts =
                     block.transaction_receipts as unknown as Array<any>
                   const transactionReceipt = transactionReceipts.find((row) =>

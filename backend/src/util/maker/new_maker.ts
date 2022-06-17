@@ -1,3 +1,7 @@
+import {
+  oldMarketConvertScanChainConfig,
+  uniq,
+} from './../../chainCore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import { ScanChainMain } from '../../chainCore'
 import { ITransaction, TransactionStatus } from '../../chainCore/src/types'
@@ -7,6 +11,7 @@ import {
   getChainByChainId,
   getChainByInternalId,
   groupBy,
+  flatten,
   isEmpty,
 } from '../../chainCore/src/utils'
 import BigNumber from 'bignumber.js'
@@ -16,12 +21,16 @@ import { Core } from '../core'
 import { Repository } from 'typeorm'
 import { MakerNode } from '../../model/maker_node'
 import { makerConfig } from '../../config'
+import mainnetChains from '../../chainCore/chains.json'
+import testnetChains from '../../chainCore/testnet.json'
+const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
-  makerAddress: string
+  recipient: string
+  sender: string
   fromChain: {
     id: string
     name: string
@@ -89,41 +98,44 @@ export function checkAmount(
   return true
 }
 export async function startNewMakerTrxPull() {
-  const makerList = await getMakerList()
-  const convertMakerList = ScanChainMain.convertTradingList(makerList)
-  const scanChain = new ScanChainMain(convertMakerList)
+  const makerList = await getNewMarketList()
+  const convertMakerList = groupWatchAddressByChain(makerList)
+  const scanChain = new ScanChainMain(<any>allChainsConfig)
   for (const intranetId in convertMakerList) {
-    convertMakerList[intranetId].forEach((row) => {
-      const pullKey = `${intranetId}:${row.address.toLowerCase()}`
+    convertMakerList[intranetId].forEach((address) => {
+      const pullKey = `${intranetId}:${address.toLowerCase()}`
       if (!LastPullTxMap.has(pullKey)) {
         LastPullTxMap.set(pullKey, Date.now())
       }
     })
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
+    scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
-  scanChain.run()
 }
-async function isExistsMakerAddress(address: string) {
-  const makerList = await getMakerList()
-  return makerList.findIndex((row) => equals(row.makerAddress, address)) != -1
+async function isWatchAddress(address: string) {
+  const makerList = await getNewMarketList()
+  return (
+    makerList.findIndex(
+      (row) => equals(row.recipient, address) || equals(row.sender, address)
+    ) != -1
+  )
 }
 async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
-  const makerList = await getMakerList()
   const groupData = groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
-      if (!(await isExistsMakerAddress(tx.to))) {
+      accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
+      if (!(await isWatchAddress(tx.to))) {
         // accessLogger.error(
         //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
         // )
         continue
       }
       if (equals(tx.to, tx.from) || tx.value.lt(0)) {
-        continue;
+        continue
       }
-      accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       const fromChain = await getChainByChainId(tx.chainId)
       // check send
       if (!fromChain) {
@@ -204,30 +216,30 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      let market: IMarket | undefined
-      for (const m of makerList) {
-        const marketArr = newExpanPool(m)
-        market = marketArr.find(
-          (row) =>
-            equals(row.fromChain.id, fromChain.internalId) &&
-            equals(row.toChain.id, toChain.internalId) &&
-            equals(row.fromChain.tokenAddress, tx.tokenAddress) &&
-            equals(row.toChain.symbol, tx.symbol)
-        )
-        if (market) {
-          break
-        }
-      }
-      if (isEmpty(makerConfig.privateKeys[market!.makerAddress])) {
+      const newMakerList = await getNewMarketList()
+      const marketItem = newMakerList.find(
+        (m) =>
+          equals(String(m.fromChain.id), fromChain.internalId) &&
+          equals(String(m.toChain.id), toChain.internalId) &&
+          equals(m.fromChain.tokenAddress, String(tx.tokenAddress)) &&
+          equals(m.toChain.symbol, tx.symbol)
+      )
+      if (!marketItem) {
         accessLogger.error(
-          `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${market?.makerAddress}`
+          `Transaction pair not found ${fromChain.name} ${tx.hash} market:${fromChain.internalId} - ${toChain.internalId}`
         )
         continue
       }
-      if (isEmpty(market) || !market) {
-        accessLogger.info(
-          `[${transactionID}] Payment collection query Market  does not exist` +
-            JSON.stringify(tx)
+      if (!equals(tx.to, marketItem.recipient)) {
+        accessLogger.error(
+          `The recipient of the transaction is not a maker address ${tx.hash}`
+        )
+        continue
+      }
+      const makerAddress = marketItem.recipient.toLowerCase()
+      if (isEmpty(makerConfig.privateKeys[makerAddress.toLowerCase()])) {
+        accessLogger.error(
+          `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${makerAddress}`
         )
         continue
       }
@@ -236,7 +248,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           Number(fromChain.internalId),
           Number(toChain.internalId),
           tx.value.toString(),
-          market
+          marketItem
         )
         if (!checkAmountResult) {
           accessLogger.error(
@@ -246,7 +258,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
       }
-      await confirmTransactionSendMoneyBack(transactionID, market, tx)
+      await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
     }
   }
   return newTxList.map((tx) => tx.hash)
@@ -259,7 +271,7 @@ export async function confirmTransactionSendMoneyBack(
   const fromChainID = market.fromChain.id
   const toChainID = market.toChain.id
   const toChainName = market.toChain.name
-  const makerAddress = market.makerAddress
+  const makerAddress = market.sender
   LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
   // check send
   // valid is exits
@@ -275,6 +287,7 @@ export async function confirmTransactionSendMoneyBack(
     errorLogger.error(`[${transactionID}] isHaveSqlError =`, error)
     return
   }
+
   await repositoryMakerNode()
     .insert({
       transactionID: transactionID,
@@ -303,11 +316,29 @@ export async function confirmTransactionSendMoneyBack(
         market.pool,
         tx.nonce,
       ]
-      accessLogger.info(
-        `[${transactionID}] ConfirmTransactionSendMoneyBack SendTransaction [${market.fromChain.id} - ${market.toChain.id}] Params:`,
-        tx.hash,
-        JSON.stringify(params)
-      )
+      // accessLogger.info(
+      //   `[${transactionID}] ConfirmTransactionSendMoneyBack SendTransaction [${market.fromChain.id} - ${market.toChain.id}] Params:`,
+      //   tx.hash,
+      //   JSON.stringify(params)
+      // )
+      let userAddress = tx.from
+      switch (String(fromChainID)) {
+        case '11':
+        case '511':
+        case '4':
+        case '44':
+          userAddress = tx.extra['ext']
+          break
+      }
+      switch (String(toChainID)) {
+        case '11':
+        case '511':
+          userAddress = tx.extra['ext'].replace('0x02', '0x')
+        case '4':
+        case '44':
+          userAddress = tx.extra['ext'].replace('0x03', '0x')
+          break
+      }
       await sendTransaction(
         makerAddress,
         transactionID,
@@ -316,7 +347,7 @@ export async function confirmTransactionSendMoneyBack(
         toChainName,
         toTokenAddress,
         tx.value.toNumber(),
-        tx.from,
+        userAddress,
         market.pool,
         tx.nonce
       )
@@ -326,18 +357,49 @@ export async function confirmTransactionSendMoneyBack(
       return
     })
 }
-export function newExpanPool(pool) {
+
+export async function getNewMarketList(): Promise<Array<IMarket>> {
+  const makerList = await getMakerList()
+  return flatten(
+    makerList.map((row) => {
+      return newExpanPool(row)
+    })
+  )
+}
+export function groupWatchAddressByChain(makerList: Array<IMarket>): {
+  [key: string]: Array<string>
+} {
+  const chainIds = uniq(
+    flatten(makerList.map((row) => [row.fromChain.id, row.toChain.id]))
+  )
+  const chain = {}
+  for (const id of chainIds) {
+    const recipientAddress = uniq(
+      makerList.filter((m) => m.fromChain.id === id).map((m) => m.recipient)
+    )
+    const senderAddress = uniq(
+      makerList.filter((m) => m.toChain.id === id).map((m) => m.sender)
+    )
+    chain[id] = uniq([...senderAddress, ...recipientAddress])
+  }
+  return chain
+}
+// getNewMarketList().then((result) => {
+//   console.log(groupWatchAddressByChain(result), '===result')
+// })
+export function newExpanPool(pool): Array<IMarket> {
   return [
     {
-      makerAddress: pool.makerAddress,
+      recipient: pool.makerAddress,
+      sender: pool.makerAddress,
       fromChain: {
-        id: pool.c1ID,
+        id: String(pool.c1ID),
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
       },
       toChain: {
-        id: pool.c2ID,
+        id: String(pool.c2ID),
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
@@ -351,7 +413,7 @@ export function newExpanPool(pool) {
       // avalibleTimes: pool.c1AvalibleTimes,
       pool: {
         //Subsequent versions will modify the structure
-        makerAddress:pool.makerAddress,
+        makerAddress: pool.makerAddress,
         c1ID: pool.c1ID,
         c2ID: pool.c2ID,
         c1Name: pool.c1Name,
@@ -369,15 +431,16 @@ export function newExpanPool(pool) {
       },
     },
     {
-      makerAddress: pool.makerAddress,
+      recipient: pool.makerAddress,
+      sender: pool.makerAddress,
       fromChain: {
-        id: pool.c2ID,
+        id: String(pool.c2ID),
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
       },
       toChain: {
-        id: pool.c1ID,
+        id: String(pool.c1ID),
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
@@ -408,14 +471,23 @@ export function newExpanPool(pool) {
         avalibleTimes: pool.c2AvalibleTimes,
       },
     },
-  ].map(row => {
-    if ([4,44].includes(row.toChain.id)) {
+  ].map((row) => {
+    if (['4', '44'].includes(row.toChain.id)) {
+      const L1L2Maping =
+        row.toChain.id === '4'
+          ? makerConfig.starknetL1MapL2['mainnet-alpha']
+          : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
-      if (makerConfig.starknetAddressMap[row.makerAddress]) {
-        row.makerAddress = makerConfig.starknetAddressMap[row.makerAddress];
-        row.pool.makerAddress = row.makerAddress;
-      }
+      row.sender = L1L2Maping[row.sender.toLowerCase()]
     }
-    return row;
+    if (['4', '44'].includes(row.fromChain.id)) {
+      const L1L2Maping =
+        row.fromChain.id === '4'
+          ? makerConfig.starknetL1MapL2['mainnet-alpha']
+          : makerConfig.starknetL1MapL2['georli-alpha']
+      // starknet mapping
+      row.recipient = L1L2Maping[row.recipient.toLowerCase()]
+    }
+    return row
   })
 }

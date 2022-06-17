@@ -1,4 +1,4 @@
-import { BigNumber } from 'bignumber.js';
+import { BigNumber } from 'bignumber.js'
 import schedule from 'node-schedule'
 import { makerConfig } from '../config'
 import * as coinbase from '../service/coinbase'
@@ -7,10 +7,17 @@ import { ServiceMakerPull } from '../service/maker_pull'
 import * as serviceMakerWealth from '../service/maker_wealth'
 import { doBalanceAlarm } from '../service/setting'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { ScanChainMain } from '../chainCore'
+import mainnetChains from '../chainCore/chains.json'
+import testnetChains from '../chainCore/testnet.json'
+import {
+  getNewMarketList,
+  groupWatchAddressByChain,
+} from '../util/maker/new_maker'
+const allChainsConfig = [...mainnetChains, ...testnetChains]
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -266,80 +273,14 @@ export function jobBalanceAlarm() {
 }
 
 export async function startNewDashboardPull() {
-  const makerList = await getMakerList()
-  const convertMakerList = ScanChainMain.convertTradingList(makerList)
-  for (const intranetId in convertMakerList) {
-    if (['4', '44'].includes(intranetId)) {
-      for (const row of convertMakerList[intranetId]) {
-        // starknet and evm wallet address mapping
-
-        if (makerConfig.starknetAddressMap[row.address]) {
-          row['address'] = makerConfig.starknetAddressMap[row.address]
-        }
-      }
-    }
-  }
-  const scanChain = new ScanChainMain(convertMakerList)
+  const makerList = await getNewMarketList()
+  const convertMakerList = groupWatchAddressByChain(makerList)
+  const scanChain = new ScanChainMain(allChainsConfig as any)
   const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
   for (const intranetId in convertMakerList) {
-    //
     scanChain.mq.subscribe(`${intranetId}:txlist`, async (result) => {
       return await serviceMakerPull.handleNewScanChainTrx(result, makerList)
     })
+    scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
-  serviceMakerPull.handleNewScanChainTrx([
-    {
-      chainId: 'SN_GOERLI',
-      hash: '0x15e19b1e191abd16084fbc88d051cd9d0aff27aef16ff3daa0a8207a3af31d5',
-      nonce: 13,
-      blockHash:
-        '0x7df5b4d3006bb5c3d44400c836f6f437b7f9c3a82588f3be2db9a47c66db91b',
-      blockNumber: 239235,
-      transactionIndex: 0,
-      from: '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
-      to: '0x03b6da1627bf56996a2cc03934b9fbe94f43a36bc14d97be3cf7ef916e14fe9d',
-      value: new BigNumber('190010000000000'),
-      symbol: 'ETH',
-      gasPrice: 0,
-      gas: 0,
-      input: '',
-      status: 2,
-      tokenAddress:
-        '0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
-      timestamp: 1655185624,
-      fee: Number('0xf48189e4d4d'),
-      feeToken: 'ETH',
-      extra: {
-        contract_address:
-          '0x33b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
-        entry_point_selector:
-          '0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad',
-        entry_point_type: 'EXTERNAL',
-        calldata: [
-          '0x1',
-          '0x457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3',
-          '0x68bcbdba7cc8cac2832d23e2c32e9eec39a9f1d03521eff5dff800a62725fa',
-          '0x0',
-          '0x5',
-          '0x5',
-          '0x49d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7',
-          '0x3b6da1627bf56996a2cc03934b9fbe94f43a36bc14d97be3cf7ef916e14fe9d',
-          '0xacd0268dc400',
-          '0x0',
-          '0x8a3214f28946a797088944396c476f014f88dd37',
-          '0xd',
-        ],
-        signature: [
-          '0x62e09184fbad44f84ec0079fe0e060f26a0171dfb2d4bf4bd711658d1a06222',
-          '0x56020308f201c516dfe5a2d5cb2bd5cdc10335fa74f7745e2c00a3fc94c869f',
-        ],
-        max_fee: '0x1192e91ca4d0',
-        type: 'INVOKE_FUNCTION',
-        ext: '0x8a3214f28946a797088944396c476f014f88dd37',
-      },
-      source: 'rpc',
-      confirmations: 1,
-    },
-  ], makerList)
-  // scanChain.run()
 }

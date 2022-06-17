@@ -250,7 +250,6 @@ export async function getWealthsChains(makerAddress: string) {
     if (find) {
       return
     }
-
     wChain.balances.push({ tokenAddress, tokenName, decimals, value: '' })
   }
   const pushToChains = (
@@ -287,10 +286,12 @@ export async function getWealthsChains(makerAddress: string) {
       item.precision
     )
   }
-
   // get tokan balance
   for (const item of wealthsChains) {
     // add eth
+    if((item.chainId == 4 || item.chainId === 44)) {
+      continue
+    }
     const ethBalancesItem = item.balances.find((item2) => {
       return (
         !item2.tokenAddress ||
@@ -323,7 +324,6 @@ export async function getWealthsChains(makerAddress: string) {
       })
     }
   }
-
   return wealthsChains
 }
 
@@ -336,20 +336,23 @@ export async function getWealths(
   makerAddress: string
 ): Promise<WealthsChain[]> {
   const wealthsChains = await getWealthsChains(makerAddress)
-
   // get tokan balance
   const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     for (const item2 of item.balances) {
       const promiseItem = async () => {
+        let makerAddress = item.makerAddress;
+        if (item.chainId === 4 || item.chainId === 44) {
+          // mapping
+          makerAddress = makerConfig.starknetL1MapL2[item.chainId == 44 ? 'georli-alpha': 'mainnet-alpha'][item.makerAddress.toLowerCase()]
+        }
         let value = await getTokenBalance(
-          item.makerAddress,
+          makerAddress,
           item.chainId,
           item.chainName,
           item2.tokenAddress,
           item2.tokenName
         )
-
         // When value!='' && > 0, format it
         if (value) {
           value = new BigNumber(value)

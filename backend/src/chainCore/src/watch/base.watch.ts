@@ -44,6 +44,7 @@ export default abstract class BasetWatch implements IChainWatch {
       }),
     })
   }
+
   public async isWatchWalletAddress(address: string): Promise<boolean> {
     return this.watchAddress.has(address.toLowerCase())
   }

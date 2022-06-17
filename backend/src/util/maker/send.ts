@@ -26,6 +26,7 @@ import { getTargetMakerPool } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { sendEthTransaction } from '../../service/starknet/helper'
+import { equals } from '../../chainCore/src/utils'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -127,7 +128,7 @@ async function sendConsumer(value: any) {
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
       const ethWallet = new ethers.Wallet(
-        makerConfig.privateKeys[makerAddress]
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
       ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
@@ -257,7 +258,7 @@ async function sendConsumer(value: any) {
         syncProvider = new zksync2.Provider(httpEndPoint)
       }
       const syncWallet = new zksync2.Wallet(
-        makerConfig.privateKeys[makerAddress],
+        makerConfig.privateKeys[makerAddress.toLowerCase()],
         syncProvider,
         ethProvider
       )
@@ -338,10 +339,9 @@ async function sendConsumer(value: any) {
   if (chainID == 4 || chainID == 44) {
     try {
       const { hash }: any = await sendEthTransaction(
-        chainID === 44 ? 'goerli-alpha' : 'mainnet-alpha',
-        makerConfig.privateKeys[makerAddress],
+        equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha',
+        makerAddress,
         {
-          from: makerAddress,
           to: toAddress,
           tokenAddress,
           amount: String(amountToSend),
@@ -352,6 +352,7 @@ async function sendConsumer(value: any) {
         txid: hash,
       }
     } catch (error) {
+      console.error(error)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -446,7 +447,7 @@ async function sendConsumer(value: any) {
 
   if (chainID == 9 || chainID == 99) {
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress],
+      makerConfig.privateKeys[makerAddress.toLowerCase()],
       chainID == 9
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
@@ -584,7 +585,9 @@ async function sendConsumer(value: any) {
   if (chainID == 11 || chainID == 511) {
     try {
       const dydxWeb3 = new Web3()
-      dydxWeb3.eth.accounts.wallet.add(makerConfig.privateKeys[makerAddress])
+      dydxWeb3.eth.accounts.wallet.add(
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
+      )
       const dydxHelper = new DydxHelper(chainID, dydxWeb3)
       const dydxClient = await dydxHelper.getDydxClient(
         makerAddress,
@@ -670,7 +673,9 @@ async function sendConsumer(value: any) {
   // zkspace || zkspace_test
   if (chainID == 12 || chainID == 512) {
     try {
-      const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
+      const wallet = new ethers.Wallet(
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
+      )
       const msg =
         'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
       const signature = await wallet.signMessage(msg)
@@ -1035,7 +1040,9 @@ async function sendConsumer(value: any) {
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(makerConfig.privateKeys[makerAddress], 'hex'))
+  transaction.sign(
+    Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+  )
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.

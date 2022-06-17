@@ -704,7 +704,7 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
   if (!lpKey) {
     const { exchangeInfo } = await exchangeApi.getExchangeInfo()
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress],
+      makerConfig.privateKeys[makerAddress.toLowerCase()],
       fromChainID == 9
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
