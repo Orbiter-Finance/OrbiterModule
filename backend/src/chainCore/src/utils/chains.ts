@@ -30,8 +30,6 @@ export class Chain {
     return chains;
   }
 }
-import chains from '../../testnet.json';
-Chain.fill(chains as any)
 export function getAllChains(): IChainConfig[] {
   return Chain.configs || [];
 }
