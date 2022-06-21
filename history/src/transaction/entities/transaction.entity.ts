@@ -8,9 +8,6 @@ export class TransactionEntity extends CreateUpdateDateTimeAbstract {
   @PrimaryColumn({ comment: "Id" })
   id: number;
 
-  @Column({ comment: "Id" })
-  transactionId: number;
-
   @Column({ default: null, comment: "Hash" })
   hash: string;
 
@@ -58,7 +55,7 @@ export class TransactionEntity extends CreateUpdateDateTimeAbstract {
   @Column({ default: null, comment: "tokenAddress" })
   tokenAddress: string;
   
-  @Column({ type: "tinyint", default: null, comment: "timestamp" })
+  @Column({ type: "timestamp", default: () => 'CURRENT_TIMESTAMP', comment: "timestamp" })
   timestamp: string;
 
   @Column({ length: 20, default: null, comment: "fee" })
@@ -73,6 +70,9 @@ export class TransactionEntity extends CreateUpdateDateTimeAbstract {
   @Column({ length: 20, default: null, comment: "source" })
   source: string;
 
+  @Column({ length: 50, default: null, comment: "memo" })
+  memo: string;
+  
   @Column({ type: "json", default: null, comment: "extra" })
   extra: string;
 }

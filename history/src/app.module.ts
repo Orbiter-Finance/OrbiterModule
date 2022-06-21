@@ -3,9 +3,9 @@ import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { TransactionModule } from './transaction/transaction.module';
-import { TransactionRelInoutModule } from './transaction-rel-inout/transaction-rel-inout.module';
 import { GlobalModule } from './global/global.module';
 import { getEnv, isLocal } from './shared/env';
+import { MakerTransactionModule } from './maker-transaction/maker-transaction.module';
 
 const localDb = {
   DB_HOST: 'localhost',
@@ -31,8 +31,8 @@ const envs = (key) => !isLocal() ? getEnv(key) : localDb[key];
       // synchronize: isLocal()
     }),
     TransactionModule,
-    TransactionRelInoutModule,
-    GlobalModule
+    GlobalModule,
+    MakerTransactionModule
   ],
   controllers: [
     AppController

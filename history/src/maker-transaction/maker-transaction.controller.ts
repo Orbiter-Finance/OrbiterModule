@@ -1,5 +1,5 @@
 import {Get, Query, Controller} from '@nestjs/common';
-import { TransactionRelInoutService } from './transaction-rel-inout.service';
+import { MakerTransactionService } from './maker-transaction.service';
 import {
   ApiResponse,
   ApiOperation, ApiTags,
@@ -10,24 +10,25 @@ import logger from '../shared/utils/logger';
 
 @ApiTags('transactions')
 @Controller('transactions')
-export class TransactionRelInoutController {
-  constructor(private readonly transactionRelInoutService: TransactionRelInoutService) {}
+export class MakerTransactionController {
+  constructor(private readonly makerTransactionService: MakerTransactionService) {}
 
   @ApiOperation({ summary: 'Get all real transactions' })
   @ApiResponse({ status: 200, description: 'Return all real transactions.'})
   @Get()
   async findAll(@Query() query): Promise<any> {
+    // TODO: this part is common, use pipe instead
     if (!query.makerAddress) {
-      logger.warn(`[TransactionRelInoutController.findAll] Mapped {/transactions, GET} route error request params: ${JSON.stringify(query)}`);
+      logger.warn(`[MakerTransactionController.findAll] Mapped {/transactions, GET} route error request params: ${JSON.stringify(query)}`);
       throw new HttpException({code: 1, msg: 'Sorry, params makerAddress miss'}, HttpStatus.OK);
     }
-    return await this.transactionRelInoutService.findAll(query);
+    return await this.makerTransactionService.findAll(query);
   }
 
   @ApiOperation({ summary: 'Get all real transactions' })
   @ApiResponse({ status: 200, description: 'Return all real transactions.'})
   @Get('history')
   async findAllHistory(@Query() query): Promise<any> {
-    return await this.transactionRelInoutService.findAll(query);
+    return await this.makerTransactionService.findAll(query);
   }
 }

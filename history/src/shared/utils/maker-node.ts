@@ -5,15 +5,17 @@ import * as dayjs from 'dayjs'
 import * as relativeTime from 'dayjs/plugin/relativeTime'
 import { getRAmountFromTAmount, pTextFormatZero, getToAmountFromUserAmount, getTAmountFromRAmount } from './core';
 import axios from 'axios'
+import { makerListHistory, makerList } from '../configs'
+import { utils } from 'ethers'
 
 dayjs.extend(relativeTime)
 
 
 async function getAllMakerList() {
-  return ['0x0043d60e87c5dd08c86c3123340705a1556c4719']
+  return makerList.concat(makerListHistory)
 }
 async function getMakerList() {
-  return ['0x0043d60e87c5dd08c86c3123340705a1556c4719']
+  return makerList
 }
 
 const CHAIN_INDEX = {
@@ -555,14 +557,18 @@ export async function transforeData(list = []) {
     }
     item['needTo'] = needTo
 
-    // TODO
     // Parse to dydx txExt
-    // if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
-    //   const dydxHelper = new DydxHelper(Number(item.toChain))
-    //   item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
-    //     item.fromExt.value
-    //   )
-    // }
+    if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
+      // const dydxHelper = new DydxHelper(Number(item.toChain))
+      // item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
+      //   item.fromExt.value
+      // )
+      const chainId = Number(item.toChain)
+      const data = item.fromExt.value
+      const starkKey = utils.hexDataSlice(data, 0, 32)
+      const positionId = parseInt(utils.hexDataSlice(data, 32), 16)
+      item.fromExt['dydxInfo'] = { starkKey, positionId: String(positionId) }
+    }
 
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate

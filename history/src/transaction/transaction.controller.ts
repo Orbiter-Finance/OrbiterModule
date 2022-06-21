@@ -4,6 +4,9 @@ import {
   ApiResponse,
   ApiOperation, ApiTags,
 } from '@nestjs/swagger';
+import { HttpException } from '@nestjs/common';
+import { HttpStatus } from '@nestjs/common';
+import logger from '../shared/utils/logger';
 
 @ApiTags('transactions')
 @Controller('transaction')
@@ -15,5 +18,17 @@ export class TransactionController {
   @Get()
   async findAllHistory(@Query() query): Promise<any> {
     return await this.transactionService.findAll(query);
+  }
+
+  @ApiOperation({ summary: 'Get bad transaction' })
+  @ApiResponse({ status: 200, description: 'Return bad transactions.'})
+  @Get('unmatch')
+  async findUnmatchedHistory(@Query() query): Promise<any> {
+    // TODO: this part is common, use pipe instead
+    if (!query.makerAddress) {
+      logger.warn(`[TransactionController.findUnmatchedHistory] Mapped {/transaction/unmatch, GET} route error request params: ${JSON.stringify(query)}`);
+      throw new HttpException({code: 1, msg: 'Sorry, params makerAddress miss'}, HttpStatus.OK);
+    }
+    return await this.transactionService.findUnmatched(query);
   }
 }
