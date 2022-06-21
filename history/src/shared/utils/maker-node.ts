@@ -522,7 +522,29 @@ export async function transforeData(list = []) {
       tokenAddress: '',
     }
 
-    if (item.state == 1 || item.state == 20) {
+    // old:
+    // if (item.state == 1 || item.state == 20) {
+    // new:
+    // compare two transaction to computed the old state & FE's showed state
+    /*
+      0: { label: 'From: check', type: 'info' },
+      1: { label: 'From: okay', type: 'warning' },
+      2: { label: 'To: check', type: 'info' },
+      3: { label: 'To: okay', type: 'success' },
+      20: { label: 'To: failed', type: 'danger' },
+    */
+    let state = 20
+    if (item.fromStatus == 0) {
+      state = 0
+    } else if (item.fromStatus == 1) {
+      state = 1
+    }
+    if (item.status == 0) {
+      if (item.fromStatus == 1) state = 2
+    } else if (item.status == 1) {
+      state = 3
+    }
+    if (state == 1 || state == 20) {
       const _fromChain = Number(item.fromChain)
       needTo.chainId = Number(
         getAmountFlag(_fromChain, item.fromAmount)
