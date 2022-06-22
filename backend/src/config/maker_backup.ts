@@ -244,6 +244,13 @@ export default {
     gasPrice: 2,
     customChainId: 280,
   },
+  starknetL1MapL2: {
+    'mainnet-alpha': {},
+    'georli-alpha': {
+      '0x0x0043d60e87c5dd08C86C3123340705a1556C471941':
+        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
+    },
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   s3AccessKeyId: 'Your Key',
   s3SecretAccessKey: 'Your Key',
