@@ -103,9 +103,11 @@ export async function startNewMakerTrxPull() {
   const scanChain = new ScanChainMain(<any>allChainsConfig)
   for (const intranetId in convertMakerList) {
     convertMakerList[intranetId].forEach((address) => {
-      const pullKey = `${intranetId}:${address.toLowerCase()}`
-      if (!LastPullTxMap.has(pullKey)) {
-        LastPullTxMap.set(pullKey, Date.now())
+      if (address) {
+        const pullKey = `${intranetId}:${address.toLowerCase()}`
+        if (!LastPullTxMap.has(pullKey)) {
+          LastPullTxMap.set(pullKey, Date.now())
+        }
       }
     })
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
@@ -128,12 +130,15 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
     for (const tx of txList) {
       accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       if (!(await isWatchAddress(tx.to))) {
-        // accessLogger.error(
-        //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
-        // )
+        accessLogger.error(
+          `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
+        )
         continue
       }
-      if (equals(tx.to, tx.from) || tx.value.lt(0)) {
+      if (equals(tx.to, tx.from) || tx.value.lte(0)) {
+        accessLogger.error(
+          `subscribeNewTransaction to equals from | value <= 0 hash:${tx.hash}`
+        )
         continue
       }
       const fromChain = await getChainByChainId(tx.chainId)
@@ -268,8 +273,8 @@ export async function confirmTransactionSendMoneyBack(
   market: IMarket,
   tx: ITransaction
 ) {
-  const fromChainID = market.fromChain.id
-  const toChainID = market.toChain.id
+  const fromChainID = Number(market.fromChain.id)
+  const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
   const makerAddress = market.sender
   LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
@@ -293,8 +298,8 @@ export async function confirmTransactionSendMoneyBack(
       transactionID: transactionID,
       userAddress: tx.from,
       makerAddress: makerAddress,
-      fromChain: fromChainID,
-      toChain: toChainID,
+      fromChain: String(fromChainID),
+      toChain: String(toChainID),
       formTx: tx.hash,
       fromTimeStamp: String(tx.timestamp),
       fromAmount: tx.value.toString(),
