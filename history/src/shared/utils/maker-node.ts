@@ -470,6 +470,30 @@ export async function statisticsProfit(
   }
 }
 
+export async function transforeUnmatchedTradding(list = []) {
+  for (const item of list) {
+    item['chainName'] = CHAIN_INDEX[item.chainId] || ''
+
+    // amount format
+    const chainTokenInfo = await getTokenInfo(
+      Number(item.chainId),
+      item.tokenAddress
+    )
+    item['amountFormat'] = 0
+    if (chainTokenInfo.decimals > -1) {
+      item['amountFormat'] = new BigNumber(item.value).dividedBy(
+        10 ** chainTokenInfo.decimals
+      )
+    }
+
+    // time ago
+    item['txTimeAgo'] = '-'
+    if (item.timestamp.getTime() > 0) {
+      item['txTimeAgo'] = dayjs().to(dayjs(new Date(item.timestamp).getTime()))
+    }
+  }
+}
+
 export async function transforeData(list = []) {
   // fill data
   for (const item of list) {

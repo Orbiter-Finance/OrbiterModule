@@ -1,7 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { EntityManager } from 'typeorm';
 import { PaginationResRO, CommonResRO, PaginationReqRO } from '../shared/interfaces';
-import { logger, formateTimestamp } from '../shared/utils';
+import { logger, formateTimestamp, transforeUnmatchedTradding } from '../shared/utils';
 
 @Injectable()
 export class TransactionService {
@@ -32,11 +32,25 @@ export class TransactionService {
     `
     logger.log(`[TransactionService.findUnmatched] ${sql.replace(/\s+/g, ' ')}`)
     const data = await this.manager.query(sql);
+    transforeUnmatchedTradding(data);
+
+    // const data = initData.map(v => {
+    //   const chainInfo: any = getChainTokenInfo({
+    //     chainId: v.chainId, 
+    //     token: v.tokenAddress
+    //   })
+    //   return {
+    //     ...v,
+    //     tokenName: chainInfo.tokenName || '',
+    //     timeStampAgo: transforeTimestamp2Ago(v.timestamp)
+    //   }
+    // })
+
 
     return {
       code: 0,
       msg: null,
-      data
+      data,
     }
   }
   
