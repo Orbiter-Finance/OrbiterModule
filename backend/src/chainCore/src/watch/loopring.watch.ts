@@ -2,6 +2,7 @@ import dayjs from 'dayjs'
 import { Address, ITransaction, QueryTxFilterLoopring } from '../types'
 import AbstractWatch from './base.watch'
 export default class LoopringWatch extends AbstractWatch {
+  minConfirmations: number
   public async getApiFilter(address: string): Promise<QueryTxFilterLoopring> {
     const filter: Partial<QueryTxFilterLoopring> = {
       start: Date.now(),
@@ -23,7 +24,9 @@ export default class LoopringWatch extends AbstractWatch {
   ): Promise<Array<ITransaction>> {
     const filter = await this.getApiFilter(address)
     const response = await this.chain.getTransactions(address, filter)
-    // console.log('露营交易：', filter, response)
     return response.txlist
+  }
+  public replayBlock(start: number, end: number, changeBlock?: Function | undefined): Promise<{ start: number; end: number }> {
+    throw new Error('Method not implemented.')
   }
 }

@@ -207,7 +207,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     const makerAddresses = await serviceMaker.getMakerAddresses()
     const addresses: string[] = []
     for (const item of makerAddresses) {
-      if (makerConfig.privateKeys[item]) {
+      if (makerConfig.privateKeys[item.toLowerCase()]) {
         continue
       }
 
@@ -227,13 +227,13 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         if (!isEthereumAddress(makerAddress)) {
           continue
         }
-        if (!body[makerAddress] || makerConfig.privateKeys[makerAddress]) {
+        if (!body[makerAddress] || makerConfig.privateKeys[makerAddress.toLowerCase()]) {
           continue
         }
 
         makerAddresses.push(makerAddress)
 
-        makerConfig.privateKeys[makerAddress] = body[makerAddress]
+        makerConfig.privateKeys[makerAddress.toLowerCase()] = body[makerAddress]
       }
     }
 

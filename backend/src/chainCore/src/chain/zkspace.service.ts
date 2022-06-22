@@ -82,8 +82,66 @@ export class ZKSpace implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<ITransaction> {
-    throw new Error('Method not implemented.')
+  public async convertTxToEntity(data: any): Promise<Transaction | null> {
+    if (!data) return data
+    const {
+      tx_hash,
+      nonce,
+      block_number,
+      from,
+      to,
+      amount,
+      fee,
+      token,
+      created_at,
+      ...extra
+    } = data
+    let txStatus = TransactionStatus.Fail
+    if (extra.success) {
+      txStatus = TransactionStatus.PENDING
+      if (extra.status === 'pending') {
+        txStatus = TransactionStatus.PENDING
+      } else if (extra.status === 'verified') {
+        txStatus = TransactionStatus.COMPLETE
+      }
+    }
+    const trx = new Transaction({
+      chainId: this.chainConfig.chainId,
+      hash: tx_hash,
+      nonce,
+      blockHash: '',
+      blockNumber: block_number,
+      transactionIndex: 0,
+      from,
+      to,
+      value: new BigNumber(amount),
+      fee,
+      feeToken:
+        extra.fee_token === 0
+          ? this.chainConfig.nativeCurrency.symbol
+          : extra.fee_token,
+      tokenAddress: '',
+      timestamp: created_at,
+      extra,
+      status: txStatus,
+      symbol: '',
+      source: '',
+    })
+    const tokenInfo = await this.getTokenInfo(token.id)
+    if (tokenInfo) {
+      trx.tokenAddress = tokenInfo.address
+      trx.symbol = tokenInfo.symbol
+      trx.value = trx.value.multipliedBy(10 ** tokenInfo.decimals)
+    }
+    return trx
+  }
+
+  async getTransactionByHash(hash: string): Promise<ITransaction | null> {
+    const { data, success, ...resExtra } = await HttpGet(
+      `${this.chainConfig.api.url}/tx/${hash}`
+    )
+    const trx = await this.convertTxToEntity(data)
+    return trx
   }
   async getTransactions(
     address: string,
@@ -99,55 +157,10 @@ export class ZKSpace implements IChain {
     Object.assign(response, resExtra)
     if (success) {
       for (const row of data.data) {
-        const {
-          tx_hash,
-          nonce,
-          block_number,
-          from,
-          to,
-          amount,
-          fee,
-          token,
-          created_at,
-          ...extra
-        } = row
-        let txStatus = TransactionStatus.Fail
-        if (extra.success) {
-          txStatus = TransactionStatus.PENDING
-          if (extra.status === 'pending') {
-            txStatus = TransactionStatus.PENDING
-          } else if (extra.status === 'verified') {
-            txStatus = TransactionStatus.COMPLETE
-          }
+        const trx = await this.convertTxToEntity(row)
+        if (trx) {
+          response.txlist.push(trx)
         }
-        const trx = new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash: tx_hash,
-          nonce,
-          blockHash: '',
-          blockNumber: block_number,
-          transactionIndex: 0,
-          from,
-          to,
-          value: new BigNumber(amount),
-          fee,
-          feeToken:
-            extra.fee_token === 0
-              ? this.chainConfig.nativeCurrency.symbol
-              : extra.fee_token,
-          tokenAddress: '',
-          timestamp: created_at,
-          extra,
-          status: txStatus,
-          symbol: '',
-        })
-        const tokenInfo = await this.getTokenInfo(token.id)
-        if (tokenInfo) {
-          trx.tokenAddress = tokenInfo.address
-          trx.symbol = tokenInfo.symbol
-          trx.value = trx.value.multipliedBy(10 ** tokenInfo.decimals)
-        }
-        response.txlist.push(trx)
       }
     }
     return response
@@ -158,7 +171,7 @@ export class ZKSpace implements IChain {
     filter: Partial<QueryTxFilterZKSpace>
   ): Promise<QueryTransactionsResponse> {
     const token = await this.getTokenInfo(tokenAddress)
-    if (!token) {
+    if (!token || !token.id) {
       throw new Error(`${tokenAddress} Token Not Exists`)
     }
     const response: QueryTransactionsResponse = {
@@ -166,57 +179,15 @@ export class ZKSpace implements IChain {
     }
     const { data, success, ...resExtra } = await HttpGet(
       `${this.chainConfig.api.url}/txs`,
-      Object.assign({ address }, filter)
+      Object.assign({ address, token: token.id }, filter)
     )
     Object.assign(response, resExtra)
     if (success) {
       for (const row of data.data) {
-        const {
-          tx_hash,
-          nonce,
-          block_number,
-          from,
-          to,
-          amount,
-          fee,
-          token,
-          created_at,
-          ...extra
-        } = row
-        let txStatus = TransactionStatus.Fail
-        if (extra.success) {
-          txStatus = TransactionStatus.PENDING
-          if (extra.status === 'pending') {
-            txStatus = TransactionStatus.PENDING
-          } else if (extra.status === 'verified') {
-            txStatus = TransactionStatus.COMPLETE
-          }
+        const trx = await this.convertTxToEntity(row)
+        if (trx) {
+          response.txlist.push(trx)
         }
-        const trx = new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash: tx_hash,
-          nonce,
-          blockHash: '',
-          blockNumber: block_number,
-          transactionIndex: 0,
-          from,
-          to,
-          value: new BigNumber(amount),
-          fee,
-          feeToken: extra.fee_token === 0 ? '' : extra.fee_token,
-          tokenAddress: '',
-          timestamp: created_at,
-          extra,
-          status: txStatus,
-          symbol: '',
-        })
-        const tokenInfo = await this.getTokenInfo(token.id)
-        if (tokenInfo) {
-          trx.tokenAddress = tokenInfo.address
-          trx.symbol = tokenInfo.symbol
-          trx.value = trx.value.multipliedBy(10 ** tokenInfo.decimals)
-        }
-        response.txlist.push(trx)
       }
     }
     return response
@@ -242,7 +213,7 @@ export class ZKSpace implements IChain {
       `${this.chainConfig.api.url}/overview/account/${address}`
     )
     if (success && Array.isArray(data)) {
-      const mainToken = data.find((row) => equals(row.id,token.id))
+      const mainToken = data.find((row) => equals(row.id, token.id))
       return new BigNumber(mainToken && mainToken.amount)
     }
     return new BigNumber(0)

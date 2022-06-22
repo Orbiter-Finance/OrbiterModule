@@ -82,8 +82,15 @@ export class ImmutableX implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<Transaction> {
-    throw new Error('Method not implemented.')
+  async getTransactionByHash(hash: string): Promise<Transaction | null> {
+    const client = await this.createClient()
+    const rawTx = await client.getTransfer({
+      id: Number(hash),
+    })
+    if (rawTx) {
+      return await this.convertTxToEntity(rawTx)
+    }
+    return null
   }
   private timestampToNonce(timestamp: number | string) {
     let nonce = 0
@@ -101,6 +108,36 @@ export class ImmutableX implements IChain {
     }
     return nonce
   }
+  public async convertTxToEntity(data: any): Promise<Transaction | null> {
+    if (!data) return data
+    const { transaction_id, user, receiver, timestamp, token, ...extra } = data
+    const nonce = this.timestampToNonce(timestamp.getTime())
+    let tokenAddress = String(token.data['token_address'])
+    if (isEmpty(tokenAddress)) {
+      tokenAddress = this.chainConfig.nativeCurrency.address
+    }
+    let status = TransactionStatus.Fail
+    if (['success', 'confirmed', 'accepted'].includes(data.status)) {
+      status = TransactionStatus.COMPLETE
+    }
+
+    return new Transaction({
+      chainId: this.chainConfig.chainId,
+      hash: String(transaction_id),
+      from: user,
+      to: receiver,
+      nonce,
+      blockNumber: transaction_id,
+      value: new BigNumber(token.data.quantity.toString()),
+      symbol: token.type,
+      status,
+      timestamp: dayjs(timestamp).unix(),
+      fee: 0,
+      feeToken: this.chainConfig.nativeCurrency.symbol,
+      tokenAddress,
+      extra,
+    })
+  }
   async getTransactions(
     address: string,
     filter: Partial<QueryTxFilterIMX> = {}
@@ -115,37 +152,12 @@ export class ImmutableX implements IChain {
       }
       const { result, ...resExtra } = await client.getTransfers(filterParams)
       Object.assign(response, resExtra)
-      response.txlist = result.map((tx) => {
-        const { transaction_id, user, receiver, timestamp, token, ...extra } =
-          tx
-        const nonce = this.timestampToNonce(timestamp.getTime())
-        let tokenAddress = String(token.data['token_address'])
-        if (isEmpty(tokenAddress)) {
-          tokenAddress = this.chainConfig.nativeCurrency.address
+      for (const txRaw of result) {
+        const tx = await this.convertTxToEntity(txRaw)
+        if (tx) {
+          response.txlist.push(tx)
         }
-        let status = TransactionStatus.Fail
-        if (['success', 'confirmed', 'accepted'].includes(tx.status)) {
-          status = TransactionStatus.COMPLETE
-        }
-
-        return new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash: String(transaction_id),
-          from: user,
-          to: receiver,
-          nonce,
-          blockNumber: transaction_id,
-          value: new BigNumber(token.data.quantity.toString()),
-          symbol: token.type,
-          status,
-          timestamp: dayjs(timestamp).unix(),
-          fee: 0,
-          feeToken: this.chainConfig.nativeCurrency.symbol,
-          tokenAddress,
-          extra,
-        })
-      })
-
+      }
       return response
     }
     const sendRes = await requestTx(

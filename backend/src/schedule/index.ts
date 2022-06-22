@@ -32,7 +32,7 @@ export async function waittingStartMaker() {
       const item = makerList[index]
       const makerAddress = item.makerAddress
       if (
-        makerConfig.privateKeys[makerAddress] &&
+        makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
       ) {
         // startMaker(item)

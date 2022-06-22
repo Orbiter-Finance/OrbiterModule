@@ -1,5 +1,4 @@
 import { AlchemyWeb3, createAlchemyWeb3 } from '@alch/alchemy-web3'
-import { isEmpty } from '@loopring-web/loopring-sdk'
 import BigNumber from 'bignumber.js'
 import {
   HashOrBlockNumber,
@@ -13,7 +12,7 @@ import {
   IEVMChain,
   QueryTransactionsResponse,
 } from '../types/chain'
-import { decodeMethod, equals, IERC20_ABI_JSON } from '../utils'
+import { decodeMethod, equals, IERC20_ABI_JSON, isEmpty } from '../utils'
 import logger from '../utils/logger'
 
 export abstract class EVMChain implements IEVMChain {
@@ -68,6 +67,62 @@ export abstract class EVMChain implements IEVMChain {
     }
     return null
   }
+  protected async decodeInputContractTransfer(
+    input: string,
+    contractAddress: string
+  ) {
+    const callFuncNameSign = input.substring(0, 10)
+    const forwardNameSigns = ['0x29723511', '0x46f506ad']
+    const decodeInputData = decodeMethod(
+      String(input),
+      forwardNameSigns.includes(callFuncNameSign) ? 'Forward' : 'ERC20'
+    )
+    const result = {
+      //...
+      name: '',
+      transferData: {
+        recipient: '',
+        // sender: '',
+        amount: new BigNumber(0),
+        tokenAddress: '',
+        ext: '',
+      },
+      data: {},
+    }
+    if (!decodeInputData || !decodeInputData.params) {
+      return result
+    }
+    result.name = decodeInputData.name
+    decodeInputData.params.forEach((el) => {
+      const filedName = el.name.replace('_', '')
+      result.data[filedName] = el.value
+      result[filedName] = el
+    })
+    if (forwardNameSigns.includes(callFuncNameSign)) {
+      // Forward
+      switch (callFuncNameSign) {
+        case '0x29723511': // transfer
+          result.transferData.recipient = result.data['to']
+          result.transferData.ext = result.data['ext']
+          result.transferData.tokenAddress =
+            this.chainConfig.nativeCurrency.address
+          break
+        case '0x46f506ad': // transfer erc20
+          result.transferData.recipient = result.data['to']
+          result.transferData.ext = result.data['ext']
+          result.transferData.tokenAddress = result.data['token']
+          result.transferData.amount = new BigNumber(result.data['amount'])
+          break
+      }
+    } else {
+      // Standard ERC20 Transfer
+      result.transferData.recipient = result.data['recipient']
+      result.transferData.amount = new BigNumber(result.data['amount'])
+      result.transferData.tokenAddress = contractAddress;
+    }
+    // delete result.data;
+    return result
+  }
   public async convertTxToEntity(trx: any): Promise<Transaction | null> {
     const {
       hash,
@@ -79,23 +134,22 @@ export abstract class EVMChain implements IEVMChain {
       to,
       value,
       gasPrice,
-      gas,
       input,
       ...extra
     } = trx
-
     const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
     if (!trxRcceipt) {
       return null
     }
+    const gas = trxRcceipt.gasUsed
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)
     const confirmations = await this.getConfirmations(blockNumber)
-    const newTx = new Transaction({
+    const txData = new Transaction({
       chainId: this.chainConfig.chainId,
       hash,
       from,
-      to: String(to),
+      to: '',
       value: new BigNumber(value),
       nonce,
       blockHash: String(blockHash),
@@ -115,51 +169,33 @@ export abstract class EVMChain implements IEVMChain {
       source: 'rpc',
     })
     if (trxRcceipt.status) {
-      newTx.status = TransactionStatus.COMPLETE
+      txData.status = TransactionStatus.COMPLETE
     }
     // valid main token or contract token
     if (!isEmpty(to)) {
       const code = await this.web3.eth.getCode(to)
       if (code === '0x') {
-        newTx.tokenAddress = this.chainConfig.nativeCurrency.address
-        newTx.symbol = this.chainConfig.nativeCurrency.symbol
+        txData.to = to
+        txData.tokenAddress = this.chainConfig.nativeCurrency.address
+        txData.symbol = this.chainConfig.nativeCurrency.symbol
       } else {
         // contract token
-        newTx.tokenAddress = to
-        newTx.to = ''
-        const decodeInputData = decodeMethod(String(input), to.toLowerCase())
-        // Compatible with transaction data from other chains to dydx
-        if (
-          this.chainConfig.contracts.findIndex((addr) => equals(addr, to)) !==
-          -1
-        ) {
-          if (decodeInputData.name === 'transferERC20') {
-            decodeInputData.params.forEach((el) => {
-              if (el.name === '_token') {
-                newTx.tokenAddress = el.value
-              } else if (el.name === '_to') {
-                newTx.to = el.value
-              } else if (el.name === '_amount') {
-                newTx.value = new BigNumber(el.value)
-              }
-            })
-            newTx.symbol = await this.getTokenSymbol(to)
-          }
+        txData.tokenAddress = to
+        txData.to = ''
+        const inputData = await this.decodeInputContractTransfer(input, to)
+        // transferData
+        if (inputData && inputData.transferData) {
+          const { tokenAddress, recipient, amount, ...inputExtra } =
+            inputData.transferData
+          txData.tokenAddress = tokenAddress
+          txData.to = recipient
+          txData.value = amount.gt(0) ? amount : txData.value;
+          Object.assign(txData.extra, inputExtra)
         }
-        if (decodeInputData && decodeInputData.name === 'transfer') {
-          decodeInputData.params.forEach((el) => {
-            if (el.type === 'address') {
-              newTx.to = el.value
-            } else if (el.type === 'uint256') {
-              newTx.value = new BigNumber(el.value)
-            }
-          })
-          // get token symbol
-          newTx.symbol = await this.getTokenSymbol(to)
-        }
+        txData.symbol = await this.getTokenSymbol(String(txData.tokenAddress))
       }
     }
-    return newTx
+    return txData
   }
   public async getBalance(address: string): Promise<BigNumber> {
     const value = await this.web3.eth.getBalance(address)

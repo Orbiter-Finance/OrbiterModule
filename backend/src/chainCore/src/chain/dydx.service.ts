@@ -6,6 +6,7 @@ import {
   ITransaction,
   QueryTransactionsResponse,
   QueryTxFilterDydx,
+  Token,
   Transaction,
   TransactionStatus,
 } from '../types'
@@ -32,7 +33,25 @@ export class Dydx implements IChain {
       this.apiKeyCredentials.passphrase = keys[2]
     }
   }
-
+  public async getTokenInfo(idOrAddrsss: string | number) {
+    if (
+      idOrAddrsss === 0 ||
+      idOrAddrsss === '0' ||
+      idOrAddrsss === '0x0000000000000000000000000000000000000000'
+    ) {
+      return this.chainConfig.nativeCurrency as Token
+    }
+    if (typeof idOrAddrsss === 'string') {
+      // check local config
+      const localToken = this.chainConfig.tokens.find((t) =>
+        equals(t.address, idOrAddrsss)
+      )
+      if (localToken) {
+        return localToken
+      }
+    }
+    return null
+  }
   public getDydxClient() {
     const apiKeyCredentials = this.apiKeyCredentials
     if (
@@ -56,7 +75,43 @@ export class Dydx implements IChain {
   async getLatestHeight(): Promise<number> {
     return 0
   }
-
+  public async convertTxToEntity(data: any): Promise<Transaction | null> {
+    if (!data) return data
+    const { id, fromAddress, type, toAddress, status, createdAt, ...extra } =
+      data
+    const value = new BigNumber(
+      equals(type, 'TRANSFER_IN') ? data.creditAmount : data.debitAmount
+    )
+    const symbol = equals(type, 'TRANSFER_IN')
+      ? data.creditAsset
+      : data.debitAsset
+    const nonce = Dydx.timestampToNonce(new Date(createdAt).getTime())
+    const token = await this.chainConfig.tokens.find((t) =>
+      equals(String(symbol), t.symbol)
+    )
+    const tx = new Transaction({
+      chainId: this.chainConfig.chainId,
+      hash: id,
+      nonce: Number(nonce),
+      from: fromAddress || '',
+      to: toAddress || '',
+      blockNumber: 0,
+      value,
+      status: TransactionStatus.Fail,
+      timestamp: dayjs(createdAt).unix(),
+      fee: 0,
+      feeToken: String(token?.symbol),
+      tokenAddress: token?.address,
+      extra,
+      symbol,
+    })
+    if (equals(status, 'PENDING')) {
+      tx.status = TransactionStatus.PENDING
+    } else if (equals(status, 'CONFIRMED')) {
+      tx.status = TransactionStatus.COMPLETE
+    }
+    return tx
+  }
   getConfirmations(hashOrHeight: HashOrBlockNumber): Promise<number> {
     throw new Error('Method not implemented.')
   }
@@ -66,8 +121,31 @@ export class Dydx implements IChain {
   ): Promise<number> {
     throw new Error('Method not implemented.')
   }
-  getTransactionByHash(hash: string): Promise<ITransaction> {
+  async getTransactionByHash(hash: string): Promise<ITransaction> {
     throw new Error('Method not implemented.')
+  }
+  /**
+   * The api does not return the nonce value, timestamp(ms) last three number is the nonce
+   *  (warnning: there is a possibility of conflict)
+   * @param  timestamp ms
+   * @returns
+   */
+  static timestampToNonce(timestamp: number | string) {
+    let nonce = 0
+
+    if (timestamp) {
+      timestamp = String(timestamp)
+      const match = timestamp.match(/(\d{3})$/i)
+      if (match && match.length > 1) {
+        nonce = Number(match[1]) || 0
+      }
+
+      if (nonce > 900) {
+        nonce = nonce - 100
+      }
+    }
+
+    return nonce + ''
   }
   async getTransactions(
     _address: string,
@@ -90,35 +168,10 @@ export class Dydx implements IChain {
       )
 
     for (const row of transfers) {
-      const value = new BigNumber(
-        row.type.includes('TRANSFER_IN') ? row.creditAmount : row.debitAmount
-      )
-      const symbol = row.type.includes('TRANSFER_IN')
-        ? row.creditAsset
-        : row.debitAsset
-      const { id, fromAddress, toAddress, createdAt, ...extra } = row
-      const tx = new Transaction({
-        chainId: this.chainConfig.chainId,
-        hash: id,
-        nonce: 0,
-        from: fromAddress || '',
-        to: toAddress || '',
-        blockNumber: 0,
-        value,
-        status: TransactionStatus.Fail,
-        timestamp: dayjs(createdAt).unix(),
-        fee: 0,
-        feeToken: '',
-        tokenAddress: '',
-        extra,
-        symbol,
-      })
-      if (equals(row.status, 'PENDING')) {
-        tx.status = TransactionStatus.PENDING
-      } else if (equals(row.status, 'CONFIRMED')) {
-        tx.status = TransactionStatus.COMPLETE
+      const tx = await this.convertTxToEntity(row)
+      if (tx) {
+        response.txlist.push(tx)
       }
-      response.txlist.push(tx)
     }
     return response
   }
@@ -129,19 +182,32 @@ export class Dydx implements IChain {
   ): Promise<QueryTransactionsResponse> {
     throw new Error('Method not implemented.')
   }
-  getBalance(address: string): Promise<BigNumber> {
-    throw new Error('Method not implemented.')
+  async getBalance(address: string): Promise<BigNumber> {
+    const dydxClient = this.getDydxClient()
+    const { account } = await dydxClient.private.getAccount(address)
+    return new BigNumber(account.freeCollateral)
   }
-  getDecimals(): Promise<number> {
-    throw new Error('Method not implemented.')
+  public async getDecimals(): Promise<number> {
+    return this.chainConfig.nativeCurrency.decimals
   }
   getTokenBalance(address: string, tokenAddress: string): Promise<BigNumber> {
     throw new Error('Method not implemented.')
   }
-  getTokenDecimals(tokenAddress: string): Promise<number> {
-    throw new Error('Method not implemented.')
+  async getTokenDecimals(tokenAddress: string): Promise<number> {
+    const token = await this.getTokenInfo(tokenAddress)
+    if (!token) {
+      throw new Error(`${tokenAddress} Token Not Exists`)
+    }
+    if (token) {
+      return Number(token.decimals)
+    }
+    return 0
   }
-  getTokenSymbol(tokenAddress: string): Promise<string> {
-    throw new Error('Method not implemented.')
+  async getTokenSymbol(tokenAddress: string): Promise<string> {
+    const token = await this.getTokenInfo(tokenAddress)
+    if (!token) {
+      throw new Error(`${tokenAddress} Token Not Exists`)
+    }
+    return token && token.symbol
   }
 }

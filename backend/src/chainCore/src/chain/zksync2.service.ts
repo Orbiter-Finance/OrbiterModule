@@ -14,7 +14,6 @@ export class ZKSync2 extends EvmExplorerService {
       to,
       value,
       gasPrice,
-      gas,
       input,
       ...extra
     } = trx
@@ -22,6 +21,7 @@ export class ZKSync2 extends EvmExplorerService {
     if (!trxRcceipt) {
       return null
     }
+    const gas = trxRcceipt.gasUsed;
     // status
     const block = await this.web3.eth.getBlock(Number(blockNumber), false)
     const confirmations = await this.getConfirmations(blockNumber)
