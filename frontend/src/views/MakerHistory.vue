@@ -137,14 +137,14 @@
 
 <script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerPulls } from '@/hooks/maker-history'
+import { useUnmatchedTradding } from '@/hooks/maker-history'
 import dayjs from 'dayjs'
 import {
-  computed,
   inject,
   reactive,
   toRef,
   watch,
+  ref, computed
 } from 'vue'
 
 const makerAddressSelected: any = inject('makerAddressSelected')
@@ -158,12 +158,35 @@ const showSuccessed = toRef(state, 'showSuccessed')
 const showRejected = toRef(state, 'showRejected')
 const showCannotMatched = toRef(state, 'showCannotMatched')
 const startTime = toRef(state, 'startTime')
-const fromMakerPulls = makerPulls()
-const toMakerPulls = makerPulls()
-const getMakerPulls = () => {
+const fromLoading = ref(false)
+const toLoading = ref(false)
+const _fromList = ref([])
+const _toList = ref([])
+const fromList = computed(() => {
+  return _fromList.value.filter(listFilter)
+})
+const toList = computed(() => {
+  return _toList.value.filter(listFilter)
+})
+const getMakerPulls = async () => {
   const rangeDate = [state.startTime]
-  fromMakerPulls.get(makerAddressSelected?.value, 1, rangeDate)
-  toMakerPulls.get(makerAddressSelected?.value, 0, rangeDate)
+  const { list, loading } = await useUnmatchedTradding({
+    makerAddress: makerAddressSelected?.value, 
+    fromOrToMaker: 1,
+    rangeDate,
+    status: 2
+  })
+  fromLoading.value = loading.value
+  _fromList.value = list.value
+
+  const { list: list0, loading: loading0 } = await useUnmatchedTradding({
+    makerAddress: makerAddressSelected?.value, 
+    fromOrToMaker: 0,
+    rangeDate,
+    status: 2
+  })
+  toLoading.value = loading0.value
+  _toList.value = list0.value
 }
 const tableRowClassName = ({ row }) => {
   if (row.tx_status == 'rejected') {
@@ -191,22 +214,11 @@ const listFilter = ({ tx_status, target_tx }) => {
 
   return conditions.indexOf(true) > -1
 }
-const fromList = computed(() => {
-  return fromMakerPulls.state.list.value.filter(listFilter)
-})
-const toList = computed(() => {
-  return toMakerPulls.state.list.value.filter(listFilter)
-})
 
-getMakerPulls()
 // watchs
 watch(() => makerAddressSelected?.value, getMakerPulls)
 // methods
-const onChangeStartTime = () => {
-  getMakerPulls()
-}
-const fromLoading = fromMakerPulls.state.loading
-const toLoading = toMakerPulls.state.loading
+const onChangeStartTime = () => getMakerPulls()
 </script>
 
 <style lang="scss">

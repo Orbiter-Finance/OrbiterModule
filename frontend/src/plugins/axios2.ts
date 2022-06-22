@@ -30,7 +30,6 @@ http.interceptors.request.use(
 // Add a response interceptor
 http.interceptors.response.use(
   function (response) {
-    console.log('response: ', response)
     const respData = response.data
 
     if (respData.code != 0) {

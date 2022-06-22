@@ -395,8 +395,8 @@ const status = [
     label: 'All'
   }
 ].concat(Object.keys(stateTags).map(key => ({value: +key, label: stateTags[key].label})))
-// Default time duration
-const DEFAULT_TIME_DURATION = 10800000
+// Default time duration 10800 
+const DEFAULT_TIME_DURATION = 30 * 24 * 60 * 60 * 1000
 
 const makerAddressSelected: any = inject('makerAddressSelected')
 const exchangeRates: any = inject('exchangeRates')
@@ -496,6 +496,9 @@ const reset = () => {
   state.toChainId = ''
   state.userAddressSelected = ''
   state.keyword = ''
+  state.status = -1
+  
+  getMakerNodes()
 }
 /*
 const getMakerNodes = async (more: any = {}) => {
@@ -517,10 +520,11 @@ const getMakerNodes = async (more: any = {}) => {
     total: _total
   } = await useTransactionHistory({
     makerAddress: makerAddressSelected?.value,
-    fromChain: Number(state.fromChainId),
-    toChain: Number(state.toChainId),
+    fromChain: state.fromChainId ? +state.fromChainId : null,
+    toChain: state.toChainId ? +state.toChainId : null,
     rangeDate: state.rangeDate,
     keyword: state.keyword.trim(),
+    state: state.status,
     ...more,
   });
   loadingNodes.value = loading.value

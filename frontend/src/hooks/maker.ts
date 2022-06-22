@@ -83,6 +83,22 @@ function transforeData(list: any = []) {
     if (item['toTx'] && item['toTx'] != '0x') {
       item['toTxHref'] = $env.txExploreUrl[item.toChain] + item['toTx']
     }
+    item['txTokenName'] = item.tokenName
+    item.transactionID = item.transcationId
+    item.formTx = item.fromTx
+    item.fromAmountFormat = +item.fromValue / Math.pow(10, 18)
+    item.toAmountFormat = +item.toValue / Math.pow(10, 18)
+    item.state = 20
+    if (item.fromStatus == 0) {
+      item.state = 0
+    } else if (item.fromStatus == 1) {
+      item.state = 1
+    }
+    if (item.status == 0) {
+      if (item.fromStatus == 1) item.state = 2
+    } else if (item.status == 1) {
+      item.state = 3
+    }
   }
 }
 async function getMakerNode(params: any = {}) {
