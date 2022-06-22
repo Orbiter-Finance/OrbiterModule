@@ -43,7 +43,7 @@ export function ABIInputToString<T extends { type: string; components?: any }>(
   input: T
 ) {
   if (input.type.includes('tuple')) {
-    return '(' + input.components.map(this.inputItemToString).join(',') + ')'
+    return '(' + input.components.map(ABIInputToString).join(',') + ')'
   }
   return input.type
 }
