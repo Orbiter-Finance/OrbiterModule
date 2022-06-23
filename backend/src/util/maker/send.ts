@@ -1071,16 +1071,16 @@ async function sendConsumer(value: any) {
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
     if (fromChainID === 3 && chainID === 1) {
-      maxPrice = 110
+      maxPrice = 95
     }
     if (fromChainID === 2 && chainID === 1) {
-      maxPrice = 110
+      maxPrice = 95
     }
     if (fromChainID === 7 && chainID === 1) {
-      maxPrice = 110
+      maxPrice = 95
     }
     if (fromChainID === 6 && chainID === 1) {
-      maxPrice = 110
+      maxPrice = 95
     }
   }
   const gasPrices = await getCurrentGasPrices(
