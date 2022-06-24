@@ -379,5 +379,27 @@
       "rpc"
     ],
     "tokens": []
+  },
+  {
+    "api": {
+      "url": "",
+      "key": ""
+    },
+    "chainId": "SN_GOERLI",
+    "networkId": "goerli-alpha",
+    "internalId": "44",
+    "name": "Starknet Goerli Testnet",
+    "debug": false,
+    "contracts": ["0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"],
+    "nativeCurrency": {
+      "id":0,
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
+    },
+    "rpc": [],
+    "watch": ["rpc"],
+    "tokens": []
   }
 ]

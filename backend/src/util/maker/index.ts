@@ -1537,7 +1537,7 @@ function confirmToTransaction(
   }, 8 * 1000)
 }
 
-function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
+function confirmToZKTransaction(syncProvider, txID, transactionID) {
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
     let transferReceipt: any
@@ -1545,7 +1545,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       transferReceipt = await syncProvider.getTxReceipt(txID)
     } catch (err) {
       errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
-      return confirmToZKTransaction(syncProvider, txID)
+      return confirmToZKTransaction(syncProvider, txID, transactionID)
     }
 
     accessLogger.info(
@@ -1582,7 +1582,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
     if (!transferReceipt.success && transferReceipt.failReason) {
       return
     }
-    return confirmToZKTransaction(syncProvider, txID)
+    return confirmToZKTransaction(syncProvider, txID, transactionID)
   }, 8 * 1000)
 }
 
