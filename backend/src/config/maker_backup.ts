@@ -1,7 +1,7 @@
 export default {
   starknetL1MapL2: {
     'mainnet-alpha': {
-      '0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC': '',
+      'xxxxx': 'xxxx',
     },
     'georli-alpha': {
       '0x8a3214f28946a797088944396c476f014f88dd37':
