@@ -106,13 +106,45 @@ export async function startNewMakerTrxPull() {
       if (address) {
         const pullKey = `${intranetId}:${address.toLowerCase()}`
         if (!LastPullTxMap.has(pullKey)) {
-          LastPullTxMap.set(pullKey, Date.now())
+          // LastPullTxMap.set(pullKey, Date.now())
         }
       }
     })
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
-    scanChain.startScanChain(intranetId, convertMakerList[intranetId])
+    // scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
+  subscribeNewTransaction([
+    {
+      chainId: '4',
+      hash: '0xeac99b678b50e9a66a72fbe344355a868a2557d24fd5874c1b19958892573f5b',
+      nonce: 221,
+      blockHash:
+        '0xb591682fbd11819daeda0697112097b3da11577812382f4e7123aba0ce7dfd3b',
+      blockNumber: 10906350,
+      transactionIndex: 17,
+      from: '0x6f5e78931888e1c4dc257b5539054b9ce2fc5ed3',
+      to: '0x0043d60e87c5dd08c86c3123340705a1556c4719',
+      value: new BigNumber('10100000000009088'),
+      symbol: 'ETH',
+      gasPrice: 1000164764,
+      gas: 21000,
+      input: '0x',
+      status: 1,
+      tokenAddress: '0x0000000000000000000000000000000000000000',
+      timestamp: 1656048526,
+      fee: 21003460044000,
+      feeToken: 'ETH',
+      extra: {
+        gas: '21000',
+        isError: '0',
+        txreceipt_status: '1',
+        contractAddress: '',
+        cumulativeGasUsed: '1678790',
+      },
+      source: 'api',
+      confirmations: 2,
+    },
+  ])
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
@@ -309,18 +341,18 @@ export async function confirmTransactionSendMoneyBack(
     })
     .then(async () => {
       const toTokenAddress = market.toChain.tokenAddress
-      const params = [
-        makerAddress,
-        transactionID,
-        fromChainID,
-        toChainID,
-        toChainName,
-        toTokenAddress,
-        tx.value.toNumber(),
-        tx.from,
-        market.pool,
-        tx.nonce,
-      ]
+      // const params = [
+      //   makerAddress,
+      //   transactionID,
+      //   fromChainID,
+      //   toChainID,
+      //   toChainName,
+      //   toTokenAddress,
+      //   tx.value.toNumber(),
+      //   tx.from,
+      //   market.pool,
+      //   tx.nonce,
+      // ]
       // accessLogger.info(
       //   `[${transactionID}] ConfirmTransactionSendMoneyBack SendTransaction [${market.fromChain.id} - ${market.toChain.id}] Params:`,
       //   tx.hash,
