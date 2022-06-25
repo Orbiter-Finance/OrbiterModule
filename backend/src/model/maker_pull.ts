@@ -63,9 +63,9 @@ export class MakerPull extends CommonEntity {
   txExt: { type: string; value: string }
 
   @Column('varchar', { default: null })
-  userL2Address: string;
+  userReceive: string;
   @Column('varchar', { default: null })
-  makerL2Address: string;
+  makerSender: string;
   @Column('varchar', { default: null })
   symbol: string;
   @Column('timestamp', { default: null })
