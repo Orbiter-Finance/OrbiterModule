@@ -365,6 +365,7 @@ async function sendConsumer(value: any) {
   if (chainID == 8 || chainID == 88) {
     try {
       const imxHelper = new IMXHelper(chainID)
+      console.log(makerAddress, '==makerAddress')
       const imxClient = await imxHelper.getImmutableXClient(makerAddress)
 
       // Warnning: The nonce value of immutablex currently has no substantial effect
@@ -407,7 +408,6 @@ async function sendConsumer(value: any) {
           },
         }
       }
-
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
         token: imxTokenInfo,
@@ -437,6 +437,7 @@ async function sendConsumer(value: any) {
         }
       }
     } catch (error) {
+      console.log(error);
       return {
         code: 1,
         txid: 'immutablex transfer error: ' + error.message,

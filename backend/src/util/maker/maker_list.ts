@@ -33,6 +33,7 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
     c2ID: 9,
@@ -40,6 +41,15 @@ export const makerList = [
     c2Name: 'loopring',
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 510,
+    c2ID: 66,
+    c1Name: 'metis_test',
+    c2Name: 'polygon_test',
+    t1Address: '0x420000000000000000000000000000000000000A',
+    t2Address: '0xA6FA4fB5f76172d178d61B04b0ecd319C5d1C0aa',
+>>>>>>> eth_dev_starknet
     tName: 'ETH',
     c1MinPrice: 0.005,
     c1MaxPrice: 2,
@@ -66,12 +76,21 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 9,
     c2ID: 2,
     c1Name: 'loopring',
     c2Name: 'arbitrum',
     t1Address: '0x0000000000000000000000000000000000000000',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 510,
+    c2ID: 77,
+    c1Name: 'metis_test',
+    c2Name: 'optimism_test',
+    t1Address: '0x420000000000000000000000000000000000000A',
+>>>>>>> eth_dev_starknet
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
     c1MinPrice: 0.005,
@@ -99,6 +118,7 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 9,
     c2ID: 6,
@@ -106,6 +126,15 @@ export const makerList = [
     c2Name: 'polygon',
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 510,
+    c2ID: 99,
+    c1Name: 'metis_test',
+    c2Name: 'loopring_test',
+    t1Address: '0x420000000000000000000000000000000000000A',
+    t2Address: '0x0000000000000000000000000000000000000000',
+>>>>>>> eth_dev_starknet
     tName: 'ETH',
     c1MinPrice: 0.005,
     c1MaxPrice: 2,
@@ -132,12 +161,21 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 9,
     c2ID: 7,
     c1Name: 'loopring',
     c2Name: 'optimism',
     t1Address: '0x0000000000000000000000000000000000000000',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 510,
+    c2ID: 88,
+    c1Name: 'metis_test',
+    c2Name: 'immutableX_test',
+    t1Address: '0x420000000000000000000000000000000000000A',
+>>>>>>> eth_dev_starknet
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
     c1MinPrice: 0.005,
@@ -165,11 +203,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
     c2ID: 3,
     c1Name: 'mainnet',
     c2Name: 'zksync',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 33,
+    c1Name: 'zkspace_test',
+    c2Name: 'zksync_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -198,11 +244,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
     c2ID: 2,
     c1Name: 'mainnet',
     c2Name: 'arbitrum',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 99,
+    c1Name: 'zkspace_test',
+    c2Name: 'loopring_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -231,11 +285,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 2,
     c2ID: 3,
     c1Name: 'arbitrum',
     c2Name: 'zksync',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 22,
+    c1Name: 'zkspace_test',
+    c2Name: 'arbitrum_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -264,16 +326,28 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
     c2ID: 6,
     c1Name: 'mainnet',
     c2Name: 'polygon',
+=======
+    makerAddress: '0x8a3214f28946a797088944396c476f014f88dd37',
+    c1ID: 512,
+    c2ID: 44,
+    c1Name: 'zkspace_test',
+    c2Name: 'starknet_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
     tName: 'ETH',
     c1MinPrice: 0.005,
+<<<<<<< HEAD
     c1MaxPrice: 3,
+=======
+    c1MaxPrice: 0.01,
+>>>>>>> eth_dev_starknet
     c2MinPrice: 0.005,
     c2MaxPrice: 3,
     precision: 18,
@@ -297,16 +371,28 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 3,
     c2ID: 6,
     c1Name: 'zksync',
     c2Name: 'polygon',
+=======
+    makerAddress: '0x8a3214f28946a797088944396c476f014f88dd37',
+    c1ID: 512,
+    c2ID: 44,
+    c1Name: 'zkspace_test',
+    c2Name: 'starknet_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619',
     tName: 'ETH',
     c1MinPrice: 0.005,
+<<<<<<< HEAD
     c1MaxPrice: 3,
+=======
+    c1MaxPrice: 0.01,
+>>>>>>> eth_dev_starknet
     c2MinPrice: 0.005,
     c2MaxPrice: 3,
     precision: 18,
@@ -363,11 +449,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 2,
     c2ID: 7,
     c1Name: 'arbitrum',
     c2Name: 'optimism',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 5,
+    c1Name: 'zkspace_test',
+    c2Name: 'rinkeby',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -396,11 +490,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
     c2ID: 7,
     c1Name: 'mainnet',
     c2Name: 'optimism',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 66,
+    c1Name: 'zkspace_test',
+    c2Name: 'polygon_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -429,11 +531,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 3,
     c2ID: 7,
     c1Name: 'zksync',
     c2Name: 'optimism',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 77,
+    c1Name: 'zkspace_test',
+    c2Name: 'optimism_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -495,11 +605,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 8,
     c2ID: 1,
     c1Name: 'immutableX',
     c2Name: 'mainnet',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 88,
+    c1Name: 'zkspace_test',
+    c2Name: 'immutableX_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -528,11 +646,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 8,
     c2ID: 3,
     c1Name: 'immutableX',
     c2Name: 'zksync',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 512,
+    c2ID: 510,
+    c1Name: 'zkspace_test',
+    c2Name: 'immutableX_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',
@@ -561,11 +687,19 @@ export const makerList = [
     ],
   },
   {
+<<<<<<< HEAD
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 8,
     c2ID: 2,
     c1Name: 'immutableX',
     c2Name: 'arbitrum',
+=======
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 510,
+    c2ID: 512,
+    c1Name: 'zkspace_test',
+    c2Name: 'metis_test',
+>>>>>>> eth_dev_starknet
     t1Address: '0x0000000000000000000000000000000000000000',
     t2Address: '0x0000000000000000000000000000000000000000',
     tName: 'ETH',

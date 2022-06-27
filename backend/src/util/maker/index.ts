@@ -30,7 +30,6 @@ import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
-import { factoryStarknetListen } from './starknet_listen'
 import * as chainCoreUtils from '../../chainCore/src/utils'
 import { IChainConfig } from '../../chainCore/src/types'
 import { getProviderByChainId } from '../../service/starknet/helper'
@@ -1531,7 +1530,7 @@ function confirmToTransaction(
   }, 8 * 1000)
 }
 
-function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
+function confirmToZKTransaction(syncProvider, txID, transactionID) {
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
     let transferReceipt: any
@@ -1539,7 +1538,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       transferReceipt = await syncProvider.getTxReceipt(txID)
     } catch (err) {
       errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
-      return confirmToZKTransaction(syncProvider, txID)
+      return confirmToZKTransaction(syncProvider, txID, transactionID)
     }
 
     accessLogger.info(
@@ -1577,7 +1576,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return
     }
 
-    return confirmToZKTransaction(syncProvider, txID)
+    return confirmToZKTransaction(syncProvider, txID, transactionID)
   }, 8 * 1000)
 }
 
