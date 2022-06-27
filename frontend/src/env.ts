@@ -1,6 +1,6 @@
 export const $env = {
   baseUrl: '',
-  apiBaseUrl: 'http://iris_dashboard.orbiter.finance:3002/',
+  apiBaseUrl: '',
   credential: false,
   localProvider: {
     1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -17,7 +17,7 @@ export const $env = {
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
   supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511,514
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514,
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -40,9 +40,9 @@ export const $env = {
     99: '5', // loopring(G)
     510: '588', // metis(G)
     511: '3', // dydx(R)
-    13: '288',// boba
-    513: '28',// boba(R) 
-    514: '280',// boba(R) 
+    13: '288', // boba
+    513: '28', // boba(R)
+    514: '280', // boba(R)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -51,6 +51,8 @@ export const $env = {
     22: 'https://testnet.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
     33: 'https://rinkeby.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
+    4: 'https://beta.voyager.online/tx/',
+    44: 'https://beta-goerli.voyager.online/tx/',
     6: 'https://polygonscan.com/tx/',
     66: 'https://mumbai.polygonscan.com/tx/',
     7: 'https://optimistic.etherscan.io/tx/',
@@ -65,9 +67,9 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/transaction/',
     512: 'https://v3-rinkeby.zkswap.info/transaction/',
-    13: "https://blockexplorer.boba.network/tx/",
-    513: "https://blockexplorer.rinkeby.boba.network/tx/",
-    514: "https://zksync2-testnet.zkscan.io/tx/",
+    13: 'https://blockexplorer.boba.network/tx/',
+    513: 'https://blockexplorer.rinkeby.boba.network/tx/',
+    514: 'https://zksync2-testnet.zkscan.io/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -76,6 +78,8 @@ export const $env = {
     22: 'https://testnet.arbiscan.io/address/',
     3: 'https://zkscan.io/explorer/accounts/',
     33: 'https://rinkeby.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
+    4: 'https://beta.voyager.online/contract/',
+    44: 'https://beta-goerli.voyager.online/contract/',
     6: 'https://polygonscan.com/address/',
     66: 'https://mumbai.polygonscan.com/address/',
     7: 'https://optimistic.etherscan.io/address/',
@@ -90,9 +94,9 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/account/',
     512: 'https://v3-rinkeby.zkswap.info/account/',
-    13: "https://blockexplorer.boba.network/address/",
-    513: "https://blockexplorer.rinkeby.boba.network/address/",
-    514: "https://zksync2-testnet.zkscan.io/address/"
+    13: 'https://blockexplorer.boba.network/address/',
+    513: 'https://blockexplorer.rinkeby.boba.network/address/',
+    514: 'https://zksync2-testnet.zkscan.io/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -101,6 +105,8 @@ export const $env = {
     22: 'https://testnet.arbitrum.io/address/',
     3: 'https://etherscan.io/token/', // same as etherscan
     33: 'https://rinkeby.etherscan.io/token/',
+    4: 'https://beta.voyager.online/token/',
+    44: 'https://beta-goerli.voyager.online/token/',
     6: 'https://polygonscan.com/token/',
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
@@ -111,8 +117,8 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/token/',
     512: 'https://v3-rinkeby.zkswap.info/token/',
-    13: "https://blockexplorer.boba.network/",
-    513: "https://blockexplorer.rinkeby.boba.network/",
-    514: "https://zksync2-testnet.zkscan.io/token/"
+    13: 'https://blockexplorer.boba.network/',
+    513: 'https://blockexplorer.rinkeby.boba.network/',
+    514: 'https://zksync2-testnet.zkscan.io/token/',
   },
 }
