@@ -309,23 +309,6 @@ export async function confirmTransactionSendMoneyBack(
     })
     .then(async () => {
       const toTokenAddress = market.toChain.tokenAddress
-      const params = [
-        makerAddress,
-        transactionID,
-        fromChainID,
-        toChainID,
-        toChainName,
-        toTokenAddress,
-        tx.value.toNumber(),
-        tx.from,
-        market.pool,
-        tx.nonce,
-      ]
-      // accessLogger.info(
-      //   `[${transactionID}] ConfirmTransactionSendMoneyBack SendTransaction [${market.fromChain.id} - ${market.toChain.id}] Params:`,
-      //   tx.hash,
-      //   JSON.stringify(params)
-      // )
       let userAddress = tx.from
       switch (String(fromChainID)) {
         case '11':

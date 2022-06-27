@@ -421,6 +421,13 @@ export class ServiceMakerPull {
       }
     }
   }
+  private getL1ToL2Mapping() {
+    const starknetL1MapL2 =
+      makerConfig.starknetL1MapL2[
+        process.env.NODE_ENV == 'development' ? 'georli-alpha' : 'mainnet-alpha'
+      ]
+    return starknetL1MapL2
+  }
   /**
    * @param new makerPull
    * @returns
@@ -431,11 +438,7 @@ export class ServiceMakerPull {
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
     // if maker out
-    const originTx: ITransaction = JSON.parse(makerPull.data)
-    if (
-      equals(makerPull.fromAddress, makerPull.makerAddress) ||
-      equals(makerPull.fromAddress, makerPull.makerL2Address)
-    ) {
+    if (equals(fromAddress, makerAddress)) {
       // maker to user
       let targetMP = await repositoryMakerPull().findOne(
         {
@@ -455,11 +458,28 @@ export class ServiceMakerPull {
       )
       if (!targetMP) {
         // starknet match
+        const starknetL1MapL2 =
+          makerConfig.starknetL1MapL2[
+            process.env.NODE_ENV == 'development'
+              ? 'georli-alpha'
+              : 'mainnet-alpha'
+          ]
+          let mapL2MakerAddress:string|undefined;
+          for (const L1Address in starknetL1MapL2) {
+            if (equals(makerAddress, L1Address)) {
+              mapL2MakerAddress = starknetL1MapL2[L1Address];
+            } else if (equals(makerAddress, starknetL1MapL2[L1Address])) {
+              mapL2MakerAddress = L1Address;
+            }
+            if (mapL2MakerAddress) {
+              break;
+            }
+          }
         targetMP = await repositoryMakerPull().findOne(
           {
-            makerAddress: makerAddress, //  same makerAddress
-            userL2Address: toAddress,
-            makerL2Address: makerPull.makerL2Address,
+            makerSender: fromAddress, //  same makerAddress
+            makerAddress: mapL2MakerAddress,
+            userReceive: toAddress,
             amount_flag: String(makerPull.chainId),
             nonce: makerPull.amount_flag,
             tx_status: Not('rejected'),
@@ -473,11 +493,11 @@ export class ServiceMakerPull {
         )
       }
       if (targetMP) {
-        const transactionID = newMakeTransactionID(
+        let transactionID = newMakeTransactionID(
           targetMP.fromAddress,
           targetMP.chainId,
           targetMP.nonce,
-          originTx.symbol
+          targetMP.symbol
         )
         await repositoryMakerNode().update(
           {
@@ -499,7 +519,7 @@ export class ServiceMakerPull {
         )
       }
     }
-    if (equals(makerPull.toAddress, makerPull.makerAddress)) {
+    if (equals(toAddress, makerAddress)) {
       // user to maker
       // when amount_flag not in CHAIN_INDEX, it cann't identify toChain
       if (!CHAIN_INDEX[makerPull.amount_flag]) {
@@ -510,16 +530,36 @@ export class ServiceMakerPull {
         fromAddress,
         makerPull.chainId,
         makerPull.nonce,
-        originTx.symbol
+        makerPull.symbol
       )
-      // find pool and calculate needToAmount
-      const targetMakerPool = await getTargetMakerPool(
-        makerAddress,
-        makerPull.tokenAddress,
-        makerPull.chainId,
-        Number(makerPull.amount_flag),
-        makerPull.txTime
-      )
+      let targetMakerPool: any = null
+      if ([4, 44].includes(makerPull.chainId)) {
+        const starknetL1MapL2 = this.getL1ToL2Mapping()
+        for (const L1Addr in starknetL1MapL2) {
+          if (equals(makerAddress, starknetL1MapL2[L1Addr])) {
+            targetMakerPool = await getTargetMakerPool(
+              L1Addr,
+              makerPull.tokenAddress,
+              makerPull.chainId,
+              Number(makerPull.amount_flag),
+              makerPull.txTime
+            )
+            if (targetMakerPool) {
+              break
+            }
+          }
+        }
+      } else {
+        // find pool and calculate needToAmount
+        targetMakerPool = await getTargetMakerPool(
+          makerAddress,
+          makerPull.tokenAddress,
+          makerPull.chainId,
+          Number(makerPull.amount_flag),
+          makerPull.txTime
+        )
+      }
+
       let needToAmount = '0'
       if (targetMakerPool) {
         needToAmount =
@@ -533,12 +573,26 @@ export class ServiceMakerPull {
       }
       // match data from maker_pull
       let _mp: MakerPull | undefined
-      if (['4', '44', '11', '511'].includes(makerPull.amount_flag)) {
+      const makerList = await getNewMarketList()
+      const marketItem = makerList.find(
+        (m) =>
+          equals(m.fromChain.id, String(makerPull.chainId)) &&
+          equals(String(m.toChain.id), makerPull.amount_flag) &&
+          equals(m.fromChain.tokenAddress, String(makerPull.tokenAddress)) &&
+          equals(m.toChain.symbol, makerPull.symbol)
+      )
+      if (!marketItem) {
+        accessLogger.error(
+          `[newCompareData] The transaction in which the user sends funds to the merchant address is scanned, but the transaction pair does not exist ${makerPull.txHash}`
+        )
+        return;
+      }
+      if (['4', '44'].includes(marketItem.fromChain.id) || ['4', '44'].includes(marketItem.toChain.id)) {
         _mp = await repositoryMakerPull().findOne({
           chainId: Number(makerPull.amount_flag),
-          makerAddress: makerAddress,
-          fromAddress: makerPull.makerL2Address,
-          toAddress: makerPull.userL2Address,
+          makerAddress: makerPull.makerSender,
+          fromAddress: makerPull.makerSender,
+          toAddress: makerPull.userReceive,
           amount: needToAmount,
           amount_flag: makerPull.nonce,
           tx_status: Not('rejected'),
@@ -556,6 +610,7 @@ export class ServiceMakerPull {
           symbol: makerPull.symbol,
         })
       }
+
       const otherData = {
         state: makerPull.tx_status == 'finalized' ? 1 : 0,
       }
@@ -1847,6 +1902,7 @@ export class ServiceMakerPull {
         tx_status: 'rejected',
         symbol: tx.symbol,
       }
+
       if (tx.status === TransactionStatus.COMPLETE) {
         makerPull.tx_status = 'finalized'
       } else if (tx.status === TransactionStatus.PENDING) {
@@ -1861,18 +1917,13 @@ export class ServiceMakerPull {
         makerPull.tx_status = 'finalized'
       }
       accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
-      // handle L1L2 address maping
       if (makerPull.makerAddress === makerPull.fromAddress) {
         // maker send to user
-        const marketItem = makerList.find((m) =>
-          equals(m.sender, String(makerPull.makerAddress))
-        )
-        if (marketItem && makerPull) {
-          makerPull.makerAddress = marketItem.recipient
-          makerPull.makerL2Address = marketItem.sender
-        }
+        makerPull.userReceive = makerPull.toAddress
+        makerPull.makerSender = makerPull.fromAddress
       } else if (makerPull.makerAddress === makerPull.toAddress) {
         // user send to maker
+        makerPull.userReceive = makerPull.fromAddress
         const toChain = getChainByInternalId(String(amount_flag))
         const marketItem = makerList.find(
           (m) =>
@@ -1887,12 +1938,15 @@ export class ServiceMakerPull {
           )
           continue
         }
-        if (makerPull.txExt && makerPull.txExt['value']) {
-          makerPull.makerL2Address = marketItem.sender
-          makerPull.userL2Address = makerPull.txExt['value']
+        makerPull.makerSender = marketItem.sender
+        if (['4', '44'].includes(marketItem.fromChain.id)) {
+          makerPull.txExt = <any>{ ext: tx.extra['ext'] }
+          makerPull.userReceive = tx.extra['ext']
+        } else if (['4', '44'].includes(marketItem.toChain.id)) {
+          makerPull.userReceive = makerPull.txExt?.value
         }
+        //
       }
-
       promiseMethods.push(async () => {
         await savePull(<MakerPull>makerPull)
         // compare

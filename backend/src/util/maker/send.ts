@@ -408,7 +408,6 @@ async function sendConsumer(value: any) {
           },
         }
       }
-
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
         token: imxTokenInfo,
@@ -437,6 +436,7 @@ async function sendConsumer(value: any) {
         }
       }
     } catch (error) {
+      console.log(error)
       return {
         code: 1,
         txid: 'immutablex transfer error: ' + error.message,
