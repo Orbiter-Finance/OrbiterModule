@@ -20,7 +20,7 @@ import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import { BobaListen } from '../../service/boba/boba_listen'
 import { factoryIMXListen } from '../../service/immutablex/imx_listen'
-
+import { StarknetHelp } from '../../service/starknet/helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import loopring_help from '../../service/loopring/loopring_help'
 import { Core } from '../core'
@@ -33,6 +33,7 @@ import send from './send'
 import * as chainCoreUtils from '../../chainCore/src/utils'
 import { IChainConfig } from '../../chainCore/src/types'
 import { getProviderByChainId } from '../../service/starknet/helper'
+import { L1Signer } from 'zksync-web3'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 // import { doSms } from '../../sms/smsSchinese'
 
@@ -1652,52 +1653,59 @@ function confirmToLPTransaction(
   }, 8 * 1000)
 }
 
-async function confirmToSNTransaction(
+export async function confirmToSNTransaction(
   txID: string,
   transactionID: string,
-  chainId: number
-) {
+  chainId: number,
+  makerAddress: string
+): Promise<boolean | undefined> {
   accessLogger.info('confirmToSNTransaction =', getTime())
+  const provider = getProviderByChainId(chainId)
+  const transaction = await provider.getTransaction(txID)
+  accessLogger.info(
+    'sn_transaction =',
+    JSON.stringify({ status: transaction.status, txID })
+  )
 
-  while (true) {
-    try {
-      const provider = getProviderByChainId(chainId)
-      const transaction = await provider.getTransaction(txID)
-      accessLogger.info(
-        'sn_transaction =',
-        JSON.stringify({ status: transaction.status, txID })
+  // When reject
+  if (transaction.status == 'REJECTED') {
+    errorLogger.info(
+      `starknet transfer failed: ${transaction.status}, txID:${txID}, transactionID:${transactionID}`
+    )
+    // check nonce
+    if (
+      transaction['transaction_failure_reason'] &&
+      transaction['transaction_failure_reason']['error_message'].includes(
+        'Error message: nonce invalid'
       )
-
-      // When reject
-      if (transaction.status == 'REJECTED') {
-        break
-      }
-
-      if (
-        transaction.status == 'ACCEPTED_ON_L1' ||
-        transaction.status == 'ACCEPTED_ON_L2'
-      ) {
-        accessLogger.info(
-          'sn_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
-        )
-        accessLogger.info(
-          'update maker_node =',
-          `state = 3 WHERE transactionID = '${transactionID}'`
-        )
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          { state: 3 }
-        )
-        break
-      }
-    } catch (err) {
-      errorLogger.error('sn_getTransaction failed: ', err.message)
+    ) {
+      return true
     }
-
-    await sleep(8 * 1000)
+    return false
+  } else if (
+    transaction.status == 'ACCEPTED_ON_L1' ||
+    transaction.status == 'ACCEPTED_ON_L2'
+  ) {
+    accessLogger.info(
+      'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
+    )
+    accessLogger.info(
+      'update maker_node =',
+      `state = 3 WHERE transactionID = '${transactionID}'`
+    )
+    await repositoryMakerNode().update(
+      { transactionID: transactionID },
+      { state: 3 }
+    )
+    return true
   }
+  await sleep(1000 * 10)
+  return await confirmToSNTransaction(
+    txID,
+    transactionID,
+    chainId,
+    makerAddress
+  )
 }
 
 function confirmToZKSTransaction(
@@ -2022,7 +2030,14 @@ export async function sendTransaction(
           let syncProvider = response.zkProvider
           confirmToZKTransaction(syncProvider, txID, transactionID)
         } else if (toChainID === 4 || toChainID === 44) {
-          confirmToSNTransaction(txID, transactionID, toChainID)
+          confirmToSNTransaction(
+            txID,
+            transactionID,
+            toChainID,
+            makerAddress
+          ).then((success) => {
+            success === false && response.rollback()
+          })
         } else if (toChainID === 8 || toChainID === 88) {
           console.warn({ toChainID, toChain, txID, transactionID })
           // confirmToSNTransaction(txID, transactionID, toChainID)
