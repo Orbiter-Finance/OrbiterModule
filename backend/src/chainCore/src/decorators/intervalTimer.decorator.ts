@@ -13,7 +13,7 @@ export const IntervalTimerDecorator = (
       const config = that.chain.chainConfig
       const intervalSeconds = config.api.intervalTime || 1000 * 4
       setInterval(async () => {
-        if ((Date.now() % 1000) == 0) {
+        if (Date.now() % 1000 === 0) {
           logger.info(
             `[${config.name}] time:${
               Date.now() - execTime
@@ -27,11 +27,12 @@ export const IntervalTimerDecorator = (
             isLock = false
             execTime = Date.now()
           } catch (error) {
-            isLock = false
-            execTime = Date.now()
             logger.error(
               `[${this.chain.chainConfig.name}] Scan Chain API Timer execution exception：${error.message}`
             )
+          } finally {
+            isLock = false
+            execTime = Date.now()
           }
         }
       }, 1000)
