@@ -189,7 +189,7 @@ export default class StarknetWatch extends AbstractWatch {
     try {
       const pendingBlockTxs =await this.replayByBlock("pending")
       if (pendingBlockTxs) {
-        changeBlock && changeBlock('pending', pendingBlockTxs)
+        changeBlock && changeBlock(0, pendingBlockTxs)
       }
       const config = this.chain.chainConfig;
       config.debug &&
