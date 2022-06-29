@@ -123,8 +123,8 @@ export async function startNewMakerTrxPull() {
     convertMakerList[intranetId].forEach((address) => {
       if (address) {
         const pullKey = `${intranetId}:${address.toLowerCase()}`
-        // transfers.set(intranetId, new Map())
-        // LastPullTxMap.set(pullKey, Date.now())
+        transfers.set(intranetId, new Map())
+        LastPullTxMap.set(pullKey, Date.now())
       }
     })
     scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
