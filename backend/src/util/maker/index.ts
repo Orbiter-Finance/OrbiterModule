@@ -1684,7 +1684,8 @@ export async function confirmToSNTransaction(
     return false
   } else if (
     transaction.status == 'ACCEPTED_ON_L1' ||
-    transaction.status == 'ACCEPTED_ON_L2'
+    transaction.status == 'ACCEPTED_ON_L2' || 
+    transaction.status == 'PENDING'
   ) {
     accessLogger.info(
       'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
