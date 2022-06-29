@@ -33,20 +33,7 @@ export class TransactionService {
     logger.log(`[TransactionService.findUnmatched] ${sql.replace(/\s+/g, ' ')}`)
     const data = await this.manager.query(sql);
     transforeUnmatchedTradding(data);
-
-    // const data = initData.map(v => {
-    //   const chainInfo: any = getChainTokenInfo({
-    //     chainId: v.chainId, 
-    //     token: v.tokenAddress
-    //   })
-    //   return {
-    //     ...v,
-    //     tokenName: chainInfo.tokenName || '',
-    //     timeStampAgo: transforeTimestamp2Ago(v.timestamp)
-    //   }
-    // })
-
-
+    
     return {
       code: 0,
       msg: null,
@@ -58,7 +45,7 @@ export class TransactionService {
     // const { makerAddress } = query;
     const cur = +query.current || 1;
     const limit = +query.size || 10;
-    const offset = `${(cur - 1) * limit}`;
+    const offset = (cur - 1) * limit;
 
     let more = ``;
     if (query.startTime) {

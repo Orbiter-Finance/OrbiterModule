@@ -21,7 +21,7 @@ export class MakerTransactionService {
 
     const cur = +query.current || 1;
     const limit = +query.size || 10;
-    const offset = `${(cur - 1) * limit}`;
+    const offset = (cur - 1) * limit;
     // const first = offset + 1;
     // const last = offset + limit;
 
