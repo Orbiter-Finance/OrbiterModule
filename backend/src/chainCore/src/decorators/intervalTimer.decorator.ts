@@ -13,7 +13,7 @@ export const IntervalTimerDecorator = (
       const config = that.chain.chainConfig
       const intervalSeconds = config.api.intervalTime || 1000 * 4
       setInterval(async () => {
-        if ((Date.now() % 1000) * 10) {
+        if ((Date.now() % 1000) == 0) {
           logger.info(
             `[${config.name}] time:${
               Date.now() - execTime
