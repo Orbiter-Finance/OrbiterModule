@@ -62,15 +62,25 @@ export class TransactionService {
         smid = `where ${more}`
       }
     }
-    const sql = `
-      select * from transaction t ${smid}
+    const commsql = `
+      from transaction t ${smid}
         order by t.timestamp DESC
+    `
+    const sql = `
+      select * ${commsql} LIMIT ${limit} OFFSET ${offset}
     `;
     logger.log(`[TransactionService.findAll] ${sql.replace(/\s+/g, ' ')}`)
     const datas = await this.manager.query(sql);
     const data = datas.slice(offset, offset + limit);      
 
-    const total = datas.length;
+    const sqlOfTotal = `
+      select COUNT(t.id) as sum 
+        ${commsql}
+    `
+    logger.log(`[TransactionService.findAll count] ${sqlOfTotal.replace(/\s+/g, ' ')}`)
+    const sumData = await this.manager.query(sqlOfTotal)
+    const total = +sumData[0]?.sum || 0;
+    // const total = datas.length;
     const pages = Math.ceil((total / limit));
 
     return {

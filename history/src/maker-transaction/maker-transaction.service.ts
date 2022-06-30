@@ -72,17 +72,17 @@ export class MakerTransactionService {
     }
 
     const commsql = `
-    select m.id, m.transcationId, m.fromChain, m.toChain, m.toAmount, m.replySender, m.replyAccount, m.createdAt, m.updatedAt,
-      m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, 
-      t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
-      t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, 
-      t.feeToken as tokenName, t2.status as status, t.status as fromStatus 
       from maker_transaction m 
         left join transaction t on m.inId = t.id 
         left join transaction t2 on m.outId = t2.id 
         where ${more.slice(4)}
     `
     const sql = ` 
+      select m.id, m.transcationId, m.fromChain, m.toChain, m.toAmount, m.replySender, m.replyAccount, m.createdAt, m.updatedAt,
+        m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, 
+        t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
+        t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, 
+        t.feeToken as tokenName, t2.status as status, t.status as fromStatus 
       ${commsql} order by t.timestamp DESC LIMIT ${limit} OFFSET ${offset}
     `
 
@@ -90,12 +90,10 @@ export class MakerTransactionService {
     const data = await this.manager.query(sql);
 
     const sqlOfTotal = `
-      select COUNT(m.id) as sum from maker_transaction m 
-        left join transaction t on m.inId = t.id 
-        left join transaction t2 on m.outId = t2.id
-        where ${more.slice(4)}
+      select COUNT(m.id) as sum 
+        ${commsql}
     `
-    logger.log(`[MakerTransactionService.findAll count(*)] ${sqlOfTotal.replace(/\s+/g, ' ')}`)
+    logger.log(`[MakerTransactionService.findAll count] ${sqlOfTotal.replace(/\s+/g, ' ')}`)
     const sumData = await this.manager.query(sqlOfTotal)
     const total = +sumData[0]?.sum || 0;
     const pages = Math.ceil((total / limit));
