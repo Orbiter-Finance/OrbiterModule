@@ -1,7 +1,7 @@
+import { ScanChainMain,pubSub,chains } from 'orbiter-chaincore';
+import {core as chainCoreUtil} from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
-import { ScanChainMain } from 'orbiter-chaincore'
 import * as orbiterCore from './core'
-import { core as chainCoreUtil, chains } from 'orbiter-chaincore/src/utils'
 import BigNumber from 'bignumber.js'
 import { newMakeTransactionID } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
@@ -118,7 +118,7 @@ export async function startNewMakerTrxPull() {
         LastPullTxMap.set(pullKey, Date.now())
       }
     })
-    scanChain.mq.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
+    pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
 }
