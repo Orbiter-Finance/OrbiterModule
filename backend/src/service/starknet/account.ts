@@ -50,7 +50,7 @@ export class OfflineAccount extends Account {
       chainId: this.chainId,
       nonce: nonce,
       version: 0,
-      maxFee: suggestedMaxFee,
+      maxFee: fee,
     }
     return {
       type: 'INVOKE_FUNCTION',
@@ -64,7 +64,7 @@ export class OfflineAccount extends Account {
       signature: bigNumberishArrayToDecimalStringArray(
         await this.signer.signTransaction([invocation], transactionDetail)
       ),
-      max_fee: toHex(suggestedMaxFee),
+      max_fee: toHex(fee),
     }
   }
 }
