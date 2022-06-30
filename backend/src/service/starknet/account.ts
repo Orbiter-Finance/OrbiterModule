@@ -64,7 +64,7 @@ export class OfflineAccount extends Account {
       signature: bigNumberishArrayToDecimalStringArray(
         await this.signer.signTransaction([invocation], transactionDetail)
       ),
-      max_fee: toHex(suggestedMaxFee),
+      max_fee: toHex(fee),
     }
   }
 }
