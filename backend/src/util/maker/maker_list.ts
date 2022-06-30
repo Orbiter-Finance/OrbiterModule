@@ -2024,7 +2024,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 3,
@@ -2718,7 +2717,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 2,
@@ -2851,7 +2849,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
@@ -3182,7 +3179,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
@@ -3381,7 +3377,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
@@ -3580,7 +3575,6 @@ export const makerListHistory = [
       },
     ],
   },
-
   {
     makerAddress: '0x80C67432656d59144cEFf962E8fAF8926599bCF8',
     c1ID: 1,
