@@ -25,14 +25,14 @@ export class TransactionService {
     }
     // fromOrToMaker 0: maker <<< to, 1: maker >>> from
     const inoutId = query.fromOrToMaker == 1 ? 'outId' : 'inId'
+    const rInoutId = inoutId === 'outId' ? 'inId' : 'outId'
     const sql = `
-      select * from transaction t left join maker_transaction m 
-        on t.id = m.${inoutId} where m.${inoutId} is not null ${more} 
-        order by t.timestamp DESC, t.createdAt DESC
+      select * from maker_transaction m left join transaction t on m.${inoutId} = t.id where m.${rInoutId} is null ${more} 
+        order by t.timestamp DESC
     `
     logger.log(`[TransactionService.findUnmatched] ${sql.replace(/\s+/g, ' ')}`)
     const data = await this.manager.query(sql);
-    transforeUnmatchedTradding(data);
+    await transforeUnmatchedTradding(data);
     
     return {
       code: 0,
@@ -49,10 +49,10 @@ export class TransactionService {
 
     let more = ``;
     if (query.startTime) {
-      more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
+      more += `${more ? 'and' : ''} t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
     }
     if (query.endTime) {
-      more += `and t.timestamp <= '${formateTimestamp(+query.endTime)}' `;
+      more += `${more ? 'and' : ''} t.timestamp <= '${formateTimestamp(+query.endTime)}' `;
     }
     let smid = ``
     if (query.makerAddress || more) {
@@ -64,7 +64,7 @@ export class TransactionService {
     }
     const sql = `
       select * from transaction t ${smid}
-        order by t.timestamp DESC, t.updatedAt DESC, t.createdAt DESC
+        order by t.timestamp DESC
     `;
     logger.log(`[TransactionService.findAll] ${sql.replace(/\s+/g, ' ')}`)
     const datas = await this.manager.query(sql);

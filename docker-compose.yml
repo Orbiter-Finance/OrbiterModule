@@ -11,11 +11,11 @@ services:
     command: yarn run start:prod
     environment:
       NODE_ENV: 'development' # production
-      DB_HOST: db
-      DB_PORT: '${DB_PORT}'
-      DB_USER: '${DB_USER}'
-      DB_PASS: '${DB_PASS}'
-      DB_NAME: '${DB_NAME}'
+      DB_HOST: '${DB_HOST2}'
+      DB_PORT: '${DB_PORT2}'
+      DB_USER: '${DB_USER2}'
+      DB_PASS: '${DB_PASS2}'
+      DB_NAME: '${DB_NAME2}'
     # volumes:
     #   - './history/logs:/app/logs'
     ports:

@@ -396,7 +396,7 @@ const status = [
   }
 ].concat(Object.keys(stateTags).map(key => ({value: +key, label: stateTags[key].label})))
 // Default time duration 10800 
-const DEFAULT_TIME_DURATION = 30 * 24 * 60 * 60 * 1000
+const DEFAULT_TIME_DURATION = 1 * 24 * 60 * 60 * 1000
 
 const makerAddressSelected: any = inject('makerAddressSelected')
 const exchangeRates: any = inject('exchangeRates')

@@ -6,6 +6,11 @@ import { TransactionModule } from './transaction/transaction.module';
 import { GlobalModule } from './global/global.module';
 import { getEnv, isLocal } from './shared/env';
 import { MakerTransactionModule } from './maker-transaction/maker-transaction.module';
+import * as dotenv from 'dotenv'
+import * as path from 'path'
+
+// uncomment next line when u start with `start-env:watch`
+// dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 const localDb = {
   DB_HOST: 'localhost',

@@ -142,7 +142,7 @@ function AmountValidDigits(chain, amount) {
   }
   let amountRegion = AmountRegion(chain)
 
-  let ramount = removeSidesZero(amount.toString())
+  let ramount = removeSidesZero(amount?.toString())
 
   if (ramount.length > amountMaxDigits) {
     return 'amount is inValid'
@@ -184,7 +184,7 @@ function getPTextFromTAmount(chain, amount) {
   }
   //Get the effective number of digits
   let validDigit = AmountValidDigits(chain, amount) // 10 11
-  var amountLength = amount.toString().length
+  var amountLength = amount?.toString()?.length || 0
   if (amountLength < SIZE_OP.P_NUMBER) {
     return {
       state: false,
@@ -192,14 +192,14 @@ function getPTextFromTAmount(chain, amount) {
     }
   }
   if (isLimitNumber(chain) && amountLength > validDigit) {
-    let zkAmount = amount.toString().slice(0, validDigit)
+    let zkAmount = amount?.toString()?.slice(0, validDigit)
     let op_text = zkAmount.slice(-SIZE_OP.P_NUMBER)
     return {
       state: true,
       pText: op_text,
     }
   } else {
-    let op_text = amount.toString().slice(-SIZE_OP.P_NUMBER)
+    let op_text = amount?.toString()?.slice(-SIZE_OP.P_NUMBER)
     return {
       state: true,
       pText: op_text,
