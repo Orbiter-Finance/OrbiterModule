@@ -118,9 +118,6 @@ export default class StarknetWatch extends AbstractWatch {
         return txmap;
       }
       matchAddress = matchAddress.toLowerCase();
-      logger.info(
-        `[${this.chain.chainConfig.name}] replayBlock Match Transaction:Addrss=${matchAddress},matchAddress Hash=${originTx.hash}`
-      );
       if (!txmap.has(matchAddress)) txmap.set(matchAddress, []);
       txmap.get(matchAddress)?.push(TxData);
       return txmap;

@@ -515,7 +515,7 @@ export class ServiceMakerPull {
         )
       } else {
         logger.error(
-          `Collection transaction, user transfer targetMP  not found:id:${makerPull.id},chainId:${makerPull.chainId},amount_flag:${makerPull.amount_flag},txHash${makerPull.txHash}`
+          `Collection transaction, user transfer targetMP  Not Found, chainId：${makerPull.chainId}, amount_flag：${makerPull.amount_flag},txHash：${makerPull.txHash}`
         )
       }
     }
