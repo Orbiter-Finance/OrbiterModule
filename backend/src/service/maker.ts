@@ -1,6 +1,6 @@
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
-import { equals, padStart } from '../chainCore/src/utils'
+import { equals, padStart } from 'orbiter-chaincore/src/utils/core'
 import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'

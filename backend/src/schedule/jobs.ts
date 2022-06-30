@@ -10,9 +10,9 @@ import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { ScanChainMain } from '../chainCore'
-import mainnetChains from '../chainCore/chains.json'
-import testnetChains from '../chainCore/testnet.json'
+import { ScanChainMain } from 'orbiter-chaincore'
+import mainnetChains from '../config/chains.json'
+import testnetChains from '../config/testnet.json'
 import {
   getNewMarketList,
   groupWatchAddressByChain,
