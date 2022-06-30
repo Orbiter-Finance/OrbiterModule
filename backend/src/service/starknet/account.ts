@@ -50,7 +50,7 @@ export class OfflineAccount extends Account {
       chainId: this.chainId,
       nonce: nonce,
       version: 0,
-      maxFee: suggestedMaxFee,
+      maxFee: fee,
     }
     return {
       type: 'INVOKE_FUNCTION',
