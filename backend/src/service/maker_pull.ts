@@ -1914,10 +1914,10 @@ export class ServiceMakerPull {
         ) {
           makerPull.tx_status = 'finalized'
         }
-        // accessLogger.info(
-        //   'Processing transactions：',
-        //   JSON.stringify(makerPull)
-        // )
+        accessLogger.info(
+          'Processing transactions：',
+          JSON.stringify(makerPull)
+        )
         if (makerPull.makerAddress === makerPull.fromAddress) {
           // maker send to user
           makerPull.userReceive = makerPull.toAddress
@@ -1956,7 +1956,7 @@ export class ServiceMakerPull {
           }
         })
       } catch (error) {
-        accessLogger.error(`Process matching tx error: `,JSON.stringify(tx), error.message)
+        accessLogger.error(`Processing matching tx error: `,JSON.stringify(tx), error.message)
       }
     }
 
