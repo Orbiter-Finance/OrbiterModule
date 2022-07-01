@@ -6,7 +6,6 @@
   "scripts": {
     "start": "node index.js",
     "start:watch": "nodemon",
-    "start-env:watch": "cross-env NODE_ENV=development nodemon",
     "prod:watch": "nodemon",
     "build": "tsc -p .",
     "start:prod": "node dist/main.js",

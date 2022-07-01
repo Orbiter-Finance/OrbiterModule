@@ -3,40 +3,28 @@ import { AppController } from './app.controller';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Connection } from 'typeorm';
 import { TransactionModule } from './transaction/transaction.module';
-import { GlobalModule } from './global/global.module';
 import { getEnv, isLocal } from './shared/env';
 import { MakerTransactionModule } from './maker-transaction/maker-transaction.module';
 import * as dotenv from 'dotenv'
 import * as path from 'path'
 
-// uncomment next line when u start with `start-env:watch`
-// dotenv.config({ path: path.resolve(__dirname, '../../.env') })
-
-const localDb = {
-  DB_HOST: 'localhost',
-  DB_PORT: 3336,
-  DB_USER: 'root',
-  DB_PASS: '123456',
-  DB_NAME: 'tradding_history',
-}
-const envs = (key) => !isLocal() ? getEnv(key) : localDb[key];
+isLocal() && dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
 @Module({
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: envs('DB_HOST'),
-      port: envs('DB_PORT'),
-      username: envs('DB_USER'),
-      password: envs('DB_PASS'),
-      database: envs('DB_NAME'),
+      host: getEnv('DB_HOST2'),
+      port: getEnv('DB_PORT2'),
+      username: getEnv('DB_USER2'),
+      password: getEnv('DB_PASS2'),
+      database: getEnv('DB_NAME2'),
       entities: [
         './**/**.entity{.ts,.js}',
       ],
       // synchronize: isLocal()
     }),
     TransactionModule,
-    GlobalModule,
     MakerTransactionModule
   ],
   controllers: [
