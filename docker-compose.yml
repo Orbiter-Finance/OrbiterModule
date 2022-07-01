@@ -10,7 +10,7 @@ services:
     build: ./history
     command: yarn run start:prod
     environment:
-      NODE_ENV: 'development' # production
+      NODE_ENV: 'production' # production development
       DB_HOST: '${DB_HOST2}'
       DB_PORT: '${DB_PORT2}'
       DB_USER: '${DB_USER2}'
