@@ -124,32 +124,21 @@ export abstract class EVMChain implements IEVMChain {
     return result
   }
   public async convertTxToEntity(trx: any): Promise<Transaction | null> {
-    const {
-      hash,
-      nonce,
-      blockHash,
-      blockNumber,
-      transactionIndex,
-      from,
-      to,
-      value,
-      gasPrice,
-      input,
-      ...extra
-    } = trx
-    const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash)
+    const { hash, nonce, transactionIndex, value, gasPrice, input, ...extra } =
+      trx;
+    const trxRcceipt = await this.web3.eth.getTransactionReceipt(hash);
     if (!trxRcceipt) {
-      return null
+      return null;
     }
-    const gas = trxRcceipt.gasUsed
+    const { to, from, blockHash, blockNumber, gasUsed: gas } = trxRcceipt;
     // status
-    const block = await this.web3.eth.getBlock(Number(blockNumber), false)
-    const confirmations = await this.getConfirmations(blockNumber)
+    const block = await this.web3.eth.getBlock(Number(blockNumber), false);
+    const confirmations = await this.getConfirmations(Number(blockNumber));
     const txData = new Transaction({
       chainId: this.chainConfig.chainId,
       hash,
       from,
-      to: '',
+      to: "",
       value: new BigNumber(value),
       nonce,
       blockHash: String(blockHash),
@@ -160,42 +149,51 @@ export abstract class EVMChain implements IEVMChain {
       fee: Number(gas) * Number(gasPrice),
       feeToken: this.chainConfig.nativeCurrency.symbol,
       input,
-      symbol: '',
-      tokenAddress: '',
+      symbol: "",
+      tokenAddress: "",
       status: TransactionStatus.Fail,
       timestamp: Number(block.timestamp),
       confirmations,
       extra,
-      source: 'rpc',
-    })
+      source: "rpc",
+    });
     if (trxRcceipt.status) {
-      txData.status = TransactionStatus.COMPLETE
+      txData.status = TransactionStatus.COMPLETE;
     }
     // valid main token or contract token
     if (!isEmpty(to)) {
-      const code = await this.web3.eth.getCode(to)
-      if (code === '0x') {
-        txData.to = to
-        txData.tokenAddress = this.chainConfig.nativeCurrency.address
-        txData.symbol = this.chainConfig.nativeCurrency.symbol
+      const code = await this.web3.eth.getCode(to);
+      if (code === "0x") {
+        txData.to = to;
+        txData.tokenAddress = this.chainConfig.nativeCurrency.address;
+        txData.symbol = this.chainConfig.nativeCurrency.symbol;
       } else {
         // contract token
-        txData.tokenAddress = to
-        txData.to = ''
-        const inputData = await this.decodeInputContractTransfer(input, to)
+        txData.tokenAddress = to;
+        txData.to = "";
+        let inputData: any = null;
+        if (txData.input === "deprecated") {
+          const rpcTx = await this.web3.eth.getTransaction(txData.hash);
+          if (rpcTx) {
+            txData.input = rpcTx.input;
+          }
+        }
+        if (txData.input) {
+          inputData = await this.decodeInputContractTransfer(txData.input, to);
+        }
         // transferData
         if (inputData && inputData.transferData) {
           const { tokenAddress, recipient, amount, ...inputExtra } =
-            inputData.transferData
-          txData.tokenAddress = tokenAddress
-          txData.to = recipient
+            inputData.transferData;
+          txData.tokenAddress = tokenAddress;
+          txData.to = recipient;
           txData.value = amount.gt(0) ? amount : txData.value;
-          Object.assign(txData.extra, inputExtra)
+          Object.assign(txData.extra, inputExtra);
         }
-        txData.symbol = await this.getTokenSymbol(String(txData.tokenAddress))
+        txData.symbol = await this.getTokenSymbol(String(txData.tokenAddress));
       }
     }
-    return txData
+    return txData;
   }
   public async getBalance(address: string): Promise<BigNumber> {
     const value = await this.web3.eth.getBalance(address)
