@@ -26,84 +26,29 @@ export abstract class EvmExplorerService extends EVMChain {
   ): Promise<QueryTransactionsResponse> {
     const returnResponse: QueryTransactionsResponse = {
       txlist: [],
-    }
+    };
     const response = await this.apiClient.call(
       EtherscanApiAction.AccountTxlist,
       filter
-    )
-    const { status, result, ...responseExtra } = response
-    if (status !== '1') {
+    );
+    const { status, result, ...responseExtra } = response;
+    if (status !== "1") {
       throw new Error(
         `${this.chainConfig.name} GetTransactions Fail:${JSON.stringify(
           response
         )} , Params:${JSON.stringify(filter)}`
-      )
+      );
     }
-    Object.assign(returnResponse, responseExtra)
+    Object.assign(returnResponse, responseExtra);
     for (const tx of result) {
       try {
-        const {
-          hash,
-          nonce,
-          blockHash,
-          blockNumber,
-          transactionIndex,
-          from,
-          to,
-          value,
-          gasPrice,
-          input,
-          confirmations,
-          gasUsed: gas,
-          timeStamp: timestamp,
-          ...extra
-        } = tx
-        const tokenAddress = isEmpty(tx.contractAddress) ? this.chainConfig.nativeCurrency.address : tx.contractAddress;
-        const status =
-          extra.isError !== '1' || extra.txreceipt_status === '1'
-            ? TransactionStatus.COMPLETE
-            : TransactionStatus.Fail
-        const symbol = isEmpty(tokenAddress)
-          ? this.chainConfig.nativeCurrency.symbol
-          : await this.getTokenSymbol(tokenAddress)
-        const newTx = new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash,
-          from,
-          to,
-          value: new BigNumber(value),
-          nonce,
-          blockHash,
-          blockNumber,
-          transactionIndex,
-          gasPrice,
-          gas,
-          input,
-          tokenAddress,
-          timestamp,
-          status,
-          fee: Number(gas) * Number(gasPrice),
-          feeToken: this.chainConfig.nativeCurrency.symbol,
-          confirmations,
-          symbol,
-          extra,
-          source: 'api'
-        })
-        if (equals(newTx.input, 'deprecated')) {
-          // is deprecated
-          const rpcTx = await this.web3.eth.getTransaction(hash)
-          newTx.input = rpcTx.input
-        }
-        returnResponse.txlist.push(newTx)
-      } catch (error) {
-        logger.error(
-          'getTransactions Error:',
-          error.message,
-          JSON.stringify(tx)
-        )
+        const newTx = await this.convertTxToEntity(tx);
+        newTx && returnResponse.txlist.push(newTx);
+      } catch (error: any) {
+        logger.error(`getTransactions Error:${tx.hash}`, error);
       }
     }
-    return returnResponse
+    return returnResponse;
   }
 
   public async getTokenTransactions(
@@ -114,86 +59,31 @@ export abstract class EvmExplorerService extends EVMChain {
     //
     const returnResponse: QueryTransactionsResponse = {
       txlist: [],
-    }
+    };
     const response = await this.apiClient.call(
       EtherscanApiAction.AccountTokentx,
       filter
-    )
-    const { status, result, ...resExtra } = response
-    if (status !== '1') {
+    );
+    const { status, result, ...resExtra } = response;
+    if (status !== "1") {
       throw new Error(
         `${this.chainConfig.name} getTokenTransactions Fail:${JSON.stringify(
           response
         )} , Params:${JSON.stringify(filter)}`
-      )
+      );
     }
-    Object.assign(returnResponse, resExtra)
+    Object.assign(returnResponse, resExtra);
     for (const tx of result) {
       try {
-        const {
-          hash,
-          nonce,
-          blockHash,
-          blockNumber,
-          transactionIndex,
-          from,
-          to,
-          value,
-          gasPrice,
-          input,
-          contractAddress:tokenAddress,
-          gasUsed: gas,
-          timeStamp: timestamp,
-          confirmations,
-          ...extra
-        } = tx
-        const symbol = isEmpty(tokenAddress)
-          ? this.chainConfig.nativeCurrency.symbol
-          : await this.getTokenSymbol(tokenAddress)
-        const status =
-          extra.isError !== '1' || extra.txreceipt_status === '1'
-            ? TransactionStatus.COMPLETE
-            : TransactionStatus.Fail
-        const newTx = new Transaction({
-          chainId: this.chainConfig.chainId,
-          hash,
-          from,
-          to,
-          value: new BigNumber(value),
-          nonce,
-          blockHash,
-          blockNumber,
-          transactionIndex,
-          gasPrice,
-          gas,
-          input,
-          tokenAddress,
-          timestamp,
-          status,
-          fee: Number(gas) * Number(gasPrice),
-          feeToken: this.chainConfig.nativeCurrency.symbol,
-          symbol,
-          confirmations,
-          extra,
-          source: 'api'
-        })
-        if (equals(newTx.input,'deprecated')) {
-          // is deprecated
-          const rpcTx = await this.web3.eth.getTransaction(hash)
-          if (rpcTx) {
-            newTx.input = rpcTx.input
-          }
-        }
-        returnResponse.txlist.push(newTx)
-      } catch (error) {
-        logger.error(
-          'getTokenTransactions Error:',
-          error.message,
-          JSON.stringify(tx),
-        )
-        throw error
+        
+        const newTx = await this.convertTxToEntity(tx);
+        newTx && returnResponse.txlist.push(newTx);
+      } catch (error: any) {
+        console.log(error);
+        logger.error(`getTokenTransactions Error:${tx.hash}`, error);
+        throw error;
       }
     }
-    return returnResponse
+    return returnResponse;
   }
 }
