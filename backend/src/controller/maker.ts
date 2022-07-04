@@ -133,6 +133,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
           for (const L1Addr in starknetL1MapL2) {
             if (equals(starknetL1MapL2[L1Addr],item.makerAddress )) {
               makerAddress = L1Addr;
+              break;
             }
           }
         }
