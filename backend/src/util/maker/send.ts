@@ -26,7 +26,7 @@ import { getTargetMakerPool } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
-import { equals } from '../../chainCore/src/utils'
+import { equals } from 'orbiter-chaincore/src/utils/core'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
