@@ -45,6 +45,7 @@ export class ScanChainMain {
           }
         }
       }
+      console.log("address list", addressList);
       addressList && watchService?.addWatchAddress(addressList)
       logger.info(
         `startScanChain Run Start: intranetId:${intranetId}, addressList:${JSON.stringify(

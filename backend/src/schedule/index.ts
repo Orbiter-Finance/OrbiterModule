@@ -17,6 +17,7 @@ let smsTimeStamp = 0
 
 async function waittingStartMaker() {
   const makerList = await getMakerList()
+  console.log("makerList", makerList);
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
