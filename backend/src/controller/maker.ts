@@ -6,6 +6,7 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
+import { equals } from 'orbiter-chaincore/src/utils/core'
 import { makerConfig } from '../config'
 import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
@@ -135,10 +136,21 @@ export default function (router: KoaRouter<DefaultState, Context>) {
         needTo.chainId = Number(
           serviceMaker.getAmountFlag(_fromChain, item.fromAmount)
         )
-
+        let makerAddress = item.makerAddress;
+        if (item.fromChain === '4' || item.fromChain == '44') {
+          const starknetL1MapL2 =item.fromChain === '44'
+          ? makerConfig.starknetL1MapL2['georli-alpha']
+          : makerConfig.starknetL1MapL2['mainnet-alpha'];
+          for (const L1Addr in starknetL1MapL2) {
+            if (equals(starknetL1MapL2[L1Addr],item.makerAddress )) {
+              makerAddress = L1Addr;
+              break;
+            }
+          }
+        }
         // find pool
         const pool = await serviceMaker.getTargetMakerPool(
-          item.makerAddress,
+          makerAddress,
           item.txToken,
           _fromChain,
           needTo.chainId
@@ -176,6 +188,15 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       // Profit statistics
       // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
       item['profitUSD'] = (await serviceMaker.statisticsProfit(item)).toFixed(3)
+    
+      //
+      if (item['fromChain'] === '4' || item['fromChain'] === '44') {
+        item['userAddress'] = item['fromExt']['ext']
+      }
+      if (item['toChain'] === '4' || item['toChain'] === '44') {
+        item['userAddress'] = item['fromExt']['value']
+      }
+      
     }
 
     restful.json(list)

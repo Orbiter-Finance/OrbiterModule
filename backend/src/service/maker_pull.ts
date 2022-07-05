@@ -14,11 +14,11 @@ import { getAmountToSend } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
+import { equals, fix0xPadStartAddress } from 'orbiter-chaincore/src/utils/core'
 import {
   getNewMarketList,
   groupWatchAddressByChain,
   IMarket,
-  newExpanPool,
 } from '../util/maker/new_maker'
 import {
   getAmountFlag,
@@ -28,15 +28,9 @@ import {
 } from './maker'
 import { getMakerPullStart } from './setting'
 import BobaService from './boba/boba_service'
-import { ITransaction, TransactionStatus } from '../chainCore/src/types'
-import {
-  equals,
-  getChainByChainId,
-  getChainByInternalId,
-} from '../chainCore/src/utils'
-import logger from '../chainCore/src/utils/logger'
-import { equal } from 'assert'
+import { core, chains } from 'orbiter-chaincore/src/utils'
 import { makerConfig } from '../config'
+import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -438,7 +432,7 @@ export class ServiceMakerPull {
     const fromAddress = makerPull.fromAddress.toLowerCase()
     const toAddress = makerPull.toAddress.toLowerCase()
     // if maker out
-    if (equals(fromAddress, makerAddress)) {
+    if (core.equals(fromAddress, makerAddress)) {
       // maker to user
       let targetMP = await repositoryMakerPull().findOne(
         {
@@ -464,17 +458,17 @@ export class ServiceMakerPull {
               ? 'georli-alpha'
               : 'mainnet-alpha'
           ]
-          let mapL2MakerAddress:string|undefined;
-          for (const L1Address in starknetL1MapL2) {
-            if (equals(makerAddress, L1Address)) {
-              mapL2MakerAddress = starknetL1MapL2[L1Address];
-            } else if (equals(makerAddress, starknetL1MapL2[L1Address])) {
-              mapL2MakerAddress = L1Address;
-            }
-            if (mapL2MakerAddress) {
-              break;
-            }
+        let mapL2MakerAddress: string | undefined
+        for (const L1Address in starknetL1MapL2) {
+          if (equals(makerAddress, L1Address)) {
+            mapL2MakerAddress = starknetL1MapL2[L1Address]
+          } else if (equals(makerAddress, starknetL1MapL2[L1Address])) {
+            mapL2MakerAddress = L1Address
           }
+          if (mapL2MakerAddress) {
+            break
+          }
+        }
         targetMP = await repositoryMakerPull().findOne(
           {
             makerSender: fromAddress, //  same makerAddress
@@ -513,13 +507,9 @@ export class ServiceMakerPull {
             state: targetMP.tx_status == 'finalized' ? 3 : 2,
           }
         )
-      } else {
-        logger.error(
-          `Collection transaction, user transfer targetMP  not found:id:${makerPull.id},chainId:${makerPull.chainId},amount_flag:${makerPull.amount_flag},txHash${makerPull.txHash}`
-        )
       }
     }
-    if (equals(toAddress, makerAddress)) {
+    if (core.equals(toAddress, makerAddress)) {
       // user to maker
       // when amount_flag not in CHAIN_INDEX, it cann't identify toChain
       if (!CHAIN_INDEX[makerPull.amount_flag]) {
@@ -536,7 +526,7 @@ export class ServiceMakerPull {
       if ([4, 44].includes(makerPull.chainId)) {
         const starknetL1MapL2 = this.getL1ToL2Mapping()
         for (const L1Addr in starknetL1MapL2) {
-          if (equals(makerAddress, starknetL1MapL2[L1Addr])) {
+          if (core.equals(makerAddress, starknetL1MapL2[L1Addr])) {
             targetMakerPool = await getTargetMakerPool(
               L1Addr,
               makerPull.tokenAddress,
@@ -559,7 +549,6 @@ export class ServiceMakerPull {
           makerPull.txTime
         )
       }
-
       let needToAmount = '0'
       if (targetMakerPool) {
         needToAmount =
@@ -576,18 +565,24 @@ export class ServiceMakerPull {
       const makerList = await getNewMarketList()
       const marketItem = makerList.find(
         (m) =>
-          equals(m.fromChain.id, String(makerPull.chainId)) &&
-          equals(String(m.toChain.id), makerPull.amount_flag) &&
-          equals(m.fromChain.tokenAddress, String(makerPull.tokenAddress)) &&
-          equals(m.toChain.symbol, makerPull.symbol)
+          core.equals(m.fromChain.id, String(makerPull.chainId)) &&
+          core.equals(String(m.toChain.id), makerPull.amount_flag) &&
+          core.equals(
+            m.fromChain.tokenAddress,
+            String(makerPull.tokenAddress)
+          ) &&
+          core.equals(m.toChain.symbol, makerPull.symbol)
       )
       if (!marketItem) {
         accessLogger.error(
           `[newCompareData] The transaction in which the user sends funds to the merchant address is scanned, but the transaction pair does not exist ${makerPull.txHash}`
         )
-        return;
+        return
       }
-      if (['4', '44'].includes(marketItem.fromChain.id) || ['4', '44'].includes(marketItem.toChain.id)) {
+      if (
+        ['4', '44'].includes(marketItem.fromChain.id) ||
+        ['4', '44'].includes(marketItem.toChain.id)
+      ) {
         _mp = await repositoryMakerPull().findOne({
           chainId: Number(makerPull.amount_flag),
           makerAddress: makerPull.makerSender,
@@ -1843,118 +1838,127 @@ export class ServiceMakerPull {
     const promiseMethods: (() => Promise<unknown>)[] = []
     const makerAddressList = groupWatchAddressByChain(makerList)
     for (const tx of txlist) {
-      if (tx.value.lte(0)) {
-        accessLogger.error(
-          'Transaction amount is incorrect, please check：',
-          JSON.stringify(tx)
-        )
-        continue
-      }
-      const chainConfig = await getChainByChainId(tx.chainId)
-      const value = tx.value.toString()
-      const txChainId = Number(chainConfig.internalId)
-      let amount_flag = getAmountFlag(txChainId, value)
-      if ([9, 99].includes(txChainId) && tx.extra) {
-        amount_flag = (<any>tx.extra.memo % 9000) + ''
-      }
-
-      let makerAddress: string | undefined = ''
-      // const marketConfig = makerList.find(m => equal(String(m.fromChain.id), chainConfig.internalId) && equals(m.fromChain.symbol, tx.symbol) && equals(m.fromChain.tokenAddress, String(tx.tokenAddress)))
-      if (
-        makerAddressList[chainConfig.internalId].find((address) =>
-          equals(address, tx.to)
-        )
-      ) {
-        makerAddress = tx.to
-        //
-      } else if (
-        // maker send user
-        makerAddressList[chainConfig.internalId].find((address) =>
-          equals(address, tx.from)
-        )
-      ) {
-        makerAddress = tx.from
-      }
-      if (!makerAddress) {
-        accessLogger.error(
-          `Transaction pair maker address not found ${chainConfig.name} ${tx.hash}  market:${chainConfig.internalId}`
-        )
-        continue
-      }
-      // market list
-      const backTx = JSON.stringify(tx)
-      const makerPull: Partial<MakerPull> = {
-        chainId: Number(chainConfig.internalId),
-        makerAddress: makerAddress,
-        tokenAddress: tx.tokenAddress || '',
-        data: backTx,
-        amount: value,
-        amount_flag,
-        nonce: String(tx.nonce),
-        fromAddress: tx.from,
-        toAddress: tx.to,
-        txBlock: String(tx.blockNumber),
-        txHash: tx.hash,
-        txExt: this.getTxExtFromInput(String(tx.input)),
-        txTime: new Date(tx.timestamp * 1000),
-        gasCurrency: tx.feeToken,
-        gasAmount: String(tx.fee),
-        tx_status: 'rejected',
-        symbol: tx.symbol,
-      }
-
-      if (tx.status === TransactionStatus.COMPLETE) {
-        makerPull.tx_status = 'finalized'
-      } else if (tx.status === TransactionStatus.PENDING) {
-        makerPull.tx_status = 'committed'
-      } else if (tx.status === TransactionStatus.Fail) {
-        makerPull.tx_status = 'rejected'
-      }
-      if (
-        [3, 33, 8, 88, 12, 512].includes(Number(makerPull.chainId)) &&
-        tx.status === TransactionStatus.PENDING
-      ) {
-        makerPull.tx_status = 'finalized'
-      }
-      accessLogger.info('Processing transactions：', JSON.stringify(makerPull))
-      if (makerPull.makerAddress === makerPull.fromAddress) {
-        // maker send to user
-        makerPull.userReceive = makerPull.toAddress
-        makerPull.makerSender = makerPull.fromAddress
-      } else if (makerPull.makerAddress === makerPull.toAddress) {
-        // user send to maker
-        makerPull.userReceive = makerPull.fromAddress
-        const toChain = getChainByInternalId(String(amount_flag))
-        const marketItem = makerList.find(
-          (m) =>
-            equals(m.fromChain.id, String(txChainId)) &&
-            equals(String(m.toChain.id), toChain.internalId) &&
-            equals(m.fromChain.tokenAddress, String(tx.tokenAddress)) &&
-            equals(m.toChain.symbol, tx.symbol)
-        )
-        if (!marketItem) {
+      // accessLogger.info('sub tx：', tx.hash)
+      try {
+        if (tx.value.lte(0)) {
           accessLogger.error(
-            `The transaction in which the user sends funds to the merchant address is scanned, but the transaction pair does not exist ${tx.hash}`
+            'Transaction amount is incorrect, please check：',
+            JSON.stringify(tx)
           )
           continue
         }
-        makerPull.makerSender = marketItem.sender
-        if (['4', '44'].includes(marketItem.fromChain.id)) {
-          makerPull.txExt = <any>{ ext: tx.extra['ext'] }
-          makerPull.userReceive = tx.extra['ext']
-        } else if (['4', '44'].includes(marketItem.toChain.id)) {
-          makerPull.userReceive = makerPull.txExt?.value
+        const chainConfig = await chains.getChainByChainId(tx.chainId)
+        const value = tx.value.toString()
+        const txChainId = Number(chainConfig.internalId)
+        let amount_flag = getAmountFlag(txChainId, value)
+        if ([9, 99].includes(txChainId) && tx.extra) {
+          amount_flag = (<any>tx.extra.memo % 9000) + ''
         }
-        //
+
+        let makerAddress: string | undefined = ''
+        // const marketConfig = makerList.find(m => equal(String(m.fromChain.id), chainConfig.internalId) && equals(m.fromChain.symbol, tx.symbol) && equals(m.fromChain.tokenAddress, String(tx.tokenAddress)))
+        if (
+          makerAddressList[chainConfig.internalId].find((address) =>
+            core.equals(address, tx.to)
+          )
+        ) {
+          makerAddress = tx.to
+          //
+        } else if (
+          // maker send user
+          makerAddressList[chainConfig.internalId].find((address) =>
+            core.equals(address, tx.from)
+          )
+        ) {
+          makerAddress = tx.from
+        }
+        if (!makerAddress) {
+          accessLogger.error(
+            `Transaction pair maker address not found ${chainConfig.name} ${tx.hash}  market:${chainConfig.internalId}`
+          )
+          continue
+        }
+        // market list
+        const backTx = JSON.stringify(tx)
+        const makerPull: Partial<MakerPull> = {
+          chainId: Number(chainConfig.internalId),
+          makerAddress: makerAddress,
+          tokenAddress: tx.tokenAddress || '',
+          data: backTx,
+          amount: value,
+          amount_flag,
+          nonce: String(tx.nonce),
+          fromAddress: tx.from,
+          toAddress: tx.to,
+          txBlock: String(tx.blockNumber),
+          txHash: tx.hash,
+          txExt: this.getTxExtFromInput(String(tx.input)),
+          txTime:new Date(Number(tx.timestamp) * 1000),
+          gasCurrency: tx.feeToken,
+          gasAmount: String(tx.fee),
+          tx_status: 'rejected',
+          symbol: tx.symbol,
+        }
+
+        if (tx.status === TransactionStatus.COMPLETE) {
+          makerPull.tx_status = 'finalized'
+        } else if (tx.status === TransactionStatus.PENDING) {
+          makerPull.tx_status = 'committed'
+        } else if (tx.status === TransactionStatus.Fail) {
+          makerPull.tx_status = 'rejected'
+        }
+        if (
+          [3, 33, 8, 88, 12, 512].includes(Number(makerPull.chainId)) &&
+          tx.status === TransactionStatus.PENDING
+        ) {
+          makerPull.tx_status = 'finalized'
+        }
+        accessLogger.info(
+          'Processing transactions：',
+          JSON.stringify(makerPull)
+        )
+        if (makerPull.makerAddress === makerPull.fromAddress) {
+          // maker send to user
+          makerPull.userReceive = makerPull.toAddress
+          makerPull.makerSender = makerPull.fromAddress
+        } else if (makerPull.makerAddress === makerPull.toAddress) {
+          // user send to maker
+          makerPull.userReceive = makerPull.fromAddress
+          const toChain = chains.getChainByInternalId(String(amount_flag))
+          const marketItem = makerList.find(
+            (m) =>
+              core.equals(m.fromChain.id, String(txChainId)) &&
+              core.equals(String(m.toChain.id), toChain.internalId) &&
+              core.equals(m.fromChain.tokenAddress, String(tx.tokenAddress)) &&
+              core.equals(m.toChain.symbol, tx.symbol)
+          )
+          if (!marketItem) {
+            accessLogger.error(
+              `The transaction in which the user sends funds to the merchant address is scanned, but the transaction pair does not exist ${tx.hash}`
+            )
+            continue
+          }
+          makerPull.makerSender = marketItem.sender
+          if (['4', '44'].includes(marketItem.fromChain.id)) {
+            makerPull.txExt = <any>{ ext: tx.extra['ext'] }
+            makerPull.userReceive = tx.extra['ext']
+          } else if (['4', '44'].includes(marketItem.toChain.id)) {
+            makerPull.userReceive = fix0xPadStartAddress(String(makerPull.txExt?.value), 66)
+          }
+          //
+        }
+        promiseMethods.push(async () => {
+          await savePull(<MakerPull>makerPull)
+          // compare
+          if (makerPull.tx_status != 'rejected') {
+            await this.newCompareData(<MakerPull>makerPull)
+          }
+        })
+      } catch (error) {
+        accessLogger.error(`Processing matching tx error: `,JSON.stringify(tx), error.message)
       }
-      promiseMethods.push(async () => {
-        await savePull(<MakerPull>makerPull)
-        // compare
-        if (makerPull.tx_status != 'rejected') {
-          await this.newCompareData(<MakerPull>makerPull)
-        }
-      })
     }
+
     await PromisePool.for(promiseMethods)
       .withConcurrency(10)
       .process(async (item) => await item())

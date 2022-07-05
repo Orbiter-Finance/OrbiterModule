@@ -30,10 +30,11 @@ import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
-import * as chainCoreUtils from '../../chainCore/src/utils'
-import { IChainConfig } from '../../chainCore/src/types'
+import { equals } from 'orbiter-chaincore/src/utils/core'
+import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderByChainId } from '../../service/starknet/helper'
 import { L1Signer } from 'zksync-web3'
+import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 // import { doSms } from '../../sms/smsSchinese'
 
@@ -1670,7 +1671,8 @@ export async function confirmToSNTransaction(
   // When reject
   if (transaction.status == 'REJECTED') {
     errorLogger.info(
-      `starknet transfer failed: ${transaction.status}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`, transaction['transaction_failure_reason']
+      `starknet transfer failed: ${transaction.status}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
+      transaction['transaction_failure_reason']
     )
     // check nonce
     if (
@@ -1684,7 +1686,7 @@ export async function confirmToSNTransaction(
     return false
   } else if (
     transaction.status == 'ACCEPTED_ON_L1' ||
-    transaction.status == 'ACCEPTED_ON_L2' || 
+    transaction.status == 'ACCEPTED_ON_L2' ||
     transaction.status == 'PENDING'
   ) {
     accessLogger.info(
@@ -1957,7 +1959,7 @@ export async function sendTransaction(
   // accessLogger.info(
   // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   // )
-  const toChainConfig: IChainConfig = chainCoreUtils.getChainByInternalId(
+  const toChainConfig: IChainConfig = chains.getChainByInternalId(
     String(toChainID)
   )
   if (!toChainConfig || !toChainConfig.tokens) {
@@ -1967,7 +1969,7 @@ export async function sendTransaction(
     return
   }
   const tokenInfo = toChainConfig.tokens.find((token) =>
-    chainCoreUtils.equals(token.address, tokenAddress)
+    equals(token.address, tokenAddress)
   )
   if (!tokenInfo) {
     accessLogger.error(
@@ -2011,51 +2013,35 @@ export async function sendTransaction(
         accessLogger.info(
           `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
         )
-        try {
-          await repositoryMakerNode().update(
-            { transactionID: transactionID },
-            {
-              toTx: txID,
-              toAmount: tAmount,
-              state: 2,
-            }
-          )
-          accessLogger.info(
-            `[${transactionID}] sendTransaction toChain ${toChain} update success`
-          )
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
-          return
-        }
-        if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
-          let syncProvider = response.zkProvider
-          confirmToZKTransaction(syncProvider, txID, transactionID)
-        } else if (toChainID === 4 || toChainID === 44) {
-          confirmToSNTransaction(
-            txID,
-            transactionID,
-            toChainID,
-            makerAddress
-          ).then((success) => {
-            success === false && response.rollback()
-          })
-        } else if (toChainID === 8 || toChainID === 88) {
-          console.warn({ toChainID, toChain, txID, transactionID })
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 9 || toChainID === 99) {
-          confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
-        } else if (toChainID === 11 || toChainID === 511) {
-          accessLogger.info(
-            `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
-          )
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 12 || toChainID === 512) {
-          if (txID.indexOf('sync-tx:') != -1) {
-            txID = txID.replace('sync-tx:', '0x')
-          }
-          confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
-        } else {
-          confirmToTransaction(toChainID, toChain, txID, transactionID)
+      } catch (error) {
+        errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
+        return
+      }
+      if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
+        let syncProvider = response.zkProvider
+        confirmToZKTransaction(syncProvider, txID, transactionID)
+      } else if (toChainID === 4 || toChainID === 44) {
+        confirmToSNTransaction(
+          txID,
+          transactionID,
+          toChainID,
+          makerAddress
+        ).then((success) => {
+          success === false && response.rollback()
+        })
+      } else if (toChainID === 8 || toChainID === 88) {
+        console.warn({ toChainID, toChain, txID, transactionID })
+        // confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 9 || toChainID === 99) {
+        confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+      } else if (toChainID === 11 || toChainID === 511) {
+        accessLogger.info(
+          `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
+        )
+        // confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 12 || toChainID === 512) {
+        if (txID.indexOf('sync-tx:') != -1) {
+          txID = txID.replace('sync-tx:', '0x')
         }
         // update todo
         await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })

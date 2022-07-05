@@ -21,9 +21,7 @@
       "rpc",
       "api"
     ],
-    "contracts": [
-      "0x783703C20dF627893952d59DF40f556A172d1719"
-    ],
+    "contracts": [],
     "tokens": [
       {
         "name": "USD Coin",
@@ -55,9 +53,7 @@
       "rpc",
       "api"
     ],
-    "contracts": [
-      "0x721fBB2C2C9cdFa5547feE6b683949c20F175457"
-    ],
+    "contracts": [],
     "tokens": [
       {
         "name": "USD Coin",
@@ -178,9 +174,7 @@
       "api",
       "rpc"
     ],
-    "contracts": [
-      "0x40eC19690ebEd534e9b9C58e341727028cF143c0"
-    ],
+    "contracts": [],
     "tokens": [
       {
         "name": "Wrapped Ether",
@@ -218,9 +212,7 @@
       "api",
       "rpc"
     ],
-    "contracts": [
-      "0x2200a79aDdFE2EFd7bDe34300f4C8FE902E31d39"
-    ],
+    "contracts": [],
     "tokens": []
   },
   {
@@ -229,7 +221,7 @@
       "key": ""
     },
     "chainId": "dydx_test",
-    "networkId": "5",
+    "networkId": "dydx",
     "internalId": "511",
     "name": "Dydx Testnet",
     "nativeCurrency": {
@@ -389,17 +381,21 @@
     "networkId": "goerli-alpha",
     "internalId": "44",
     "name": "Starknet Goerli Testnet",
-    "debug": false,
-    "contracts": ["0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"],
+    "debug": true,
+    "contracts": [
+      "0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"
+    ],
     "nativeCurrency": {
-      "id":0,
+      "id": 0,
       "name": "Ether",
       "symbol": "ETH",
       "decimals": 18,
       "address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
     },
     "rpc": [],
-    "watch": ["rpc"],
+    "watch": [
+      "rpc"
+    ],
     "tokens": []
   }
 ]
