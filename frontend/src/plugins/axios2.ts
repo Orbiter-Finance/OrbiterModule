@@ -9,7 +9,7 @@ import { ElNotification } from 'element-plus'
 
 const config = {
   baseURL:
-    process.env.apiBaseURL || $env.apiBaseUrl || 'http://localhost:3000/',
+    process.env.historyApiUrl || $env.historyApiUrl || 'http://localhost:3000/',
   // timeout: 60 * 1000, // Timeout
   // withCredentials: true, // Check cross-site Access-Control
 }
