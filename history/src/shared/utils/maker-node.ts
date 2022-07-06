@@ -75,6 +75,23 @@ function isChainSupport(chain) {
   }
   return false
 }
+async function getTokenInfoNew(fromChainId, toChainId) {
+  let decimals = -1
+  let fromTokenName = ''
+  let toTokenName = ''
+  const makerList: any = await getMakerList()
+  for(const item of makerList) {
+    if (
+      (item.c1ID == fromChainId && item.c2ID == toChainId) || (item.c2ID == fromChainId && item.c1ID == toChainId)
+    ) {
+      decimals = item.precision
+      fromTokenName = item.c1Name
+      toTokenName = item.c2Name
+      break
+    }
+  }
+  return { decimals, fromTokenName, toTokenName }
+}
 async function getTokenInfo(
   chainId: number,
   tokenAddress: string
@@ -133,7 +150,7 @@ function removeSidesZero(param) {
   if (typeof param !== 'string') {
     return 'param must be string'
   }
-  return param.replace(/^0+(\d)|(\d)0+$/gm, '$1$2')
+  return param?.replace(/^0+(\d)|(\d)0+$/gm, '$1$2')
 }
 function AmountValidDigits(chain, amount) {
   let amountMaxDigits = AmountMaxDigits(chain)
@@ -497,32 +514,39 @@ export async function transforeUnmatchedTradding(list = []) {
 export async function transforeData(list = []) {
   // fill data
   for (const item of list) {
-    item['fromChainName'] = CHAIN_INDEX[item.fromChain] || ''
-    item['toChainName'] = CHAIN_INDEX[item.toChain] || ''
     // format tokenName and amounts
-    const fromChainTokenInfo = await getTokenInfo(
-      Number(item.fromChain),
-      item.txToken
-    )
-    item['txTokenName'] = fromChainTokenInfo.tokenName
-    item['fromAmountFormat'] = 0
-    if (fromChainTokenInfo.decimals > -1) {
-      item['fromAmountFormat'] = new BigNumber(item['fromAmount']).dividedBy(
-        10 ** fromChainTokenInfo.decimals
-      )
+    const { decimals, fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain)
+    item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
+    item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
+    item.decimals = decimals
+    if (decimals > -1) {
+      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+        10 ** decimals
+      ).toFixed(6)
     }
 
-    // to amounts
-    const toChainTokenInfo = await getTokenInfo(
-      Number(item.fromChain),
-      item.txToken
-    )
-    item['toAmountFormat'] = 0
-    if (toChainTokenInfo.decimals > -1) {
-      item['toAmountFormat'] = new BigNumber(item['toAmount']).dividedBy(
-        10 ** toChainTokenInfo.decimals
-      )
-    }
+    // const fromChainTokenInfo = await getTokenInfo(
+    //   Number(item.fromChain),
+    //   item.txToken
+    // )
+    // item['txTokenName'] = fromChainTokenInfo.tokenName
+    // item['fromAmountFormat'] = 0
+    // if (fromChainTokenInfo.decimals > -1) {
+    //   item['fromAmountFormat'] = new BigNumber(item['fromAmount']).dividedBy(
+    //     10 ** fromChainTokenInfo.decimals
+    //   )
+    // }
+    // // to amounts
+    // const toChainTokenInfo = await getTokenInfo(
+    //   Number(item.fromChain),
+    //   item.txToken
+    // )
+    // item['toAmountFormat'] = 0
+    // if (toChainTokenInfo.decimals > -1) {
+    //   item['toAmountFormat'] = new BigNumber(item['toAmount']).dividedBy(
+    //     10 ** toChainTokenInfo.decimals
+    //   )
+    // }
 
     // Trade duration
     item['tradeDuration'] = 0

@@ -82,7 +82,7 @@ export class MakerTransactionService {
         m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, 
         t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
         t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, 
-        t.feeToken as tokenName, t2.status as status, t.status as fromStatus 
+        t.symbol as tokenName, t2.status as status, t.status as fromStatus 
       ${commsql} order by t.timestamp DESC LIMIT ${limit} OFFSET ${offset}
     `
 
@@ -93,7 +93,7 @@ export class MakerTransactionService {
       select COUNT(m.id) as sum 
         ${commsql}
     `
-    logger.log(`[MakerTransactionService.findAll count] ${sqlOfTotal.replace(/\s+/g, ' ')}`)
+    logger.log(`[MakerTransactionService.findAll count] ${sqlOfTotal?.replace(/\s+/g, ' ')}`)
     const sumData = await this.manager.query(sqlOfTotal)
     const total = +sumData[0]?.sum || 0;
     const pages = Math.ceil((total / limit));
