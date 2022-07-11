@@ -71,13 +71,14 @@ export class MakerTransactionService {
       }
     }
 
-    const wheresql = more.slice(4)
+    // const wheresql = more.slice(4)
+    // ${wheresql ? 'where' : ''} ${wheresql}
 
     const commsql = `
       from maker_transaction m 
         left join transaction t on m.inId = t.id 
         left join transaction t2 on m.outId = t2.id 
-        ${wheresql ? 'where' : ''} ${wheresql}
+        where m.inId is not null ${more}
     `
     const sql = ` 
       select m.id, m.transcationId, m.fromChain, m.toChain, m.toAmount, m.replySender, m.replyAccount, m.createdAt, m.updatedAt,
