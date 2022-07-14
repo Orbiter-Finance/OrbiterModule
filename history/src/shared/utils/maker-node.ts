@@ -519,11 +519,9 @@ export async function transforeData(list = []) {
     item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
     item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
     item.decimals = decimals
-    if (decimals > -1) {
-      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
-        10 ** decimals
-      ).toFixed(6)
-    }
+    item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+      10 ** (decimals > -1 ? decimals : 18)
+    ).toFixed(6)
 
     // const fromChainTokenInfo = await getTokenInfo(
     //   Number(item.fromChain),
