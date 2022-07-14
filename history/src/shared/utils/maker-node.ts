@@ -75,14 +75,15 @@ function isChainSupport(chain) {
   }
   return false
 }
-async function getTokenInfoNew(fromChainId, toChainId) {
+async function getTokenInfoNew(fromChainId, toChainId, tokenName) {
   let decimals = -1
   let fromTokenName = ''
   let toTokenName = ''
   const makerList: any = await getMakerList()
   for(const item of makerList) {
     if (
-      (item.c1ID == fromChainId && item.c2ID == toChainId) || (item.c2ID == fromChainId && item.c1ID == toChainId)
+      tokenName == item.tName && 
+      ((item.c1ID == fromChainId && item.c2ID == toChainId) || (item.c2ID == fromChainId && item.c1ID == toChainId))
     ) {
       decimals = item.precision
       fromTokenName = item.c1Name
@@ -515,13 +516,22 @@ export async function transforeData(list = []) {
   // fill data
   for (const item of list) {
     // format tokenName and amounts
-    const { decimals, fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain)
+    const { decimals, fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain, item.tokenName)
     item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
     item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
     item.decimals = decimals
-    item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
-      10 ** (decimals > -1 ? decimals : 18)
-    ).toFixed(6)
+
+    if (decimals > -1) {
+      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+        10 ** decimals
+      ).toFixed(6)
+    } else {
+      logger.log(`[shared/utils/maker-node.ts transforeData] maker-node.ts should Synchronize！Error decimals!`)
+      // tmp for show
+      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+        10 ** 18
+      ).toFixed(6)
+    }
 
     // const fromChainTokenInfo = await getTokenInfo(
     //   Number(item.fromChain),
