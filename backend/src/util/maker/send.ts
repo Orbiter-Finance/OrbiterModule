@@ -883,13 +883,13 @@ async function sendConsumer(value: any) {
 
   if (!tokenBalanceWei) {
     errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
-    return {
-      code: 1,
-      txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
-    }
+    // return {
+    //   code: 1,
+    //   txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
+    // }
   }
   accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
-  if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
+  if (tokenBalanceWei && BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
     errorLogger.error(
       `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
     )
