@@ -1011,6 +1011,18 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 90
     }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 90
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
     if (fromChainID === 3 && chainID === 1) {
