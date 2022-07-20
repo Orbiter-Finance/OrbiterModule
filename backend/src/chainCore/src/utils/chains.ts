@@ -91,7 +91,7 @@ export function getChainByKeyValue(
   if (typeof chain === "undefined") {
     throw new Error(`No chain found matching ${key}: ${value}`);
   }
-
+  
   return getChain(chain.chainId);
 }
 

@@ -1860,6 +1860,29 @@ export const makerList = [
       },
     ],
   },
+  {
+    makerAddress: '0x694434EC84b7A8Ad8eFc57327ddD0A428e23f8D5',
+    c1ID: 515,
+    c2ID: 5,
+    c1Name: 'bsc_test',
+    c2Name: 'rinkeby',
+    t1Address: '0x84b9B910527Ad5C03A9Ca831909E21e236EA7b06',
+    t2Address: '0x0000000000000000000000000000000000000000',
+    tName: 'ETH',
+    c1MinPrice: 0.005,
+    c1MaxPrice: 0.01,
+    c2MinPrice: 0.005,
+    c2MaxPrice: 0.01,
+    precision: 18,
+    c1AvalibleDeposit: 1000,
+    c2AvalibleDeposit: 1000,
+    c1TradingFee: 0.0001,
+    c2TradingFee: 0.0001,
+    c1GasFee: 2,
+    c2GasFee: 2,
+    c1AvalibleTimes: [{ startTime: 1636019587, endTime: 99999999999999 }],
+    c2AvalibleTimes: [{ startTime: 1636019587, endTime: 99999999999999 }],
+  }
 ]
 
 export const makerListHistory = []

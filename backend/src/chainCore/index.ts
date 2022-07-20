@@ -30,7 +30,7 @@ export class ScanChainMain {
       } else {
         watchService = ChainFactory.createWatchChainByIntranetId(intranetId)
         await watchService?.init()
-        const chainConfig = watchService.chain.chainConfig
+        const chainConfig = watchService.chain.chainConfig  
         if (Array.isArray(chainConfig.watch) && chainConfig.watch.length > 0) {
           // await watchService.init()
           try {
@@ -45,7 +45,6 @@ export class ScanChainMain {
           }
         }
       }
-      console.log("address list", addressList);
       addressList && watchService?.addWatchAddress(addressList)
       logger.info(
         `startScanChain Run Start: intranetId:${intranetId}, addressList:${JSON.stringify(

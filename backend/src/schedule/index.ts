@@ -17,7 +17,6 @@ let smsTimeStamp = 0
 
 async function waittingStartMaker() {
   const makerList = await getMakerList()
-  console.log("makerList", makerList);
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
@@ -102,7 +101,6 @@ async function waittingStartMaker() {
 
 export const startMasterJobs = async () => {
   const scene = process.env.ORBITER_SCENE
-
   // cache coinbase
   jobCacheCoinbase()
 
@@ -120,7 +118,6 @@ export const startMasterJobs = async () => {
 
 export const startWorkerJobs = async () => {
   const scene = process.env.ORBITER_SCENE
-
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()

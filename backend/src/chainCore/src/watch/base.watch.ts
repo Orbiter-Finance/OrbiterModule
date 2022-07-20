@@ -214,6 +214,7 @@ export default abstract class BasetWatch implements IChainWatch {
       let blockNumber: number = 0
       try {
         blockNumber = await this.chain.getLatestHeight()
+
       } catch (error) {
         logger.error(
           `[${this.chain.chainConfig.name}] init apiScanCursor get LastHeight error:`,
@@ -241,6 +242,7 @@ export default abstract class BasetWatch implements IChainWatch {
     }
     let queryTxs: Array<ITransaction> = []
     for (const address of this.watchAddress.keys()) {
+
       const prevCursor = await this.apiScanCursor(address)
       if (prevCursor) {
         // exec query trx

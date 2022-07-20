@@ -15,6 +15,7 @@ import ZKSync2Watch from './zksync2.watcht'
 import LoopringWatch from './loopring.watch'
 import ImmutableXWatch from './immutableX.watch'
 import StarknetWatch from './starknet.watch'
+import BSCWatch from './bsc.watch'
 
 export class ChainFactory {
   static createWatchChainByIntranetId(
@@ -81,6 +82,10 @@ export class ChainFactory {
       case '14':
       case '514':
         watchChain = new ZKSync2Watch(new chains.ZKSync2Chain(chainConfig))
+        break
+      case "15":
+      case "515":
+        watchChain = new BSCWatch(new chains.BSCChain(chainConfig))
         break
       default:
         throw new Error(`Public chain id not found ${intranetChainId}`)

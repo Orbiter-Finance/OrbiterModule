@@ -1,5 +1,6 @@
 import { AlchemyWeb3, createAlchemyWeb3 } from '@alch/alchemy-web3'
 import BigNumber from 'bignumber.js'
+import Web3 from 'web3'
 import {
   HashOrBlockNumber,
   ITransaction,
@@ -16,7 +17,7 @@ import { decodeMethod, equals, IERC20_ABI_JSON, isEmpty } from '../utils'
 import logger from '../utils/logger'
 
 export abstract class EVMChain implements IEVMChain {
-  protected readonly web3: AlchemyWeb3
+  protected web3: AlchemyWeb3 | Web3;
   constructor(public readonly chainConfig: IChainConfig) {
     this.web3 = createAlchemyWeb3(this.chainConfig.rpc[0])
   }
@@ -34,8 +35,13 @@ export abstract class EVMChain implements IEVMChain {
   public getWeb3() {
     return this.web3
   }
-  public getLatestHeight(): Promise<number> {
-    return this.web3.eth.getBlockNumber()
+  /**
+   * 
+   * @returns returns the current block number
+   */
+  public async getLatestHeight(): Promise<number> {
+    const blockNumber = await this.web3.eth.getBlockNumber();
+    return blockNumber;
   }
   public async getConfirmations(
     hashOrHeight: HashOrBlockNumber

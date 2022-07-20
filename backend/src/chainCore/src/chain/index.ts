@@ -1,5 +1,6 @@
 import { Arbitrum } from './arbitrum.service'
 import { Boba } from './boba.service'
+import { BSC } from './bsc.service'
 import { Dydx } from './dydx.service'
 import { Ethereum } from './ethereum.service'
 import { ImmutableX } from './immutableX.service'
@@ -24,5 +25,6 @@ export default {
   ZKSync2Chain: ZKSync2,
   ImmutableXChain: ImmutableX,
   LoopringChain: Loopring,
-  StartknetChain: Startknet
+  StartknetChain: Startknet,
+  BSCChain: BSC
 }
