@@ -73,10 +73,11 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   }
 }
 async function getRates(currency) {
-  const resp = await axios.get(
-    `https://api.coinbase.com/v2/exchange-rates?currency=${currency}`
-  )
-  const data = resp.data?.data
+  // const resp = await axios.get(
+  //   `https://api.coinbase.com/v2/exchange-rates?currency=${currency}`
+  // )
+  // const data = resp.data?.data
+  const data:any = null;
   // check
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined

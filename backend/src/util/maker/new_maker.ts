@@ -1,5 +1,5 @@
-import { ScanChainMain,pubSub,chains } from 'orbiter-chaincore';
-import {core as chainCoreUtil} from 'orbiter-chaincore/src/utils'
+import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
+import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
@@ -121,12 +121,99 @@ export async function startNewMakerTrxPull() {
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
+
+  // subscribeNewTransaction([
+  //   {
+  //     chainId: '4',
+  //     hash: '0x26c54c00fafd813bd5e51814919c436c705831bf08d7d26132f910945cb6486f5',
+  //     nonce: 36,
+  //     blockHash:
+  //       '0xab9915821756de9b381daf989128d3c1ecec5ad9773d3680eb64bd6877c8587d',
+  //     blockNumber: 11055965,
+  //     transactionIndex: 22,
+  //     from: '0x8a3214f28946a797088944396c476f014f88dd37',
+  //     to: '0x0043d60e87c5dd08c86c3123340705a1556c4719',
+  //     value: new BigNumber('2009514'),
+  //     symbol: 'USDC',
+  //     gasPrice: 1429999946,
+  //     gas: 21000,
+  //     input: '0x',
+  //     status: 1,
+  //     tokenAddress: '0xeb8f08a975Ab53E34D8a0330E0D34de942C95926',
+  //     timestamp: 1658298721,
+  //     fee: '30029998866000',
+  //     feeToken: 'USDC',
+  //     extra: {
+  //       accessList: [],
+  //       blockHash:
+  //         '0xab9915821756de9b381daf989128d3c1ecec5ad9773d3680eb64bd6877c8587d',
+  //       blockNumber: 11055965,
+  //       chainId: '0x4',
+  //       from: '0x8A3214F28946A797088944396c476f014F88Dd37',
+  //       gas: 21000,
+  //       maxFeePerGas: '1429999946',
+  //       maxPriorityFeePerGas: '1429999946',
+  //       r: '0x7884311827b9571c3751e87b8dc3e08948928ee241506544a7c92a5bd3ab1de8',
+  //       s: '0xa5313824240d5f12bf8b7dfcac17b5886c9874c050c0b993845d64d3338037b',
+  //       to: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+  //       transactionIndex: 22,
+  //       type: 2,
+  //       v: '0x1',
+  //     },
+  //     source: 'rpc',
+  //     confirmations: 4,
+  //     toChainId: '',
+  //   },
+  //   // {
+  //   //   chainId: '4',
+  //   //   hash: '0x6c54c00fafd813bd5e51814919c436c705831bf08d7d26132f910945cb6486f5',
+  //   //   nonce: 36,
+  //   //   blockHash:
+  //   //     '0xab9915821756de9b381daf989128d3c1ecec5ad9773d3680eb64bd6877c8587d',
+  //   //   blockNumber: 11055965,
+  //   //   transactionIndex: 22,
+  //   //   from: '0x8a3214f28946a797088944396c476f014f88dd37',
+  //   //   to: '0x0043d60e87c5dd08c86c3123340705a1556c4719',
+  //   //   value: new BigNumber('5100000000009514'),
+  //   //   symbol: 'ETH',
+  //   //   gasPrice: 1429999946,
+  //   //   gas: 21000,
+  //   //   input: '0x',
+  //   //   status: 1,
+  //   //   tokenAddress: '0x0000000000000000000000000000000000000000',
+  //   //   timestamp: 1658298721,
+  //   //   fee: '30029998866000',
+  //   //   feeToken: 'ETH',
+  //   //   extra: {
+  //   //     accessList: [],
+  //   //     blockHash:
+  //   //       '0xab9915821756de9b381daf989128d3c1ecec5ad9773d3680eb64bd6877c8587d',
+  //   //     blockNumber: 11055965,
+  //   //     chainId: '0x4',
+  //   //     from: '0x8A3214F28946A797088944396c476f014F88Dd37',
+  //   //     gas: 21000,
+  //   //     maxFeePerGas: '1429999946',
+  //   //     maxPriorityFeePerGas: '1429999946',
+  //   //     r: '0x7884311827b9571c3751e87b8dc3e08948928ee241506544a7c92a5bd3ab1de8',
+  //   //     s: '0xa5313824240d5f12bf8b7dfcac17b5886c9874c050c0b993845d64d3338037b',
+  //   //     to: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
+  //   //     transactionIndex: 22,
+  //   //     type: 2,
+  //   //     v: '0x1',
+  //   //   },
+  //   //   source: 'rpc',
+  //   //   confirmations: 4,
+  //   //   toChainId: '',
+  //   // },
+  // ])
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
   return (
     makerList.findIndex(
-      (row) => chainCoreUtil.equals(row.recipient, address) || chainCoreUtil.equals(row.sender, address)
+      (row) =>
+        chainCoreUtil.equals(row.recipient, address) ||
+        chainCoreUtil.equals(row.sender, address)
     ) != -1
   )
 }
@@ -165,7 +252,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         accessLogger.error(
           `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
         )
-        continue
+        // TODO: test
+        // continue
       }
       const transactionID = newMakeTransactionID(
         tx.from,
@@ -242,7 +330,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       )
       if (!marketItem) {
         accessLogger.error(
-          `Transaction pair not found ${fromChain.name} ${tx.hash} market:${fromChain.internalId} - ${toChain.internalId}`
+          `Transaction pair not found ${fromChain.name} ${tx.hash} market from:${fromChain.internalId} - to:${toChain.internalId}`
         )
         continue
       }
@@ -297,7 +385,7 @@ export async function confirmTransactionSendMoneyBack(
     (await cache?.has(tx.hash.toLowerCase()))
   ) {
     return accessLogger.error(
-      `starknet ${tx.hash}  ${transactionID} transfer exists!`
+      `Payment collection ${tx.hash}  ${transactionID} transfer exists!`
     )
   }
   chainTransferMap?.set(tx.hash.toLowerCase(), 'ok')
