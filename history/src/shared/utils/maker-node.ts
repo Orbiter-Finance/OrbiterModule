@@ -479,7 +479,7 @@ export async function statisticsProfit(
       new BigNumber(makerNode.gasAmount)
         .multipliedBy(gasPricePaidRate)
         .dividedBy(10 ** gasPrecision),
-      makerNode.gasCurrency
+      makerNode.gasCurrency || ''
     )
     return fromMinusToUsd.minus(gasAmountUsd || 0)
   } else {
