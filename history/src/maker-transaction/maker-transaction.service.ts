@@ -82,9 +82,9 @@ export class MakerTransactionService {
     `
     const sql = ` 
       select m.id, m.transcationId, m.fromChain, m.toChain, m.toAmount, m.replySender, m.replyAccount, m.createdAt, m.updatedAt,
-        m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, 
-        t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
-        t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, 
+        m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, t.gasPrice, t.gas,
+        t.tokenAddress as fromTokenAddress, t2.tokenAddress as toTokenAddress, t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
+        t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, t2.fee as gasAmount, t2.feeToken as gasCurrency,
         t.symbol as tokenName, t2.status as status, t.status as fromStatus 
       ${commsql} order by t.timestamp DESC LIMIT ${limit} OFFSET ${offset}
     `

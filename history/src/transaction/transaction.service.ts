@@ -21,15 +21,24 @@ export class TransactionService {
       more += `and t.status = ${query.status} `
     }
     if (query.makerAddress) {
-      more += `and m.replySender = '${query.makerAddress}' `
+      // more += `and m.replySender = '${query.makerAddress}' `
+      const fromOrTo = query.fromOrToMaker == 1 ? 'from' : 'to'
+      more += `and t.${fromOrTo} = '${query.makerAddress}'`
     }
     // fromOrToMaker 0: maker <<< to, 1: maker >>> from
     const inoutId = query.fromOrToMaker == 1 ? 'outId' : 'inId'
-    const rInoutId = inoutId === 'outId' ? 'inId' : 'outId'
+    // const rInoutId = inoutId === 'outId' ? 'inId' : 'outId'
+    // const sql = `
+    //   select * from maker_transaction m left join transaction t on m.${inoutId} = t.id where m.${rInoutId} is null ${more} 
+    //     order by t.timestamp DESC
+    // `
+
     const sql = `
-      select * from maker_transaction m left join transaction t on m.${inoutId} = t.id where m.${rInoutId} is null ${more} 
-        order by t.timestamp DESC
+      select * 
+        from transaction t left join maker_transaction m on t.id = m.${inoutId} 
+        where (t.status = '2' or t.status = '3') and m.${inoutId} is null ${more}
     `
+
     logger.log(`[TransactionService.findUnmatched] ${sql.replace(/\s+/g, ' ')}`)
     const data = await this.manager.query(sql);
     await transforeUnmatchedTradding(data);

@@ -1,14 +1,17 @@
 
 import { equalsIgnoreCase, logger } from '.';
 import { BigNumber } from 'bignumber.js'
-import * as dayjs from 'dayjs'
-import * as relativeTime from 'dayjs/plugin/relativeTime'
+// import * as dayjs from 'dayjs'
+// import * as relativeTime from 'dayjs/plugin/relativeTime'
+import dayjs from './dayFormat'
+import dayjs2 from './dayWithRelativeFormat'
+
 import { getRAmountFromTAmount, pTextFormatZero, getToAmountFromUserAmount, getTAmountFromRAmount } from './core';
 import axios from 'axios'
 import { makerListHistory, makerList } from '../configs'
 import { utils } from 'ethers'
 
-dayjs.extend(relativeTime)
+// dayjs.extend(relativeTime)
 
 
 async function getAllMakerList() {
@@ -451,8 +454,8 @@ export async function statisticsProfit(
     }
 
     if (
-      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
-      equalsIgnoreCase(item.t2Address, makerNode.txToken)
+      equalsIgnoreCase(item.t1Address, makerNode.fromTokenAddress) ||
+      equalsIgnoreCase(item.t2Address, makerNode.toTokenAddress)
     ) {
       fromToCurrency = item.tName
       fromToPrecision = item.precision
@@ -471,17 +474,13 @@ export async function statisticsProfit(
       fromToCurrency
     )
 
-    let gasPricePaidRate = 1
-    if (GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]) {
-      gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]
-    }
+    let gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]] || 1
     const gasAmountUsd = await exchangeToUsd(
       new BigNumber(makerNode.gasAmount)
         .multipliedBy(gasPricePaidRate)
         .dividedBy(10 ** gasPrecision),
       makerNode.gasCurrency
     )
-
     return fromMinusToUsd.minus(gasAmountUsd || 0)
   } else {
     return new BigNumber(0)
@@ -507,7 +506,7 @@ export async function transforeUnmatchedTradding(list = []) {
     // time ago
     item['txTimeAgo'] = '-'
     if (item.timestamp.getTime() > 0) {
-      item['txTimeAgo'] = dayjs().to(dayjs(new Date(item.timestamp).getTime()))
+      item['txTimeAgo'] = dayjs2().to(dayjs(new Date(item.timestamp).getTime()))
     }
   }
 }
@@ -520,17 +519,29 @@ export async function transforeData(list = []) {
     item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
     item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
     item.decimals = decimals
+    item.toTx = item.toTx || '0x'
 
     if (decimals > -1) {
-      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+      item.fromAmountFormat = `${new BigNumber(item.fromValue).dividedBy(
         10 ** decimals
-      ).toFixed(6)
+      )}`
+      item.fromValueFormat = (+item.fromAmountFormat).toFixed(6)
+      item.fromAmount = item.fromValue
+      item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
+        10 ** decimals
+      )}`
     } else {
       logger.log(`[shared/utils/maker-node.ts transforeData] maker-node.ts should Synchronize！Error decimals!`)
       // tmp for show
-      item.fromValueFormat = new BigNumber(+item.fromValue).dividedBy(
+      item.fromValueFormat = new BigNumber(+item.toAmount).dividedBy(
         10 ** 18
       ).toFixed(6)
+    }
+
+    // old logic: when not toTx, dashboard ToAmount shows: 0 (NeedTo: 0.009752000000000003)
+    if (!item.toTx) {
+      item.toAmount = "0"
+      item.toAmountFormat = "0"
     }
 
     // const fromChainTokenInfo = await getTokenInfo(
@@ -560,12 +571,15 @@ export async function transforeData(list = []) {
     item['tradeDuration'] = 0
 
     // Time duration、time ago
+    // const tmp = item.fromTimeStamp
+    item.fromTimeStamp = item.fromTimeStamp && dayjs(item.fromTimeStamp).format('YYYY-MM-DD HH:mm:ss')
+    item.toTimeStamp = item.toTimeStamp && dayjs(item.toTimeStamp).format('YYYY-MM-DD HH:mm:ss')
     const dayjsFrom: any = dayjs(item.fromTimeStamp)
-    item['fromTimeStampAgo'] = dayjs().to(dayjsFrom)
+    item['fromTimeStampAgo'] = dayjs2().to(dayjsFrom)
     item['toTimeStampAgo'] = '-'
     if (item.toTimeStamp && item.toTimeStamp != '0') {
       const dayjsTo = dayjs(item.toTimeStamp)
-      item['toTimeStampAgo'] = dayjs().to(dayjsTo)
+      item['toTimeStampAgo'] = dayjs2().to(dayjsTo)
 
       item['tradeDuration'] = dayjsTo.unix() - dayjsFrom.unix()
     }
@@ -651,6 +665,11 @@ export async function transforeData(list = []) {
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
     item['profitUSD'] = (await statisticsProfit(item)).toFixed(3)
+
+    // old logic: when not toTx, dashboard Profit shows: 0.000 USD
+    if (item.profitUSD === 'NaN' || !item.toTx) {
+      item.profitUSD = "0.000"
+    }
   }
   return list
 }
