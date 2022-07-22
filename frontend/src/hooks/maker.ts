@@ -63,12 +63,14 @@ export type MakerNode = {
   profitUSD: string
 }
 function transforeDate(params: any = {}) {
-  const { rangeDate = [] } = params
-  if (rangeDate?.[0]) {
-    params['startTime'] = rangeDate?.[0].getTime()
-  }
-  if (rangeDate?.[1]) {
-    params['endTime'] = rangeDate?.[1].getTime()
+  const { rangeDate = [], keyword = '' } = params
+  if (!keyword) {
+    if (rangeDate?.[0]) {
+      params['startTime'] = rangeDate?.[0].getTime()
+    }
+    if (rangeDate?.[1]) {
+      params['endTime'] = rangeDate?.[1].getTime()
+    }
   }
 }
 function transforeData(list: any = []) {
@@ -86,8 +88,8 @@ function transforeData(list: any = []) {
     item['txTokenName'] = item.tokenName
     item.transactionID = item.transcationId
     item.formTx = item.fromTx
-    item.fromAmountFormat = +item.fromValue / Math.pow(10, 18)
-    item.toAmountFormat = +item.toValue / Math.pow(10, 18)
+    // item.fromAmountFormat = +item.fromValue / Math.pow(10, 18)
+    // item.toAmountFormat = +item.toValue / Math.pow(10, 18)
     item.state = 20
     if (item.fromStatus == 0) {
       item.state = 0

@@ -73,7 +73,7 @@
             ></el-option>
           </el-select>
         </el-col>
-        <el-col :span="8" class="maker-search__item">
+        <el-col v-if="!state.keyword" :span="8" class="maker-search__item">
           <div class="title">From date range</div>
           <el-date-picker
             v-model="state.rangeDate"
@@ -476,7 +476,7 @@ const loadingWealths = toRef(makerWealth.state, 'loading')
 const wealths = toRef(makerWealth.state, 'list')
 const loadingNodes = ref(false)
 const currentPage = ref(1)
-const pageSize = ref(300)
+const pageSize = ref(100)
 const total = ref(0)
 
 const handleSizeChange = (val: number) => {
@@ -514,9 +514,10 @@ const getMakerNodes = async (more: any = {}) => {
 }
 */
 const getMakerNodes = async (more: any = {}) => {
+  loadingNodes.value = true
   const {
     list: _list,
-    loading,
+    // loading,
     total: _total
   } = await useTransactionHistory({
     makerAddress: makerAddressSelected?.value,
@@ -527,7 +528,7 @@ const getMakerNodes = async (more: any = {}) => {
     state: state.status,
     ...more,
   });
-  loadingNodes.value = loading.value
+  loadingNodes.value = false
   makerNodes.value = _list.value
   total.value = _total.value
 }

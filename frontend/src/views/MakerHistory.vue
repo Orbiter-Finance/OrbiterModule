@@ -35,18 +35,18 @@
         ></span>
         Transaction finalized but can't match
       </div>
-      <div
+      <!-- <div
         :border="true"
         :class="{ 'filter-item--invalid': !showSuccessed }"
         @click="showSuccessed = !showSuccessed"
       >
         <span class="filter__color-block"></span>
         Transaction successed
-      </div>
+      </div> -->
     </div>
     <el-row :gutter="16">
       <el-col :span="12">
-        <h3>In</h3>
+        <h3>In({{toList.length}})</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
           show-overflow
@@ -88,7 +88,7 @@
         </vxe-table>
       </el-col>
       <el-col :span="12">
-        <h3>Out</h3>
+        <h3>Out({{fromList.length}})</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
           show-overflow
@@ -154,7 +154,7 @@ const state = reactive({
   showCannotMatched: true,
   startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
 })
-const showSuccessed = toRef(state, 'showSuccessed')
+// const showSuccessed = toRef(state, 'showSuccessed')
 const showRejected = toRef(state, 'showRejected')
 const showCannotMatched = toRef(state, 'showCannotMatched')
 const startTime = toRef(state, 'startTime')
@@ -199,17 +199,19 @@ const tableRowClassName = ({ row }) => {
   return ''
 }
 
-const listFilter = ({ tx_status, target_tx }) => {
+// , target_tx
+const listFilter = ({ tx_status }) => {
   const conditions: boolean[] = []
 
-  if (state.showSuccessed) {
-    conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
-  }
+  // if (state.showSuccessed) {
+  //   conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
+  // }
   if (state.showRejected) {
     conditions.push(tx_status == 'rejected')
   }
   if (state.showCannotMatched) {
-    conditions.push(!target_tx && tx_status != 'rejected')
+    // conditions.push(!target_tx && tx_status != 'rejected')
+    conditions.push(tx_status == 'MatchFailed')
   }
 
   return conditions.indexOf(true) > -1

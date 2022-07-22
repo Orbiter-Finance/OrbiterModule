@@ -37,7 +37,9 @@ export async function useUnmatchedTradding(params: any) {
       item.toAddress = item.to
       item.txHash = item.hash
       item.txTime = item.timestamp
-      item.tx_status = item.status === 1 ? 'finalized' : 'rejected'
+      // status:0=PENDING,1=COMPLETE,2=REJECT,3=MatchFailed,4=refund
+      // item.tx_status = item.status === 1 ? 'finalized' : 'rejected'
+      item.tx_status = item.status === 2 ? 'rejected' : (item.status === 3 ? 'MatchFailed' : 'finalized')
       /* old: 
         amount: "131899000000000017"
         amountFormat: "0.131899000000000017"
