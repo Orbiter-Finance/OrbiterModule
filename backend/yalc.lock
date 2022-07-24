@@ -1,0 +1,9 @@
+{
+  "version": "v1",
+  "packages": {
+    "orbiter-chaincore": {
+      "signature": "dac066a327414909dc6100b5df022d59",
+      "file": true
+    }
+  }
+}

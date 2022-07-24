@@ -44,8 +44,8 @@ export const CHAIN_INDEX = {
   13: 'boba',
   513: 'boba',
   514: 'zksync2',
-  97: "bsc",
-  56: "bsc"
+  15: "bsc",
+  515: "bsc"
 }
 
 export const SIZE_OP = {
