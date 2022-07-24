@@ -56,7 +56,6 @@ export class StarknetHelp {
     return {
       nonce: takeNonce,
       rollback: async () => {
-        console.log('starknet transaction fail rollback nonce:', takeNonce)
         const nonces = await this.getAvailableNonce()
         nonces.push(takeNonce)
         await this.cache.set(cacheKey, nonces)
