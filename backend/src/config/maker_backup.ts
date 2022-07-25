@@ -247,6 +247,28 @@ export default {
     gasPrice: 2,
     customChainId: 280,
   },
+  bsc: {
+    wsEndPoint: 'wss://bsc-ws-node.nariox.org',
+    httpEndPoint: 'https://bsc-dataseed1.binance.org',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 56,
+  },
+  bsc_test: {
+    wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+    httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 97,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [
