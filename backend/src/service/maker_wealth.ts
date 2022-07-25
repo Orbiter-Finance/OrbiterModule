@@ -156,10 +156,10 @@ async function getTokenBalance(
         break   
       case "bsc":
         const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
-        if (tokenAddress) {
-          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
-        } else {
+        if (isEthTokenAddress(tokenAddress)) {
           value = await bscWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
         }
         break
       default:
@@ -192,7 +192,7 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }
