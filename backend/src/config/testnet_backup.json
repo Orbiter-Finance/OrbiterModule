@@ -326,5 +326,33 @@
     "rpc": [],
     "watch": ["rpc"],
     "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://api-testnet.bscscan.com/api",
+      "key": "{You Key}"
+    },
+    "chainId": "97",
+    "networkId": "97",
+    "internalId": "515",
+    "name": "Binance Smart Chain Testnet",
+    "debug": true,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "Testnet BNB",
+      "symbol": "BNB",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://data-seed-prebsc-1-s1.binance.org:8545"],
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "Testnet ETH",
+        "symbol": "ETH",
+        "decimals": 18,
+        "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
+      }
+    ]
   }
 ]
