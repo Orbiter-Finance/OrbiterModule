@@ -7,7 +7,7 @@ import http from '@/plugins/axios2'
 export async function useUnmatchedTradding(params: any) {
   const list: any = ref([])
   const loading = ref(false)
-  const rangeDate = params.params || []
+  const rangeDate = params.rangeDate || []
   if (rangeDate?.[0]) {
     params['startTime'] = rangeDate?.[0].getTime()
   }
@@ -31,7 +31,7 @@ export async function useUnmatchedTradding(params: any) {
         item['txHashHref'] = $env.txExploreUrl[item.chainId] + item.hash
       }
       item.toAmount = item.value
-      item.amountFormat = item.value / Math.pow(10, 18)
+      // item.amountFormat = item.value // / Math.pow(10, 18)
       item.fromAddress = item.from
       item.target_tx = item.hash
       item.toAddress = item.to

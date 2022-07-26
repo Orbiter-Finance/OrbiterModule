@@ -4,7 +4,7 @@
       <div class="filter__start-time">
         <span>Start Time: </span>
         <el-date-picker
-          v-model="startTime"
+          v-model="state.startTime"
           type="datetime"
           :clearable="false"
           :offset="-50"
@@ -35,14 +35,14 @@
         ></span>
         Transaction finalized but can't match
       </div>
-      <!-- <div
+      <div
         :border="true"
         :class="{ 'filter-item--invalid': !showSuccessed }"
         @click="showSuccessed = !showSuccessed"
       >
         <span class="filter__color-block"></span>
         Transaction successed
-      </div> -->
+      </div>
     </div>
     <el-row :gutter="16">
       <el-col :span="12">
@@ -154,10 +154,10 @@ const state = reactive({
   showCannotMatched: true,
   startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
 })
-// const showSuccessed = toRef(state, 'showSuccessed')
+const showSuccessed = toRef(state, 'showSuccessed')
 const showRejected = toRef(state, 'showRejected')
 const showCannotMatched = toRef(state, 'showCannotMatched')
-const startTime = toRef(state, 'startTime')
+// const startTime = toRef(state, 'startTime')
 const fromLoading = ref(false)
 const toLoading = ref(false)
 const _fromList = ref([])
@@ -170,23 +170,25 @@ const toList = computed(() => {
 })
 const getMakerPulls = async () => {
   const rangeDate = [state.startTime]
-  const { list, loading } = await useUnmatchedTradding({
+  useUnmatchedTradding({
     makerAddress: makerAddressSelected?.value, 
     fromOrToMaker: 1,
     rangeDate,
     status: 2
+  }).then(({ list, loading }) => {
+    fromLoading.value = loading.value
+    _fromList.value = list.value
   })
-  fromLoading.value = loading.value
-  _fromList.value = list.value
 
-  const { list: list0, loading: loading0 } = await useUnmatchedTradding({
+  useUnmatchedTradding({
     makerAddress: makerAddressSelected?.value, 
     fromOrToMaker: 0,
     rangeDate,
     status: 2
+  }).then(({ list: list0, loading: loading0 }) => {
+    toLoading.value = loading0.value
+    _toList.value = list0.value
   })
-  toLoading.value = loading0.value
-  _toList.value = list0.value
 }
 const tableRowClassName = ({ row }) => {
   if (row.tx_status == 'rejected') {
@@ -199,13 +201,12 @@ const tableRowClassName = ({ row }) => {
   return ''
 }
 
-// , target_tx
-const listFilter = ({ tx_status }) => {
+const listFilter = ({ tx_status, target_tx }) => {
   const conditions: boolean[] = []
 
-  // if (state.showSuccessed) {
-  //   conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
-  // }
+  if (state.showSuccessed) {
+    conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
+  }
   if (state.showRejected) {
     conditions.push(tx_status == 'rejected')
   }
