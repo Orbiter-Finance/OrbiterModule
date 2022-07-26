@@ -247,7 +247,7 @@ export default {
     gasPrice: 2,
     customChainId: 280,
   },
-  bsc: {
+  bnbchain: {
     wsEndPoint: 'wss://bsc-ws-node.nariox.org',
     httpEndPoint: 'https://bsc-dataseed1.binance.org',
     httpEndPointInfura:"",
@@ -258,7 +258,7 @@ export default {
     gasPrice: 2,
     customChainId: 56,
   },
-  bsc_test: {
+  bnbchain_test: {
     wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
     httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
     httpEndPointInfura:"",

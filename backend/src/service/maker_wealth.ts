@@ -154,7 +154,7 @@ async function getTokenBalance(
               ''
             : '0'
         break   
-      case "bsc":
+      case "bnbchain":
         const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
         if (isEthTokenAddress(tokenAddress)) {
           value = await bscWeb3.eth.getBalance(makerAddress)
