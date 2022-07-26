@@ -17,9 +17,9 @@ export class TransactionService {
     if (query.endTime) {
       more += `and t.timestamp <= '${formateTimestamp(+query.endTime)}' `;
     }
-    if (typeof query.status != 'undefined') {
-      more += `and t.status = ${query.status} `
-    }
+    // if (typeof query.status != 'undefined') {
+    //   more += `and t.status = ${query.status} `
+    // }
     if (query.makerAddress) {
       // more += `and m.replySender = '${query.makerAddress}' `
       const fromOrTo = query.fromOrToMaker == 1 ? 'from' : 'to'
@@ -27,16 +27,24 @@ export class TransactionService {
     }
     // fromOrToMaker 0: maker <<< to, 1: maker >>> from
     const inoutId = query.fromOrToMaker == 1 ? 'outId' : 'inId'
-    // const rInoutId = inoutId === 'outId' ? 'inId' : 'outId'
+    const rInoutId = inoutId === 'outId' ? 'inId' : 'outId'
     // const sql = `
     //   select * from maker_transaction m left join transaction t on m.${inoutId} = t.id where m.${rInoutId} is null ${more} 
     //     order by t.timestamp DESC
     // `
 
+    // const sql = `
+    //   select * 
+    //     from transaction t left join maker_transaction m on t.id = m.${inoutId} 
+    //     where (t.status = '2' or t.status = '3') and m.${inoutId} is null ${more}
+    // `
+
     const sql = `
-      select * 
+      select t.id, t.chainId, t.hash, t.value, t.from, t.to, t.timestamp, t.status, t.tokenAddress 
         from transaction t left join maker_transaction m on t.id = m.${inoutId} 
-        where (t.status = '2' or t.status = '3') and m.${inoutId} is null ${more}
+        where (t.status = '1' and m.${rInoutId} is null ${more}) 
+        or ((t.status = '2' or t.status = '3') ${more})
+        order by t.timestamp DESC
     `
 
     logger.log(`[TransactionService.findUnmatched] ${sql.replace(/\s+/g, ' ')}`)

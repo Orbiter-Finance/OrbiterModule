@@ -21,6 +21,12 @@ async function getMakerList() {
   return makerList
 }
 
+// ETH:18  USDC:6  USDT:6
+const token2Decimals = {
+  'ETH': 18,
+  'USDC': 6,
+  'USDT': 6
+}
 const CHAIN_INDEX = {
   1: 'eth',
   2: 'arbitrum',
@@ -79,7 +85,7 @@ function isChainSupport(chain) {
   return false
 }
 async function getTokenInfoNew(fromChainId, toChainId, tokenName) {
-  let decimals = -1
+  // let decimals = -1
   let fromTokenName = ''
   let toTokenName = ''
   const makerList: any = await getMakerList()
@@ -88,36 +94,16 @@ async function getTokenInfoNew(fromChainId, toChainId, tokenName) {
       tokenName == item.tName && 
       ((item.c1ID == fromChainId && item.c2ID == toChainId) || (item.c2ID == fromChainId && item.c1ID == toChainId))
     ) {
-      decimals = item.precision
+      // decimals = item.precision
       fromTokenName = item.c1Name
       toTokenName = item.c2Name
       break
     }
   }
-  return { decimals, fromTokenName, toTokenName }
+  // DO NOT USE here's decimals, use token2Decimals instead
+  return { fromTokenName, toTokenName }
 }
-async function getTokenInfo(
-  chainId: number,
-  tokenAddress: string
-) {
-  let decimals = -1
-  let tokenName = ''
 
-  const makerList: any = await getMakerList()
-  for (const item of makerList) {
-    if (
-      (item.c1ID == chainId || item.c2ID == chainId) &&
-      (equalsIgnoreCase(item.t1Address, tokenAddress) ||
-        equalsIgnoreCase(item.t2Address, tokenAddress))
-    ) {
-      decimals = item.precision
-      tokenName = item.tName
-      break
-    }
-  }
-
-  return { decimals, tokenName }
-}
 /**
  * 0 ~ (2 ** N - 1)
  * @param { any } chain
@@ -491,16 +477,15 @@ export async function transforeUnmatchedTradding(list = []) {
   for (const item of list) {
     item['chainName'] = CHAIN_INDEX[item.chainId] || ''
 
-    // amount format
-    const chainTokenInfo = await getTokenInfo(
-      Number(item.chainId),
-      item.tokenAddress
-    )
+    const decimals = token2Decimals[item.tokenAddress]
+
     item['amountFormat'] = 0
-    if (chainTokenInfo.decimals > -1) {
+    if (decimals > -1) {
       item['amountFormat'] = new BigNumber(item.value).dividedBy(
-        10 ** chainTokenInfo.decimals
+        10 ** decimals
       )
+    } else {
+      logger.warn(`should add new token to decimal map.`)
     }
 
     // time ago
@@ -515,7 +500,8 @@ export async function transforeData(list = []) {
   // fill data
   for (const item of list) {
     // format tokenName and amounts
-    const { decimals, fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain, item.tokenName)
+    const { fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain, item.tokenName)
+    const decimals = token2Decimals[item.tokenName]
     item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
     item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
     item.decimals = decimals
