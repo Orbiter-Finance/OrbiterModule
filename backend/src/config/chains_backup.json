@@ -356,5 +356,33 @@
     "rpc": [],
     "watch": ["rpc"],
     "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://api.bscscan.com/api",
+      "key": "{You Key}"
+    },
+    "chainId": "56",
+    "networkId": "56",
+    "internalId": "15",
+    "name": "Binance Smart Chain",
+    "debug": true,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "BNB",
+      "symbol": "BNB",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://bsc-dataseed1.binance.org"],
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "Binance-Peg Ethereum",
+        "symbol": "ETH",
+        "decimals": 18,
+        "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
+      }
+    ]
   }
 ]

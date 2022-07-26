@@ -153,6 +153,14 @@ async function getTokenBalance(
                 10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
               ''
             : '0'
+        break   
+      case "bsc":
+        const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (isEthTokenAddress(tokenAddress)) {
+          value = await bscWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
+        }
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
@@ -160,7 +168,7 @@ async function getTokenBalance(
           break
         }
         // when empty tokenAddress or 0x00...000  get eth balances
-        if (!tokenAddress || isEthTokenAddress(tokenAddress)) {
+        if (!tokenAddress || isEthTokenAddress(tokenAddress) || chainId == 97) {
           value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
             makerAddress
           )
@@ -184,7 +192,7 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }
@@ -237,6 +245,7 @@ export async function getWealthsChains(makerAddress: string) {
 
   const makerList = await getMakerList()
   const wealthsChains: WealthsChain[] = []
+
 
   const pushToChainBalances = (
     wChain: WealthsChain,
