@@ -1,5 +1,5 @@
-import { ScanChainMain,pubSub,chains } from 'orbiter-chaincore';
-import {core as chainCoreUtil} from 'orbiter-chaincore/src/utils'
+import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore';
+import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
@@ -197,10 +197,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (!result.state) {
         accessLogger.error(
-          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -208,10 +206,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.error(
-          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -225,7 +221,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
           `[${transactionID}] Refund The query currency information does not exist: ` +
-            JSON.stringify(tx)
+          JSON.stringify(tx)
         )
         continue
       }

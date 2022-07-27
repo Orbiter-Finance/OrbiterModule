@@ -1,7 +1,7 @@
 [
   {
     "api": {
-      "url": "https://api-rinkeby.etherscan.io/api",
+      "url": "https://eth-rinkeby.alchemyapi.io/v2",
       "key": "{You Key}"
     },
     "chainId": "4",
@@ -14,9 +14,16 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["wss://eth-rinkeby.alchemyapi.io/v2/{You Key}"],
-    "watch": ["rpc", "api"],
-    "contracts": [],
+    "rpc": [
+      "wss://eth-rinkeby.alchemyapi.io/v2/{You Key}"
+    ],
+    "watch": [
+      "rpc",
+      "api"
+    ],
+    "contracts": [
+      "0x783703C20dF627893952d59DF40f556A172d1719"
+    ],
     "tokens": [
       {
         "name": "USD Coin",
@@ -28,7 +35,7 @@
   },
   {
     "api": {
-      "url": "https://testnet.arbiscan.io/api",
+      "url": "https://arb-rinkeby.g.alchemy.com/v2",
       "key": "{You Key}"
     },
     "chainId": "421611",
@@ -41,9 +48,16 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["wss://arb-rinkeby.g.alchemy.com/v2/{You Key}"],
-    "watch": ["rpc", "api"],
-    "contracts": [],
+    "rpc": [
+      "wss://arb-rinkeby.g.alchemy.com/v2/{You Key}"
+    ],
+    "watch": [
+      "rpc",
+      "api"
+    ],
+    "contracts": [
+      "0x721fBB2C2C9cdFa5547feE6b683949c20F175457"
+    ],
     "tokens": [
       {
         "name": "USD Coin",
@@ -68,8 +82,13 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "networkId": "28",
-    "rpc": ["wss://wss.rinkeby.boba.network"],
-    "watch": ["rpc", "api"],
+    "rpc": [
+      "wss://wss.rinkeby.boba.network"
+    ],
+    "watch": [
+      "rpc",
+      "api"
+    ],
     "contracts": [],
     "tokens": []
   },
@@ -89,8 +108,13 @@
       "decimals": 18,
       "address": "0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000"
     },
-    "rpc": ["wss://stardust-ws.metis.io"],
-    "watch": ["api", "rpc"],
+    "rpc": [
+      "wss://stardust-ws.metis.io"
+    ],
+    "watch": [
+      "api",
+      "rpc"
+    ],
     "contracts": [],
     "tokens": [
       {
@@ -118,7 +142,9 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"],
+    "watch": [
+      "api"
+    ],
     "contracts": [],
     "tokens": [
       {
@@ -139,15 +165,22 @@
     "networkId": "80001",
     "internalId": "66",
     "name": "Polygon Mumbai Testnet",
-    "rpc": ["wss://polygon-mumbai.g.alchemy.com/v2/{You Key}"],
+    "rpc": [
+      "wss://polygon-mumbai.g.alchemy.com/v2/{You Key}"
+    ],
     "nativeCurrency": {
       "name": "MATIC",
       "symbol": "MATIC",
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "watch": ["api", "rpc"],
-    "contracts": [],
+    "watch": [
+      "api",
+      "rpc"
+    ],
+    "contracts": [
+      "0x40eC19690ebEd534e9b9C58e341727028cF143c0"
+    ],
     "tokens": [
       {
         "name": "Wrapped Ether",
@@ -178,9 +211,16 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["wss://opt-kovan.g.alchemy.com/v2/{You Key}"],
-    "watch": ["api", "rpc"],
-    "contracts": [],
+    "rpc": [
+      "wss://opt-kovan.g.alchemy.com/v2/{You Key}"
+    ],
+    "watch": [
+      "api",
+      "rpc"
+    ],
+    "contracts": [
+      "0x2200a79aDdFE2EFd7bDe34300f4C8FE902E31d39"
+    ],
     "tokens": []
   },
   {
@@ -189,7 +229,7 @@
       "key": ""
     },
     "chainId": "dydx_test",
-    "networkId": "dydx",
+    "networkId": "5",
     "internalId": "511",
     "name": "Dydx Testnet",
     "nativeCurrency": {
@@ -199,7 +239,9 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"],
+    "watch": [
+      "api"
+    ],
     "contracts": [],
     "tokens": [
       {
@@ -226,7 +268,9 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"],
+    "watch": [
+      "api"
+    ],
     "contracts": [],
     "tokens": [
       {
@@ -253,8 +297,12 @@
       "decimals": 0,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["wss://ws.uat2.loopring.io/v3/ws"],
-    "watch": ["api"],
+    "rpc": [
+      "wss://ws.uat2.loopring.io/v3/ws"
+    ],
+    "watch": [
+      "api"
+    ],
     "contracts": [],
     "tokens": []
   },
@@ -277,7 +325,10 @@
       "wss://zksync2-testnet.zksync.dev/ws",
       "https://zksync2-testnet.zksync.dev"
     ],
-    "watch": ["api", "rpc"],
+    "watch": [
+      "api",
+      "rpc"
+    ],
     "contracts": [],
     "tokens": []
   },
@@ -298,7 +349,9 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [],
-    "watch": ["api"],
+    "watch": [
+      "api"
+    ],
     "tokens": []
   },
   {
@@ -310,7 +363,7 @@
     "networkId": "goerli-alpha",
     "internalId": "44",
     "name": "Starknet Goerli Testnet",
-    "debug": true,
+    "debug": false,
     "contracts": [
       "0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"
     ],
@@ -322,7 +375,42 @@
       "address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
     },
     "rpc": [],
-    "watch": ["rpc"],
+    "watch": [
+      "rpc"
+    ],
     "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://api-testnet.bscscan.com/api",
+      "key": "{You Key}"
+    },
+    "chainId": "97",
+    "networkId": "97",
+    "internalId": "515",
+    "name": "Binance Smart Chain Testnet",
+    "debug": true,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "Testnet BNB",
+      "symbol": "BNB",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": [
+      "https://data-seed-prebsc-1-s1.binance.org:8545"
+    ],
+    "watch": [
+      "api",
+      "rpc"
+    ],
+    "tokens": [
+      {
+        "name": "Testnet ETH",
+        "symbol": "ETH",
+        "decimals": 18,
+        "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
+      }
+    ]
   }
 ]
