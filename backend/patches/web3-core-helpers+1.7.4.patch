@@ -1,0 +1,13 @@
+diff --git a/node_modules/web3-core-helpers/lib/formatters.js b/node_modules/web3-core-helpers/lib/formatters.js
+index 65349a8..2ef702b 100644
+--- a/node_modules/web3-core-helpers/lib/formatters.js
++++ b/node_modules/web3-core-helpers/lib/formatters.js
+@@ -203,7 +203,7 @@ var outputTransactionFormatter = function (tx) {
+     if (tx.transactionIndex !== null)
+         tx.transactionIndex = utils.hexToNumber(tx.transactionIndex);
+     tx.nonce = utils.hexToNumber(tx.nonce);
+-    tx.gas = utils.hexToNumber(tx.gas);
++	if (tx.gas) tx.gas = outputBigNumberFormatter(tx.gas);   
+     if (tx.gasPrice)
+         tx.gasPrice = outputBigNumberFormatter(tx.gasPrice);
+     if (tx.maxFeePerGas)

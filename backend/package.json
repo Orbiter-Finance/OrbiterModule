@@ -10,7 +10,8 @@
     "start": "node ./dist/index.js",
     "start:dashboard": "cross-env NODE_ENV=production node ./dist/index.js",
     "build": "tsc -p .",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
@@ -43,7 +44,7 @@
     "node-cache": "^5.1.2",
     "node-fetch": "^1.7.3",
     "node-schedule": "^2.1.0",
-    "orbiter-chaincore": "file:.yalc/orbiter-chaincore",
+    "orbiter-chaincore": "1.2.6",
     "reflect-metadata": "^0.1.13",
     "semver": "^7.3.5",
     "starknet": "^3.15.4",
@@ -53,7 +54,10 @@
     "validator": "^13.7.0",
     "web3": "1.3.0",
     "zksync": "^0.11.5",
-    "zksync-web3": "^0.7.9"
+    "zksync-web3": "^0.7.9",
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0",
+    "web3-core-helpers": "^1.7.4"
   },
   "devDependencies": {
     "@types/jest": "^27.5.1",
