@@ -10,7 +10,8 @@
     "start": "node ./dist/index.js",
     "start:dashboard": "cross-env NODE_ENV=production node ./dist/index.js",
     "build": "tsc -p .",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
@@ -45,6 +46,11 @@
     "node-cache": "^5.1.2",
     "node-fetch": "^1.7.3",
     "node-schedule": "^2.1.0",
+    "orbiter-chaincore": "1.2.6",
+    "patch-package": "^6.4.7",
+    "postinstall-postinstall": "^2.1.0",
+    "reflect-metadata": "^0.1.13",
+    "semver": "^7.3.5",
     "starknet": "^3.15.4",
     "tunnel": "0.0.6",
     "typeorm": "^0.2.37",
@@ -69,7 +75,7 @@
     "ts-jest": "^27.1.0",
     "ts-node": "^10.2.1",
     "ts-node-dev": "^1.1.8",
-    "typescript": "^4.4.3",
+    "typescript": "4.5",
     "yarn": "^1.22.18"
   }
 }
