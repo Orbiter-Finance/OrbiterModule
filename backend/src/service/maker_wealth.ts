@@ -327,7 +327,7 @@ export async function getWealthsChains(makerAddress: string) {
         theTokenName = 'METIS'
       } else if(CHAIN_INDEX[item.chainId] == 'bnbchain') {
         theTokenName = 'BNB';
-        tokenAddress = '0x0000000000000000000000000000000000000000'
+        // tokenAddress = '0x0000000000000000000000000000000000000000'
       }
       item.balances.unshift({
         tokenAddress:tokenAddress,
