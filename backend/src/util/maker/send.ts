@@ -999,6 +999,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 100
     }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
+    }
   } else {
     // USDC
     if (
@@ -1012,6 +1018,12 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 110
+    }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
     }
   }
   const gasPrices = await getCurrentGasPrices(

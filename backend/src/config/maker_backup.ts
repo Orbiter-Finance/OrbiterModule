@@ -1,8 +1,16 @@
 export default {
+  starknetL1MapL2: {
+    'mainnet-alpha': {
+      'xxxxx': 'xxxx',
+    },
+    'georli-alpha': {
+      '0x8a3214f28946a797088944396c476f014f88dd37':
+        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
+    },
+  },
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key', // limit
@@ -13,7 +21,6 @@ export default {
   rinkeby: {
     wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://rinkeby.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-rinkeby.etherscan.io/api',
       key: 'Your Key',
@@ -23,7 +30,6 @@ export default {
   arbitrum: {
     wsEndPoint: 'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -34,7 +40,6 @@ export default {
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
-    // httpEndPointInfura: 'https://arbitrum-rinkeby.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://testnet.arbiscan.io/api',
       key: '',
@@ -81,7 +86,6 @@ export default {
   polygon: {
     wsEndPoint: 'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
@@ -92,13 +96,32 @@ export default {
   polygon_test: {
     wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
-    // httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
     },
     gasPrice: 2,
     customChainId: 80001,
+  },
+  metis: {
+    wsEndPoint: 'wss://andromeda-ws.metis.io',
+    httpEndPoint: 'https://andromeda.metis.io/?owner=1088',
+    api: {
+      endPoint: 'https://andromeda-explorer.metis.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 1088,
+  },
+  metis_test: {
+    wsEndPoint: 'wss://stardust-ws.metis.io',
+    httpEndPoint: 'https://stardust.metis.io/?owner=588',
+    api: {
+      endPoint: 'https://stardust-explorer.metis.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 588,
   },
   optimism: {
     wsEndPoint: 'wss://opt.g.alchemy.com/v2/Your Key',
@@ -148,33 +171,13 @@ export default {
     gasPrice: 2,
   },
   loopring_test: {
-    wsEndPoint: 'wss://ws.uat2.loopring.io/v3/ws',
-    httpEndPoint: 'https://uat2.loopring.io/api/v3',
+    wsEndPoint: null,
+    httpEndPoint: 'https://uat2.loopring.io',
     api: {
-      endPoint: 'https://uat2.loopring.io/api/v3',
+      endPoint: 'https://uat2.loopring.io',
       key: '',
     },
     gasPrice: 2,
-  },
-  metis: {
-    wsEndPoint: 'wss://andromeda-ws.metis.io',
-    httpEndPoint: 'https://andromeda.metis.io/?owner=1088',
-    api: {
-      endPoint: 'https://andromeda-explorer.metis.io/api',
-      key: '',
-    },
-    gasPrice: 2,
-    customChainId: 1088,
-  },
-  metis_test: {
-    wsEndPoint: 'wss://stardust-ws.metis.io',
-    httpEndPoint: 'https://stardust.metis.io/?owner=588',
-    api: {
-      endPoint: 'https://stardust-explorer.metis.io/api',
-      key: '',
-    },
-    gasPrice: 2,
-    customChainId: 588,
   },
   dydx: {
     wsEndPoint: null,
@@ -244,17 +247,29 @@ export default {
     gasPrice: 2,
     customChainId: 280,
   },
-  starknetL1MapL2: {
-    'mainnet-alpha': {},
-    'georli-alpha': {
-      '0x0x0043d60e87c5dd08C86C3123340705a1556C471941':
-        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
+  bnbchain: {
+    wsEndPoint: 'wss://bsc-ws-node.nariox.org',
+    httpEndPoint: 'https://bsc-dataseed1.binance.org',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: '',
+      key: '',
     },
+    gasPrice: 2,
+    customChainId: 56,
+  },
+  bnbchain_test: {
+    wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+    httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 97,
   },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
-  s3AccessKeyId: 'Your Key',
-  s3SecretAccessKey: 'Your Key',
-  s3Proof: 'S3 Proof',
   crossAddressContracts: {},
   ABI: [
     {
