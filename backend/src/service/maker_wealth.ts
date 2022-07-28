@@ -304,9 +304,7 @@ export async function getWealthsChains(makerAddress: string) {
     const ethBalancesItem = item.balances.find((item2) => {
       return (
         !item2.tokenAddress ||
-        isEthTokenAddress(item2.tokenAddress) ||
-        (CHAIN_INDEX[item.chainId] == 'zksync2' &&
-          item2.tokenAddress.toLowerCase() == `0x${'e'.repeat(40)}`)
+        isEthTokenAddress(item2.tokenAddress)
       )
     })
     //if zk2 eth exist,ignore
