@@ -20,5 +20,6 @@ backend/src/chainCore/testnet.json
 chainlogs/
 runtime/
 backend/yalc.lock
+backend/yarn.lock
 .yalc
 .env
