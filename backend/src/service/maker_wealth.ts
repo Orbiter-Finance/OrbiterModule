@@ -296,43 +296,47 @@ export async function getWealthsChains(makerAddress: string) {
     )
   }
   // get tokan balance
-  // for (const item of wealthsChains) {
-  //   // add eth
-  //   if((item.chainId == 4 || item.chainId === 44)) {
-  //     continue
-  //   }
-  //   // const ethBalancesItem = item.balances.find((item2) => {
-  //   //   return (
-  //   //     !item2.tokenAddress ||
-  //   //     isEthTokenAddress(item2.tokenAddress) ||
-  //   //     (CHAIN_INDEX[item.chainId] == 'zksync2' &&
-  //   //       item2.tokenAddress.toLowerCase() == `0x${'e'.repeat(40)}`)
-  //   //   )
-  //   // })
-  //   // //if zk2 eth exist,ignore
-  //   // if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
-  //   //   continue
-  //   // }
-  //   // if (ethBalancesItem) {
-  //   //   // clear eth's tokenAddress
-  //   //   ethBalancesItem.tokenAddress = ''
-  //   // } else {
-  //   //   // add eth balances item
-  //   //   let theTokenName = 'ETH'
-  //   //   if (CHAIN_INDEX[item.chainId] == 'polygon') {
-  //   //     theTokenName = 'MATIC'
-  //   //   } else if (CHAIN_INDEX[item.chainId] == 'metis') {
-  //   //     theTokenName = 'METIS'
-  //   //   }
-  //   //   // item.balances.unshift({
-  //   //   //   tokenAddress:
-  //   //   //     CHAIN_INDEX[item.chainId] == 'zksync2' ? `0x${'e'.repeat(40)}` : '',
-  //   //   //   tokenName: theTokenName,
-  //   //   //   decimals: 18,
-  //   //   //   value: '',
-  //   //   // })
-  //   // }
-  // }
+  for (const item of wealthsChains) {
+    // add eth
+    if((item.chainId == 4 || item.chainId === 44)) {
+      continue
+    }
+    const ethBalancesItem = item.balances.find((item2) => {
+      return (
+        !item2.tokenAddress ||
+        isEthTokenAddress(item2.tokenAddress)
+      )
+    })
+    //if zk2 eth exist,ignore
+    if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
+      continue
+    }
+    if (ethBalancesItem) {
+      // clear eth's tokenAddress
+      ethBalancesItem.tokenAddress = ''
+    } else {
+      // add eth balances item
+      let theTokenName = 'ETH'
+      let tokenAddress = '';
+      if (CHAIN_INDEX[item.chainId] == 'zksync2') {
+        tokenAddress = '0x000000000000000000000000000000000000800A'
+      }
+      if (CHAIN_INDEX[item.chainId] == 'polygon') {
+        theTokenName = 'MATIC'
+      } else if (CHAIN_INDEX[item.chainId] == 'metis') {
+        theTokenName = 'METIS'
+      } else if(CHAIN_INDEX[item.chainId] == 'bnbchain') {
+        theTokenName = 'BNB';
+        // tokenAddress = '0x0000000000000000000000000000000000000000'
+      }
+      item.balances.unshift({
+        tokenAddress:tokenAddress,
+        tokenName: theTokenName,
+        decimals: 18,
+        value: '',
+      })
+    }
+  }
   return wealthsChains
 }
 
