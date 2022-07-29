@@ -25,7 +25,9 @@ export class MakerTransactionService {
 
     let more = ``;
     if (query.makerAddress) {
-      more += `and m.replySender = '${query.makerAddress}'`
+      // more += `and m.replySender = '${query.makerAddress}'`
+      // more += `and (t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}')`
+      more += `and t.to = '${query.makerAddress}' `
     }
     if (query.startTime) {
       more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
@@ -62,12 +64,13 @@ export class MakerTransactionService {
       more += `
         and (m.transcationId like '%${query.keyword}%' 
         or t.hash like '%${query.keyword}%' or t2.hash like '%${query.keyword}%'
-        or m.replySender like '%${query.keyword}%' or	m.replyAccount like '%${query.keyword}%'
         or t.from like '%${query.keyword}%' or t.to like '%${query.keyword}%')
       ` ;
+      // or m.replySender like '%${query.keyword}%' or	m.replyAccount like '%${query.keyword}%'
     } else {
       if (query.userAddress) {
-        more += `and m.replyAccount = '${query.userAddress}' `;
+        // more += `and m.replyAccount = '${query.userAddress}' `;
+        more += `and t.from = '${query.userAddress}' `;
       }
     }
 
