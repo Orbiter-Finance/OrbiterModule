@@ -25,9 +25,7 @@ export class MakerTransactionService {
 
     let more = ``;
     if (query.makerAddress) {
-      // more += `and m.replySender = '${query.makerAddress}'`
-      // more += `and (t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}')`
-      more += `and t.to = '${query.makerAddress}' `
+      more += `and (m.replySender = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
     }
     if (query.startTime) {
       more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
@@ -64,24 +62,29 @@ export class MakerTransactionService {
       more += `
         and (m.transcationId like '%${query.keyword}%' 
         or t.hash like '%${query.keyword}%' or t2.hash like '%${query.keyword}%'
-        or t.from like '%${query.keyword}%' or t.to like '%${query.keyword}%')
+        or m.replyAccount like '%${query.keyword}%' or t.from like '%${query.keyword}%' or t2.to like '%${query.keyword}%')
       ` ;
       // or m.replySender like '%${query.keyword}%' or	m.replyAccount like '%${query.keyword}%'
     } else {
       if (query.userAddress) {
-        // more += `and m.replyAccount = '${query.userAddress}' `;
-        more += `and t.from = '${query.userAddress}' `;
+        more += `and (m.replyAccount = '${query.userAddress}' or t.from = '${query.userAddress}' or t2.to = '${query.userAddress}') `
       }
     }
 
     // const wheresql = more.slice(4)
     // ${wheresql ? 'where' : ''} ${wheresql}
+    if (query.makerAddress) {
+      const wheresql = more.slice(4)
+      more = wheresql ? `where ${wheresql}` : ''
+    } else {
+      more = `where m.inId is not null and m.outId is not null ${more}`
+    }
 
     const commsql = `
       from maker_transaction m 
         left join transaction t on m.inId = t.id 
         left join transaction t2 on m.outId = t2.id 
-        where m.inId is not null ${more}
+        ${more}
     `
     const sql = ` 
       select m.id, m.transcationId, m.fromChain, m.toChain, m.toAmount, m.replySender, m.replyAccount, m.createdAt, m.updatedAt,

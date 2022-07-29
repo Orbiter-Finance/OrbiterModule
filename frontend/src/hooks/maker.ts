@@ -90,17 +90,40 @@ function transforeData(list: any = []) {
     item.formTx = item.fromTx
     // item.fromAmountFormat = +item.fromValue / Math.pow(10, 18)
     // item.toAmountFormat = +item.toValue / Math.pow(10, 18)
+    
+    /*
+      item.state = 20
+      if (item.status==1 || item.status==99) {
+        item.state = 1
+      } else {
+        item.state = 20
+      }
+      if (item.fromStatus==1 || item.fromStatus==99) {
+        item.state = 3
+      } else {
+        item.state = 2
+      }
+      if (item.state == 1 || item.state == 3) {
+        if (item.toTx && item.fromTx) {
+          item.state = 3
+        } else {
+          item.state = 20
+        }
+      }
+    */
+
     item.state = 20
     if (item.fromStatus == 0) {
       item.state = 0
-    } else if (item.fromStatus == 1) {
+    } else if (item.fromStatus == 1 || item.fromStatus == 99) {
       item.state = 1
     }
     if (item.status == 0) {
-      if (item.fromStatus == 1) item.state = 2
-    } else if (item.status == 1) {
+      if (item.fromStatus == 1 || item.fromStatus == 99) item.state = 2
+    } else if (item.status == 1 || item.status == 99) {
       item.state = 3
     }
+
   }
 }
 async function getMakerNode(params: any = {}) {
