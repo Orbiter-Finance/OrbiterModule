@@ -15,7 +15,7 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-
+import {chains } from 'orbiter-chaincore'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -83,8 +83,7 @@ async function getTokenBalance(
             (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
           )
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${
-              lpTokenInfo ? lpTokenInfo.tokenId : 0
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0
             }`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
@@ -150,11 +149,12 @@ async function getTokenBalance(
         value =
           defaultIndex > -1
             ? balanceInfo[defaultIndex].amount *
-                10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
-              ''
+            10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
+            ''
             : '0'
-        break   
+        break
       case "bnbchain":
+        tokenAddress = tokenAddress ? tokenAddress : "0x0000000000000000000000000000000000000000";
         const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
         if (isEthTokenAddress(tokenAddress)) {
           value = await bscWeb3.eth.getBalance(makerAddress)
@@ -296,45 +296,22 @@ export async function getWealthsChains(makerAddress: string) {
     )
   }
   // get tokan balance
-  for (const item of wealthsChains) {
-    // add eth
-    if((item.chainId == 4 || item.chainId === 44)) {
-      continue
+  for (const chain of wealthsChains) {
+    const chainId = chain['chainId'];
+    if (chainId == 11 || chainId == 511) {
+      continue;
     }
-    const ethBalancesItem = item.balances.find((item2) => {
-      return (
-        !item2.tokenAddress ||
-        isEthTokenAddress(item2.tokenAddress)
-      )
-    })
-    //if zk2 eth exist,ignore
-    if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
-      continue
-    }
-    if (ethBalancesItem) {
-      // clear eth's tokenAddress
-      ethBalancesItem.tokenAddress = ''
-    } else {
-      // add eth balances item
-      let theTokenName = 'ETH'
-      let tokenAddress = '';
-      if (CHAIN_INDEX[item.chainId] == 'zksync2') {
-        tokenAddress = '0x000000000000000000000000000000000000800A'
+    const chainConfig = chains.getChainByInternalId(String(chainId));
+    if (chainConfig) {
+      const nativeCurrency = chainConfig.nativeCurrency;
+      if (nativeCurrency && chain.balances.findIndex(row => row.tokenAddress === nativeCurrency.address) < 0) {
+            chain.balances.push({
+              tokenAddress: nativeCurrency.address,
+              tokenName: nativeCurrency.symbol,
+              decimals: nativeCurrency.decimals,
+              value: '',
+            })
       }
-      if (CHAIN_INDEX[item.chainId] == 'polygon') {
-        theTokenName = 'MATIC'
-      } else if (CHAIN_INDEX[item.chainId] == 'metis') {
-        theTokenName = 'METIS'
-      } else if(CHAIN_INDEX[item.chainId] == 'bnbchain') {
-        theTokenName = 'BNB';
-        tokenAddress = '0x0000000000000000000000000000000000000000'
-      }
-      item.balances.unshift({
-        tokenAddress:tokenAddress,
-        tokenName: theTokenName,
-        decimals: 18,
-        value: '',
-      })
     }
   }
   return wealthsChains
@@ -357,7 +334,7 @@ export async function getWealths(
         let makerAddress = item.makerAddress;
         if (item.chainId === 4 || item.chainId === 44) {
           // mapping
-          makerAddress = makerConfig.starknetL1MapL2[item.chainId == 44 ? 'georli-alpha': 'mainnet-alpha'][item.makerAddress.toLowerCase()]
+          makerAddress = makerConfig.starknetL1MapL2[item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'][item.makerAddress.toLowerCase()]
         }
         let value = await getTokenBalance(
           makerAddress,
