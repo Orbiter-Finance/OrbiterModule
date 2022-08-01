@@ -319,16 +319,6 @@ export async function getWealthsChains(makerAddress: string) {
         })
       }
     }
-    if (chainId == 14 || chainId == 514) {
-      if (chain.balances.findIndex(row => row.tokenAddress === '0x0000000000000000000000000000000000000000') < 0) {
-        chain.balances.push({
-          tokenAddress: '	0xDeadDeAddeAddEAddeadDEaDDEAdDeaDDeAD0000',
-          tokenName: 'METIS',
-          decimals: 18,
-          value: '',
-        })
-      }
-    }
     if (chainId == 6 || chainId == 66) {
       chain.balances.push({
         tokenAddress: '0x0000000000000000000000000000000000000000',
