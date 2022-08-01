@@ -15,7 +15,7 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-
+import {chains } from 'orbiter-chaincore'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -298,34 +298,17 @@ export async function getWealthsChains(makerAddress: string) {
   // get tokan balance
   for (const chain of wealthsChains) {
     const chainId = chain['chainId'];
-    if (chainId == 15 || chainId == 515) {
-      if (chain.balances.findIndex(row => row.tokenAddress === '0x0000000000000000000000000000000000000000') < 0) {
-        chain.balances.push({
-          tokenAddress: '0x0000000000000000000000000000000000000000',
-          tokenName: 'BNB',
-          decimals: 18,
-          value: '',
-        })
+    const chainConfig = chains.getChainByInternalId(String(chainId));
+    if (chainConfig) {
+      const nativeCurrency = chainConfig.nativeCurrency;
+      if (nativeCurrency && chain.balances.findIndex(row => row.tokenAddress === nativeCurrency.address) < 0) {
+            chain.balances.push({
+              tokenAddress: nativeCurrency.address,
+              tokenName: nativeCurrency.symbol,
+              decimals: nativeCurrency.decimals,
+              value: '',
+            })
       }
-
-    }
-    if (chainId == 10 || chainId == 510) {
-      if (chain.balances.findIndex(row => row.tokenAddress === '0xdeaddeaddeaddeaddeaddeaddeaddeaddead0000') < 0) {
-        chain.balances.push({
-          tokenAddress: '0xdeaddeaddeaddeaddeaddeaddeaddeaddead0000',
-          tokenName: 'METIS',
-          decimals: 18,
-          value: '',
-        })
-      }
-    }
-    if (chainId == 6 || chainId == 66) {
-      chain.balances.push({
-        tokenAddress: '0x0000000000000000000000000000000000000000',
-        tokenName: 'MATIC',
-        decimals: 18,
-        value: '',
-      })
     }
   }
   return wealthsChains
