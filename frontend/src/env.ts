@@ -16,6 +16,7 @@ export const $env = {
     2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     5: 'https://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
     22: 'https://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
+    15: 'https://bsc-dataseed1.binance.org'
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -26,7 +27,7 @@ export const $env = {
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
   supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511,514
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514,15,515
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -49,9 +50,11 @@ export const $env = {
     99: '5', // loopring(G)
     510: '588', // metis(G)
     511: '3', // dydx(R)
-    13: '288',// boba
-    513: '28',// boba(R) 
-    514: '280',// boba(R) 
+    13: '288', // boba
+    513: '28', // boba(R)
+    514: '280', // zk2
+    15: '56', // bsc
+    515: '97' // bsc(R)
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -76,9 +79,11 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/transaction/',
     512: 'https://v3-rinkeby.zkswap.info/transaction/',
-    13: "https://blockexplorer.boba.network/tx/",
-    513: "https://blockexplorer.rinkeby.boba.network/tx/",
-    514: "https://zksync2-testnet.zkscan.io/tx/",
+    13: 'https://blockexplorer.boba.network/tx/',
+    513: 'https://blockexplorer.rinkeby.boba.network/tx/',
+    514: 'https://zksync2-testnet.zkscan.io/tx/',
+    15: 'https://bscscan.com/tx/',
+    515: 'https://testnet.bscscan.com/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -103,9 +108,11 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/account/',
     512: 'https://v3-rinkeby.zkswap.info/account/',
-    13: "https://blockexplorer.boba.network/address/",
-    513: "https://blockexplorer.rinkeby.boba.network/address/",
-    514: "https://zksync2-testnet.zkscan.io/address/"
+    13: 'https://blockexplorer.boba.network/address/',
+    513: 'https://blockexplorer.rinkeby.boba.network/address/',
+    514: 'https://zksync2-testnet.zkscan.io/address/',
+    15:'https://bscscan.com/address/',
+    515: 'https://testnet.bscscan.com/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -126,8 +133,10 @@ export const $env = {
     511: 'https://trade.stage.dydx.exchange/',
     12: 'https://zkspace.info/token/',
     512: 'https://v3-rinkeby.zkswap.info/token/',
-    13: "https://blockexplorer.boba.network/",
-    513: "https://blockexplorer.rinkeby.boba.network/",
-    514: "https://zksync2-testnet.zkscan.io/token/"
+    13: 'https://blockexplorer.boba.network/',
+    513: 'https://blockexplorer.rinkeby.boba.network/',
+    514: 'https://zksync2-testnet.zkscan.io/token/',
+    15: 'https://bscscan.com/tokens',
+    515: 'https://testnet.bscscan.com/tokens'
   },
 }
