@@ -10,7 +10,8 @@
     "start": "node ./dist/index.js",
     "start:dashboard": "cross-env NODE_ENV=production node ./dist/index.js",
     "build": "tsc -p .",
-    "test": "jest"
+    "test": "jest",
+    "postinstall": "patch-package"
   },
   "dependencies": {
     "@alch/alchemy-web3": "^1.1.7",
