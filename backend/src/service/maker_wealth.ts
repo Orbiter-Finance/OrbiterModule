@@ -298,6 +298,9 @@ export async function getWealthsChains(makerAddress: string) {
   // get tokan balance
   for (const chain of wealthsChains) {
     const chainId = chain['chainId'];
+    if (chainId == 11 || chainId == 511) {
+      continue;
+    }
     const chainConfig = chains.getChainByInternalId(String(chainId));
     if (chainConfig) {
       const nativeCurrency = chainConfig.nativeCurrency;
