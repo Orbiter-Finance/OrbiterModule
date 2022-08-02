@@ -1,7 +1,7 @@
 export const $env = {
   baseUrl: '',
-  // apiBaseUrl: 'http://iris_dashboard.orbiter.finance:3002/',
-  apiBaseUrl: '',
+  apiBaseUrl: 'http://iris_dashboard.orbiter.finance:3002/',
+  // apiBaseUrl: '',
   historyApiUrl: `https://api.orbiter.finance`,
   credential: false,
   localProvider: {
