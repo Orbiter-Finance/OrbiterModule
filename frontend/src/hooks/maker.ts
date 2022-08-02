@@ -80,7 +80,7 @@ function transforeData(list: any = []) {
   for (const item of list) {
     item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
     item['userAddressHref'] = accountExploreUrl[item.toChain] + item['userAddress']
-    item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['formTx']
+    item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['fromTx']
     item['toTxHref'] = ''
     if (item['toTx'] && item['toTx'] != '0x') {
       item['toTxHref'] = $env.txExploreUrl[item.toChain] + item['toTx']
@@ -167,7 +167,7 @@ export const useMakerNodes = async (
 export const useTransactionHistory = async (params: any = {}) => {
   const loading = ref(false)
   const list: any = ref([])
-  const size = ref(params.size || 300)
+  const size = ref(params.size || 100)
   const current = ref(params.current || 1)
   const total = ref(0)
   if (params.makerAddress) {

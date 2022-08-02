@@ -53,6 +53,8 @@ const CHAIN_INDEX = {
   13: 'boba',
   513: 'boba',
   514: 'zksync2',
+  15: 'BNB',
+  515: 'BNB'
 }
 const MAX_BITS = {
   eth: 256,
@@ -435,9 +437,10 @@ export async function statisticsProfit(
 
   const makerList: any = await getMakerList()
   for (const item of makerList) {
-    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
-      continue
-    }
+    // skarknet ??
+    // if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
+    //   continue
+    // }
 
     if (
       equalsIgnoreCase(item.t1Address, makerNode.fromTokenAddress) ||

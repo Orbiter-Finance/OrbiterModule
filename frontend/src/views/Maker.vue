@@ -110,7 +110,7 @@
         <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
-          <el-button type="primary" @click="() => getMakerNodes()">Apply</el-button>
+          <el-button type="primary" @click="() => getMakerNodes({current:1})">Apply</el-button>
         </el-col>
       </el-row>
       <el-row v-if="state.userAddressSelected">
@@ -513,8 +513,13 @@ const getMakerNodes = async (more: any = {}) => {
   makerNodes.value = list.value
 }
 */
+let prevMore = {}
 const getMakerNodes = async (more: any = {}) => {
   loadingNodes.value = true
+  prevMore = {
+    ...prevMore,
+    ...more
+  }
   const {
     list: _list,
     // loading,
@@ -526,7 +531,7 @@ const getMakerNodes = async (more: any = {}) => {
     rangeDate: state.rangeDate,
     keyword: state.keyword.trim(),
     state: state.status,
-    ...more,
+    ...prevMore,
   });
   loadingNodes.value = false
   makerNodes.value = _list.value
