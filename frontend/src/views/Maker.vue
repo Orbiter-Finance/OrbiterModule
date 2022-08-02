@@ -136,7 +136,7 @@
           Next Page
         </el-button>
       </el-button-group>
-      <div v-if="false">TransactionTotal: {{ list.length }}</div>
+      <div>TransactionTotal: {{ list.length }}</div>
       
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
