@@ -40,7 +40,7 @@ export class TransactionService {
     // `
 
     const sql = `
-      select t.id, t.chainId, t.hash, t.value, t.from, t.to, t.timestamp, t.status, t.tokenAddress 
+      select t.id, t.chainId, t.hash, t.value, t.from, t.to, t.timestamp, t.status, t.tokenAddress, t.symbol as tokenName
         from transaction t left join maker_transaction m on t.id = m.${inoutId} 
         where (t.status = '1' and m.${rInoutId} is null ${more}) 
         or ((t.status = '2' or t.status = '3') ${more})

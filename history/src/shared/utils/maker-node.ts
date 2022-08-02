@@ -477,7 +477,7 @@ export async function transforeUnmatchedTradding(list = []) {
   for (const item of list) {
     item['chainName'] = CHAIN_INDEX[item.chainId] || ''
 
-    const decimals = token2Decimals[item.tokenAddress]
+    const decimals = token2Decimals[item.tokenName]
 
     item['amountFormat'] = 0
     if (decimals > -1) {
@@ -485,7 +485,7 @@ export async function transforeUnmatchedTradding(list = []) {
         10 ** decimals
       )
     } else {
-      logger.warn(`should add new token to decimal map.`)
+      logger.log(`[shared/utils/maker-node.ts transforeData] maker-node.ts should Synchronize！Error decimals!`)
     }
 
     // time ago
