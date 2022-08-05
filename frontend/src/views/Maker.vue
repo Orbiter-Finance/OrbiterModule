@@ -183,7 +183,7 @@
           <el-pagination
             v-model:currentPage="currentPage"
             v-model:page-size="pageSize"
-            :page-sizes="[100, 200, 300, 400]"
+            :page-sizes="pagesizes"
             :background="true"
             layout="total, sizes, prev, pager, next, jumper"
             :total="total"
@@ -478,6 +478,7 @@ const loadingNodes = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
+const pagesizes = computed(() => Array.from(new Set([100, 200, 300, 400, Math.ceil((total.value / 100))* 100])))
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val
