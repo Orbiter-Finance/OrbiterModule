@@ -26,7 +26,7 @@ export const $env = {
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
   supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514,
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514,16,516
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -52,6 +52,8 @@ export const $env = {
     13: '288', // boba
     513: '28', // boba(R)
     514: '280', // boba(R)
+    16: '42170',
+    516: '421613'
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -79,6 +81,8 @@ export const $env = {
     13: 'https://blockexplorer.boba.network/tx/',
     513: 'https://blockexplorer.rinkeby.boba.network/tx/',
     514: 'https://zksync2-testnet.zkscan.io/tx/',
+    16: 'https://nova-explorer.arbitrum.io/tx/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -106,6 +110,8 @@ export const $env = {
     13: 'https://blockexplorer.boba.network/address/',
     513: 'https://blockexplorer.rinkeby.boba.network/address/',
     514: 'https://zksync2-testnet.zkscan.io/address/',
+    16: 'https://nova-explorer.arbitrum.io/address/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -129,5 +135,7 @@ export const $env = {
     13: 'https://blockexplorer.boba.network/',
     513: 'https://blockexplorer.rinkeby.boba.network/',
     514: 'https://zksync2-testnet.zkscan.io/token/',
+    16: 'https://nova-explorer.arbitrum.io/token/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/token/'
   },
 }
