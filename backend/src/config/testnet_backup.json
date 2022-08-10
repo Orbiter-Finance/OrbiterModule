@@ -412,5 +412,33 @@
         "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
       }
     ]
+  },
+  {
+    "api": {
+      "url": "https://goerli-rollup-explorer.arbitrum.io/api",
+      "key": ""
+    },
+    "chainId": "421613",
+    "networkId": "421613",
+    "internalId": "516",
+    "name": "Arbitrum Nova(Goerli)",
+    "debug": true,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://goerli-rollup.arbitrum.io/rpc"],
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "TestnetUSDC",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x3a304243d69e330b2cebbd79690ae9df52ef2dbd"
+      }
+    ]
   }
 ]

@@ -275,6 +275,28 @@ export default {
     gasPrice: 2,
     customChainId: 97,
   },
+  arbitrum_nova: {
+    wsEndPoint: 'https://nova.arbitrum.io/rpc',
+    httpEndPoint: 'https://nova.arbitrum.io/rpc',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: 'https://nova-explorer.arbitrum.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 42170,
+  },
+  arbitrum_nova_test: {
+    wsEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
+    httpEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: 'https://goerli-rollup-explorer.arbitrum.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 421613,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [
