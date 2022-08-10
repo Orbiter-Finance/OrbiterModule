@@ -1,7 +1,7 @@
 [
   {
     "api": {
-      "url": "https://eth-rinkeby.alchemyapi.io/v2",
+      "url": "https://api-rinkeby.etherscan.io/api",
       "key": "{You Key}"
     },
     "chainId": "4",
@@ -35,7 +35,7 @@
   },
   {
     "api": {
-      "url": "https://arb-rinkeby.g.alchemy.com/v2",
+      "url": "https://testnet.arbiscan.io/api",
       "key": "{You Key}"
     },
     "chainId": "421611",
