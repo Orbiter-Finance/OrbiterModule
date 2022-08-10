@@ -431,6 +431,9 @@ const GAS_PRICE_PAID_RATE = { arbitrum: 0.8 } // arbitrum Transaction Fee = gasU
 export async function statisticsProfit(
   makerNode
 ): Promise<BigNumber> {
+  if (makerNode.tokenName === 'USDC' || makerNode.tokenName === 'USDT') {
+    return statisticsProfitOld(makerNode)
+  }
   let fromToPrecision = token2Decimals[makerNode.tokenName] || 18
   let gasPrecision = token2Decimals[makerNode.tokenName] || 18 // gas default is eth, zksync is token
 
@@ -448,6 +451,58 @@ export async function statisticsProfit(
         .dividedBy(10 ** gasPrecision),
       makerNode.gasCurrency || ''
     )
+    return fromMinusToUsd.minus(gasAmountUsd || 0)
+  } else {
+    return new BigNumber(0)
+  }
+}
+
+// old logic use makerList
+export async function statisticsProfitOld(
+  makerNode
+): Promise<BigNumber> {
+  let fromToCurrency = ''
+  let fromToPrecision = 0
+  let gasPrecision = 18 // gas default is eth, zksync is token
+
+  const makerList = await getMakerList()
+  for (const item of makerList) {
+    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
+      continue
+    }
+
+    if (
+      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
+      equalsIgnoreCase(item.t2Address, makerNode.txToken)
+    ) {
+      fromToCurrency = item.tName
+      fromToPrecision = item.precision
+    }
+
+    if (equalsIgnoreCase(item.tName, makerNode.gasCurrency)) {
+      gasPrecision = item.precision
+    }
+  }
+
+  if (fromToCurrency && Number(makerNode.toAmount) > 0) {
+    const fromMinusToUsd = await exchangeToUsd(
+      new BigNumber(makerNode.fromAmount)
+        .minus(makerNode.toAmount)
+        .dividedBy(10 ** fromToPrecision),
+      fromToCurrency
+    )
+
+    let gasPricePaidRate = 1
+    if (GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]) {
+      gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]
+    }
+    const gasAmountUsd = await exchangeToUsd(
+      new BigNumber(makerNode.gasAmount)
+        .multipliedBy(gasPricePaidRate)
+        .dividedBy(10 ** gasPrecision),
+      makerNode.gasCurrency
+    )
+
     return fromMinusToUsd.minus(gasAmountUsd || 0)
   } else {
     return new BigNumber(0)
