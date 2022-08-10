@@ -11,6 +11,7 @@ export default {
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
+    httpEndPointInfura: 'https://mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key', // limit
@@ -21,6 +22,7 @@ export default {
   rinkeby: {
     wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
+    httpEndPointInfura: 'https://rinkeby.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-rinkeby.etherscan.io/api',
       key: 'Your Key',
@@ -30,6 +32,7 @@ export default {
   arbitrum: {
     wsEndPoint: 'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-mainnet.g.alchemy.com/v2/Your Key',
+    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -40,6 +43,7 @@ export default {
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
+    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://testnet.arbiscan.io/api',
       key: '',
@@ -86,6 +90,7 @@ export default {
   polygon: {
     wsEndPoint: 'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
+    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
@@ -96,6 +101,7 @@ export default {
   polygon_test: {
     wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
+    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
@@ -268,6 +274,28 @@ export default {
     },
     gasPrice: 2,
     customChainId: 97,
+  },
+  arbitrum_nova: {
+    wsEndPoint: 'https://nova.arbitrum.io/rpc',
+    httpEndPoint: 'https://nova.arbitrum.io/rpc',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: 'https://nova-explorer.arbitrum.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 42170,
+  },
+  arbitrum_nova_test: {
+    wsEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
+    httpEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
+    httpEndPointInfura:"",
+    api: {
+      endPoint: 'https://goerli-rollup-explorer.arbitrum.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 421613,
   },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},

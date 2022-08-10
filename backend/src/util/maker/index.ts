@@ -34,6 +34,7 @@ import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderByChainId } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
+import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -347,8 +348,8 @@ async function watchTransfers(pool, state) {
       accessLogger.info('lpTokenInfo =', lpTokenInfo)
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
-      console.log('error =', error)
-      throw new Error('getLPTransactionDataError')
+      errorLogger.error('error =', error)
+      throw 'getLPTransactionDataError'
     }
     return
   }
@@ -383,6 +384,11 @@ async function watchTransfers(pool, state) {
       if (startBlockNumber) {
         return startBlockNumber + ''
       } else {
+        // if (fromChainID == 10 || fromChainID == 510) {
+        //   const httpWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
+        //   startBlockNumber = (await httpWeb3.eth.getBlockNumber()) + 1
+        //   return startBlockNumber + ''
+        // }
         // Current block number +1, to prevent restart too fast!!!
         startBlockNumber = (await web3.eth.getBlockNumber()) + 1
         return startBlockNumber + ''
@@ -2106,9 +2112,17 @@ export async function sendTransaction(
         errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
         return
       }
-      let alert = 'Send Transaction Error ' + transactionID
+      var myDate = new Date()
+      let alert =
+        'Send Transaction Error ' +
+        transactionID +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
       try {
-        // doSms(alert)
+        doSms(alert)
       } catch (error) {
         errorLogger.error(
           `[${transactionID}] sendTransactionErrorMessage =`,
