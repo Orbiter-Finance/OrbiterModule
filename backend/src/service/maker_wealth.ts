@@ -83,8 +83,7 @@ async function getTokenBalance(
             (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
           )
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${
-              lpTokenInfo ? lpTokenInfo.tokenId : 0
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0
             }`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
@@ -150,16 +149,24 @@ async function getTokenBalance(
         value =
           defaultIndex > -1
             ? balanceInfo[defaultIndex].amount *
-                10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
-              ''
+            10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
+            ''
             : '0'
-        break   
+        break
       case "bnbchain":
         const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
         if (isEthTokenAddress(tokenAddress)) {
           value = await bscWeb3.eth.getBalance(makerAddress)
         } else {
           value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
+        }
+        break
+      case "arbitrum_nova":
+        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (isEthTokenAddress(tokenAddress)) {
+          value = await arWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
         }
         break
       default:
@@ -298,7 +305,7 @@ export async function getWealthsChains(makerAddress: string) {
   // get tokan balance
   for (const item of wealthsChains) {
     // add eth
-    if((item.chainId == 4 || item.chainId === 44)) {
+    if ((item.chainId == 4 || item.chainId === 44)) {
       continue
     }
     const ethBalancesItem = item.balances.find((item2) => {
@@ -325,12 +332,12 @@ export async function getWealthsChains(makerAddress: string) {
         theTokenName = 'MATIC'
       } else if (CHAIN_INDEX[item.chainId] == 'metis') {
         theTokenName = 'METIS'
-      } else if(CHAIN_INDEX[item.chainId] == 'bnbchain') {
+      } else if (CHAIN_INDEX[item.chainId] == 'bnbchain') {
         theTokenName = 'BNB';
         // tokenAddress = '0x0000000000000000000000000000000000000000'
       }
       item.balances.unshift({
-        tokenAddress:tokenAddress,
+        tokenAddress: tokenAddress,
         tokenName: theTokenName,
         decimals: 18,
         value: '',
@@ -357,7 +364,7 @@ export async function getWealths(
         let makerAddress = item.makerAddress;
         if (item.chainId === 4 || item.chainId === 44) {
           // mapping
-          makerAddress = makerConfig.starknetL1MapL2[item.chainId == 44 ? 'georli-alpha': 'mainnet-alpha'][item.makerAddress.toLowerCase()]
+          makerAddress = makerConfig.starknetL1MapL2[item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'][item.makerAddress.toLowerCase()]
         }
         let value = await getTokenBalance(
           makerAddress,
