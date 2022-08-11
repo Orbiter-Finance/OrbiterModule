@@ -162,6 +162,14 @@ async function getTokenBalance(
           value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
         }
         break
+      case "arbitrum_nova":
+        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (isEthTokenAddress(tokenAddress)) {
+          value = await arWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
+        }
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
@@ -298,7 +306,7 @@ export async function getWealthsChains(makerAddress: string) {
   // get tokan balance
   for (const chain of wealthsChains) {
     const chainId = chain['chainId'];
-    if (chainId == 11 || chainId == 511) {
+    if  (chainId == 11 || chainId == 511) {
       continue;
     }
     const chainConfig = chains.getChainByInternalId(String(chainId));
