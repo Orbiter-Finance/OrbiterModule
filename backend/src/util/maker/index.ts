@@ -351,7 +351,7 @@ async function watchTransfers(pool, state) {
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
       errorLogger.error('error =', error)
-      throw new Error('getLPTransactionDataError')
+      throw 'getLPTransactionDataError'
     }
     return
   }
@@ -386,6 +386,11 @@ async function watchTransfers(pool, state) {
       if (startBlockNumber) {
         return startBlockNumber + ''
       } else {
+        // if (fromChainID == 10 || fromChainID == 510) {
+        //   const httpWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
+        //   startBlockNumber = (await httpWeb3.eth.getBlockNumber()) + 1
+        //   return startBlockNumber + ''
+        // }
         // Current block number +1, to prevent restart too fast!!!
         startBlockNumber = (await web3.eth.getBlockNumber()) + 1
         return startBlockNumber + ''

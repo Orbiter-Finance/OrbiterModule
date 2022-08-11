@@ -25,9 +25,7 @@ import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
-import {
-  StarknetHelp,
-} from '../../service/starknet/helper'
+import { StarknetHelp } from '../../service/starknet/helper'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
@@ -302,30 +300,36 @@ async function sendConsumer(value: any) {
         accessLogger.info('zk2 result_nonde =', result_nonce)
       }
       const params = {
-        from:makerAddress,
+        from: makerAddress,
         customData: {
-          feeToken: "",
+          feeToken: '',
         },
         to: '',
-        nonce:result_nonce,
+        nonce: result_nonce,
         value: ethers.BigNumber.from(0),
         data: '0x',
       }
-      const isMainCoin = tokenAddress.toLowerCase() === '0x000000000000000000000000000000000000800a';
+      const isMainCoin =
+        tokenAddress.toLowerCase() ===
+        '0x000000000000000000000000000000000000800a'
       if (isMainCoin) {
         params.value = ethers.BigNumber.from(amountToSend)
         params.to = toAddress
-        params.customData.feeToken = "0x0000000000000000000000000000000000000000";
+        params.customData.feeToken =
+          '0x0000000000000000000000000000000000000000'
       } else {
         const web3 = new Web3()
-        const tokenContract = new web3.eth.Contract(<any>makerConfig.ABI, tokenAddress)
+        const tokenContract = new web3.eth.Contract(
+          <any>makerConfig.ABI,
+          tokenAddress
+        )
         params.data = tokenContract.methods
           .transfer(toAddress, web3.utils.toHex(amountToSend))
           .encodeABI()
         params.to = tokenAddress
-        params.customData.feeToken = tokenAddress;
+        params.customData.feeToken = tokenAddress
       }
-      const transfer = await syncWallet.sendTransaction(params);
+      const transfer = await syncWallet.sendTransaction(params)
       if (!has_result_nonce) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
@@ -775,9 +779,9 @@ async function sendConsumer(value: any) {
         nonceDic[makerAddress] = {}
       }
       nonceDic[makerAddress][chainID] = result_nonce
-      accessLogger.info('zks_nonce =', accountInfo.nonce)
-      accessLogger.info('zks_sql_nonce =', sql_nonce)
-      accessLogger.info('zks_result_nonde =', result_nonce)
+      accessLogger.info('nonce =', accountInfo.nonce)
+      accessLogger.info('sql_nonce =', sql_nonce)
+      accessLogger.info('result_nonde =', result_nonce)
 
       const msgBytes = ethers.utils.concat([
         '0x05',
@@ -876,6 +880,7 @@ async function sendConsumer(value: any) {
       }
     }
   }
+
   let web3Net = makerConfig[toChain].httpEndPointInfura
   if (!web3Net) {
     web3Net = makerConfig[toChain].httpEndPoint
@@ -903,13 +908,13 @@ async function sendConsumer(value: any) {
   }
   if (!tokenBalanceWei) {
     errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
-    return {
-      code: 1,
-      txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
-    }
+    // return {
+    //   code: 1,
+    //   txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
+    // }
   }
   accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
-  if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
+  if (tokenBalanceWei && BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
     errorLogger.error(
       `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
     )
@@ -970,6 +975,18 @@ async function sendConsumer(value: any) {
       maxPrice = 180
     }
     if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
       (fromChainID == 7 || fromChainID == 77) &&
       (chainID == 1 || chainID == 5)
     ) {
@@ -1000,6 +1017,12 @@ async function sendConsumer(value: any) {
       maxPrice = 100
     }
     if (
+      (fromChainID == 13 || fromChainID == 513) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 100
+    }
+    if (
       (fromChainID == 15 || fromChainID == 515) &&
       (chainID == 1 || chainID == 5)
     ) {
@@ -1011,13 +1034,45 @@ async function sendConsumer(value: any) {
       (fromChainID == 2 || fromChainID == 22) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
     }
     if (
       (fromChainID == 3 || fromChainID == 33) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
+    }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 90
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
+  }
+  if (tokenInfo && tokenInfo.symbol === 'USDT') {
+    if (fromChainID === 3 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 2 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 7 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 6 && chainID === 1) {
+      maxPrice = 95
     }
     if (
       (fromChainID == 15 || fromChainID == 515) &&

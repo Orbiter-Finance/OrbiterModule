@@ -21,7 +21,9 @@
       "rpc",
       "api"
     ],
-    "contracts": [],
+    "contracts": [
+      "0x783703C20dF627893952d59DF40f556A172d1719"
+    ],
     "tokens": [
       {
         "name": "USD Coin",
@@ -53,7 +55,9 @@
       "rpc",
       "api"
     ],
-    "contracts": [],
+    "contracts": [
+      "0x721fBB2C2C9cdFa5547feE6b683949c20F175457"
+    ],
     "tokens": [
       {
         "name": "USD Coin",
@@ -174,7 +178,9 @@
       "api",
       "rpc"
     ],
-    "contracts": [],
+    "contracts": [
+      "0x40eC19690ebEd534e9b9C58e341727028cF143c0"
+    ],
     "tokens": [
       {
         "name": "Wrapped Ether",
@@ -212,7 +218,9 @@
       "api",
       "rpc"
     ],
-    "contracts": [],
+    "contracts": [
+      "0x2200a79aDdFE2EFd7bDe34300f4C8FE902E31d39"
+    ],
     "tokens": []
   },
   {
@@ -221,7 +229,7 @@
       "key": ""
     },
     "chainId": "dydx_test",
-    "networkId": "dydx",
+    "networkId": "5",
     "internalId": "511",
     "name": "Dydx Testnet",
     "nativeCurrency": {
@@ -355,33 +363,7 @@
     "networkId": "goerli-alpha",
     "internalId": "44",
     "name": "Starknet Goerli Testnet",
-    "debug": true,
-    "contracts": [
-      "0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"
-    ],
-    "nativeCurrency": {
-      "id": 0,
-      "name": "Ether",
-      "symbol": "ETH",
-      "decimals": 18,
-      "address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7"
-    },
-    "rpc": [],
-    "watch": [
-      "rpc"
-    ],
-    "tokens": []
-  },
-  {
-    "api": {
-      "url": "",
-      "key": ""
-    },
-    "chainId": "SN_GOERLI",
-    "networkId": "goerli-alpha",
-    "internalId": "44",
-    "name": "Starknet Goerli Testnet",
-    "debug": true,
+    "debug": false,
     "contracts": [
       "0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3"
     ],
@@ -415,14 +397,47 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": ["https://data-seed-prebsc-1-s1.binance.org:8545"],
-    "watch": ["api", "rpc"],
+    "rpc": [
+      "https://data-seed-prebsc-1-s1.binance.org:8545"
+    ],
+    "watch": [
+      "api",
+      "rpc"
+    ],
     "tokens": [
       {
         "name": "Testnet ETH",
         "symbol": "ETH",
         "decimals": 18,
         "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
+      }
+    ]
+  },
+  {
+    "api": {
+      "url": "https://goerli-rollup-explorer.arbitrum.io/api",
+      "key": ""
+    },
+    "chainId": "421613",
+    "networkId": "421613",
+    "internalId": "516",
+    "name": "Arbitrum Nova(Goerli)",
+    "debug": true,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://goerli-rollup.arbitrum.io/rpc"],
+    "watch": ["api", "rpc"],
+    "tokens": [
+      {
+        "name": "TestnetUSDC",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x3a304243d69e330b2cebbd79690ae9df52ef2dbd"
       }
     ]
   }

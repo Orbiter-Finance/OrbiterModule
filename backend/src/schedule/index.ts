@@ -87,7 +87,8 @@ export async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${appConfig.options.port
+        )}' http://${appConfig.options.host}:${
+          appConfig.options.port
         }/maker/privatekeys] set it`
       )
 
@@ -110,8 +111,8 @@ export const startMasterJobs = async () => {
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
-    // 
-    startNewDashboardPull();
+    //
+    startNewDashboardPull()
     // get wealths
     jobGetWealths()
 
