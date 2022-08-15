@@ -15,6 +15,15 @@ const MAX_BITS = {
   dydx: 28,
   boba: 256,
   zkspace: 35,
+  bnbchain: 256,
+  arbitrum_nova: 256
+}
+
+const precisionResolverMap = {
+  // pay attention:  the type of field "userAmount" in the following methods is not BigNumber 
+  // but string in decimal!!!
+  "18": userAmount => userAmount.slice(0, 6),
+  "default": userAmount => userAmount
 }
 
 export const CHAIN_INDEX = {
@@ -43,6 +52,10 @@ export const CHAIN_INDEX = {
   13: 'boba',
   513: 'boba',
   514: 'zksync2',
+  15: "bnbchain",
+  515: "bnbchain",
+  16: 'arbitrum_nova',
+  516: 'arbitrum_nova'
 }
 
 export const SIZE_OP = {
@@ -143,6 +156,29 @@ function isAmountValid(chain, amount) {
   }
 }
 
+// function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
+//   userAmount = performUserAmountLegality(userAmount, selectMakerInfo);
+//   let toAmount_tradingFee = new BigNumber(userAmount).minus(
+//     new BigNumber(selectMakerInfo.tradingFee)
+//   )
+//   let gasFee = toAmount_tradingFee
+//     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
+//     .dividedBy(new BigNumber(1000))
+//   let digit = selectMakerInfo.precision === 18 ? 5 : 2
+//   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP)
+//   let toAmount_fee = toAmount_tradingFee.minus(gasFee_fix)
+
+//   if (!toAmount_fee || isNaN(toAmount_fee.toNumber())) {
+//     return 0
+//   }
+//   if (isWei) {
+//     return toAmount_fee.multipliedBy(
+//       new BigNumber(10 ** selectMakerInfo.precision)
+//     )
+//   } else {
+//     return toAmount_fee
+//   }
+// }
 function getToAmountFromUserAmount(userAmount, selectMakerInfo, isWei) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
     new BigNumber(selectMakerInfo.tradingFee)
@@ -422,6 +458,27 @@ function transferTimeStampToTime(timestamp) {
   var result = Y + M + D + h + m + s
   accessLogger.info(result)
   return result
+}
+
+
+/**
+ * @description {
+ *  This method is to confirm the legitimacy of the amount
+ *  if the amount u passed is legal, it will return it intact
+ *  otherwise the data we processed will be returned
+ * }
+ * @param userAmount the amount user given
+ * @param chain config of the current chain 
+ */
+ const performUserAmountLegality = (userAmount, chain) => {
+  const { precision } = chain;
+  const decimalData = userAmount.toFormat(); // convert BigNumber instance to decimal
+  // if the precision that current chain support equals 18, the maximum precision of userAmount u passed is 6
+  const matchResolver = precisionResolverMap[precision] || precisionResolverMap["default"];
+  // eg: precision equals 18, but the value of userAmount is 0.3333333333
+  // covert result after matchResolver processed was 0.333333
+  const convertResult =  matchResolver(decimalData, chain); 
+  return new BigNumber(convertResult);
 }
 
 export {

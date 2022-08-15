@@ -13,12 +13,23 @@ export const $env = {
         '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
     },
   },
+  starknetL1MapL2: {
+    'mainnet-alpha': {
+      '0x80c67432656d59144ceff962e8faf8926599bcf8':
+        '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+    },
+    'georli-alpha': {
+      '0x0043d60e87c5dd08c86c3123340705a1556c4719':
+        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
+    },
+  },
   localProvider: {
     1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     5: 'https://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
     22: 'https://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     15: 'https://bsc-dataseed1.binance.org'
+    15: 'https://bsc-dataseed1.binance.org',
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -29,7 +40,8 @@ export const $env = {
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
   supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514,15,515
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511,  514,15,515, 15,
+    515, 16, 516,
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -56,7 +68,9 @@ export const $env = {
     513: '28', // boba(R)
     514: '280', // zk2
     15: '56', // bsc
-    515: '97' // bsc(R)
+    515: '97', // bsc(R)
+    16: '42170',
+    516: '421613',
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -86,6 +100,8 @@ export const $env = {
     514: 'https://zksync2-testnet.zkscan.io/tx/',
     15: 'https://bscscan.com/tx/',
     515: 'https://testnet.bscscan.com/tx/',
+    16: 'https://nova-explorer.arbitrum.io/tx/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -113,8 +129,10 @@ export const $env = {
     13: 'https://blockexplorer.boba.network/address/',
     513: 'https://blockexplorer.rinkeby.boba.network/address/',
     514: 'https://zksync2-testnet.zkscan.io/address/',
-    15:'https://bscscan.com/address/',
-    515: 'https://testnet.bscscan.com/address/'
+    15: 'https://bscscan.com/address/',
+    515: 'https://testnet.bscscan.com/address/',
+    16: 'https://nova-explorer.arbitrum.io/address/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -139,6 +157,8 @@ export const $env = {
     513: 'https://blockexplorer.rinkeby.boba.network/',
     514: 'https://zksync2-testnet.zkscan.io/token/',
     15: 'https://bscscan.com/tokens',
-    515: 'https://testnet.bscscan.com/tokens'
+    515: 'https://testnet.bscscan.com/tokens',
+    16: 'https://nova-explorer.arbitrum.io/token/',
+    516: 'https://goerli-rollup-explorer.arbitrum.io/token/',
   },
 }

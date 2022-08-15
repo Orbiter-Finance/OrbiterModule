@@ -11,7 +11,7 @@ export const options: ConnectionOptions = {
   password: process.env.DB_PASS || '123456',
   database: process.env.DB_NAME || 'orbiter',
   synchronize: isDevelopment,
-  logging: false,
+  // logging: true,
   extra: {},
   maxQueryExecutionTime: 1000, // Show slow query
 

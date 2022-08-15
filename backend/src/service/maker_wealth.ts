@@ -14,8 +14,8 @@ import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
-import { getErc20BalanceByL1, getNetworkIdByChainId } from './starknet/helper'
-
+import { getErc20Balance } from './starknet/helper'
+import { chains } from 'orbiter-chaincore'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -100,9 +100,8 @@ async function getTokenBalance(
         }
         break
       case 'starknet':
-        const networkId = getNetworkIdByChainId(chainId)
         value = String(
-          await getErc20BalanceByL1(makerAddress, tokenAddress, networkId)
+          await getErc20Balance(makerAddress, tokenAddress, chainId)
         )
         break
       case 'immutablex':
@@ -155,13 +154,32 @@ async function getTokenBalance(
               ''
             : '0'
         break
+      case 'bnbchain':
+        tokenAddress = tokenAddress
+          ? tokenAddress
+          : '0x0000000000000000000000000000000000000000'
+        const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (isEthTokenAddress(tokenAddress)) {
+          value = await bscWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
+        }
+        break
+      case 'arbitrum_nova':
+        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        if (isEthTokenAddress(tokenAddress)) {
+          value = await arWeb3.eth.getBalance(makerAddress)
+        } else {
+          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
+        }
+        break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint
         if (!alchemyUrl) {
           break
         }
         // when empty tokenAddress or 0x00...000  get eth balances
-        if (!tokenAddress || isEthTokenAddress(tokenAddress)) {
+        if (!tokenAddress || isEthTokenAddress(tokenAddress) || chainId == 97) {
           value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
             makerAddress
           )
@@ -185,7 +203,7 @@ async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress}, tokenName: ${tokenName}, error: `,
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: `,
       error.message
     )
   }
@@ -251,7 +269,6 @@ export async function getWealthsChains(makerAddress: string) {
     if (find) {
       return
     }
-
     wChain.balances.push({ tokenAddress, tokenName, decimals, value: '' })
   }
   const pushToChains = (
@@ -288,43 +305,30 @@ export async function getWealthsChains(makerAddress: string) {
       item.precision
     )
   }
-
   // get tokan balance
-  for (const item of wealthsChains) {
-    // add eth
-    const ethBalancesItem = item.balances.find((item2) => {
-      return (
-        !item2.tokenAddress ||
-        isEthTokenAddress(item2.tokenAddress) ||
-        (CHAIN_INDEX[item.chainId] == 'zksync2' &&
-          item2.tokenAddress.toLowerCase() == `0x${'e'.repeat(40)}`)
-      )
-    })
-    //if zk2 eth exist,ignore
-    if (ethBalancesItem && CHAIN_INDEX[item.chainId] == 'zksync2') {
+  for (const chain of wealthsChains) {
+    const chainId = chain['chainId']
+    if (chainId == 11 || chainId == 511) {
       continue
     }
-    if (ethBalancesItem) {
-      // clear eth's tokenAddress
-      ethBalancesItem.tokenAddress = ''
-    } else {
-      // add eth balances item
-      let theTokenName = 'ETH'
-      if (CHAIN_INDEX[item.chainId] == 'polygon') {
-        theTokenName = 'MATIC'
-      } else if (CHAIN_INDEX[item.chainId] == 'metis') {
-        theTokenName = 'METIS'
+    const chainConfig = chains.getChainByInternalId(String(chainId))
+    if (chainConfig) {
+      const nativeCurrency = chainConfig.nativeCurrency
+      if (
+        nativeCurrency &&
+        chain.balances.findIndex(
+          (row) => row.tokenAddress === nativeCurrency.address
+        ) < 0
+      ) {
+        chain.balances.push({
+          tokenAddress: nativeCurrency.address,
+          tokenName: nativeCurrency.symbol,
+          decimals: nativeCurrency.decimals,
+          value: '',
+        })
       }
-      item.balances.unshift({
-        tokenAddress:
-          CHAIN_INDEX[item.chainId] == 'zksync2' ? `0x${'e'.repeat(40)}` : '',
-        tokenName: theTokenName,
-        decimals: 18,
-        value: '',
-      })
     }
   }
-
   return wealthsChains
 }
 
@@ -337,20 +341,26 @@ export async function getWealths(
   makerAddress: string
 ): Promise<WealthsChain[]> {
   const wealthsChains = await getWealthsChains(makerAddress)
-
   // get tokan balance
   const promises: Promise<void>[] = []
   for (const item of wealthsChains) {
     for (const item2 of item.balances) {
       const promiseItem = async () => {
+        let makerAddress = item.makerAddress
+        if (item.chainId === 4 || item.chainId === 44) {
+          // mapping
+          makerAddress =
+            makerConfig.starknetL1MapL2[
+              item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'
+            ][item.makerAddress.toLowerCase()]
+        }
         let value = await getTokenBalance(
-          item.makerAddress,
+          makerAddress,
           item.chainId,
           item.chainName,
           item2.tokenAddress,
           item2.tokenName
         )
-
         // When value!='' && > 0, format it
         if (value) {
           value = new BigNumber(value)

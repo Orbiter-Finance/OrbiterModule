@@ -11,7 +11,7 @@ import {
   jobMakerPull,
   startNewDashboardPull,
 } from './jobs'
-// import { doSms } from '../sms/smsSchinese'
+import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
@@ -33,7 +33,7 @@ async function waittingStartMaker() {
       const makerAddress = item.makerAddress
 
       if (
-        makerConfig.privateKeys[makerAddress] &&
+        makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
       ) {
         // startMaker(item)
@@ -62,7 +62,7 @@ async function waittingStartMaker() {
 
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
-          // doSms(alert)
+          doSms(alert)
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime
@@ -88,7 +88,8 @@ async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${appConfig.options.port
+        )}' http://${appConfig.options.host}:${
+          appConfig.options.port
         }/maker/privatekeys] set it`
       )
 
@@ -101,28 +102,32 @@ async function waittingStartMaker() {
 
 export const startMasterJobs = async () => {
   const scene = process.env.ORBITER_SCENE
-
   // cache coinbase
   jobCacheCoinbase()
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
-    // 
-    startNewDashboardPull();
+    //
+    startNewDashboardPull()
     // get wealths
     jobGetWealths()
 
     jobBalanceAlarm()
   }
-}
-
-export const startWorkerJobs = async () => {
-  const scene = process.env.ORBITER_SCENE
 
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
     startNewMakerTrxPull()
   }
+}
+
+export const startWorkerJobs = async () => {
+  //   const scene = process.env.ORBITER_SCENE
+  //   // maker
+  //   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
+  //     waittingStartMaker()
+  //     startNewMakerTrxPull()
+  //   }
 }

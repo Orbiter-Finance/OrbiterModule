@@ -11,7 +11,6 @@ import {
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
-import { getSelectorFromName } from 'starknet/dist/utils/stark'
 import { Repository } from 'typeorm'
 import Web3 from 'web3'
 import { isEthTokenAddress, sleep } from '..'
@@ -21,14 +20,6 @@ import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import { BobaListen } from '../../service/boba/boba_listen'
 import { factoryIMXListen } from '../../service/immutablex/imx_listen'
-import {
-  getL1AddressByL2,
-  getL2AddressByL1,
-  getNetworkIdByChainId,
-  getProviderByChainId,
-  getStarknetAccount,
-  saveMappingL1AndL2,
-} from '../../service/starknet/helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import loopring_help from '../../service/loopring/loopring_help'
 import { Core } from '../core'
@@ -38,10 +29,12 @@ import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
-import { factoryStarknetListen } from './starknet_listen'
-import * as chainCoreUtils from '../../chainCore/src/utils'
-import { IChainConfig } from '../../chainCore/src/types'
+import { equals } from 'orbiter-chaincore/src/utils/core'
+import { chains } from 'orbiter-chaincore/src/utils'
+import { getProviderByChainId } from '../../service/starknet/helper'
+import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
+import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -63,69 +56,69 @@ const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
   return Core.db.getRepository(MakerZkHash)
 }
 
-const starknetMakers: { [key: string]: string } = {}
-async function deployStarknetMaker(makerInfo: any, chainId: number) {
-  if (chainId != 4 && chainId != 44) {
-    return
-  }
+// const starknetMakers: { [key: string]: string } = {}
+// async function deployStarknetMaker(makerInfo: any, chainId: number) {
+//   if (chainId != 4 && chainId != 44) {
+//     return
+//   }
 
-  const { makerAddress } = makerInfo
+//   const { makerAddress } = makerInfo
 
-  try {
-    if (typeof starknetMakers[makerAddress] === 'undefined') {
-      starknetMakers[makerAddress] = ''
+//   try {
+//     if (typeof starknetMakers[makerAddress] === 'undefined') {
+//       starknetMakers[makerAddress] = ''
 
-      const networkId = getNetworkIdByChainId(chainId)
-      const account = await getStarknetAccount(makerAddress, networkId)
-      accessLogger.info(`Deploying starknet, l1: ${makerAddress}`)
+//       const networkId = getNetworkIdByChainId(chainId)
+//       const account = await getStarknetAccount(makerAddress, networkId)
+//       accessLogger.info(`Deploying starknet, l1: ${makerAddress}`)
 
-      while (true) {
-        try {
-          const provider = getProviderByChainId(chainId)
-          const resp = await provider.callContract({
-            contract_address: account.starknetAddress,
-            entry_point_selector: getSelectorFromName('get_nonce'),
-          })
+//       while (true) {
+//         try {
+//           const provider = getProviderByChainId(chainId)
+//           const resp = await provider.callContract({
+//             contract_address: account.starknetAddress,
+//             entry_point_selector: getSelectorFromName('get_nonce'),
+//           })
 
-          if (typeof resp.result?.[0] !== 'undefined') {
-            accessLogger.info(
-              `🎉Deployed starknet, l1: ${makerAddress}, starknet: ${account.starknetAddress}`
-            )
-            starknetMakers[makerAddress] = account.starknetAddress
+//           if (typeof resp.result?.[0] !== 'undefined') {
+//             accessLogger.info(
+//               `🎉Deployed starknet, l1: ${makerAddress}, starknet: ${account.starknetAddress}`
+//             )
+//             starknetMakers[makerAddress] = account.starknetAddress
 
-            // Save L1 <=> L2
-            saveMappingL1AndL2(makerAddress, networkId)
+//             // Save L1 <=> L2
+//             saveMappingL1AndL2(makerAddress, networkId)
 
-            break
-          }
-        } catch (err) {}
+//             break
+//           }
+//         } catch (err) {}
 
-        await sleep(1000)
-      }
-    }
+//         await sleep(1000)
+//       }
+//     }
 
-    // When deploying, wait it
-    if (starknetMakers[makerAddress] === '') {
-      while (true) {
-        if (starknetMakers[makerAddress]) {
-          break
-        }
+//     // When deploying, wait it
+//     if (starknetMakers[makerAddress] === '') {
+//       while (true) {
+//         if (starknetMakers[makerAddress]) {
+//           break
+//         }
 
-        await sleep(1000)
-      }
-    }
-  } catch (err) {
-    delete starknetMakers[makerAddress]
-    errorLogger.error('Deploy starknet maker error: ' + err.message)
-  }
-}
+//         await sleep(1000)
+//       }
+//     }
+//   } catch (err) {
+//     delete starknetMakers[makerAddress]
+//     errorLogger.error('Deploy starknet maker error: ' + err.message)
+//   }
+// }
 
 export async function startMaker(makerInfo: any) {
   if (!makerInfo.t1Address || !makerInfo.t2Address) {
     return
   }
-  await deployStarknetMaker(makerInfo, makerInfo.c1ID)
-  await deployStarknetMaker(makerInfo, makerInfo.c2ID)
+  // await deployStarknetMaker(makerInfo, makerInfo.c1ID)
+  // await deployStarknetMaker(makerInfo, makerInfo.c2ID)
 
   watchPool(makerInfo)
   // new maker trx pull
@@ -285,40 +278,40 @@ async function watchTransfers(pool, state) {
   }
 
   // starknet || starknet_test
-  if (fromChainID == 4 || fromChainID == 44) {
-    const _api = state
-      ? makerConfig[pool.c2Name].api
-      : makerConfig[pool.c1Name].api
-    const networkId = getNetworkIdByChainId(fromChainID)
-    getL2AddressByL1(makerAddress, networkId)
-      .then((starknetAddressMaker) => {
-        accessLogger.info('Starknet transfer listen: ' + starknetAddressMaker)
+  // if (fromChainID == 4 || fromChainID == 44) {
+  //   const _api = state
+  //     ? makerConfig[pool.c2Name].api
+  //     : makerConfig[pool.c1Name].api
+  //   const networkId = getNetworkIdByChainId(fromChainID)
+  //   getL2AddressByL1(makerAddress, networkId)
+  //     .then((starknetAddressMaker) => {
+  //       accessLogger.info('Starknet transfer listen: ' + starknetAddressMaker)
 
-        const skl = factoryStarknetListen(_api)
-        skl.transfer(
-          {
-            to: starknetAddressMaker,
-          },
-          {
-            onConfirmation: (transaction) => {
-              if (!transaction.hash) {
-                return
-              }
+  //       const skl = factoryStarknetListen(_api)
+  //       skl.transfer(
+  //         {
+  //           to: starknetAddressMaker,
+  //         },
+  //         {
+  //           onConfirmation: (transaction) => {
+  //             if (!transaction.hash) {
+  //               return
+  //             }
 
-              if (
-                checkData(transaction.value + '', transaction.hash) === true
-              ) {
-                confirmSNTransaction(pool, state, transaction)
-              }
-            },
-          }
-        )
-      })
-      .catch((err) => {
-        errorLogger.error('GetL2AddressByL1 faild: ' + err.message)
-      })
-    return
-  }
+  //             if (
+  //               checkData(transaction.value + '', transaction.hash) === true
+  //             ) {
+  //               confirmSNTransaction(pool, state, transaction)
+  //             }
+  //           },
+  //         }
+  //       )
+  //     })
+  //     .catch((err) => {
+  //       errorLogger.error('GetL2AddressByL1 faild: ' + err.message)
+  //     })
+  //   return
+  // }
 
   // immutablex || immutablex_test
   if (fromChainID == 8 || fromChainID == 88) {
@@ -355,8 +348,8 @@ async function watchTransfers(pool, state) {
       accessLogger.info('lpTokenInfo =', lpTokenInfo)
       confirmLPTransaction(pool, tokenAddress, state)
     } catch (error) {
-      console.log('error =', error)
-      throw new Error('getLPTransactionDataError')
+      errorLogger.error('error =', error)
+      throw 'getLPTransactionDataError'
     }
     return
   }
@@ -391,6 +384,11 @@ async function watchTransfers(pool, state) {
       if (startBlockNumber) {
         return startBlockNumber + ''
       } else {
+        // if (fromChainID == 10 || fromChainID == 510) {
+        //   const httpWeb3 = new Web3(makerConfig[fromChain].httpEndPoint)
+        //   startBlockNumber = (await httpWeb3.eth.getBlockNumber()) + 1
+        //   return startBlockNumber + ''
+        // }
         // Current block number +1, to prevent restart too fast!!!
         startBlockNumber = (await web3.eth.getBlockNumber()) + 1
         return startBlockNumber + ''
@@ -711,7 +709,7 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
   if (!lpKey) {
     const { exchangeInfo } = await exchangeApi.getExchangeInfo()
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress],
+      makerConfig.privateKeys[makerAddress.toLowerCase()],
       fromChainID == 9
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
@@ -1125,94 +1123,94 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
   setInterval(ticker, 10 * 1000)
 }
 
-async function confirmSNTransaction(pool: any, state: any, transaction: any) {
-  const makerAddress = pool.makerAddress
-  const toChain = state ? pool.c1Name : pool.c2Name
-  const tokenAddress = state ? pool.t2Address : pool.t1Address
-  const toChainID = state ? pool.c1ID : pool.c2ID
-  const fromChainID = state ? pool.c2ID : pool.c1ID
-  const { hash, from, nonce, timeStamp, value, txreceipt_status } = transaction
+// async function confirmSNTransaction(pool: any, state: any, transaction: any) {
+//   const makerAddress = pool.makerAddress
+//   const toChain = state ? pool.c1Name : pool.c2Name
+//   const tokenAddress = state ? pool.t2Address : pool.t1Address
+//   const toChainID = state ? pool.c1ID : pool.c2ID
+//   const fromChainID = state ? pool.c2ID : pool.c1ID
+//   const { hash, from, nonce, timeStamp, value, txreceipt_status } = transaction
 
-  accessLogger.info(
-    'Starknet Transaction with hash ' + hash + ', status: ' + txreceipt_status
-  )
-  const networkId = getNetworkIdByChainId(fromChainID)
-  let fromL1Address = ''
-  try {
-    fromL1Address = await getL1AddressByL2(from, networkId)
-  } catch (err) {}
+//   accessLogger.info(
+//     'Starknet Transaction with hash ' + hash + ', status: ' + txreceipt_status
+//   )
+//   const networkId = getNetworkIdByChainId(fromChainID)
+//   let fromL1Address = ''
+//   try {
+//     fromL1Address = await getL1AddressByL2(from, networkId)
+//   } catch (err) {}
 
-  // check
-  if (!fromL1Address) {
-    return
-  }
+//   // check
+//   if (!fromL1Address) {
+//     return
+//   }
 
-  const transactionID = fromL1Address.toLowerCase() + fromChainID + nonce
+//   const transactionID = fromL1Address.toLowerCase() + fromChainID + nonce
 
-  let makerNode: MakerNode | undefined
-  try {
-    makerNode = await repositoryMakerNode().findOne({
-      transactionID: transactionID,
-    })
-  } catch (error) {
-    errorLogger.error('isHaveSqlError =', error)
-    return
-  }
+//   let makerNode: MakerNode | undefined
+//   try {
+//     makerNode = await repositoryMakerNode().findOne({
+//       transactionID: transactionID,
+//     })
+//   } catch (error) {
+//     errorLogger.error('isHaveSqlError =', error)
+//     return
+//   }
 
-  if (!makerNode) {
-    try {
-      await repositoryMakerNode().insert({
-        transactionID: transactionID,
-        userAddress: fromL1Address,
-        makerAddress,
-        fromChain: fromChainID,
-        toChain: toChainID,
-        formTx: hash,
-        fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
-        fromAmount: value,
-        formNonce: nonce,
-        txToken: tokenAddress,
-        state: 0,
-      })
-      accessLogger.info('add success')
-    } catch (error) {
-      errorLogger.error('newTransactionSqlError =', error)
-    }
-  }
+//   if (!makerNode) {
+//     try {
+//       await repositoryMakerNode().insert({
+//         transactionID: transactionID,
+//         userAddress: fromL1Address,
+//         makerAddress,
+//         fromChain: fromChainID,
+//         toChain: toChainID,
+//         formTx: hash,
+//         fromTimeStamp: orbiterCore.transferTimeStampToTime(timeStamp || '0'),
+//         fromAmount: value,
+//         formNonce: nonce,
+//         txToken: tokenAddress,
+//         state: 0,
+//       })
+//       accessLogger.info('add success')
+//     } catch (error) {
+//       errorLogger.error('newTransactionSqlError =', error)
+//     }
+//   }
 
-  accessLogger.info(
-    'Transaction with hash ' + hash + ' has been successfully confirmed'
-  )
-  accessLogger.info(
-    'updateFromSql =',
-    `state = 1 WHERE transactionID = '${transactionID}'`
-  )
-  try {
-    await repositoryMakerNode().update(
-      { transactionID: transactionID },
-      { state: 1 }
-    )
-    accessLogger.info('confirmSNTransaction update success')
-  } catch (error) {
-    errorLogger.error('updateFromError =', error)
-    return
-  }
+//   accessLogger.info(
+//     'Transaction with hash ' + hash + ' has been successfully confirmed'
+//   )
+//   accessLogger.info(
+//     'updateFromSql =',
+//     `state = 1 WHERE transactionID = '${transactionID}'`
+//   )
+//   try {
+//     await repositoryMakerNode().update(
+//       { transactionID: transactionID },
+//       { state: 1 }
+//     )
+//     accessLogger.info('confirmSNTransaction update success')
+//   } catch (error) {
+//     errorLogger.error('updateFromError =', error)
+//     return
+//   }
 
-  const toTokenAddress = state ? pool.t1Address : pool.t2Address
+//   const toTokenAddress = state ? pool.t1Address : pool.t2Address
 
-  sendTransaction(
-    makerAddress,
-    transactionID,
-    fromChainID,
-    toChainID,
-    toChain,
-    toTokenAddress,
-    value,
-    fromL1Address,
-    pool,
-    nonce
-  )
-}
+//   sendTransaction(
+//     makerAddress,
+//     transactionID,
+//     fromChainID,
+//     toChainID,
+//     toChain,
+//     toTokenAddress,
+//     value,
+//     fromL1Address,
+//     pool,
+//     nonce
+//   )
+// }
 
 async function confirmIMXTransaction(pool: any, state: any, transaction: any) {
   const makerAddress = pool.makerAddress
@@ -1510,7 +1508,9 @@ function confirmToTransaction(
       )
 
       accessLogger.info(
-        `[${transactionID}] Transaction with hash ` + txHash + ' has been successfully confirmed'
+        `[${transactionID}] Transaction with hash ` +
+          txHash +
+          ' has been successfully confirmed'
       )
       accessLogger.info(
         'update maker_node =',
@@ -1521,7 +1521,9 @@ function confirmToTransaction(
           { transactionID: transactionID },
           { toTimeStamp: timestamp, state: 3 }
         )
-        accessLogger.info(`[${transactionID}]  confirmToTransaction->Chain:${Chain} update success`)
+        accessLogger.info(
+          `[${transactionID}]  confirmToTransaction->Chain:${Chain} update success`
+        )
       } catch (error) {
         errorLogger.error(`[${transactionID}]  updateToSqlError =`, error)
         return
@@ -1538,7 +1540,7 @@ function confirmToTransaction(
   }, 8 * 1000)
 }
 
-function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
+function confirmToZKTransaction(syncProvider, txID, transactionID) {
   accessLogger.info('confirmToZKTransaction =', getTime())
   setTimeout(async () => {
     let transferReceipt: any
@@ -1546,7 +1548,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       transferReceipt = await syncProvider.getTxReceipt(txID)
     } catch (err) {
       errorLogger.error('zkSync getTxReceipt failed: ' + err.message)
-      return confirmToZKTransaction(syncProvider, txID)
+      return confirmToZKTransaction(syncProvider, txID, transactionID)
     }
 
     accessLogger.info(
@@ -1584,7 +1586,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID = undefined) {
       return
     }
 
-    return confirmToZKTransaction(syncProvider, txID)
+    return confirmToZKTransaction(syncProvider, txID, transactionID)
   }, 8 * 1000)
 }
 
@@ -1654,51 +1656,61 @@ function confirmToLPTransaction(
   }, 8 * 1000)
 }
 
-async function confirmToSNTransaction(
+export async function confirmToSNTransaction(
   txID: string,
   transactionID: string,
-  chainId: number
-) {
+  chainId: number,
+  makerAddress: string
+): Promise<boolean | undefined> {
   accessLogger.info('confirmToSNTransaction =', getTime())
-  while (true) {
-    try {
-      const provider = getProviderByChainId(chainId)
-      const transaction = await provider.getTransaction(txID)
-      accessLogger.info(
-        'sn_transaction =',
-        JSON.stringify({ status: transaction.status, txID })
+  const provider = getProviderByChainId(chainId)
+  const transaction = await provider.getTransaction(txID)
+  accessLogger.info(
+    'sn_transaction =',
+    JSON.stringify({ status: transaction.status, txID })
+  )
+
+  // When reject
+  if (transaction.status == 'REJECTED') {
+    errorLogger.info(
+      `starknet transfer failed: ${transaction.status}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
+      transaction['transaction_failure_reason']
+    )
+    // check nonce
+    if (
+      transaction['transaction_failure_reason'] &&
+      transaction['transaction_failure_reason']['error_message'].includes(
+        'Error message: nonce invalid'
       )
-
-      // When reject
-      if (transaction.status == 'REJECTED') {
-        break
-      }
-
-      if (
-        transaction.status == 'ACCEPTED_ON_L1' ||
-        transaction.status == 'ACCEPTED_ON_L2'
-      ) {
-        accessLogger.info(
-          'sn_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
-        )
-        accessLogger.info(
-          'update maker_node =',
-          `state = 3 WHERE transactionID = '${transactionID}'`
-        )
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          { state: 3 }
-        )
-        break
-      }
-    } catch (err) {
-      errorLogger.error('sn_getTransaction failed: ', err.message)
+    ) {
+      return true
     }
-
-    await sleep(8 * 1000)
+    return false
+  } else if (
+    transaction.status == 'ACCEPTED_ON_L1' ||
+    transaction.status == 'ACCEPTED_ON_L2' ||
+    transaction.status == 'PENDING'
+  ) {
+    accessLogger.info(
+      'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
+    )
+    accessLogger.info(
+      'update maker_node =',
+      `state = 3 WHERE transactionID = '${transactionID}'`
+    )
+    await repositoryMakerNode().update(
+      { transactionID: transactionID },
+      { state: 3 }
+    )
+    return true
   }
+  await sleep(1000 * 10)
+  return await confirmToSNTransaction(
+    txID,
+    transactionID,
+    chainId,
+    makerAddress
+  )
 }
 
 function confirmToZKSTransaction(
@@ -1947,9 +1959,9 @@ export async function sendTransaction(
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
   // accessLogger.info(
-    // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
+  // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   // )
-  const toChainConfig: IChainConfig = chainCoreUtils.getChainByInternalId(
+  const toChainConfig: IChainConfig = chains.getChainByInternalId(
     String(toChainID)
   )
   if (!toChainConfig || !toChainConfig.tokens) {
@@ -1959,7 +1971,7 @@ export async function sendTransaction(
     return
   }
   const tokenInfo = toChainConfig.tokens.find((token) =>
-    chainCoreUtils.equals(token.address, tokenAddress)
+    equals(token.address, tokenAddress)
   )
   if (!tokenInfo) {
     accessLogger.error(
@@ -1967,18 +1979,21 @@ export async function sendTransaction(
     )
     return
   }
-  accessLogger.info(`${transactionID} Exec Send Transfer`, JSON.stringify({
-    makerAddress,
-    toAddress,
-    toChain,
-    fromChainID,
-    toChainID,
-    tokenAddress,
-    tAmount,
-    result_nonce,
-    nonce,
-    tokenInfo
-  }))
+  accessLogger.info(
+    `${transactionID} Exec Send Transfer`,
+    JSON.stringify({
+      makerAddress,
+      toAddress,
+      toChain,
+      fromChainID,
+      toChainID,
+      tokenAddress,
+      tAmount,
+      result_nonce,
+      nonce,
+      tokenInfo,
+    })
+  )
   await send(
     makerAddress,
     toAddress,
@@ -2008,7 +2023,9 @@ export async function sendTransaction(
             state: 2,
           }
         )
-        accessLogger.info(`[${transactionID}] sendTransaction toChain ${toChain} update success`)
+        accessLogger.info(
+          `[${transactionID}] sendTransaction toChain ${toChain} update success`
+        )
       } catch (error) {
         errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
         return
@@ -2017,7 +2034,14 @@ export async function sendTransaction(
         let syncProvider = response.zkProvider
         confirmToZKTransaction(syncProvider, txID, transactionID)
       } else if (toChainID === 4 || toChainID === 44) {
-        confirmToSNTransaction(txID, transactionID, toChainID)
+        confirmToSNTransaction(
+          txID,
+          transactionID,
+          toChainID,
+          makerAddress
+        ).then((success) => {
+          success === false && response.rollback()
+        })
       } else if (toChainID === 8 || toChainID === 88) {
         console.warn({ toChainID, toChain, txID, transactionID })
         // confirmToSNTransaction(txID, transactionID, toChainID)
@@ -2088,11 +2112,22 @@ export async function sendTransaction(
         errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
         return
       }
-      let alert = 'Send Transaction Error ' + transactionID
+      var myDate = new Date()
+      let alert =
+        'Send Transaction Error ' +
+        transactionID +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
       try {
-        // doSms(alert)
+        doSms(alert)
       } catch (error) {
-        errorLogger.error(`[${transactionID}] sendTransactionErrorMessage =`, error)
+        errorLogger.error(
+          `[${transactionID}] sendTransactionErrorMessage =`,
+          error
+        )
       }
     }
   })

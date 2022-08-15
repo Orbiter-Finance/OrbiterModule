@@ -13,7 +13,7 @@ import BigNumber from 'bignumber.js'
 import Common from 'ethereumjs-common'
 import { Transaction as EthereumTx } from 'ethereumjs-tx'
 import * as ethers from 'ethers'
-import * as zksync2 from "zksync-web3"
+import * as zksync2 from 'zksync-web3'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
@@ -23,14 +23,10 @@ import { IMXHelper } from '../../service/immutablex/imx_helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
-import {
-  getAccountNonce,
-  getL2AddressByL1,
-  getNetworkIdByChainId,
-  sendTransaction,
-} from '../../service/starknet/helper'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
+import { StarknetHelp } from '../../service/starknet/helper'
+import { equals } from 'orbiter-chaincore/src/utils/core'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -65,6 +61,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
     } catch (error) {
+      maxGwei = 80
       return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
     }
   } else {
@@ -132,7 +129,7 @@ async function sendConsumer(value: any) {
         syncProvider = await zksync.getDefaultProvider('rinkeby')
       }
       const ethWallet = new ethers.Wallet(
-        makerConfig.privateKeys[makerAddress]
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
       ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
@@ -253,15 +250,19 @@ async function sendConsumer(value: any) {
       let ethProvider
       let syncProvider
       if (chainID === 514) {
-        const httpEndPoint = makerConfig["zksync2_test"].httpEndPoint
-        ethProvider = ethers.getDefaultProvider("goerli");
-        syncProvider = new zksync2.Provider(httpEndPoint);
+        const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
+        ethProvider = ethers.getDefaultProvider('goerli')
+        syncProvider = new zksync2.Provider(httpEndPoint)
       } else {
-        const httpEndPoint = makerConfig["zksync2"].httpEndPoint//official httpEndpoint is not exists now 
-        ethProvider = ethers.getDefaultProvider('homestead');
-        syncProvider = new zksync2.Provider(httpEndPoint);
+        const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
+        ethProvider = ethers.getDefaultProvider('homestead')
+        syncProvider = new zksync2.Provider(httpEndPoint)
       }
-      const syncWallet = new zksync2.Wallet(makerConfig.privateKeys[makerAddress], syncProvider, ethProvider);
+      const syncWallet = new zksync2.Wallet(
+        makerConfig.privateKeys[makerAddress.toLowerCase()],
+        syncProvider,
+        ethProvider
+      )
       let tokenBalanceWei = await syncWallet.getBalance(
         tokenAddress,
         'finalized'
@@ -296,15 +297,39 @@ async function sendConsumer(value: any) {
         }
         accessLogger.info('zk2_nonce =', zk_nonce)
         accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
-        accessLogger.info('result_nonde =', result_nonce)
+        accessLogger.info('zk2 result_nonde =', result_nonce)
       }
-
-      const transfer = await syncWallet.transfer({
-        to: toAddress,
-        token: tokenAddress,
-        amount: amountToSend,
-        // feeToken: tokenAddress,
-      });
+      const params = {
+        from: makerAddress,
+        customData: {
+          feeToken: '',
+        },
+        to: '',
+        nonce: result_nonce,
+        value: ethers.BigNumber.from(0),
+        data: '0x',
+      }
+      const isMainCoin =
+        tokenAddress.toLowerCase() ===
+        '0x000000000000000000000000000000000000800a'
+      if (isMainCoin) {
+        params.value = ethers.BigNumber.from(amountToSend)
+        params.to = toAddress
+        params.customData.feeToken =
+          '0x0000000000000000000000000000000000000000'
+      } else {
+        const web3 = new Web3()
+        const tokenContract = new web3.eth.Contract(
+          <any>makerConfig.ABI,
+          tokenAddress
+        )
+        params.data = tokenContract.methods
+          .transfer(toAddress, web3.utils.toHex(amountToSend))
+          .encodeABI()
+        params.to = tokenAddress
+        params.customData.feeToken = tokenAddress
+      }
+      const transfer = await syncWallet.sendTransaction(params)
       if (!has_result_nonce) {
         if (!nonceDic[makerAddress]) {
           nonceDic[makerAddress] = {}
@@ -337,82 +362,25 @@ async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
+    const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
+    const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
+    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
+    const { nonce, rollback } = await starknet.takeOutNonce()
     try {
-      const starknetNetworkId = getNetworkIdByChainId(chainID)
-      const starknetAddressMaker = await getL2AddressByL1(
-        makerAddress,
-        starknetNetworkId
-      )
-
-      const has_result_nonce = result_nonce > 0
-      if (!has_result_nonce) {
-        const sn_nonce = await getAccountNonce(
-          starknetAddressMaker,
-          starknetNetworkId
-        )
-        let sn_sql_nonce = nonceDic[makerAddress]?.[chainID]
-        if (!sn_sql_nonce) {
-          result_nonce = sn_nonce
-        } else {
-          if (sn_nonce > sn_sql_nonce) {
-            result_nonce = sn_nonce
-          } else {
-            result_nonce = sn_sql_nonce + 1
-          }
-        }
-        accessLogger.info('sn_nonce =', sn_nonce)
-        accessLogger.info('sn_sql_nonce =', sn_sql_nonce)
-        accessLogger.info('result_nonde =', result_nonce)
-      }
-
-      // Wait user starknet account deploy
-      let starknetAddressTo = ''
-      const starknetNow = new Date().getTime()
-      while (new Date().getTime() - starknetNow < 1000000) {
-        starknetAddressTo = await getL2AddressByL1(toAddress, starknetNetworkId)
-        if (starknetAddressTo) {
-          break
-        }
-
-        accessLogger.info('Waitting user starknet account deploy: ' + toAddress)
-        await sleep(5000)
-      }
-      if (!starknetAddressTo) {
-        throw new Error("User starknet account cann't deploy: " + toAddress)
-      }
-
-      // Starknet transfer
-      const starknetHash = await sendTransaction(
-        makerAddress,
+      const { hash }: any = await starknet.signTransfer({
+        recipient: toAddress,
         tokenAddress,
-        starknetAddressTo,
-        amountToSend,
-        starknetNetworkId
-      )
-
-      if (!has_result_nonce) {
-        if (!nonceDic[makerAddress]) {
-          nonceDic[makerAddress] = {}
-        }
-
-        nonceDic[makerAddress][chainID] = result_nonce
-      }
-
-      if (starknetHash) {
-        return {
-          code: 0,
-          txid: starknetHash,
-          chainID: chainID,
-          snNonce: result_nonce,
-        }
-      } else {
-        return {
-          code: 1,
-          error: 'starknet transfer error',
-          result_nonce,
-        }
+        amount: String(amountToSend),
+        nonce,
+      })
+      return {
+        code: 0,
+        txid: hash,
+        rollback,
       }
     } catch (error) {
+      console.error(error)
+      rollback()
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -425,6 +393,7 @@ async function sendConsumer(value: any) {
   if (chainID == 8 || chainID == 88) {
     try {
       const imxHelper = new IMXHelper(chainID)
+      console.log(makerAddress, '==makerAddress')
       const imxClient = await imxHelper.getImmutableXClient(makerAddress)
 
       // Warnning: The nonce value of immutablex currently has no substantial effect
@@ -467,7 +436,6 @@ async function sendConsumer(value: any) {
           },
         }
       }
-
       const imxResult = await imxClient.transfer({
         sender: makerAddress,
         token: imxTokenInfo,
@@ -507,7 +475,7 @@ async function sendConsumer(value: any) {
 
   if (chainID == 9 || chainID == 99) {
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress],
+      makerConfig.privateKeys[makerAddress.toLowerCase()],
       chainID == 9
         ? makerConfig['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
@@ -535,9 +503,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -645,7 +613,9 @@ async function sendConsumer(value: any) {
   if (chainID == 11 || chainID == 511) {
     try {
       const dydxWeb3 = new Web3()
-      dydxWeb3.eth.accounts.wallet.add(makerConfig.privateKeys[makerAddress])
+      dydxWeb3.eth.accounts.wallet.add(
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
+      )
       const dydxHelper = new DydxHelper(chainID, dydxWeb3)
       const dydxClient = await dydxHelper.getDydxClient(
         makerAddress,
@@ -731,7 +701,9 @@ async function sendConsumer(value: any) {
   // zkspace || zkspace_test
   if (chainID == 12 || chainID == 512) {
     try {
-      const wallet = new ethers.Wallet(makerConfig.privateKeys[makerAddress])
+      const wallet = new ethers.Wallet(
+        makerConfig.privateKeys[makerAddress.toLowerCase()]
+      )
       const msg =
         'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
       const signature = await wallet.signMessage(msg)
@@ -811,9 +783,9 @@ async function sendConsumer(value: any) {
         nonceDic[makerAddress] = {}
       }
       nonceDic[makerAddress][chainID] = result_nonce
-      accessLogger.info('nonce =', accountInfo.nonce)
-      accessLogger.info('sql_nonce =', sql_nonce)
-      accessLogger.info('result_nonde =', result_nonce)
+      accessLogger.info('zks_nonce =', accountInfo.nonce)
+      accessLogger.info('zks_sql_nonce =', sql_nonce)
+      accessLogger.info('zks_result_nonce =', result_nonce)
 
       const msgBytes = ethers.utils.concat([
         '0x05',
@@ -907,7 +879,10 @@ async function sendConsumer(value: any) {
     }
   }
 
-  const web3Net = makerConfig[toChain].httpEndPoint
+  let web3Net = makerConfig[toChain].httpEndPointInfura
+  if (!web3Net) {
+    web3Net = makerConfig[toChain].httpEndPoint
+  }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
 
@@ -932,13 +907,13 @@ async function sendConsumer(value: any) {
 
   if (!tokenBalanceWei) {
     errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
-    return {
-      code: 1,
-      txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
-    }
+    // return {
+    //   code: 1,
+    //   txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
+    // }
   }
   accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
-  if (BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
+  if (tokenBalanceWei && BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
     errorLogger.error(
       `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
     )
@@ -999,10 +974,28 @@ async function sendConsumer(value: any) {
       maxPrice = 180
     }
     if (
+      (fromChainID == 2 || fromChainID == 22) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 180
+    }
+    if (
       (fromChainID == 7 || fromChainID == 77) &&
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 180
+    }
+    if (
+      (fromChainID == 8 || fromChainID == 88) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 130
     }
     if (
       (fromChainID == 9 || fromChainID == 99) &&
@@ -1022,19 +1015,87 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 100
     }
+    if (
+      (fromChainID == 13 || fromChainID == 513) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 100
+    }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
+    }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
   } else {
     // USDC
     if (
       (fromChainID == 2 || fromChainID == 22) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
     }
     if (
       (fromChainID == 3 || fromChainID == 33) &&
       (chainID == 1 || chainID == 5)
     ) {
-      maxPrice = 110
+      maxPrice = 90
+    }
+    if (
+      (fromChainID == 6 || fromChainID == 66) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 90
+    }
+    if (
+      (fromChainID == 7 || fromChainID == 77) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
+    }
+  }
+  if (tokenInfo && tokenInfo.symbol === 'USDT') {
+    if (fromChainID === 3 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 2 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 7 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (fromChainID === 6 && chainID === 1) {
+      maxPrice = 95
+    }
+    if (
+      (fromChainID == 15 || fromChainID == 515) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
     }
   }
   const gasPrices = await getCurrentGasPrices(
@@ -1096,7 +1157,9 @@ async function sendConsumer(value: any) {
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
    */
-  transaction.sign(Buffer.from(makerConfig.privateKeys[makerAddress], 'hex'))
+  transaction.sign(
+    Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+  )
 
   /**
    * Now, we'll compress the transaction info down into a transportable object.

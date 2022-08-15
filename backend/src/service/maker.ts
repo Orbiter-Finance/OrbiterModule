@@ -1,6 +1,7 @@
 import { BigNumber } from 'bignumber.js'
 import { Repository } from 'typeorm'
-import { padStart } from '../chainCore/src/utils'
+import { equals, padStart } from 'orbiter-chaincore/src/utils/core'
+import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
@@ -67,8 +68,18 @@ export async function statisticsProfit(
 
   const makerList = await getMakerList()
   for (const item of makerList) {
-    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
-      continue
+    let makerAddress =item.makerAddress;
+    if (['4','44'].includes(makerNode.fromChain)) {
+      const addrMap = makerConfig.starknetL1MapL2[makerNode.toChain =='44' ? 'georli-alpha':'mainnet-alpha'];
+      for(let L1Addr in addrMap) {
+        if (equals(L1Addr, makerAddress)) {
+          makerAddress = addrMap[L1Addr];
+        }
+      }
+    }
+  
+    if (!equalsIgnoreCase(makerAddress, makerNode.makerAddress)) {
+        continue
     }
 
     if (
@@ -169,11 +180,9 @@ export function newMakeTransactionID(
   fromTxNonce: string | number,
   symbol: string | undefined
 ) {
-  return `${fromAddress}${padStart(
-    String(fromChainId),
-    4,
-    '00'
-  )}${symbol || 'NULL'}${fromTxNonce}`.toLowerCase()
+  return `${fromAddress}${padStart(String(fromChainId), 4, '00')}${
+    symbol || 'NULL'
+  }${fromTxNonce}`.toLowerCase()
 }
 
 /**
@@ -219,6 +228,16 @@ export async function getMakerNodes(
   queryBuilder.where('makerAddress = :makerAddress', {
     makerAddress,
   })
+  const starknetL1MapL2 =
+    makerConfig.starknetL1MapL2[
+      process.env.NODE_ENV == 'development' ? 'georli-alpha' : 'mainnet-alpha'
+    ]
+  if (starknetL1MapL2[makerAddress.toLowerCase()]) {
+    queryBuilder.where(
+      'makerAddress in(:makerAddress)',
+      { makerAddress: [starknetL1MapL2[makerAddress.toLowerCase()],makerAddress]}
+    )
+  }
   if (keyword) {
     queryBuilder.andWhere(
       'transactionID like :kw or userAddress like :kw or formTx like :kw or toTx like :kw',
@@ -284,7 +303,8 @@ export async function getTargetMakerPool(
       pool1.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
       (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
         equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
-      ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId)) &&
+      pool1.c1ID == fromChainId &&
+      pool1.c2ID == toChainId &&
       transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool1.avalibleTimes[0].endTime
     ) {
@@ -294,7 +314,8 @@ export async function getTargetMakerPool(
       pool2.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
       (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
         equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
-      ((pool2.c2ID == fromChainId && pool2.c1ID == toChainId)) &&
+      pool2.c2ID == fromChainId &&
+      pool2.c1ID == toChainId &&
       transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
       transactionTimeStramp <= pool2.avalibleTimes[0].endTime
     ) {
