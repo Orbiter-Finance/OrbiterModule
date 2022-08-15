@@ -127,13 +127,13 @@
   },
   {
     "api": {
-      "url": "https://rinkeby-api.zksync.io/api/v0.2",
+      "url": "https://goerli-api.zksync.io/api/v0.2",
       "key": ""
     },
     "chainId": "zksync_test",
     "networkId": "zksync",
     "internalId": "33",
-    "name": "ZKSync Rinkeby",
+    "name": "ZKSync Goerli",
     "nativeCurrency": {
       "id": 0,
       "name": "Ether",

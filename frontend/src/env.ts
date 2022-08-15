@@ -59,7 +59,7 @@ export const $env = {
     2: 'https://arbiscan.io/tx/', // /tx/  /address/
     22: 'https://testnet.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
-    33: 'https://rinkeby.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
+    33: 'https://goerli.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
     4: 'https://beta.voyager.online/tx/',
     44: 'https://beta-goerli.voyager.online/tx/',
     6: 'https://polygonscan.com/tx/',
@@ -113,7 +113,7 @@ export const $env = {
     2: 'https://arbiscan.io/address/', // /address/
     22: 'https://testnet.arbitrum.io/address/',
     3: 'https://etherscan.io/token/', // same as etherscan
-    33: 'https://rinkeby.etherscan.io/token/',
+    33: 'https://goerli.etherscan.io/token/',
     4: 'https://beta.voyager.online/token/',
     44: 'https://beta-goerli.voyager.online/token/',
     6: 'https://polygonscan.com/token/',
