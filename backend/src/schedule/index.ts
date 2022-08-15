@@ -123,11 +123,11 @@ export const startMasterJobs = async () => {
   }
 }
 
-// export const startWorkerJobs = async () => {
-//   const scene = process.env.ORBITER_SCENE
-//   // maker
-//   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
-//     waittingStartMaker()
-//     startNewMakerTrxPull()
-//   }
-// }
+export const startWorkerJobs = async () => {
+  //   const scene = process.env.ORBITER_SCENE
+  //   // maker
+  //   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
+  //     waittingStartMaker()
+  //     startNewMakerTrxPull()
+  //   }
+}
