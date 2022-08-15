@@ -11,7 +11,7 @@ import {
   jobMakerPull,
   startNewDashboardPull,
 } from './jobs'
-// import { doSms } from '../sms/smsSchinese'
+import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
@@ -62,7 +62,7 @@ async function waittingStartMaker() {
 
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
-          // doSms(alert)
+          doSms(alert)
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime

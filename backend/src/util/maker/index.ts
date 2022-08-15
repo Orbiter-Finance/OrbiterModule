@@ -34,7 +34,7 @@ import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderByChainId } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
-// import { doSms } from '../../sms/smsSchinese'
+import { doSms } from '../../sms/smsSchinese'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -2122,7 +2122,7 @@ export async function sendTransaction(
         ':' +
         myDate.getSeconds()
       try {
-        // doSms(alert)
+        doSms(alert)
       } catch (error) {
         errorLogger.error(
           `[${transactionID}] sendTransactionErrorMessage =`,
