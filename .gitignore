@@ -17,6 +17,8 @@ cache/
 backend/src/config/maker.ts
 backend/src/chainCore/chains.json
 backend/src/chainCore/testnet.json
+backend/src/config/chains.json
+backend/src/config/testnet.json
 chainlogs/
 runtime/
 backend/yalc.lock
