@@ -63,7 +63,7 @@ export const makerList = [
         startTime: 0,
         endTime: 99999999999999,
       },
-    ]
+    ],
   },
   {
     makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
@@ -131,7 +131,7 @@ export const makerList = [
         startTime: 0,
         endTime: 99999999999999,
       },
-    ]
+    ],
   },
   {
     makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
@@ -164,7 +164,7 @@ export const makerList = [
         startTime: 0,
         endTime: 99999999999999,
       },
-    ]
+    ],
   },
   {
     makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
@@ -198,7 +198,8 @@ export const makerList = [
         endTime: 99999999999999,
       },
     ],
-  }, {
+  },
+  {
     makerAddress: '0x0043d60e87c5dd08C86C3123340705a1556C4719',
     c1ID: 516,
     c2ID: 33,

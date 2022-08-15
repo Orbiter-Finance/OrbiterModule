@@ -11,7 +11,7 @@ import {
   jobMakerPull,
   startNewDashboardPull,
 } from './jobs'
-import { doSms } from '../sms/smsSchinese'
+// import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
@@ -62,7 +62,7 @@ async function waittingStartMaker() {
 
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
-          doSms(alert)
+          // doSms(alert)
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime
@@ -115,16 +115,13 @@ export const startMasterJobs = async () => {
 
     jobBalanceAlarm()
   }
+}
+
+export const startWorkerJobs = async () => {
+  const scene = process.env.ORBITER_SCENE
+  // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
     startNewMakerTrxPull()
   }
-}
-
-export const startWorkerJobs = async () => {
-  // const scene = process.env.ORBITER_SCENE
-  // // maker
-  // if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
-  //   waittingStartMaker()
-  // }
 }
