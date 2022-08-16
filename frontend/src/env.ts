@@ -14,13 +14,13 @@ export const $env = {
   localProvider: {
     1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
-    5: 'https://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
+    5: 'https://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // goerli
     22: 'https://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'wss://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
-    5: 'wss://rinkeby.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
+    5: 'wss://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
     22: 'wss://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
@@ -33,7 +33,7 @@ export const $env = {
     2: '42161', // Arbitrum
     3: '1', // zk
     4: '1', // starknet
-    5: '4', // rinkeby
+    5: '4', // goerli
     6: '137', // polygon
     7: '10', // optimism
     8: '1', // mainnet
@@ -55,7 +55,7 @@ export const $env = {
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
-    5: 'https://rinkeby.etherscan.io/tx/', // /tx/  /address/
+    5: 'https://goerli.etherscan.io/tx/', // /tx/  /address/
     2: 'https://arbiscan.io/tx/', // /tx/  /address/
     22: 'https://testnet.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
@@ -82,11 +82,11 @@ export const $env = {
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
-    5: 'https://rinkeby.etherscan.io/address/', // /tx/  /address/
+    5: 'https://goerli.etherscan.io/address/', // /tx/  /address/
     2: 'https://arbiscan.io/address/', // /tx/  /address/
     22: 'https://testnet.arbiscan.io/address/',
     3: 'https://zkscan.io/explorer/accounts/',
-    33: 'https://rinkeby.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
+    33: 'https://goerli.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
     4: 'https://beta.voyager.online/contract/',
     44: 'https://beta-goerli.voyager.online/contract/',
     6: 'https://polygonscan.com/address/',
@@ -109,7 +109,7 @@ export const $env = {
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
-    5: 'https://rinkeby.etherscan.io/token/', // /token/
+    5: 'https://goerli.etherscan.io/token/', // /token/
     2: 'https://arbiscan.io/address/', // /address/
     22: 'https://testnet.arbitrum.io/address/',
     3: 'https://etherscan.io/token/', // same as etherscan

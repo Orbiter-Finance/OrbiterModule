@@ -1,13 +1,13 @@
 [
   {
     "api": {
-      "url": "https://eth-rinkeby.alchemyapi.io/v2",
+      "url": "https://eth-goerli.g.alchemyapi.io/v2",
       "key": "{You Key}"
     },
     "chainId": "4",
     "networkId": "4",
     "internalId": "5",
-    "name": "Ethereum Testnet Rinkeby",
+    "name": "Ethereum Testnet Goerli",
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -15,7 +15,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://eth-rinkeby.alchemyapi.io/v2/{You Key}"
+      "wss://eth-goerli.g.alchemyapi.io/v2/{You Key}"
     ],
     "watch": [
       "rpc",
