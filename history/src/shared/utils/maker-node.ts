@@ -1,18 +1,11 @@
 
 import { equalsIgnoreCase, logger } from '.';
 import { BigNumber } from 'bignumber.js'
-// import * as dayjs from 'dayjs'
-// import * as relativeTime from 'dayjs/plugin/relativeTime'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
-
-import { getRAmountFromTAmount, pTextFormatZero, getToAmountFromUserAmount, getTAmountFromRAmount } from './core';
 import axios from 'axios'
 import { makerListHistory, makerList } from '../configs'
 import { utils } from 'ethers'
-
-// dayjs.extend(relativeTime)
-
 
 async function getAllMakerList() {
   return makerList.concat(makerListHistory)
@@ -27,294 +20,14 @@ const token2Decimals = {
   'USDC': 6,
   'USDT': 6
 }
-const CHAIN_INDEX = {
-  1: 'eth',
-  2: 'arbitrum',
-  22: 'arbitrum',
-  3: 'zksync',
-  33: 'zksync',
-  4: 'starknet',
-  44: 'starknet',
-  5: 'eth',
-  6: 'polygon',
-  66: 'polygon',
-  7: 'optimism',
-  77: 'optimism',
-  8: 'immutablex',
-  88: 'immutablex',
-  9: 'loopring',
-  99: 'loopring',
-  10: 'metis',
-  510: 'metis',
-  11: 'dydx',
-  511: 'dydx',
-  12: 'zkspace',
-  512: 'zkspace',
-  13: 'boba',
-  513: 'boba',
-  514: 'zksync2',
-  15: 'BNB',
-  515: 'BNB'
-}
-const MAX_BITS = {
-  eth: 256,
-  arbitrum: 256,
-  zksync: 35,
-  zksync2: 256,
-  starknet: 256,
-  polygon: 256,
-  optimism: 256,
-  immutablex: 28,
-  loopring: 256,
-  metis: 256,
-  dydx: 28,
-  boba: 256,
-  zkspace: 35,
-}
-const SIZE_OP = {
-  P_NUMBER: 4,
-}
-function isChainSupport(chain) {
-  if (parseInt(chain) == chain) {
-    if (CHAIN_INDEX[chain] && MAX_BITS[CHAIN_INDEX[chain]]) {
-      return true
-    }
-  } else {
-    if (MAX_BITS[chain.toLowerCase()]) {
-      return true
-    }
-  }
-  return false
-}
-async function getTokenInfoNew(fromChainId, toChainId, tokenName) {
-  // let decimals = -1
-  let fromTokenName = ''
-  let toTokenName = ''
-  const makerList: any = await getMakerList()
-  for(const item of makerList) {
-    if (
-      tokenName == item.tName && 
-      ((item.c1ID == fromChainId && item.c2ID == toChainId) || (item.c2ID == fromChainId && item.c1ID == toChainId))
-    ) {
-      // decimals = item.precision
-      fromTokenName = item.c1Name
-      toTokenName = item.c2Name
-      break
-    }
-  }
-  // DO NOT USE here's decimals, use token2Decimals instead
-  return { fromTokenName, toTokenName }
-}
 
-/**
- * 0 ~ (2 ** N - 1)
- * @param { any } chain
- * @returns { any }
- */
- function AmountRegion(chain): any {
-  if (!isChainSupport(chain)) {
-    return {
-      error: 'The chain did not support',
-    }
-  }
-  if (typeof chain === 'number') {
-    let max = new BigNumber(2 ** MAX_BITS[CHAIN_INDEX[chain]] - 1)
-    return {
-      min: new BigNumber(0),
-      max: max,
-    }
-  } else if (typeof chain === 'string') {
-    let max = new BigNumber(2 ** MAX_BITS[chain.toLowerCase()] - 1)
-    return {
-      min: new BigNumber(0),
-      max: max,
-    }
-  }
-}
-function AmountMaxDigits(chain) {
-  let amountRegion = AmountRegion(chain)
-  if (amountRegion?.error) {
-    return amountRegion
-  }
-  return amountRegion.max.toFixed().length
-}
-function removeSidesZero(param) {
-  if (typeof param !== 'string') {
-    return 'param must be string'
-  }
-  return param?.replace(/^0+(\d)|(\d)0+$/gm, '$1$2')
-}
-function AmountValidDigits(chain, amount) {
-  let amountMaxDigits = AmountMaxDigits(chain)
-  if (amountMaxDigits.error) {
-    return amountMaxDigits.error
-  }
-  let amountRegion = AmountRegion(chain)
-
-  let ramount = removeSidesZero(amount?.toString())
-
-  if (ramount.length > amountMaxDigits) {
-    return 'amount is inValid'
-  }
-  //note:the compare is one by one,not all by all
-  if (ramount > amountRegion.max.toFixed()) {
-    return amountMaxDigits - 1
-  } else {
-    return amountMaxDigits
-  }
-}
-function isLimitNumber(chain: string | number) {
-  if (chain === 3 || chain === 33 || chain === 'zksync') {
-    return true
-  }
-  if (chain === 8 || chain === 88 || chain === 'immutablex') {
-    return true
-  }
-  if (chain === 11 || chain === 511 || chain === 'dydx') {
-    return true
-  }
-  if (chain === 12 || chain === 512 || chain === 'zkspace') {
-    return true
-  }
-  return false
-}
-function getPTextFromTAmount(chain, amount) {
-  if (!isChainSupport(chain)) {
-    return {
-      state: false,
-      error: 'The chain did not support',
-    }
-  }
-  if (amount < 1) {
-    return {
-      state: false,
-      error: "the token doesn't support that many decimal digits",
-    }
-  }
-  //Get the effective number of digits
-  let validDigit = AmountValidDigits(chain, amount) // 10 11
-  var amountLength = amount?.toString()?.length || 0
-  if (amountLength < SIZE_OP.P_NUMBER) {
-    return {
-      state: false,
-      error: 'Amount size must be greater than pNumberSize',
-    }
-  }
-  if (isLimitNumber(chain) && amountLength > validDigit) {
-    let zkAmount = amount?.toString()?.slice(0, validDigit)
-    let op_text = zkAmount.slice(-SIZE_OP.P_NUMBER)
-    return {
-      state: true,
-      pText: op_text,
-    }
-  } else {
-    let op_text = amount?.toString()?.slice(-SIZE_OP.P_NUMBER)
-    return {
-      state: true,
-      pText: op_text,
-    }
-  }
-}
-function getAmountFlag(
-  chainId: string | number,
-  amount: string | number
-): string {
-  const rst = getPTextFromTAmount(chainId, amount)
-  if (!rst.state) {
-    return '0'
-  }
-  return (Number(rst.pText) % 9000) + ''
-}
-function expanPool(pool) {
-  return {
-    pool1: {
-      makerAddress: pool.makerAddress,
-      c1ID: pool.c1ID,
-      c2ID: pool.c2ID,
-      c1Name: pool.c1Name,
-      c2Name: pool.c2Name,
-      t1Address: pool.t1Address,
-      t2Address: pool.t2Address,
-      tName: pool.tName,
-      minPrice: pool.c1MinPrice,
-      maxPrice: pool.c1MaxPrice,
-      precision: pool.precision,
-      avalibleDeposit: pool.c1AvalibleDeposit,
-      tradingFee: pool.c1TradingFee,
-      gasFee: pool.c1GasFee,
-      avalibleTimes: pool.c1AvalibleTimes,
-    },
-    pool2: {
-      makerAddress: pool.makerAddress,
-      c1ID: pool.c1ID,
-      c2ID: pool.c2ID,
-      c1Name: pool.c1Name,
-      c2Name: pool.c2Name,
-      t1Address: pool.t1Address,
-      t2Address: pool.t2Address,
-      tName: pool.tName,
-      minPrice: pool.c2MinPrice,
-      maxPrice: pool.c2MaxPrice,
-      precision: pool.precision,
-      avalibleDeposit: pool.c2AvalibleDeposit,
-      tradingFee: pool.c2TradingFee,
-      gasFee: pool.c2GasFee,
-      avalibleTimes: pool.c2AvalibleTimes,
-    },
-  }
-}
-/**
- * Get target maker pool
- * @param makerAddress
- * @param tokenAddress
- * @param fromChainId
- * @param toChainId
- * @param transactionTime
- * @returns
- */
- async function getTargetMakerPool(
-  makerAddress: string,
-  tokenAddress: string,
-  fromChainId: number,
-  toChainId: number,
-  transactionTime?: Date
-) {
-  if (!transactionTime) {
-    transactionTime = new Date()
-  }
-  const transactionTimeStramp = parseInt(transactionTime.getTime() / 1000 + '')
-  for (const maker of await getAllMakerList()) {
-    const { pool1, pool2 } = expanPool(maker)
-    if (
-      pool1.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
-      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
-        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
-      ((pool1.c1ID == fromChainId && pool1.c2ID == toChainId)) &&
-      transactionTimeStramp >= pool1.avalibleTimes[0].startTime &&
-      transactionTimeStramp <= pool1.avalibleTimes[0].endTime
-    ) {
-      return pool1
-    }
-    if (
-      pool2.makerAddress.toLowerCase() == makerAddress.toLowerCase() &&
-      (equalsIgnoreCase(pool1.t1Address, tokenAddress) ||
-        equalsIgnoreCase(pool1.t2Address, tokenAddress)) &&
-      ((pool2.c2ID == fromChainId && pool2.c1ID == toChainId)) &&
-      transactionTimeStramp >= pool2.avalibleTimes[0].startTime &&
-      transactionTimeStramp <= pool2.avalibleTimes[0].endTime
-    ) {
-      return pool2
-    }
-  }
-  return undefined
-}
 
 /**
  *
  * @param currency
  * @returns
  */
- export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
+export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   // cache
   exchangeRates = await getRates(currency)
   if (exchangeRates) {
@@ -375,7 +88,7 @@ export async function getExchangeToUsdRate(
  * @param sourceCurrency
  * @returns
  */
- export async function exchangeToUsd(
+export async function exchangeToUsd(
   value: string | number | BigNumber,
   sourceCurrency: string
 ): Promise<BigNumber> {
@@ -391,43 +104,7 @@ export async function getExchangeToUsdRate(
   return value.dividedBy(rate)
 }
 
-/**
- * Get return amount
- * @param fromChainID
- * @param toChainID
- * @param amountStr
- * @param pool
- * @param nonce
- * @returns
- */
- export function getAmountToSend(
-  fromChainID: number,
-  toChainID: number,
-  amountStr: string,
-  pool: { precision: number; tradingFee: number; gasFee: number },
-  nonce: string | number
-) {
-  const realAmount = getRAmountFromTAmount(fromChainID, amountStr)
-  if (!realAmount.state) {
-    // errorLogger.error(realAmount.error)
-    return
-  }
-  const rAmount = <any>realAmount.rAmount
-  if (nonce > 8999) {
-    // errorLogger.error('nonce too high, not allowed')
-    return
-  }
-  var nonceStr = pTextFormatZero(nonce)
-  var readyAmount = getToAmountFromUserAmount(
-    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** pool.precision)),
-    pool,
-    true
-  )
-
-  return getTAmountFromRAmount(toChainID, readyAmount, nonceStr)
-}
-
-const GAS_PRICE_PAID_RATE = { arbitrum: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
+const GAS_PRICE_PAID_RATE = { 42161: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
 export async function statisticsProfit(
   makerNode
 ): Promise<BigNumber> {
@@ -444,7 +121,7 @@ export async function statisticsProfit(
         .dividedBy(10 ** fromToPrecision),
       makerNode.tokenName
     )
-    let gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]] || 1
+    let gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1
     const gasAmountUsd = await exchangeToUsd(
       new BigNumber(makerNode.gasAmount)
         .multipliedBy(gasPricePaidRate)
@@ -493,8 +170,8 @@ export async function statisticsProfitOld(
     )
 
     let gasPricePaidRate = 1
-    if (GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]) {
-      gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]
+    if (GAS_PRICE_PAID_RATE[makerNode.toChain]) {
+      gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain]
     }
     const gasAmountUsd = await exchangeToUsd(
       new BigNumber(makerNode.gasAmount)
@@ -511,7 +188,7 @@ export async function statisticsProfitOld(
 
 export async function transforeUnmatchedTradding(list = []) {
   for (const item of list) {
-    item['chainName'] = CHAIN_INDEX[item.chainId] || ''
+    item['chainName'] = await getChainName(item.chainId)
 
     const decimals = token2Decimals[item.tokenName]
 
@@ -531,18 +208,39 @@ export async function transforeUnmatchedTradding(list = []) {
     }
   }
 }
-
+/**
+ * @deprecated
+ * @param chainId 
+ * @returns 
+ */
+async function getChainName(chainId: string) {
+  // Temporarily, the public chain name can be obtained from chaincore
+  switch (String(chainId)) {
+    case "42170":
+      return 'Nova';
+    // oether
+  }
+  const makerList = await getAllMakerList();
+  const row1 = makerList.find(row => String(row.c1ID) == String(chainId));
+  if (row1) {
+    return row1.c1Name;
+  }
+  const row2 = makerList.find(row => String(row.c2ID) == String(chainId));
+  if (row2) {
+    return row2.c2Name;
+  }
+  return '';
+}
 export async function transforeData(list = []) {
   // fill data
+  const makerList = await getAllMakerList();
   for (const item of list) {
     // format tokenName and amounts
-    const { fromTokenName, toTokenName } = await getTokenInfoNew(item.fromChain, item.toChain, item.tokenName)
     const decimals = token2Decimals[item.tokenName]
-    item['fromChainName'] = CHAIN_INDEX[item.fromChain] || fromTokenName || ''
-    item['toChainName'] = CHAIN_INDEX[item.toChain] || toTokenName || ''
+    item['fromChainName'] = await getChainName(item.fromChain)
+    item['toChainName'] = await getChainName(item.toChain)
     item.decimals = decimals
     item.toTx = item.toTx || '0x'
-
     if (decimals > -1) {
       item.fromAmountFormat = `${new BigNumber(item.fromValue).dividedBy(
         10 ** decimals
@@ -566,29 +264,6 @@ export async function transforeData(list = []) {
       item.toAmountFormat = "0"
     }
 
-    // const fromChainTokenInfo = await getTokenInfo(
-    //   Number(item.fromChain),
-    //   item.txToken
-    // )
-    // item['txTokenName'] = fromChainTokenInfo.tokenName
-    // item['fromAmountFormat'] = 0
-    // if (fromChainTokenInfo.decimals > -1) {
-    //   item['fromAmountFormat'] = new BigNumber(item['fromAmount']).dividedBy(
-    //     10 ** fromChainTokenInfo.decimals
-    //   )
-    // }
-    // // to amounts
-    // const toChainTokenInfo = await getTokenInfo(
-    //   Number(item.fromChain),
-    //   item.txToken
-    // )
-    // item['toAmountFormat'] = 0
-    // if (toChainTokenInfo.decimals > -1) {
-    //   item['toAmountFormat'] = new BigNumber(item['toAmount']).dividedBy(
-    //     10 ** toChainTokenInfo.decimals
-    //   )
-    // }
-
     // Trade duration
     item['tradeDuration'] = 0
 
@@ -607,13 +282,23 @@ export async function transforeData(list = []) {
     }
 
     let needTo = {
-      chainId: 0,
-      amount: 0,
+      chainId: item['toChain'],
+      amount: item['toAmount'],
       decimals: 0,
-      amountFormat: '',
+      amountFormat: item['toAmountFormat'],
       tokenAddress: '',
     }
-
+    const market = makerList.find(row => {
+      return (row.c1ID == item['fromChain'] && row.c2ID == item['toChain'] && row['tName'] == item['tokenName'])
+        || (row.c1ID == item['toChain'] && row.c2ID == item['fromChain'] && row['tName'] == item['tokenName'])
+    });
+    if (market.c1ID == item['fromChain']) {
+      needTo.decimals = market.precision;
+      needTo.tokenAddress = market.t2Address;
+    } else if (market.c2ID == item['fromChain']) {
+      needTo.decimals = market.precision;
+      needTo.tokenAddress = market.t1Address;
+    }
     // old:
     // if (item.state == 1 || item.state == 20) {
     // new:
@@ -637,37 +322,38 @@ export async function transforeData(list = []) {
       state = 3
     }
     if (state == 1 || state == 20) {
-      const _fromChain = Number(item.fromChain)
-      needTo.chainId = Number(
-        getAmountFlag(_fromChain, item.fromAmount)
-      )
+
+      // const _fromChain = Number(item.fromChain)
+      // needTo.chainId = Number(
+      //   getAmountFlag(_fromChain, item.fromAmount)
+      // )
 
       // find pool
-      const pool = await getTargetMakerPool(
-        item.makerAddress,
-        item.txToken,
-        _fromChain,
-        needTo.chainId
-      )
+      // const pool = await getTargetMakerPool(
+      //   item.makerAddress,
+      //   item.txToken,
+      //   _fromChain,
+      //   needTo.chainId
+      // )
 
-      // if not find pool, don't do it
-      if (pool) {
-        needTo.tokenAddress =
-          needTo.chainId == pool.c1ID ? pool.t1Address : pool.t2Address
+      // // if not find pool, don't do it
+      // if (pool) {
+      //   needTo.tokenAddress =
+      //     needTo.chainId == pool.c1ID ? pool.t1Address : pool.t2Address
 
-        needTo.amount =
-          getAmountToSend(
-            _fromChain,
-            needTo.chainId,
-            item.fromAmount,
-            pool,
-            item.formNonce
-          )?.tAmount || 0
-        needTo.decimals = pool.precision
-        needTo.amountFormat = new BigNumber(needTo.amount)
-          .dividedBy(10 ** pool.precision)
-          .toString()
-      }
+      //   needTo.amount =
+      //     Number(getAmountToSend(
+      //       _fromChain,
+      //       needTo.chainId,
+      //       item.fromAmount,
+      //       pool,
+      //       item.formNonce
+      //     )?.tAmount || 0)
+      //   needTo.decimals = pool.precision
+      //   needTo.amountFormat = new BigNumber(needTo.amount)
+      //     .dividedBy(10 ** pool.precision)
+      //     .toString()
+      // }
     }
     item['needTo'] = needTo
 
@@ -683,7 +369,6 @@ export async function transforeData(list = []) {
       const positionId = parseInt(utils.hexDataSlice(data, 32), 16)
       item.fromExt['dydxInfo'] = { starkKey, positionId: String(positionId) }
     }
-
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
     item['profitUSD'] = (await statisticsProfit(item)).toFixed(3)

@@ -1,4 +1,4 @@
-const makerList = [
+export const makerList = [
   // ETH able
   {
     makerAddress: "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
@@ -3753,4 +3753,4 @@ const makerList = [
   },
 ];
 
-const history = [];
+export const makerListHistory = [];

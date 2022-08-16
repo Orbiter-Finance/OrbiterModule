@@ -23,5 +23,4 @@ export function formateTimestamp(timestamp: number | string) {
 }
 
 export { default as logger } from './logger';
-export * from './core';
 export * from './maker-node';
