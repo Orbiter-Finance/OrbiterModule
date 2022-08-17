@@ -104,7 +104,7 @@ export async function exchangeToUsd(
   return value.dividedBy(rate)
 }
 
-const GAS_PRICE_PAID_RATE = { 42161: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
+const GAS_PRICE_PAID_RATE = { 2: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
 export async function statisticsProfit(
   makerNode
 ): Promise<BigNumber> {
@@ -216,7 +216,7 @@ export async function transforeUnmatchedTradding(list = []) {
 async function getChainName(chainId: string) {
   // Temporarily, the public chain name can be obtained from chaincore
   switch (String(chainId)) {
-    case "42170":
+    case "16":
       return 'Nova';
     // oether
   }

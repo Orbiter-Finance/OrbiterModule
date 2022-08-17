@@ -1,0 +1,19 @@
+version: '3.8'
+
+networks:
+services:
+  api-history:
+    build: ./history
+    command: yarn run start:prod
+    environment:
+      NODE_ENV: 'production' # production development
+      DB_HOST2: '${DB_HOST2}'
+      DB_PORT2: '${DB_PORT2}'
+      DB_USER2: '${DB_USER2}'
+      DB_PASS2: '${DB_PASS2}'
+      DB_NAME2: '${DB_NAME2}'
+    # volumes:
+    #   - './history/logs:/app/logs'
+    ports:
+      - '3005:3000'
+    restart: always
