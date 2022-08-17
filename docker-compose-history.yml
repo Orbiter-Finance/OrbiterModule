@@ -1,6 +1,5 @@
 version: '3.8'
 
-networks:
 services:
   api-history:
     build: ./history
