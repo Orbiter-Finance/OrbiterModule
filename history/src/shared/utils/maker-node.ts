@@ -122,13 +122,16 @@ export async function statisticsProfit(
       makerNode.tokenName
     )
     let gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1
-    const gasAmountUsd = await exchangeToUsd(
-      new BigNumber(makerNode.gasAmount)
-        .multipliedBy(gasPricePaidRate)
-        .dividedBy(10 ** gasPrecision),
-      makerNode.gasCurrency || ''
-    )
-    return fromMinusToUsd.minus(gasAmountUsd || 0)
+    if (makerNode.gasCurrency) {
+      const gasAmountUsd = await exchangeToUsd(
+        new BigNumber(makerNode.gasAmount)
+          .multipliedBy(gasPricePaidRate)
+          .dividedBy(10 ** gasPrecision),
+        makerNode.gasCurrency || ''
+      )
+      return fromMinusToUsd.minus(gasAmountUsd || 0)
+    }
+    return fromMinusToUsd;
   } else {
     return new BigNumber(0)
   }
@@ -162,7 +165,7 @@ export async function statisticsProfitOld(
   }
 
   if (fromToCurrency && Number(makerNode.toAmount) > 0) {
-    const fromMinusToUsd = await exchangeToUsd(
+    let fromMinusToUsd = await exchangeToUsd(
       new BigNumber(makerNode.fromAmount)
         .minus(makerNode.toAmount)
         .dividedBy(10 ** fromToPrecision),
@@ -173,14 +176,18 @@ export async function statisticsProfitOld(
     if (GAS_PRICE_PAID_RATE[makerNode.toChain]) {
       gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain]
     }
-    const gasAmountUsd = await exchangeToUsd(
-      new BigNumber(makerNode.gasAmount)
-        .multipliedBy(gasPricePaidRate)
-        .dividedBy(10 ** gasPrecision),
-      makerNode.gasCurrency
-    )
 
-    return fromMinusToUsd.minus(gasAmountUsd || 0)
+    if (makerNode.gasCurrency) {
+      const gasAmountUsd = await exchangeToUsd(
+        new BigNumber(makerNode.gasAmount)
+          .multipliedBy(gasPricePaidRate)
+          .dividedBy(10 ** gasPrecision),
+        makerNode.gasCurrency
+      )
+      return fromMinusToUsd.minus(gasAmountUsd || 0)
+    }
+
+    return fromMinusToUsd;
   } else {
     return new BigNumber(0)
   }
