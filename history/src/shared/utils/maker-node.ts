@@ -29,7 +29,7 @@ const token2Decimals = {
  */
 export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   // cache
-  exchangeRates = await getRates(currency)
+  const exchangeRates = await getRates(currency)
   if (exchangeRates) {
     let metisExchangeRates = await getRates('metis')
     if (metisExchangeRates && metisExchangeRates["USD"]) {
@@ -43,7 +43,7 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
 }
 async function getRates(currency) {
   const resp = await axios.get(
-    `https://api.coinbase.com/v2/exchange-rates?currency=${currency}`
+    `https://api.coinbase.com/v2/exchange-rates?currency=${currency}&timestamp=${Date.now()}`,
   )
   const data = resp.data?.data
   // check
@@ -53,7 +53,7 @@ async function getRates(currency) {
   return data.rates
 }
 
-let exchangeRates: { [key: string]: string } | undefined
+// let exchangeRates: { [key: string]: string } | undefined
 
 /**
  * @param sourceCurrency
@@ -69,9 +69,7 @@ export async function getExchangeToUsdRate(
 
   let rate = -1
   try {
-    if (!exchangeRates) {
-      exchangeRates = await cacheExchangeRates(currency)
-    }
+    const exchangeRates = await cacheExchangeRates(currency)
     if (exchangeRates?.[sourceCurrency]) {
       rate = Number(exchangeRates[sourceCurrency])
     }
