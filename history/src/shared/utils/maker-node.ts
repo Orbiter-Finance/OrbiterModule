@@ -6,7 +6,8 @@ import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
 import { makerListHistory, makerList } from '../configs'
 import { utils } from 'ethers'
-
+import * as Keyv from 'keyv';
+const keyv = new Keyv();
 async function getAllMakerList() {
   return makerList.concat(makerListHistory)
 }
@@ -42,6 +43,10 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   }
 }
 async function getRates(currency) {
+  const cacheData = await keyv.get(`rates:${currency}`);
+  if (cacheData) {
+    return cacheData;
+  }
   const resp = await axios.get(
     `https://api.coinbase.com/v2/exchange-rates?currency=${currency}&timestamp=${Date.now()}`,
   )
@@ -50,6 +55,7 @@ async function getRates(currency) {
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
+  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60); // true
   return data.rates
 }
 
