@@ -34,7 +34,6 @@
                   </a>
                 </div>
                 <div class="maker-header--balances__info">
-                  Balances:&nbsp;
                   <span class="maker-header--balances__value">
                     {{ item1.value || 'Faild Get' }}
                   </span>
