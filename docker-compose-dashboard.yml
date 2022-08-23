@@ -59,6 +59,8 @@ services:
     ports:
       - '80:80'
     restart: always
+    links:
+      - history
     networks:
       - app-network
   db:

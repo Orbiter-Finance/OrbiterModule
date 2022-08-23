@@ -109,7 +109,7 @@ export const startMasterJobs = async () => {
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
     //
-    // startNewDashboardPull()
+    startNewDashboardPull()
     // get wealths
     jobGetWealths()
 

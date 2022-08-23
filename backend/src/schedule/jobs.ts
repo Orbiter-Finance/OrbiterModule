@@ -1,4 +1,4 @@
-import { BigNumber } from 'bignumber.js';
+import { chains } from 'orbiter-chaincore/src/utils';
 import schedule from 'node-schedule'
 import { errorLogger } from '../util/logger'
 import { makerConfig } from '../config'
@@ -10,14 +10,9 @@ import { doBalanceAlarm } from '../service/setting'
 import { Core } from '../util/core'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { ScanChainMain, pubSub, chainService } from 'orbiter-chaincore'
 import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
-import {
-  getNewMarketList,
-  groupWatchAddressByChain,
-} from '../util/maker/new_maker'
-const allChainsConfig = [...mainnetChains, ...testnetChains]
+chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -273,14 +268,15 @@ export function jobBalanceAlarm() {
 }
 
 export async function startNewDashboardPull() {
-  const makerList = await getNewMarketList()
-  const convertMakerList = groupWatchAddressByChain(makerList)
-  const scanChain = new ScanChainMain(allChainsConfig as any)
-  const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
-  for (const intranetId in convertMakerList) {
-    pubSub.subscribe(`${intranetId}:txlist`, (result) => {
-      return  serviceMakerPull.handleNewScanChainTrx(result, makerList)
-    })
-    scanChain.startScanChain(intranetId, convertMakerList[intranetId])
-  }
+  // const makerList = await getNewMarketList()
+  // const convertMakerList = groupWatchAddressByChain(makerList)
+  // const scanChain = new ScanChainMain(allChainsConfig as any)
+  // const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
+
+  // for (const intranetId in convertMakerList) {
+  //   pubSub.subscribe(`${intranetId}:txlist`, (result) => {
+  //     return  serviceMakerPull.handleNewScanChainTrx(result, makerList)
+  //   })
+  //   scanChain.startScanChain(intranetId, convertMakerList[intranetId])
+  // }
 }
