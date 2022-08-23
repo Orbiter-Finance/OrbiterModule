@@ -24,7 +24,7 @@
                   class="maker-header--balances__info"
                 >
                   TokenAddress:&nbsp;
-                  <a
+                  <a  
                     :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
                     target="_blank"
                   >
@@ -373,7 +373,6 @@ import {
   watch,
 } from 'vue'
 import Web3 from 'web3'
-import { $env } from '../env'
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
@@ -456,28 +455,35 @@ const diffAmountTotal = computed(() => {
       continue
     }
 
-        num = num.plus(item.profitUSD)
-      }
-      return num.toNumber().toFixed(2)
-    })
-    const diffAmountTotalETH = computed(() => {
-      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-        exchangeRates?.value?.ETH || 0
-      )
-      return num.toFixed(5)
-    })
-    const diffAmountTotalCNY = computed(() => {
-      const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-        exchangeRates?.value?.CNY || 0
-      )
-      return num.toFixed(2)
-    })
+    num = num.plus(item.profitUSD)
+  }
+  return num.toNumber().toFixed(2)
+})
+const diffAmountTotalETH = computed(() => {
+  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+    exchangeRates?.value?.ETH || 0
+  )
+  return num.toFixed(5)
+})
+const diffAmountTotalCNY = computed(() => {
+  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+    exchangeRates?.value?.CNY || 0
+  )
+  return num.toFixed(2)
+})
+const chains = toRef(makerInfo.state, 'chains')
+const loadingWealths = toRef(makerWealth.state, 'loading')
+const wealths = toRef(makerWealth.state, 'list')
+const loadingNodes = ref(false)
+const currentPage = ref(1)
+const pageSize = ref(100)
+const total = ref(0)
+const pagesizes = computed(() => Array.from(new Set([100, 200, 300, 400, Math.ceil((total.value / 100))* 100])))
 
-    makerInfo.get()
-
-    const getMakerWealth = () => {
-      makerWealth.get(makerAddressSelected?.value)
-    }
+const handleSizeChange = (val: number) => {
+  pageSize.value = val
+  getMakerNodes({size: val})
+}
 const handleCurrentChange = (val: number) => {
   currentPage.value = val
   getMakerNodes({current: val})
@@ -586,11 +592,11 @@ const transferNeedTo = async (
       break
     }
 
-        case 4:
-        case 44: {
-          console.warn('do starknet')
-          break
-        }
+    case 4:
+    case 44: {
+      console.warn('do starknet')
+      break
+    }
 
     case 8:
     case 88: {
