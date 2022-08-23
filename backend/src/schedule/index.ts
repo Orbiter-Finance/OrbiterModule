@@ -103,7 +103,7 @@ async function waittingStartMaker() {
 export const startMasterJobs = async () => {
   const scene = process.env.ORBITER_SCENE
   // cache coinbase
-  jobCacheCoinbase()
+  // jobCacheCoinbase()
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
