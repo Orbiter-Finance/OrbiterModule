@@ -15,7 +15,7 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-import { chains } from 'orbiter-chaincore'
+import { chains, utils } from 'orbiter-chaincore'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -83,8 +83,7 @@ async function getTokenBalance(
             (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
           )
           const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${
-              lpTokenInfo ? lpTokenInfo.tokenId : 0
+            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0
             }`
           )
           if (balanceData.status == 200 && balanceData.statusText == 'OK') {
@@ -150,8 +149,8 @@ async function getTokenBalance(
         value =
           defaultIndex > -1
             ? balanceInfo[defaultIndex].amount *
-                10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
-              ''
+            10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
+            ''
             : '0'
         break
       case 'bnbchain':
@@ -291,18 +290,22 @@ export async function getWealthsChains(makerAddress: string) {
     if (item.makerAddress != makerAddress) {
       continue
     }
-
+    // find token 
+    const chain1 = chains.getChainByInternalId(String(item.c1ID))
+    const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
     pushToChainBalances(
       pushToChains(item.makerAddress, item.c1ID, item.c1Name),
       item.t1Address,
-      item.tName,
-      item.precision
+      token1?.symbol || "",
+      token1?.decimals || item.precision
     )
+    const chain2 = chains.getChainByInternalId(String(item.c2ID))
+    const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
     pushToChainBalances(
       pushToChains(item.makerAddress, item.c2ID, item.c2Name),
       item.t2Address,
-      item.tName,
-      item.precision
+      token2?.symbol || "",
+      token2?.decimals || item.precision
     )
   }
   // get tokan balance
@@ -328,6 +331,19 @@ export async function getWealthsChains(makerAddress: string) {
         })
       }
     }
+    if (utils.core.equals(chain.makerAddress, '0x80C67432656d59144cEFf962E8fAF8926599bCF8')) {
+      chain.balances.sort(item => {
+        return item.tokenName == 'ETH' ? -1 : 1;
+      })
+    } else if (utils.core.equals(chain.makerAddress, '0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC')) {
+      chain.balances.sort(item => {
+        return item.tokenName == 'USDT' ? -1 : 1;
+      })
+    } else if (utils.core.equals(chain.makerAddress, '0x41d3D33156aE7c62c094AAe2995003aE63f587B3')) {
+      chain.balances.sort(item => {
+        return item.tokenName == 'USDC' ? -1 : 1;
+      })
+    }
   }
   return wealthsChains
 }
@@ -351,7 +367,7 @@ export async function getWealths(
           // mapping
           makerAddress =
             makerConfig.starknetL1MapL2[
-              item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'
+            item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'
             ][item.makerAddress.toLowerCase()]
         }
         let value = await getTokenBalance(
@@ -373,9 +389,7 @@ export async function getWealths(
       promises.push(promiseItem())
     }
   }
-
   await Promise.all(promises)
-
   return wealthsChains
 }
 

@@ -232,16 +232,6 @@ export const makerWealth = {
       // fill chain's accountExploreUrl
       for (const item of wealths) {
         item['tokenExploreUrl'] = $env.tokenExploreUrl[item.chainId]
-        // ETH show first
-        const _balances: any = []
-        item.balances.forEach(v => {
-          if (v.tokenName === 'ETH') {
-            _balances.unshift(v)
-          } else {
-            _balances.push(v)
-          }
-        })
-        item.balances = _balances
       }
       makerWealth.state.list = wealths
     } catch (error) {
