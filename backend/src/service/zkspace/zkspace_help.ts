@@ -2,7 +2,7 @@ import BigNumber from 'bignumber.js'
 import { makerConfig } from '../../config'
 import axios from 'axios'
 import * as ethers from 'ethers'
-import { sleep } from '../../util'
+import { sleep } from "../../util"
 import { private_key_to_pubkey_hash } from 'zksync-crypto'
 import { getExchangeRates } from '../coinbase'
 
@@ -46,11 +46,10 @@ export default {
     let ethPrice = usdRates && usdRates['ETH'] ? 1 / usdRates['ETH'] : 2000
 
     //get gasfee width eth
-    const url = `${
-      localChainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint
-    }/account/${account}/fee`
+    const url = `${localChainID === 512
+      ? makerConfig.zkspace_test.api.endPoint
+      : makerConfig.zkspace.api.endPoint
+      }/account/${account}/fee`
     const response = await axios.get(url)
     if (response.status === 200 && response.statusText == 'OK') {
       var respData = response.data
@@ -68,6 +67,7 @@ export default {
     }
   },
   async getFristTransferResult(fromChainID, txHash) {
+
     const firstResult = await this.getZKSpaceTransactionData(
       fromChainID,
       txHash
@@ -78,7 +78,6 @@ export default {
       !firstResult.data.success &&
       !firstResult.data.amount
     ) {
-      //tip todo
       await sleep(300)
       await this.getFristTransferResult(fromChainID, txHash)
     } else if (
@@ -150,11 +149,10 @@ Only sign this message for a trusted client!`
         nonce: 0,
         type: 'ChangePubKey',
       }
-      const url = `${
-        fromChainID == 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint
-      }/tx`
+      const url = `${fromChainID == 512
+        ? makerConfig.zkspace_test.api.endPoint
+        : makerConfig.zkspace.api.endPoint
+        }/tx`
       let transferResult: any = await axios.post(
         url,
         {
@@ -242,13 +240,13 @@ Only sign this message for a trusted client!`
     })
   },
   getZKSpaceTransactionData: async function (localChainID, txHash) {
+
     if (localChainID !== 12 && localChainID !== 512) {
       throw new Error('getZKTransactionDataError_wrongChainID')
     }
-    const url =
-      (localChainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint) +
+    const url = (localChainID === 512
+      ? makerConfig.zkspace_test.api.endPoint
+      : makerConfig.zkspace.api.endPoint) +
       '/tx/' +
       txHash
     const response = await axios.get(url)
@@ -261,7 +259,7 @@ Only sign this message for a trusted client!`
         throw new Error(respData)
       }
     } else {
-      throw new Error('getZKSpaceTransactionData NetWorkError')
+      throw new Error('getZKTransactionDataError_NetWorkError')
     }
   },
   getTokenInfos: async function (httpEndPoint) {
@@ -272,5 +270,5 @@ Only sign this message for a trusted client!`
     } else {
       return null
     }
-  },
+  }
 }

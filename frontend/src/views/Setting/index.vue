@@ -19,7 +19,7 @@ import DydxApiKeyCredentials from './DydxApiKeyCredentials.vue'
 
 export default {
   components: { BalanceAlarm, DydxApiKeyCredentials },
-  setup() {},
+  // setup() {},
 }
 </script>
 

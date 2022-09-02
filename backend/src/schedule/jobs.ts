@@ -1,7 +1,5 @@
-import axios from 'axios'
+import { chains } from 'orbiter-chaincore/src/utils';
 import schedule from 'node-schedule'
-import SHA256 from 'crypto-js/sha256'
-import { BigNumber } from 'bignumber.js'
 import { errorLogger } from '../util/logger'
 import { makerConfig } from '../config'
 import * as coinbase from '../service/coinbase'
@@ -9,20 +7,13 @@ import * as serviceMaker from '../service/maker'
 import { ServiceMakerPull } from '../service/maker_pull'
 import * as serviceMakerWealth from '../service/maker_wealth'
 import { doBalanceAlarm } from '../service/setting'
-import { clusterIsPrimary, sleep } from '../util'
 import { Core } from '../util/core'
 import { expanPool, getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
-import { ScanChainMain, pubSub, chainService } from 'orbiter-chaincore'
 import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
-import {
-  getNewMarketList,
-  groupWatchAddressByChain,
-} from '../util/maker/new_maker'
-const allChainsConfig = [...mainnetChains, ...testnetChains]
+chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
-const apiUrl = 'https://orbiter-makerlist.s3.ap-northeast-1.amazonaws.com'
 class MJob {
   protected rule:
     | string
@@ -272,72 +263,20 @@ export function jobBalanceAlarm() {
   const callback = async () => {
     await doBalanceAlarm.do()
   }
+
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
-}
-let getMakerListTimeStamp = new Date().getTime()
-export const getNewMakerList = async (count = 0) => {
-  try {
-    const res = await getNewMakerListOnce()
-    getMakerListTimeStamp = new Date().getTime()
-    return res
-  } catch (error) {
-    const date = new Date()
-    const nowTimeStamp = date.getTime()
-    if (nowTimeStamp - getMakerListTimeStamp > 3600000) {
-      // todo send message
-      let alert = `backend pull makerList from aws s3 failed for one hour.${date.getHours()}:${date.getMinutes()}:${date.getSeconds()}`
-      // doSms(alert)
-      getMakerListTimeStamp = nowTimeStamp
-    }
-    errorLogger.error(
-      `getNewMakerList error=${error.message},try again ${count}`
-    )
-    count++
-    if (count < 20) {
-      return await getNewMakerList(count)
-    } else {
-      await sleep(2000)
-      return await getNewMakerList()
-    }
-  }
-}
-const getNewMakerListOnce = async () => {
-  const res: any = await axios({
-    url: `${apiUrl}/rinkeby/makerList.json`,
-    method: 'get',
-  })
-  if (res.status == 200) {
-    const sha = SHA256(JSON.stringify(res.data)).toString()
-    return { sha, ...res.data }
-  }
-}
-export const makerListSha = {
-  sha: '',
-}
-export function jobGetMakerList() {
-  const callback = async () => {
-    try {
-      const makerListWrap = await getNewMakerList()
-      if (makerListSha.sha != makerListWrap.sha && !clusterIsPrimary()) {
-        process.exit(0)
-      }
-    } catch (error) {
-      errorLogger.error(`getMakerListError: ${error.message},try again`)
-      callback()
-    }
-  }
-  new MJobPessimism('*/20 * * * * *', callback, jobGetMakerList.name).schedule()
 }
 
 export async function startNewDashboardPull() {
-  const makerList = await getNewMarketList()
-  const convertMakerList = groupWatchAddressByChain(makerList)
-  const scanChain = new ScanChainMain(allChainsConfig as any)
-  const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
-  for (const intranetId in convertMakerList) {
-    pubSub.subscribe(`${intranetId}:txlist`, (result) => {
-      return serviceMakerPull.handleNewScanChainTrx(result, makerList)
-    })
-    scanChain.startScanChain(intranetId, convertMakerList[intranetId])
-  }
+  // const makerList = await getNewMarketList()
+  // const convertMakerList = groupWatchAddressByChain(makerList)
+  // const scanChain = new ScanChainMain(allChainsConfig as any)
+  // const serviceMakerPull = new ServiceMakerPull(0, '', '', '')
+
+  // for (const intranetId in convertMakerList) {
+  //   pubSub.subscribe(`${intranetId}:txlist`, (result) => {
+  //     return  serviceMakerPull.handleNewScanChainTrx(result, makerList)
+  //   })
+  //   scanChain.startScanChain(intranetId, convertMakerList[intranetId])
+  // }
 }

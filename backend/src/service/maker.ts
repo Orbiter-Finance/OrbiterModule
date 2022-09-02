@@ -5,9 +5,9 @@ import { makerConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerNode } from '../model/maker_node'
 import { MakerNodeTodo } from '../model/maker_node_todo'
-import { dateFormatNormal, equalsIgnoreCase, isEthTokenAddress } from '../util'
+import { dateFormatNormal, equalsIgnoreCase } from '../util'
 import { Core } from '../util/core'
-import { accessLogger, errorLogger } from '../util/logger'
+import { accessLogger } from '../util/logger'
 import {
   expanPool,
   getAllMakerList,

@@ -27,7 +27,6 @@ import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals } from 'orbiter-chaincore/src/utils/core'
-import { access } from 'fs'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -367,7 +366,6 @@ async function sendConsumer(value: any) {
     const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
     const { nonce, rollback } = await starknet.takeOutNonce()
-    accessLogger.info('starkNet_nonce =', nonce)
     try {
       const { hash }: any = await starknet.signTransfer({
         recipient: toAddress,
@@ -395,6 +393,7 @@ async function sendConsumer(value: any) {
   if (chainID == 8 || chainID == 88) {
     try {
       const imxHelper = new IMXHelper(chainID)
+      console.log(makerAddress, '==makerAddress')
       const imxClient = await imxHelper.getImmutableXClient(makerAddress)
 
       // Warnning: The nonce value of immutablex currently has no substantial effect
@@ -450,6 +449,7 @@ async function sendConsumer(value: any) {
         }
         nonceDic[makerAddress][chainID] = result_nonce
       }
+
       if (imxHash) {
         return {
           code: 0,
@@ -688,6 +688,7 @@ async function sendConsumer(value: any) {
           result_nonce,
         }
       }
+      return
     } catch (error) {
       return {
         code: 1,
@@ -777,13 +778,14 @@ async function sendConsumer(value: any) {
           result_nonce = sql_nonce + 1
         }
       }
+
       if (!nonceDic[makerAddress]) {
         nonceDic[makerAddress] = {}
       }
       nonceDic[makerAddress][chainID] = result_nonce
-      accessLogger.info('nonce =', accountInfo.nonce)
-      accessLogger.info('sql_nonce =', sql_nonce)
-      accessLogger.info('result_nonde =', result_nonce)
+      accessLogger.info('zks_nonce =', accountInfo.nonce)
+      accessLogger.info('zks_sql_nonce =', sql_nonce)
+      accessLogger.info('zks_result_nonce =', result_nonce)
 
       const msgBytes = ethers.utils.concat([
         '0x05',
@@ -859,15 +861,9 @@ async function sendConsumer(value: any) {
           tx: req.tx,
         }
       )
-      try {
-        const txHash = transferResult.data.data.replace('sync-tx:', '0x')
-        await zkspace_help.getFristTransferResult(chainID, txHash)
-        nonceDic[makerAddress][chainID] = result_nonce
-      } catch (error) {
-        nonceDic[makerAddress][chainID] = result_nonce - 1
-        throw new Error(error.message)
-      }
-
+      const txHash = transferResult.data.data.replace('sync-tx:', '0x')
+      await zkspace_help.getFristTransferResult(chainID, txHash)
+      nonceDic[makerAddress][chainID] = result_nonce
       return {
         code: 0,
         txid: transferResult?.data?.data,
@@ -877,7 +873,7 @@ async function sendConsumer(value: any) {
     } catch (error) {
       return {
         code: 1,
-        txid: 'zkspace transfer error2: ' + error.message,
+        txid: 'zkspace transfer error: ' + error.message,
         result_nonce,
       }
     }
@@ -908,6 +904,7 @@ async function sendConsumer(value: any) {
   } catch (error) {
     errorLogger.error('tokenBalanceWeiError =', error)
   }
+
   if (!tokenBalanceWei) {
     errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
     // return {
@@ -1030,6 +1027,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 80
     }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 85
+    }
   } else {
     // USDC
     if (
@@ -1062,6 +1065,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 85
     }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
+    }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
     if (fromChainID === 3 && chainID === 1) {
@@ -1082,6 +1091,12 @@ async function sendConsumer(value: any) {
     ) {
       maxPrice = 85
     }
+    if (
+      (fromChainID == 16 || fromChainID == 516) &&
+      (chainID == 1 || chainID == 5)
+    ) {
+      maxPrice = 80
+    }
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
@@ -1090,33 +1105,14 @@ async function sendConsumer(value: any) {
   )
   let gasLimit = 100000
   if (
+    toChain === 'arbitrum_test' ||
+    toChain === 'arbitrum' ||
     toChain === 'metis' ||
     toChain === 'metis_test' ||
     toChain === 'boba_test' ||
     toChain === 'boba'
   ) {
     gasLimit = 1000000
-  }
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
-    try {
-      if (isEthTokenAddress(tokenAddress)) {
-        gasLimit = await web3.eth.estimateGas({
-          from: makerAddress,
-          to: toAddress,
-          value: web3.utils.toHex(amountToSend),
-        })
-      } else {
-        gasLimit = await tokenContract.methods
-          .transfer(toAddress, web3.utils.toHex(amountToSend))
-          .estimateGas({
-            from: makerAddress,
-          })
-      }
-      gasLimit = Math.ceil(web3.utils.hexToNumber(gasLimit) * 1.5)
-    } catch (error) {
-      gasLimit = 1000000
-    }
-    accessLogger.info('arGasLimit =', gasLimit)
   }
 
   /**

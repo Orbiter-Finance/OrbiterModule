@@ -4,7 +4,7 @@
       <div class="filter__start-time">
         <span>Start Time: </span>
         <el-date-picker
-          v-model="startTime"
+          v-model="state.startTime"
           type="datetime"
           :clearable="false"
           :offset="-50"
@@ -46,7 +46,7 @@
     </div>
     <el-row :gutter="16">
       <el-col :span="12">
-        <h3>In</h3>
+        <h3>In({{toList.length}})</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
           show-overflow
@@ -88,7 +88,7 @@
         </vxe-table>
       </el-col>
       <el-col :span="12">
-        <h3>Out</h3>
+        <h3>Out({{fromList.length}})</h3>
         <vxe-table
           :scroll-y="{ enabled: false }"
           show-overflow
@@ -135,102 +135,93 @@
   </div>
 </template>
 
-<script lang="ts">
+<script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerPulls } from '@/hooks/maker-history'
+import { useUnmatchedTradding } from '@/hooks/maker-history'
 import dayjs from 'dayjs'
 import {
-  computed,
-  defineComponent,
   inject,
   reactive,
-  toRefs,
+  toRef,
   watch,
+  ref, computed
 } from 'vue'
 
-export default defineComponent({
-  components: { TextLong },
-  setup() {
-    const makerAddressSelected: any = inject('makerAddressSelected')
-
-    const state = reactive({
-      showSuccessed: false,
-      showRejected: true,
-      showCannotMatched: true,
-      startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
-    })
-
-    const fromMakerPulls = makerPulls()
-    const toMakerPulls = makerPulls()
-
-    const getMakerPulls = () => {
-      const rangeDate = [state.startTime]
-      fromMakerPulls.get(makerAddressSelected?.value, 1, rangeDate)
-      toMakerPulls.get(makerAddressSelected?.value, 0, rangeDate)
-    }
-    getMakerPulls()
-
-    const tableRowClassName = ({ row }) => {
-      if (row.tx_status == 'rejected') {
-        return 'warning-row'
-      }
-      if (!row.target_tx) {
-        return 'danger-row'
-      }
-
-      return ''
-    }
-
-    const listFilter = ({ tx_status, target_tx }) => {
-      const conditions: boolean[] = []
-
-      if (state.showSuccessed) {
-        conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
-      }
-      if (state.showRejected) {
-        conditions.push(tx_status == 'rejected')
-      }
-      if (state.showCannotMatched) {
-        conditions.push(!target_tx && tx_status != 'rejected')
-      }
-
-      return conditions.indexOf(true) > -1
-    }
-    const fromList = computed(() => {
-      return fromMakerPulls.state.list.value.filter(listFilter)
-    })
-    const toList = computed(() => {
-      return toMakerPulls.state.list.value.filter(listFilter)
-    })
-
-    // watchs
-    watch(
-      () => makerAddressSelected?.value,
-      () => {
-        getMakerPulls()
-      }
-    )
-
-    // methods
-    const onChangeStartTime = () => {
-      getMakerPulls()
-    }
-
-    return {
-      ...toRefs(state),
-
-      fromList,
-      fromLoading: fromMakerPulls.state.loading,
-
-      toList,
-      toLoading: toMakerPulls.state.loading,
-
-      tableRowClassName,
-
-      onChangeStartTime,
-    }
-  },
+const makerAddressSelected: any = inject('makerAddressSelected')
+const state = reactive({
+  showSuccessed: false,
+  showRejected: true,
+  showCannotMatched: true,
+  startTime: dayjs().startOf('day').subtract(6, 'day').toDate(),
 })
+const showSuccessed = toRef(state, 'showSuccessed')
+const showRejected = toRef(state, 'showRejected')
+const showCannotMatched = toRef(state, 'showCannotMatched')
+// const startTime = toRef(state, 'startTime')
+const fromLoading = ref(false)
+const toLoading = ref(false)
+const _fromList = ref([])
+const _toList = ref([])
+const fromList = computed(() => {
+  return _fromList.value.filter(listFilter)
+})
+const toList = computed(() => {
+  return _toList.value.filter(listFilter)
+})
+const getMakerPulls = async () => {
+  const rangeDate = [state.startTime]
+  useUnmatchedTradding({
+    makerAddress: makerAddressSelected?.value, 
+    fromOrToMaker: 1,
+    rangeDate,
+    status: 2
+  }).then(({ list, loading }) => {
+    fromLoading.value = loading.value
+    _fromList.value = list.value
+  })
+
+  useUnmatchedTradding({
+    makerAddress: makerAddressSelected?.value, 
+    fromOrToMaker: 0,
+    rangeDate,
+    status: 2
+  }).then(({ list: list0, loading: loading0 }) => {
+    toLoading.value = loading0.value
+    _toList.value = list0.value
+  })
+}
+const tableRowClassName = ({ row }) => {
+  if (row.tx_status == 'rejected') {
+    return 'warning-row'
+  }
+  if (!row.target_tx) {
+    return 'danger-row'
+  }
+
+  return ''
+}
+
+const listFilter = ({ tx_status, target_tx }) => {
+  const conditions: boolean[] = []
+
+  if (state.showSuccessed) {
+    conditions.push(tx_status == 'finalized' && !!target_tx) // !!target_tx to boolean
+  }
+  if (state.showRejected) {
+    conditions.push(tx_status == 'rejected')
+  }
+  if (state.showCannotMatched) {
+    // conditions.push(!target_tx && tx_status != 'rejected')
+    conditions.push(tx_status == 'MatchFailed')
+  }
+
+  return conditions.indexOf(true) > -1
+}
+
+// watchs
+watch(() => makerAddressSelected?.value, getMakerPulls)
+// methods
+const onChangeStartTime = () => getMakerPulls()
 </script>
 
 <style lang="scss">
