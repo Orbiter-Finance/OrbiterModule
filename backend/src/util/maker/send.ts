@@ -27,6 +27,7 @@ import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+import { access } from 'fs'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -366,6 +367,7 @@ async function sendConsumer(value: any) {
     const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
     const { nonce, rollback } = await starknet.takeOutNonce()
+    accessLogger.info('starkNet_nonce =', nonce)
     try {
       const { hash }: any = await starknet.signTransfer({
         recipient: toAddress,
@@ -1088,14 +1090,33 @@ async function sendConsumer(value: any) {
   )
   let gasLimit = 100000
   if (
-    toChain === 'arbitrum_test' ||
-    toChain === 'arbitrum' ||
     toChain === 'metis' ||
     toChain === 'metis_test' ||
     toChain === 'boba_test' ||
     toChain === 'boba'
   ) {
     gasLimit = 1000000
+  }
+  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
+    try {
+      if (isEthTokenAddress(tokenAddress)) {
+        gasLimit = await web3.eth.estimateGas({
+          from: makerAddress,
+          to: toAddress,
+          value: web3.utils.toHex(amountToSend),
+        })
+      } else {
+        gasLimit = await tokenContract.methods
+          .transfer(toAddress, web3.utils.toHex(amountToSend))
+          .estimateGas({
+            from: makerAddress,
+          })
+      }
+      gasLimit = Math.ceil(web3.utils.hexToNumber(gasLimit) * 1.5)
+    } catch (error) {
+      gasLimit = 1000000
+    }
+    accessLogger.info('arGasLimit =', gasLimit)
   }
 
   /**
