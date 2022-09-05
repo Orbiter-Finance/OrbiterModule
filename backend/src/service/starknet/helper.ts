@@ -16,6 +16,7 @@ import { makerConfig } from '../../config'
 import { OfflineAccount } from './account'
 import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
+import { accessLogger } from '../../util/logger'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
@@ -68,7 +69,8 @@ export class StarknetHelp {
     if (nonces && nonces.length <= 5) {
       // render
       let localLastNonce: number = max(nonces) || 0
-      const networkLastNonce = await this.getNetworkNonce()
+      const networkLastNonce = await this.getNetworkNonce();
+      accessLogger.info('starknet_getNetwork_nonce =', networkLastNonce)
       if (networkLastNonce > localLastNonce) {
         nonces = [networkLastNonce]
         localLastNonce = networkLastNonce
