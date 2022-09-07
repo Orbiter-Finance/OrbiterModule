@@ -79,6 +79,7 @@
             v-model="state.rangeDate"
             type="datetimerange"
             range-separator="To"
+            :picker-options="pickerOptions"
             start-placeholder="Start date"
             end-placeholder="End date"
             :clearable="false"
@@ -110,7 +111,7 @@
         <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
-          <el-button type="primary" @click="() => getMakerNodes({current:1})">Apply</el-button>
+          <el-button type="primary" @click="() => clickApply()">Apply</el-button>
         </el-col>
       </el-row>
       <el-row v-if="state.userAddressSelected">
@@ -157,17 +158,17 @@
           </template>
         </el-popover>
       </div>
-      <div>FromAmountTotal: {{ fromAmountTotal }}</div>
-      <div>ToAmountTotal: {{ toAmountTotal }}</div>
+      <div>FromAmountTotal: {{ statistics.fromAmount }}</div>
+      <div>ToAmountTotal: {{ statistics.toAmount }}</div>
       <div style="color: #67c23a; font-weight: 600">
-        +{{ diffAmountTotal }} USD
+        +{{ statistics.profit["USDC"] }} USD
       </div>
       <div style="color: #409eff; font-weight: 600">
-        +{{ diffAmountTotalETH }} ETH
+        +{{ statistics.profit["ETH"] }} ETH
       </div>
-      <div style="color: #f56c6c; font-weight: 600">
+      <!-- <div style="color: #f56c6c; font-weight: 600">
         +{{ diffAmountTotalCNY }} CNY
-      </div>
+      </div> -->
       <div style="margin-left: auto">
         <router-link
           :to="`/maker/history?makerAddress=${makerAddressSelected}`"
@@ -352,8 +353,8 @@
 
 <script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerInfo, MakerNode, makerWealth, useTransactionHistory } from '@/hooks/maker'
-import { BigNumber } from 'bignumber.js'
+import { makerInfo, MakerNode, makerWealth, useTransactionHistory,requestStatistics } from '@/hooks/maker'
+// import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
 import { BigNumberish, ethers, providers } from 'ethers'
 import {
@@ -399,7 +400,7 @@ const status = [
 const DEFAULT_TIME_DURATION = 1 * 24 * 60 * 60 * 1000
 
 const makerAddressSelected: any = inject('makerAddressSelected')
-const exchangeRates: any = inject('exchangeRates')
+// const exchangeRates: any = inject('exchangeRates')
 const state = reactive({
   rangeDate: [] as Date[],
   fromChainId: '',
@@ -408,6 +409,35 @@ const state = reactive({
   keyword: '',
   status: -1
 })
+const  pickerOptions =reactive({
+          shortcuts: [{
+            text: '本月',
+            onClick(picker) {
+              picker.$emit('pick', [new Date(), new Date()]);
+            }
+          }, {
+            text: '今年至今',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date(new Date().getFullYear(), 0);
+              picker.$emit('pick', [start, end]);
+            }
+          }, {
+            text: '最近六个月',
+            onClick(picker) {
+              const end = new Date();
+              const start = new Date();
+              start.setMonth(start.getMonth() - 6);
+              picker.$emit('pick', [start, end]);
+            }
+          }]
+        });
+const statistics = reactive({
+  total: '',
+  fromAmount: '',
+  toAmount: '',
+  profit:{},
+});
 const makerNodes: any = ref([])
 // computeds
 const list = computed(() => makerNodes.value.filter(item => !state.userAddressSelected || item.userAddress == state.userAddressSelected))
@@ -434,43 +464,29 @@ const userAddressList = computed(() => {
 
   return userAddressList
 })
-const fromAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    num = num.plus(item.fromAmountFormat)
-  }
-  return num.toFixed(5)
-})
-const toAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    num = num.plus(item.toAmountFormat)
-  }
-  return num.toFixed(5)
-})
-const diffAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    if (!item.profitUSD) {
-      continue
-    }
+// const diffAmountTotal = computed(() => {
+//   let num = new BigNumber(0)
+//   for (const item of list.value) {
+//     if (!item.profitUSD) {
+//       continue
+//     }
 
-    num = num.plus(item.profitUSD)
-  }
-  return num.toNumber().toFixed(2)
-})
-const diffAmountTotalETH = computed(() => {
-  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-    exchangeRates?.value?.ETH || 0
-  )
-  return num.toFixed(5)
-})
-const diffAmountTotalCNY = computed(() => {
-  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-    exchangeRates?.value?.CNY || 0
-  )
-  return num.toFixed(2)
-})
+//     num = num.plus(item.profitUSD)
+//   }
+//   return num.toNumber().toFixed(2)
+// })
+// const diffAmountTotalETH = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.ETH || 0
+//   )
+//   return num.toFixed(5)
+// })
+// const diffAmountTotalCNY = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.CNY || 0
+//   )
+//   return num.toFixed(2)
+// })
 const chains = toRef(makerInfo.state, 'chains')
 const loadingWealths = toRef(makerWealth.state, 'loading')
 const wealths = toRef(makerWealth.state, 'list')
@@ -500,21 +516,13 @@ const reset = () => {
   state.status = -1
   
   getMakerNodes()
+  getStatistics()
 }
-/*
-const getMakerNodes = async (more: any = {}) => {
-  const { list, loading } = await useMakerNodes(
-    makerAddressSelected?.value, 
-    Number(state.fromChainId),
-    Number(state.toChainId),
-    state.rangeDate,
-    state.keyword
-  )
-  loadingNodes.value = loading.value
-  makerNodes.value = list.value
-}
-*/
 let prevMore = {}
+const clickApply= ()=> {
+  getMakerNodes({current:1});
+  getStatistics();
+}
 const getMakerNodes = async (more: any = {}) => {
   loadingNodes.value = true
   prevMore = {
@@ -537,6 +545,28 @@ const getMakerNodes = async (more: any = {}) => {
   loadingNodes.value = false
   makerNodes.value = _list.value
   total.value = _total.value
+  
+}
+const getStatistics = async(more:any) => {
+  loadingNodes.value = true
+  prevMore = {
+    ...prevMore,
+    ...more
+  }
+  const result  = await requestStatistics({
+    makerAddress: makerAddressSelected?.value,
+    fromChain: state.fromChainId ? +state.fromChainId : null,
+    toChain: state.toChainId ? +state.toChainId : null,
+    rangeDate: state.rangeDate,
+    keyword: state.keyword.trim(),
+    state: state.status,
+    ...prevMore,
+  });
+  statistics.total = result.trxCount;
+  statistics.fromAmount = result.fromAmount;
+  statistics.toAmount = result.toAmount;
+  statistics.profit = result.profit;
+  // profit:{},
 }
 // Methods
 const mappingChainName = (chainName: string) => {
@@ -685,7 +715,7 @@ const onClickPageButton = (next: boolean) => {
   ]
   getMakerNodes()
 }
-const init = () => getMakerWealth() + getMakerNodes()
+const init = () => getMakerWealth() + getMakerNodes() + getStatistics()
 
 makerInfo.get()
 reset()
