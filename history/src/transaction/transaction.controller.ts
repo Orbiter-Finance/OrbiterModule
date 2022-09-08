@@ -31,4 +31,15 @@ export class TransactionController {
     }
     return await this.transactionService.findUnmatched(query);
   }
+  @ApiOperation({ summary: 'Get bad statistics' })
+  @ApiResponse({ status: 200, description: 'Return bad transactions.'})
+  @Get('statistics')
+  async statistics(@Query() query): Promise<any> {
+    return {
+      code: 0,
+      data: await this.transactionService.statistics(query),
+      startTime: query['startTime'],
+      endTime: query['endTime']
+    }
+  }
 }

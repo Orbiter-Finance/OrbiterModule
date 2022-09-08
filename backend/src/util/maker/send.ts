@@ -366,7 +366,8 @@ async function sendConsumer(value: any) {
     const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
     const { nonce, rollback } = await starknet.takeOutNonce()
-    accessLogger.info('starkNet_nonce =', nonce)
+    accessLogger.info('starknet_sql_nonce =', nonce)
+    accessLogger.info('result_nonde =', result_nonce)
     try {
       const { hash }: any = await starknet.signTransfer({
         recipient: toAddress,
@@ -385,7 +386,7 @@ async function sendConsumer(value: any) {
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
-        result_nonce,
+        result_nonce: nonce,
       }
     }
   }
@@ -394,7 +395,6 @@ async function sendConsumer(value: any) {
   if (chainID == 8 || chainID == 88) {
     try {
       const imxHelper = new IMXHelper(chainID)
-      console.log(makerAddress, '==makerAddress')
       const imxClient = await imxHelper.getImmutableXClient(makerAddress)
 
       // Warnning: The nonce value of immutablex currently has no substantial effect
