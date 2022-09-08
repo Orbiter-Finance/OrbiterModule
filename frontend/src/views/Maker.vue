@@ -563,7 +563,7 @@ const getMakerWealth = () => makerWealth.get(makerAddressSelected?.value)
 const reset = () => {
   const endTime = new Date()
   const startTime = new Date(endTime.getTime() - DEFAULT_TIME_DURATION)
-  state.rangeDate = [startTime, endTime]
+  state.rangeDate = [dayjs().startOf('d'), dayjs().endOf('d')]
   state.fromChainId = ''
   state.toChainId = ''
   state.userAddressSelected = ''
