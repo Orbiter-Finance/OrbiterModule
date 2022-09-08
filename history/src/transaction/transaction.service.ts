@@ -128,7 +128,7 @@ export class TransactionService {
     let makerAddress = (query?.makerAddress || '').split(',');
     if (makerAddress.length>0) {
       whereSql += ' and replySender in(?)';
-      whreeParmas.push(...makerAddress);
+      whreeParmas.push(makerAddress);
     }
     if (query['fromChain']) {
       whereSql += ' and fromChain = ?';
