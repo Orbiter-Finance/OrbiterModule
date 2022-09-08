@@ -142,9 +142,12 @@ export const requestStatistics = async (params: any = {}) => {
   const loading = ref(false)
   if (params.makerAddress) {
     transforeDate(params)
+    if ($env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]) {
+      params.makerAddress = `${params.makerAddress},${$env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]}`;
+    }
     loading.value = true
     try {
-      const res: any = await http.get(`/api/transaction/statisticsOfMonth`, {
+      const res: any = await http.get(`/api/transaction/statistics`, {
         params: params
       })
       if (res.code === 0) {

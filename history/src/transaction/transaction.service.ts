@@ -6,6 +6,8 @@ import { PaginationResRO, CommonResRO, PaginationReqRO } from '../shared/interfa
 import { logger, formateTimestamp, transforeUnmatchedTradding } from '../shared/utils';
 import { groupBy, sumBy } from 'lodash';
 import * as dayjs from 'dayjs';
+import * as utc from 'dayjs/plugin/utc';
+dayjs.extend(utc)
 import { getRates } from '../shared/utils/maker-node'
 @Injectable()
 export class TransactionService {
@@ -115,18 +117,26 @@ export class TransactionService {
       data
     }
   }
-  async statisticsOfMonth(query: any): Promise<any> {
-    const startTime = query['startTime'] || dayjs().startOf('d').valueOf();
-    const endTime = query['endTime'] || dayjs().endOf('d').valueOf();
+  async statistics(query: any): Promise<any> {
+    const startTime = Number(query['startTime']  || dayjs().startOf('d').valueOf());
+    const endTime = Number(query['endTime']  || dayjs().endOf('d').valueOf());
     const whreeParmas: Array<any> = [
-      formateTimestamp(+startTime),
-      formateTimestamp(+endTime),
+      dayjs(startTime).utc().format('YYYY-MM-DD HH:mm'),
+      dayjs(endTime).utc().format('YYYY-MM-DD HH:mm'),
     ];
     let whereSql = ' `timestamp`>=? AND `timestamp`<=? ';
     let makerAddress = (query?.makerAddress || '').split(',');
     if (makerAddress.length>0) {
-      whereSql += 'and replySender in(?)';
+      whereSql += ' and replySender in(?)';
       whreeParmas.push(...makerAddress);
+    }
+    if (query['fromChain']) {
+      whereSql += ' and fromChain = ?';
+      whreeParmas.push(query['fromChain']);
+    }
+    if (query['toChain']) {
+      whereSql += ' and toChain = ?';
+      whreeParmas.push(query['toChain']);
     }
 
     const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
@@ -139,7 +149,7 @@ export class TransactionService {
       row.fee = this.divPrecision(row.feeToken, row.fee);
     }
     const profit: any = {};
-    for (const symbol of ['ETH', 'USDC', 'USDT']) {
+    for (const symbol of ['USD','CNY', 'ETH', 'USDC', 'USDT', 'BTC']) {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
@@ -168,6 +178,7 @@ export class TransactionService {
         return Number(row.trxCount);
       }),
       profit,
+      profitAmount,
       fromAmount,
       toAmount
     }
