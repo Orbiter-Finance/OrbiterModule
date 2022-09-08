@@ -561,7 +561,7 @@ const handleCurrentChange = (val: number) => {
 }
 const getMakerWealth = () => makerWealth.get(makerAddressSelected?.value)
 const reset = () => {
-  state.rangeDate = [dayjs().startOf('d'), dayjs().endOf('d')]
+  state.rangeDate = [dayjs().startOf('d').toDate(), dayjs().endOf('d').toDate()]
   state.fromChainId = ''
   state.toChainId = ''
   state.userAddressSelected = ''
