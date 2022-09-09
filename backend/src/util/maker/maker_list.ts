@@ -2210,7 +2210,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.002,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2243,7 +2243,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2277,7 +2277,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2310,7 +2310,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0006,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2343,7 +2343,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2376,7 +2376,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2409,7 +2409,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2442,7 +2442,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2475,7 +2475,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0005,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2508,7 +2508,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0008,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2541,7 +2541,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0008,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
@@ -2574,7 +2574,7 @@ export const makerList = [
     c2AvalibleDeposit: 1000,
     c1TradingFee: 0.0008,
     c2TradingFee: 0.0005,
-    c1GasFee: 0.1,
+    c1GasFee: 0.5,
     c2GasFee: 0,
     c1AvalibleTimes: [
       {
