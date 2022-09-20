@@ -1,0 +1,421 @@
+[
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": false,
+        "internalType": "uint8",
+        "name": "version",
+        "type": "uint8"
+      }
+    ],
+    "name": "Initialized",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "previousOwner",
+        "type": "address"
+      },
+      {
+        "indexed": true,
+        "internalType": "address",
+        "name": "newOwner",
+        "type": "address"
+      }
+    ],
+    "name": "OwnershipTransferred",
+    "type": "event"
+  },
+  {
+    "anonymous": false,
+    "inputs": [
+      {
+        "indexed": true,
+        "internalType": "enum IORManager.PairEventType",
+        "name": "opType",
+        "type": "uint8"
+      },
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "sourceChain",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "destChain", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "sourceTAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destTAddress",
+            "type": "address"
+          },
+          { "internalType": "uint256", "name": "ebcid", "type": "uint256" }
+        ],
+        "indexed": false,
+        "internalType": "struct OperationsLib.pairChainInfo[]",
+        "name": "pairs",
+        "type": "tuple[]"
+      }
+    ],
+    "name": "PairLogEvent",
+    "type": "event"
+  },
+  {
+    "inputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "name": "chainList",
+    "outputs": [
+      { "internalType": "uint256", "name": "chainid", "type": "uint256" },
+      { "internalType": "uint256", "name": "batchLimit", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "maxDisputeTime",
+        "type": "uint256"
+      },
+      { "internalType": "bool", "name": "isUsed", "type": "bool" }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "sourceChain",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "destChain", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "sourceTAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destTAddress",
+            "type": "address"
+          },
+          { "internalType": "uint256", "name": "ebcid", "type": "uint256" }
+        ],
+        "internalType": "struct OperationsLib.pairChainInfo[]",
+        "name": "pairs",
+        "type": "tuple[]"
+      },
+      { "internalType": "bytes32", "name": "rootHash", "type": "bytes32" },
+      { "internalType": "bytes32[]", "name": "proof", "type": "bytes32[]" },
+      { "internalType": "bool[]", "name": "proofFlags", "type": "bool[]" }
+    ],
+    "name": "createPair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "sourceChain",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "destChain", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "sourceTAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destTAddress",
+            "type": "address"
+          },
+          { "internalType": "uint256", "name": "ebcid", "type": "uint256" }
+        ],
+        "internalType": "struct OperationsLib.pairChainInfo[]",
+        "name": "pairs",
+        "type": "tuple[]"
+      },
+      { "internalType": "bytes32[]", "name": "proof", "type": "bytes32[]" },
+      { "internalType": "bool[]", "name": "proofFlags", "type": "bool[]" },
+      { "internalType": "bytes32", "name": "rootHash", "type": "bytes32" }
+    ],
+    "name": "deletePair",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" }
+    ],
+    "name": "getChainInfoByChainID",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "chainid", "type": "uint256" },
+          {
+            "internalType": "uint256",
+            "name": "batchLimit",
+            "type": "uint256"
+          },
+          {
+            "internalType": "uint256",
+            "name": "maxDisputeTime",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address[]",
+            "name": "tokenList",
+            "type": "address[]"
+          },
+          { "internalType": "bool", "name": "isUsed", "type": "bool" }
+        ],
+        "internalType": "struct OperationsLib.chainInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "ebcid", "type": "uint256" }
+    ],
+    "name": "getEBC",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getEBCids",
+    "outputs": [{ "internalType": "uint256", "name": "", "type": "uint256" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "getSPV",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+      { "internalType": "address", "name": "tokenAddress", "type": "address" }
+    ],
+    "name": "getTokenInfo",
+    "outputs": [
+      {
+        "components": [
+          { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "tokenAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "uint256",
+            "name": "tokenPresion",
+            "type": "uint256"
+          },
+          {
+            "internalType": "address",
+            "name": "mainTokenAddress",
+            "type": "address"
+          }
+        ],
+        "internalType": "struct OperationsLib.tokenInfo",
+        "name": "",
+        "type": "tuple"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "initialize",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+      { "internalType": "address", "name": "token", "type": "address" }
+    ],
+    "name": "isSupportChain",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "bytes32", "name": "pair", "type": "bytes32" },
+      { "internalType": "bytes32[]", "name": "proof", "type": "bytes32[]" }
+    ],
+    "name": "isSupportPair",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "components": [
+          {
+            "internalType": "uint256",
+            "name": "sourceChain",
+            "type": "uint256"
+          },
+          { "internalType": "uint256", "name": "destChain", "type": "uint256" },
+          {
+            "internalType": "address",
+            "name": "sourceTAddress",
+            "type": "address"
+          },
+          {
+            "internalType": "address",
+            "name": "destTAddress",
+            "type": "address"
+          },
+          { "internalType": "uint256", "name": "ebcid", "type": "uint256" }
+        ],
+        "internalType": "struct OperationsLib.pairChainInfo",
+        "name": "pair",
+        "type": "tuple"
+      },
+      { "internalType": "bytes32[]", "name": "proof", "type": "bytes32[]" }
+    ],
+    "name": "isSupportPair",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "owner",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "pairsRoot",
+    "outputs": [{ "internalType": "bytes32", "name": "", "type": "bytes32" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "renounceOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+      { "internalType": "uint256", "name": "batchLimit", "type": "uint256" },
+      {
+        "internalType": "uint256",
+        "name": "maxDisputeTime",
+        "type": "uint256"
+      },
+      { "internalType": "address[]", "name": "tokenList", "type": "address[]" }
+    ],
+    "name": "setChainInfo",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "ebcAddress", "type": "address" }
+    ],
+    "name": "setEBC",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "spvAddress", "type": "address" }
+    ],
+    "name": "setSPV",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+      { "internalType": "address", "name": "tokenAddress", "type": "address" },
+      { "internalType": "uint256", "name": "tokenPresion", "type": "uint256" },
+      { "internalType": "address", "name": "mainAddress", "type": "address" }
+    ],
+    "name": "setTokenInfo",
+    "outputs": [{ "internalType": "bool", "name": "", "type": "bool" }],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [],
+    "name": "spv",
+    "outputs": [{ "internalType": "address", "name": "", "type": "address" }],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "", "type": "uint256" },
+      { "internalType": "address", "name": "", "type": "address" }
+    ],
+    "name": "tokenInfos",
+    "outputs": [
+      { "internalType": "uint256", "name": "chainID", "type": "uint256" },
+      { "internalType": "address", "name": "tokenAddress", "type": "address" },
+      { "internalType": "uint256", "name": "tokenPresion", "type": "uint256" },
+      {
+        "internalType": "address",
+        "name": "mainTokenAddress",
+        "type": "address"
+      }
+    ],
+    "stateMutability": "view",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "address", "name": "newOwner", "type": "address" }
+    ],
+    "name": "transferOwnership",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  },
+  {
+    "inputs": [
+      { "internalType": "uint256", "name": "ebcid", "type": "uint256" },
+      { "internalType": "address", "name": "ebcAddress", "type": "address" }
+    ],
+    "name": "updateEBC",
+    "outputs": [],
+    "stateMutability": "nonpayable",
+    "type": "function"
+  }
+]

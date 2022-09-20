@@ -5,10 +5,9 @@ import installElementPlus from './plugins/element'
 import installVxeTale from './plugins/vxe-table'
 import router from './router'
 import store from './store'
-
+import urql from '@urql/vue';
 import SvgIcon from './components/SvgIcon/SvgIcon.vue'
 // Vue.component('svg-icon', SvgIcon)
-
 
 // import './icons'
 // beforeEach
@@ -23,7 +22,9 @@ const app = createApp(App).use(store).use(router)
 installElementPlus(app)
 installVxeTale(app)
 app.component('svg-icon', SvgIcon)
-
+app.use(urql, {
+    url: process.env.VUE_APP_GRAPHQL_URL,
+});
 const req = require.context('./icons/svg', false, /\.svg$/)
 const requireAll = (requireContext) => requireContext.keys().map(requireContext)
 requireAll(req)

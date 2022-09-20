@@ -1,8 +1,8 @@
 <template>
     <div class="TokenSelect">
-        <el-select popper-class="tokenlist" v-model="tokenValue" placeholder="">
+        <el-select popper-class="tokenlist" v-model="tokenValue" placeholder="" ref="selectDom" @change="chooseToken">
             <template #prefix>
-                <svg-icon :iconName="showChainIcon(1)" style="width: 24px; height: 24px"></svg-icon>
+                <svg-icon :iconName="showChainIcon(tokenValue)" style="width: 24px; height: 24px"></svg-icon>
             </template>
             <div class="title">
                 <h3>Select  a Token</h3>
@@ -11,12 +11,12 @@
                 <!-- <SvgIconThemed  icon="mode" /> -->
             </div>
             <div class="search_box">
-                <el-input v-model="search" class="w-50 m-2" size="large" placeholder="search" :prefix-icon="Search"/>
+                <el-input v-model="search" class="w-50 m-2" size="large" placeholder="search" :prefix-icon="Search" @input="searchInp"/>
             </div>
             <div class="item_box">
                 <el-option v-for="item in tokenList" :key="item.currencyid" :label="item.name" :value="item.currencyid">
                     <div class="token_icon">
-                        <svg-icon :iconName="showChainIcon(1)" style="width: 24px; height: 24px"></svg-icon>
+                        <svg-icon :iconName="showChainIcon(item.currencyid)" style="width: 24px; height: 24px"></svg-icon>
                         <span>{{item.name}}</span>
                     </div>
                 </el-option>
@@ -27,26 +27,76 @@
 
 <script lang="ts" setup>
 import { Search } from '@element-plus/icons-vue'
-import { reactive, ref } from 'vue';
-import { chain2icon } from '../../utils/chain2id';
+import { reactive, ref, defineEmits } from 'vue';
+import { tokenIcon, makerToken } from '../../utils/chain2id';
+import { useQuery } from '@urql/vue';
 
 const tokenValue = ref(1)
 const search = ref('')
-const token = reactive([
-    {name: 'ETH', currencyid: 1},
-    {name: 'USDC', currencyid: 2},
-    {name: 'USDT', currencyid: 3},
-    {name: 'DAI', currencyid: 4},
-    {name: 'Metis', currencyid: 5},
+let token = reactive([
+    {name: 'ETH', currencyid: 1, addr: "0x0000000000000000000000000000000000000000"},
 ])
 const tokenList = ref({...token})
+
 const showChainIcon = (localChainID) => {
-    return chain2icon(localChainID)
+    return tokenIcon(localChainID)
 }
+const selectDom = ref()
 const closeSelect = () => {
-    
+    selectDom.value.blur()
 }
 
+const searchInp = (val) => {
+    let reg =  new RegExp(`${val}`, 'ig')
+    let searchData = token.filter((item) => {
+        if (reg.test(item.name)) {
+            return item
+        }
+    })
+    if (searchData.length != 0) {
+        tokenList.value = searchData
+    }
+}
+
+const netList = async () => {
+    const pairEntities = await useQuery({
+        query: `
+        query MyQuery {
+            pairEntities {
+                sourceChain
+                destChain
+                destToken
+                sourceToken
+            }
+        }
+        `
+    });
+    let data = pairEntities.data.value.pairEntities
+    // for (const row of data) {
+    //     const token = makerToken.find(item=> item.chainid === row.sourceChain&&item.address === row.sourceToken);
+    //     if (token) {
+    //         row.sourceSymbol = token.symbol;
+    //     }
+    // }
+    // data.filter(row=> row.sourceSymbol === 'ETH')
+    let tokens = reactive([] as any[]);
+    data.map((v) => {
+        if (!tokens.find((val) => val.addr == v.destToken)) {
+            let tokenItem = makerToken.filter((item) => item.address == v.destToken)
+            tokens.push({addr: v.destToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
+        } else if (!tokens.find((val) => val.addr == v.sourceToken)) {
+            let tokenItem = makerToken.filter((item) => item.address == v.destToken)
+            tokens.push({addr: v.sourceToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
+        }
+    })
+    tokenList.value = tokens
+    token = tokens
+}
+netList()
+const emits = defineEmits(['setTokenItem'])
+const chooseToken = (val) => {
+    emits('setTokenItem', val)
+}
 
 </script>
 
@@ -60,6 +110,7 @@ const closeSelect = () => {
         height: 40px;
         background-color: #F5F5F5;
         border-radius: 12px;
+        padding-left: 36px !important;
         color: #333;
         font-weight: bold;
     }

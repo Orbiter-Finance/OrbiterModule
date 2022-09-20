@@ -18,8 +18,8 @@
               {{ item.name }}
             </el-menu-item>
           </template>
-          <el-menu-item index="/makerUser" v-show="isLink">
-            MakerUser
+          <el-menu-item index="/makerNode" v-show="isLink">
+            MakerNode
           </el-menu-item>
         </el-menu>
         <div class="link_wallet">
@@ -52,7 +52,7 @@
       </el-aside> -->
       <el-container>
         <el-main>
-          <router-view />
+          <router-view  v-if="isReload"/>
         </el-main>
         <!-- <el-footer>Footer</el-footer> -->
       </el-container>
@@ -62,14 +62,17 @@
 
 <script lang="ts" setup>
 import { ArrowDown } from '@element-plus/icons'
-import { provide, reactive, toRef, ref } from 'vue'
+import { provide, reactive, toRef, ref, nextTick } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
+import store from './store'
 import util from './utils/util'
+import { contract_obj } from './contracts'
 
 const route = useRoute()
 const router = useRouter()
 const navs = router.getRoutes()
+const isReload = ref(true)
 
 const state = reactive({
   makerAddresses: [] as string[],
@@ -79,11 +82,19 @@ const state = reactive({
 const makerAddressSelected = toRef(state, 'makerAddressSelected')
 const makerAddresses = toRef(state, 'makerAddresses')
 const exchangeRates = toRef(state, 'exchangeRates')
+const reload = () => {
+  isReload.value = false;
+  nextTick(() => {
+    isReload.value = true;
+  })
+}
 
 provide('makerAddressSelected', makerAddressSelected)
 provide('exchangeRates', exchangeRates)
+provide('reload', reload)
 
 const isLink = ref(false)
+const isMaker = ref(false)
 const walletAccount = ref()
 const getLinksStatus = async () => {
   try {
@@ -92,31 +103,83 @@ const getLinksStatus = async () => {
       throw new Error('Please install metamask wallet first!')
     }
     const addr = await ethereum.request({ method: 'eth_requestAccounts' })
-    walletAccount.value = util.shortAddress(addr[0])
-    router.addRoute({
-      path: '/makerUser',
-      name: 'MakerUser',
-      component: () => import('./views/MakerUser/MakerUser.vue'),
-    })
-    isLink.value = true
+    store.commit('setAccount', addr[0])
+    let isCheck = true
+    // let isCheck = false
+    // if (ethereum.networkVersion != defaultChainInfo.chainid) {
+    //   isCheck = await linkNetwork()
+    // } else {
+    //   isCheck = true
+    // }
+    if (isCheck) {
+      walletAccount.value = util.shortAddress(addr[0])
+      isLink.value = true
+      router.addRoute({
+        path: '/makerNode',
+        name: 'MakerNode',
+        component: () => import('./views/MakerNode/MakerNode.vue'),
+      })
+      let contract_factory = await contract_obj('ORMakerV1Factory')
+      let makerAddr = await contract_factory.methods.getMaker(addr[0]).call()
+      if (makerAddr != '0x0000000000000000000000000000000000000000') {
+        isMaker.value = true
+        store.commit('setMaker', true)
+      } else {
+        isMaker.value = false
+        store.commit('setMaker', false)
+      }
+    }
+    
+    ethereum.on("chainChanged", function network(networkIDstring) {
+      console.log("networkIDstring ==>", networkIDstring)
+    });
     
     ethereum.on("accountsChanged", (accounts) => {
-        console.log(accounts)
         if (accounts.length != 0) {
           walletAccount.value = util.shortAddress(accounts[0])
+          store.commit('setAccount', accounts[0])
+          reload()
         } else {
           isLink.value = false
-          router.removeRoute('MakerUser')
-          router.push({path: '/'})
+          router.removeRoute('MakerNode')
         }
     });
     
   } catch (error) {
-    console.log('links err ==>', error)
+    throw new Error(`links err`);
   }
 }
-
 getLinksStatus()
+
+// const linkNetwork = async ():Promise<boolean> => {
+//   const ethereum = (window as any).ethereum
+//   if (!ethereum) {
+//     return false
+//   }
+//   console.log(defaultChainInfo)
+//   const result = await ethereum.request({
+//       method: 'wallet_addEthereumChain',
+//       params: [
+//         {
+//           chainId: defaultChainInfo.chainid,
+//           chainName: defaultChainInfo.name,
+//           nativeCurrency: {
+//             name: defaultChainInfo.symbol,
+//             symbol: defaultChainInfo.symbol,
+//             decimals: defaultChainInfo.decimals
+//           },
+//           rpcUrls: [defaultChainInfo.rpcUrls],
+//           blockExplorerUrls: [defaultChainInfo.blockExplorerUrls]
+//         }
+//       ]
+//   })
+//   return result;
+//   // .then(() => {
+//   //     return true
+//   // }).catch(() => {
+//   //     return false
+//   // })
+// }
 
 const getGlobalInfo = async () => {
   const resp = await $axios.get('global')

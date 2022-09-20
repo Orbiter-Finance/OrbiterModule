@@ -28,4 +28,21 @@ module.exports = {
       })
       .end()
   },
+  // devServer: {
+  //   disableHostCheck: true,
+  //   open: true,
+  //   host: '0.0.0.0',
+  //   port: 8080,
+  //   hot: true,
+  //   proxy: {
+  //     '/subgraphs/name/kakui-lau/orbiter-subgraph-testnet/graphql': {
+  //       target: 'http://192.168.1.8:8000',
+  //       secure: true,
+  //       changeOrigin: true,
+  //       pathRewrite: {
+  //         '^/subgraphs/name/kakui-lau/orbiter-subgraph-testnet/graphql': '',
+  //       },
+  //     },
+  //   }
+  // }
 }

@@ -31,7 +31,64 @@ export const chain2idMap = {
   "Arbitrum Nova": 16,
   "Arbitrum Nova(Goerli)": 516,
 }
-
+export const chainNameMap = {
+  1: 'Ethereum Mainnet',
+  2: 'Arbitrum',
+  3: 'ZkSync',
+  4: 'StarkNet',
+  6: 'Polygon',
+  7: 'Optimism',
+  8: 'ImmutableX',
+  10: 'Metis',
+  11: 'dYdX',
+  5: 'Rinkeby',
+  22: 'Arbitrum(R)',
+  33: 'ZkSync(R)',
+  44: 'StarkNet(R)',
+  66: 'Polygon(R)',
+  77: 'Optimism(G)',
+  9: 'Loopring',
+  99: 'Loopring(G)',
+  88: 'ImmutableX(R)',
+  510: 'Metis(R)',
+  511: 'dYdX(R)',
+  12: 'zkspace',
+  512: 'zkspace(R)',
+  513: 'Boba(R)',
+  13: 'Boba',
+  14: 'zkSync2',
+  514: 'zkSync2(G)',
+  515: "BNBChain(R)",
+  15: "BNBChain",
+  16: "Arbitrum Nova",
+  516: "Arbitrum Nova(Goerli)",
+}
+export const makerToken = [
+  {
+    symbol: 'ETH',
+    address: '0x0000000000000000000000000000000000000000',
+    chainid: 1
+  },
+]
+export const chainName = item => {
+  return chainNameMap[item]
+}
+export const tokenIcon = item => {
+  let iconName = 'tokenLogo'
+  if (item === 2) {
+    iconName = 'usdc'
+  }
+  if (item === 3) {
+    iconName = 'usdt'
+  }
+  if (item === 4) {
+    iconName = 'dai'
+  }
+  if (item === 5) {
+    iconName = 'metis'
+  }
+  return iconName
+}
 export const chain2icon = item => {
   let iconName = 'tokenLogo'
   if (item === 2 || item === 22) {
