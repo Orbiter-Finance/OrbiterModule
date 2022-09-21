@@ -18,6 +18,8 @@ import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
+import { accessLogger } from '../../util/logger'
+
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
 export class StarknetHelp {
@@ -65,10 +67,12 @@ export class StarknetHelp {
   async getAvailableNonce() {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
+    accessLogger.info('starkNet_supportNoce =', JSON.stringify(nonces))
     if (nonces && nonces.length <= 5) {
       // render
       let localLastNonce: number = max(nonces) || 0
       const networkLastNonce = await this.getNetworkNonce()
+      accessLogger.info('starkNet_networkLastNonce =', networkLastNonce)
       if (networkLastNonce > localLastNonce) {
         nonces = [networkLastNonce]
         localLastNonce = networkLastNonce
@@ -83,18 +87,20 @@ export class StarknetHelp {
     await this.cache.set(cacheKey, nonces)
     return nonces
   }
-  async signTransfer(
-    params: {
-      tokenAddress: string
-      recipient: string
-      amount: string
-      nonce?: number
-    }
-  ) {
+  async signTransfer(params: {
+    tokenAddress: string
+    recipient: string
+    amount: string
+    nonce?: number
+  }) {
     const starkPair = ec.getKeyPair(this.privateKey)
     const signer = new Signer(starkPair)
     const provider = new Provider({ network: <any>this.network }) // for testnet you can use defaultProvider
-    const acc: OfflineAccount = new OfflineAccount(provider, this.address, signer)
+    const acc: OfflineAccount = new OfflineAccount(
+      provider,
+      this.address,
+      signer
+    )
     const entrypoint = 'transfer'
     const calldata = compileCalldata({
       recipient: params.recipient,
@@ -104,7 +110,12 @@ export class StarknetHelp {
     if (!nonce) {
       nonce = (await this.takeOutNonce()).nonce
     }
-    const signedTx = await acc.signTx(params.tokenAddress, entrypoint, calldata, Number(nonce))
+    const signedTx = await acc.signTx(
+      params.tokenAddress,
+      entrypoint,
+      calldata,
+      Number(nonce)
+    )
     const sentTx = await acc.broadcastSignedTransaction(signedTx)
     const hash = sentTx.transaction_hash
     // provider.getTransaction(hash).then((result) => {
