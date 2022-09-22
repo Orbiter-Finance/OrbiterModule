@@ -48,7 +48,7 @@ export const $env = {
     33: '4', // zktest
     44: '5', // starknet(R)
     66: '80001', // polygon(R)
-    77: '69', // optimism(K)
+  	77: '420', // optimism(G)
     88: '3', // ropsten
     99: '5', // loopring(G)
     510: '588', // metis(G)
@@ -73,7 +73,7 @@ export const $env = {
     6: 'https://polygonscan.com/tx/',
     66: 'https://mumbai.polygonscan.com/tx/',
     7: 'https://optimistic.etherscan.io/tx/',
-    77: 'https://kovan-optimistic.etherscan.io/tx/',
+  	77: 'https://blockscout.com/optimism/goerli/tx', 
     8: 'https://immutascan.io/tx/',
     88: '',
     9: 'https://explorer.loopring.io/tx/',
@@ -104,7 +104,7 @@ export const $env = {
     6: 'https://polygonscan.com/address/',
     66: 'https://mumbai.polygonscan.com/address/',
     7: 'https://optimistic.etherscan.io/address/',
-    77: 'https://kovan-optimistic.etherscan.io/address/',
+    77: 'https://blockscout.com/optimism/goerli/address/',
     8: 'https://immutascan.io/address/',
     88: '',
     9: 'https://explorer.loopring.io/account/',
@@ -135,7 +135,7 @@ export const $env = {
     6: 'https://polygonscan.com/token/',
     66: 'https://mumbai.polygonscan.com/token/',
     7: 'https://optimistic.etherscan.io/token/',
-    77: 'https://kovan-optimistic.etherscan.io/token/',
+    77: 'https://blockscout.com/optimism/goerli/token/',
     10: 'https://andromeda-explorer.metis.io/token/',
     510: 'https://stardust-explorer.metis.io/token/',
     11: 'https://trade.dydx.exchange/',
