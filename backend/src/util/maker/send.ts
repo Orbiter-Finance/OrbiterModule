@@ -27,6 +27,9 @@ import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+import {
+  getZkSyncProvider
+} from '../../../src/service/zksync/zksync_helper'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -126,7 +129,7 @@ async function sendConsumer(value: any) {
       }
       if (chainID === 33) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
-        syncProvider = await zksync.getDefaultProvider('rinkeby')
+        syncProvider = await zksync.Provider.newHttpProvider('https://goerli-api.zksync.io/jsrpc')
       }
       const ethWallet = new ethers.Wallet(
         makerConfig.privateKeys[makerAddress.toLowerCase()]
