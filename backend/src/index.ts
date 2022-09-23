@@ -12,9 +12,6 @@ import { clusterIsPrimary, sleep } from './util'
 import { startMasterJobs, startWorkerJobs } from './schedule'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
-import { makerList, makerListHistory } from './util/maker/maker_list'
-// import Axios from './util/Axios'
-// Axios.axios()
 
 export const startKoa = () => {
   const koa = new Koa()
