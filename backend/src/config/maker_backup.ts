@@ -25,6 +25,7 @@ export default {
       endPoint: 'https://api-goerli.etherscan.io/api',
       key: '',
     },
+    customChainId:5,
     gasPrice: 2,
   },
   arbitrum: {

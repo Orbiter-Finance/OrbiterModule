@@ -233,10 +233,10 @@
     "internalId": "511",
     "name": "Dydx Testnet",
     "nativeCurrency": {
-      "name": "",
-      "symbol": "",
-      "decimals": 0,
-      "address": "0x0000000000000000000000000000000000000000"
+      "name": "USDC",
+      "symbol": "USDC",
+      "decimals": 6,
+      "address": "0x8707a5bf4c2842d46b31a405ba41b858c0f876c4"
     },
     "rpc": [],
     "watch": [
