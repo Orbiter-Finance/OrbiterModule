@@ -1,5 +1,6 @@
 import { Context } from 'koa'
 import { ServiceErrorCodes } from '../error/service'
+import { errorLogger } from './logger'
 
 export class Restful {
   private ctx: Context

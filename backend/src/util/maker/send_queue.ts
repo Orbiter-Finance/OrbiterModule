@@ -1,4 +1,3 @@
-
 type SendQueueConsumer = (value: any) => Promise<unknown>
 type SendQueueData = {
   value: any

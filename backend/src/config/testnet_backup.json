@@ -1,7 +1,7 @@
 [
   {
     "api": {
-      "url": "https://eth-goerli.g.alchemyapi.io/v2",
+      "url": "https://api-goerli.etherscan.io/api",
       "key": "{You Key}"
     },
     "chainId": "4",
@@ -198,11 +198,11 @@
   },
   {
     "api": {
-      "url": "https://api-kovan-optimistic.etherscan.io/api",
+      "url": "https://api-goerli-optimism.etherscan.io/api",
       "key": "{You Key}"
     },
-    "chainId": "69",
-    "networkId": "69",
+    "chainId": "420",
+    "networkId": "420",
     "internalId": "77",
     "name": "Optimism Kovan Testnet",
     "nativeCurrency": {
@@ -212,7 +212,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://opt-kovan.g.alchemy.com/v2/{You Key}"
+      "https://goerli.optimism.io/"
     ],
     "watch": [
       "api",

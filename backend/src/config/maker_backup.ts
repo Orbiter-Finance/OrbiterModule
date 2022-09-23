@@ -11,7 +11,6 @@ export default {
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key', // limit
@@ -20,19 +19,17 @@ export default {
     gasPrice: 0,
   },
   rinkeby: {
-    wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://rinkeby.infura.io/v3/Your Key',
+    wsEndPoint: 'wss://eth-goerli.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://eth-goerli.g.alchemy.com/v2/Your Key',
     api: {
-      endPoint: 'https://api-rinkeby.etherscan.io/api',
-      key: 'Your Key',
+      endPoint: 'https://api-goerli.etherscan.io/api',
+      key: '',
     },
     gasPrice: 2,
   },
   arbitrum: {
     wsEndPoint: 'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -43,7 +40,6 @@ export default {
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://testnet.arbiscan.io/',
       key: '',
@@ -90,7 +86,6 @@ export default {
   polygon: {
     wsEndPoint: 'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
@@ -101,7 +96,6 @@ export default {
   polygon_test: {
     wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
