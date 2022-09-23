@@ -1,7 +1,7 @@
 [
   {
     "api": {
-      "url": "https://eth-goerli.g.alchemyapi.io/v2",
+      "url": "https://api-goerli.etherscan.io/api",
       "key": "{You Key}"
     },
     "chainId": "4",
