@@ -27,9 +27,6 @@ import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals } from 'orbiter-chaincore/src/utils/core'
-import {
-  getZkSyncProvider
-} from '../../../src/service/zksync/zksync_helper'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
