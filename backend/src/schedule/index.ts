@@ -8,29 +8,30 @@ import {
   jobCacheCoinbase,
   jobGetWealths,
   // jobMakerNodeTodo,
-  jobGetMakerList,
   jobMakerPull,
   startNewDashboardPull,
 } from './jobs'
-// import { doSms } from '../sms/smsSchinese'
+import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
-export async function waittingStartMaker() {
+async function waittingStartMaker() {
   const makerList = await getMakerList()
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
   }
+
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
-
   while (startedIndexs.length < makerList.length) {
     const missPrivateKeyMakerAddresses: string[] = []
+
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
       const makerAddress = item.makerAddress
+
       if (
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
@@ -61,7 +62,7 @@ export async function waittingStartMaker() {
 
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
-          // doSms(alert)
+          doSms(alert)
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime
@@ -101,12 +102,8 @@ export async function waittingStartMaker() {
 
 export const startMasterJobs = async () => {
   const scene = process.env.ORBITER_SCENE
-
   // cache coinbase
-  jobCacheCoinbase()
-
-  // pull makerList
-  jobGetMakerList()
+  // jobCacheCoinbase()
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
@@ -118,15 +115,19 @@ export const startMasterJobs = async () => {
 
     jobBalanceAlarm()
   }
-}
 
-export const startWorkerJobs = async () => {
-  const scene = process.env.ORBITER_SCENE
-  // pull makerList
-  jobGetMakerList()
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
     startNewMakerTrxPull()
   }
+}
+
+export const startWorkerJobs = async () => {
+  //   const scene = process.env.ORBITER_SCENE
+  //   // maker
+  //   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
+  //     waittingStartMaker()
+  //     startNewMakerTrxPull()
+  //   }
 }

@@ -1,13 +1,13 @@
 [
   {
     "api": {
-      "url": "https://api-rinkeby.etherscan.io/api",
+      "url": "https://api-goerli.etherscan.io/api",
       "key": "{You Key}"
     },
     "chainId": "4",
     "networkId": "4",
     "internalId": "5",
-    "name": "Ethereum Testnet Rinkeby",
+    "name": "Ethereum Testnet Goerli",
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -15,7 +15,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://eth-rinkeby.alchemyapi.io/v2/{You Key}"
+      "wss://eth-goerli.g.alchemyapi.io/v2/{You Key}"
     ],
     "watch": [
       "rpc",
@@ -127,13 +127,13 @@
   },
   {
     "api": {
-      "url": "https://rinkeby-api.zksync.io/api/v0.2",
+      "url": "https://goerli-api.zksync.io/api/v0.2",
       "key": ""
     },
     "chainId": "zksync_test",
     "networkId": "zksync",
     "internalId": "33",
-    "name": "ZKSync Rinkeby",
+    "name": "ZKSync Goerli",
     "nativeCurrency": {
       "id": 0,
       "name": "Ether",
@@ -198,11 +198,11 @@
   },
   {
     "api": {
-      "url": "https://api-kovan-optimistic.etherscan.io/api",
+      "url": "https://api-goerli-optimism.etherscan.io/api",
       "key": "{You Key}"
     },
-    "chainId": "69",
-    "networkId": "69",
+    "chainId": "420",
+    "networkId": "420",
     "internalId": "77",
     "name": "Optimism Kovan Testnet",
     "nativeCurrency": {
@@ -212,7 +212,7 @@
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": [
-      "wss://opt-kovan.g.alchemy.com/v2/{You Key}"
+      "https://goerli.optimism.io/"
     ],
     "watch": [
       "api",

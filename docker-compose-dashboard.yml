@@ -1,0 +1,85 @@
+version: '3.8'
+
+networks:
+  # Specify the network for bridging
+  app-network:
+    driver: bridge
+
+services:
+  history:
+    build: ./history
+    command: yarn run start:prod
+    environment:
+      NODE_ENV: 'production' # production development
+      DB_HOST2: '${DB_HOST2}'
+      DB_PORT2: '${DB_PORT2}'
+      DB_USER2: '${DB_USER2}'
+      DB_PASS2: '${DB_PASS2}'
+      DB_NAME2: '${DB_NAME2}'
+    # volumes:
+    #   - './history/logs:/app/logs'
+    ports:
+      - '3003:3000'
+    restart: always
+    networks:
+      - app-network
+
+  backend:
+    build: ./backend
+    command: yarn run start
+    environment:
+      NODE_ENV: 'development'
+      ORBITER_SCENE: dashboard # dashboard: only dashboard | maker: only maker service | all
+      ORBITER_MAKER_PRIVATE_KEYS: '' # {"makerAddress":"private_key"}
+      PROMETHEUS_ALERTMANAGER: '{"api":"http://alertmanager:9093"}' # {"api":"http://alertmanager:9093"}
+      DB_HOST: db
+      DB_PORT: '${DB_PORT}'
+      DB_USER: '${DB_USER}'
+      DB_PASS: '${DB_PASS}'
+      DB_NAME: '${DB_NAME}'
+    volumes:
+      - './backend/chainlogs:/app/chainlogs'
+      - './backend/logs:/app/logs'
+      - './backend/cache:/app/cache'
+    #   - './backend:/app'
+    ports:
+      - '3002:3002'
+    restart: always
+    networks:
+      - app-network
+
+  frontend:
+    build: ./frontend
+    # command: yarn run dev
+    # environment:
+      # BACKEND_API: 'http://ec2-18-177-135-205.ap-northeast-1.compute.amazonaws.com:3002/'
+      # NODE_ENV: production # development production
+    # volumes:
+    #   - './frontend/docker.nginx.conf:/etc/nginx/nginx.conf'
+    ports:
+      - '80:80'
+    restart: always
+    links:
+      - history
+    networks:
+      - app-network
+  db:
+    image: mysql:5.7.16
+    # image: ibex/debian-mysql-server-5.7
+    # Set mysqld charset
+    command:
+      - '--character-set-server=utf8mb4'
+      - '--collation-server=utf8mb4_unicode_ci'
+    environment:
+      MYSQL_ROOT_PASSWORD: '${DB_ROOT_PASS}'
+      MYSQL_USER: '${DB_USER}'
+      MYSQL_PASSWORD: '${DB_PASS}'
+      MYSQL_DATABASE: '${DB_NAME}'
+    volumes:
+      - './mysql/data:/var/lib/mysql'
+      - './mysql/conf.d:/etc/mysql/conf.d'
+    ports:
+      - '3306:3306'
+    restart: always
+    networks:
+      - app-network
