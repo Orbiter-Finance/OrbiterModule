@@ -44,9 +44,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       const response = await axios.get(url)
       if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
-          low: Number(response.data.result.SafeGasPrice) + 10,
-          medium: Number(response.data.result.ProposeGasPrice) + 10,
-          high: Number(response.data.result.FastGasPrice) + 10,
+          low: Number(response.data.result.SafeGasPrice) + 5,
+          medium: Number(response.data.result.ProposeGasPrice) + 5,
+          high: Number(response.data.result.FastGasPrice) + 5,
         }
         let gwei = prices['medium']
         // Limit max gwei
