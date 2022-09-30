@@ -20,13 +20,13 @@ export default {
     gasPrice: 0,
   },
   rinkeby: {
-    wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://rinkeby.infura.io/v3/Your Key',
+    wsEndPoint: 'wss://eth-goerli.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://eth-goerli.g.alchemy.com/v2/Your Key',
     api: {
-      endPoint: 'https://api-rinkeby.etherscan.io/api',
-      key: 'Your Key',
+      endPoint: 'https://api-goerli.etherscan.io/api',
+      key: '',
     },
+    customChainId:5,
     gasPrice: 2,
   },
   arbitrum: {
@@ -45,7 +45,7 @@ export default {
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
-      endPoint: 'https://testnet.arbiscan.io/api',
+      endPoint: 'https://testnet.arbiscan.io/',
       key: '',
     },
     gasPrice: 2,
@@ -140,14 +140,14 @@ export default {
     customChainId: 10,
   },
   optimism_test: {
-    wsEndPoint: 'wss://opt-kovan.g.alchemy.com/v2/Your Key',
-    httpEndPoint: 'https://opt-kovan.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://opt-goerli.g.alchemy.com/v2/KEY',
+    httpEndPoint: 'https://opt-goerli.g.alchemy.com/v2/KEY',
     api: {
-      endPoint: 'https://api-kovan-optimistic.etherscan.io/api',
-      key: 'Your Key',
+      endPoint: 'https://api-goerli-optimistic.etherscan.io/api',
+      key: 'KEY',
     },
     gasPrice: 2,
-    customChainId: 69,
+    customChainId: 420,
   },
   immutableX: {
     wsEndPoint: null,
@@ -256,7 +256,7 @@ export default {
   bnbchain: {
     wsEndPoint: 'wss://bsc-ws-node.nariox.org',
     httpEndPoint: 'https://bsc-dataseed1.binance.org',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: '',
       key: '',
@@ -267,7 +267,7 @@ export default {
   bnbchain_test: {
     wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
     httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: '',
       key: '',
@@ -278,7 +278,7 @@ export default {
   arbitrum_nova: {
     wsEndPoint: 'https://nova.arbitrum.io/rpc',
     httpEndPoint: 'https://nova.arbitrum.io/rpc',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: 'https://nova-explorer.arbitrum.io/api',
       key: '',
@@ -289,7 +289,7 @@ export default {
   arbitrum_nova_test: {
     wsEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
     httpEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: 'https://goerli-rollup-explorer.arbitrum.io/api',
       key: '',

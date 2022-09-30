@@ -16,6 +16,7 @@ import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
 import { chains, utils } from 'orbiter-chaincore'
+import { equals } from 'orbiter-chaincore/src/utils/core'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -320,7 +321,7 @@ export async function getWealthsChains(makerAddress: string) {
       if (
         nativeCurrency &&
         chain.balances.findIndex(
-          (row) => row.tokenAddress === nativeCurrency.address
+          (row) => equals(row.tokenAddress,nativeCurrency.address)
         ) < 0
       ) {
         chain.balances.push({

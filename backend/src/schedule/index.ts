@@ -5,7 +5,6 @@ import { getMakerList, startMaker } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   jobBalanceAlarm,
-  jobCacheCoinbase,
   jobGetWealths,
   // jobMakerNodeTodo,
   jobMakerPull,
@@ -105,6 +104,8 @@ export const startMasterJobs = async () => {
   // cache coinbase
   // jobCacheCoinbase()
 
+  // pull makerList
+
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()
@@ -115,7 +116,6 @@ export const startMasterJobs = async () => {
 
     jobBalanceAlarm()
   }
-
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()

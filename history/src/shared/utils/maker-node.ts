@@ -42,8 +42,8 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
     return undefined
   }
 }
-async function getRates(currency) {
-  const cacheData = await keyv.get(`rates:${currency}`);
+export async function getRates(currency) {
+    const cacheData = await keyv.get(`rates:${currency}`);
   if (cacheData) {
     return cacheData;
   }
@@ -55,7 +55,7 @@ async function getRates(currency) {
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
-  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60); // true
+  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60 * 5); // true
   return data.rates
 }
 

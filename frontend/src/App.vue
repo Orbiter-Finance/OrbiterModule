@@ -14,7 +14,7 @@
         >
           <template v-for="(item, index) in navs" :key="index">
             <!-- If route.meta.navHide is undefined or navHide == false, display -->
-            <el-menu-item v-if="!item.meta.navHide " :index="item.path">
+            <el-menu-item v-if="!item.meta.navHide" :index="item.path">
               {{ item.name }}
             </el-menu-item>
           </template>

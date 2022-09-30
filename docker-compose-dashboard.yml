@@ -11,15 +11,19 @@ services:
     command: yarn run start:prod
     environment:
       NODE_ENV: 'production' # production development
-      DB_HOST2: '${DB_HOST2}'
-      DB_PORT2: '${DB_PORT2}'
-      DB_USER2: '${DB_USER2}'
-      DB_PASS2: '${DB_PASS2}'
-      DB_NAME2: '${DB_NAME2}'
+      DB_HOST: db
+      DB_PORT: '${DB_PORT}'
+      DB_USER: '${DB_USER}'
+      DB_PASS: '${DB_PASS}'
+      DB_NAME: '${DB_NAME}'
     # volumes:
     #   - './history/logs:/app/logs'
     ports:
       - '3003:3000'
+    depends_on:
+      - db 
+    links:
+      - db
     restart: always
     networks:
       - app-network
@@ -37,6 +41,10 @@ services:
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
+    depends_on:
+      - db 
+    links:
+      - db
     volumes:
       - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'

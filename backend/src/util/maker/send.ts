@@ -126,7 +126,7 @@ async function sendConsumer(value: any) {
       }
       if (chainID === 33) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
-        syncProvider = await zksync.getDefaultProvider('rinkeby')
+        syncProvider = await zksync.Provider.newHttpProvider('https://goerli-api.zksync.io/jsrpc')
       }
       const ethWallet = new ethers.Wallet(
         makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -366,6 +366,8 @@ async function sendConsumer(value: any) {
     const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
     const { nonce, rollback } = await starknet.takeOutNonce()
+    accessLogger.info('starknet_sql_nonce =', nonce)
+    accessLogger.info('result_nonde =', result_nonce)
     try {
       const { hash }: any = await starknet.signTransfer({
         recipient: toAddress,
@@ -384,7 +386,7 @@ async function sendConsumer(value: any) {
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
-        result_nonce,
+        result_nonce: nonce,
       }
     }
   }

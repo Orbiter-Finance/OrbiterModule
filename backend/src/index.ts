@@ -9,12 +9,11 @@ import { createConnection } from 'typeorm'
 import { appConfig, ormConfig } from './config'
 import controller from './controller'
 import middlewareGlobal from './middleware/global'
+import { clusterIsPrimary, sleep } from './util'
 import { startMasterJobs, startWorkerJobs } from './schedule'
 import { sleep } from './util'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
-// import Axios from './util/Axios'
-// Axios.axios()
 
 const startKoa = () => {
   const koa = new Koa()
@@ -84,14 +83,6 @@ const main = async () => {
         await sleep(1500)
       }
     }
-
-    const clusterIsPrimary = () => {
-      if (semver.gte(process.version, 'v16.0.0')) {
-        return cluster.isPrimary
-      }
-      return cluster.isMaster
-    }
-
     if (clusterIsPrimary()) {
       // StarkKoa in master only
       startKoa()

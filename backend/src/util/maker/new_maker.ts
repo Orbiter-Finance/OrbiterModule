@@ -14,27 +14,33 @@ import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
+import { equals } from 'orbiter-chaincore/src/utils/core';
+import dayjs from 'dayjs';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
-  recipient: string
-  sender: string
+  id: string;
+  makerId: string;
+  ebcId: string;
+  recipient: string;
+  sender: string;
   fromChain: {
-    id: string
-    name: string
-    tokenAddress: string
-    symbol: string
-  }
+    id: string;
+    name: string;
+    tokenAddress: string;
+    symbol: string;
+  };
   toChain: {
-    id: string
-    name: string
-    tokenAddress: string
-    symbol: string
-  }
-  pool: any
+    id: string;
+    name: string;
+    tokenAddress: string;
+    symbol: string;
+  };
+  times: Number[];
+  pool?: any;
 }
 // checkData
 export function checkAmount(
@@ -369,14 +375,140 @@ export async function confirmTransactionSendMoneyBack(
       return
     })
 }
+export const fecthSubgraphFetchLp = async (endpoint: string) => {
+  const headers = {
+    "content-type": "application/json",
+  };
+  const graphqlQuery = {
+    operationName: "fetchLpList",
+    query: `query fetchLpList {
+      lpEntities(where: { status: 1 }) {
+        id
+        createdAt
+        maxPrice
+        minPrice
+        sourcePresion
+        destPresion
+        tradingFee
+        gasFee
+        startTime
+        stopTime
+          maker {
+          id
+          owner
+        }
+          pair {
+          id
+          sourceChain
+          destChain
+          sourceToken
+          destToken
+          ebcId
+        }
+      }
+    }`,
+    variables: {},
+  };
 
+  const options = {
+    method: "POST",
+    headers: headers,
+    body: JSON.stringify(graphqlQuery),
+  };
+
+  const response = await fetch(endpoint, options);
+  const data = await response.json();
+  //
+  const lpEntities = data.data["lpEntities"];
+  if (!(lpEntities && Array.isArray(lpEntities))) {
+    throw new Error("Get LP List Fail");
+  }
+  const convertData = convertChainLPToOldLP(lpEntities);
+  return convertData;
+};
+export function convertChainLPToOldLP(oldLpList: Array<any>): Array<IMarket> {
+  return oldLpList.map(row => {
+    const pair = row["pair"];
+    const maker = row["maker"];
+    const fromChain = chains.getChainByInternalId(pair.sourceChain);
+    const fromToken = fromChain.tokens.find(row =>
+      equals(row.address, pair.sourceToken),
+    );
+    const toChain = chains.getChainByInternalId(pair.destChain);
+    const toToken = toChain.tokens.find(row =>
+      equals(row.address, pair.destToken),
+    );
+    const recipientAddress = maker["owner"];
+    const senderAddress = maker["owner"];
+    const fromChainId = pair.sourceChain;
+    const toChainId = pair.destChain;
+    const minPrice = new BigNumber(
+      Number(row["minPrice"]) / Math.pow(10, Number(row["sourcePresion"])),
+    ).toNumber();
+    const maxPrice = new BigNumber(
+      Number(row["maxPrice"]) / Math.pow(10, Number(row["sourcePresion"])),
+    ).toNumber();
+    const times = [
+      Number(row["startTime"]),
+      Number(row["stopTime"] || 9999999999),
+    ];
+    return {
+      id: row["id"],
+      recipient: recipientAddress,
+      sender: senderAddress,
+      makerId: maker.id,
+      ebcId: pair["ebcId"],
+      fromChain: {
+        id: fromChainId,
+        name: fromChain.name,
+        tokenAddress: pair.sourceToken,
+        symbol: fromToken?.symbol || "",
+      },
+      toChain: {
+        id: toChainId,
+        name: toChain.name,
+        tokenAddress: pair.destToken,
+        symbol: toToken?.symbol || "",
+      },
+      times,
+      pool: {
+        //Subsequent versions will modify the structure
+        makerAddress: recipientAddress,
+        c1ID: fromChainId,
+        c2ID: toChainId,
+        c1Name: fromChain.name,
+        c2Name: toChain.name,
+        t1Address: pair.sourceToken,
+        t2Address: pair.destToken,
+        tName: fromToken?.symbol,
+        minPrice,
+        maxPrice,
+        precision: Number(row["sourcePresion"]),
+        avalibleDeposit: 1000,
+        tradingFee: new BigNumber(
+          Number(row["tradingFee"]) / Math.pow(10, Number(row["destPresion"])),
+        ).toNumber(),
+        gasFee: new BigNumber(
+          Number(row["gasFee"]) / Math.pow(10, Number(row["destPresion"])),
+        ).toNumber(),
+        avalibleTimes: times,
+      },
+    };
+  });
+  // return lpList;
+}
 export async function getNewMarketList(): Promise<Array<IMarket>> {
-  const makerList = await getMakerList()
-  return chainCoreUtil.flatten(
-    makerList.map((row) => {
-      return newExpanPool(row)
-    })
-  )
+  if (!process.env['SUBGRAPHS']) {
+    throw new Error('Get SUBGRAPHS URL Config fail');
+  }
+  const makerList = await fecthSubgraphFetchLp(process.env['SUBGRAPHS']);
+  return makerList;
+  // const makerList = await getMakerList()
+  // return chainCoreUtil.flatten(
+  //   makerList.map((row) => {
+  //     return newExpanPool(row)
+  //   })
+  // )
 }
 export function groupWatchAddressByChain(makerList: Array<IMarket>): {
   [key: string]: Array<string>
@@ -404,6 +536,9 @@ export function groupWatchAddressByChain(makerList: Array<IMarket>): {
 export function newExpanPool(pool): Array<IMarket> {
   return [
     {
+      id: "",
+      makerId: "",
+      ebcId: "",
       recipient: pool.makerAddress,
       sender: pool.makerAddress,
       fromChain: {
@@ -418,6 +553,10 @@ export function newExpanPool(pool): Array<IMarket> {
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
       },
+      times: [
+        pool["c1AvalibleTimes"][0].startTime,
+        pool["c1AvalibleTimes"][0].endTime,
+      ],
       // minPrice: pool.c1MinPrice,
       // maxPrice: pool.c1MaxPrice,
       // precision: pool.precision,
@@ -445,6 +584,9 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
     {
+      id: "",
+      makerId: "",
+      ebcId: "",
       recipient: pool.makerAddress,
       sender: pool.makerAddress,
       fromChain: {
@@ -459,6 +601,10 @@ export function newExpanPool(pool): Array<IMarket> {
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
       },
+      times: [
+        pool["c2AvalibleTimes"][0].startTime,
+        pool["c2AvalibleTimes"][0].endTime,
+      ],
       // minPrice: pool.c2MinPrice,
       // maxPrice: pool.c2MaxPrice,
       // precision: pool.precision,
