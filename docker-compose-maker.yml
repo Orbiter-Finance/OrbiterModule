@@ -23,11 +23,6 @@ services:
       - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'
       - './backend/cache:/app/cache'
-<<<<<<<< HEAD:docker-compose-maker.yml
-      - './backend/runtime:/app/runtime'
-
-========
->>>>>>>> origin/dev_v2:docker-compose.yml
     #   - './backend:/app'
     ports:
       - '3002:3002'
@@ -35,8 +30,6 @@ services:
     networks:
       - app-network
 
-<<<<<<<< HEAD:docker-compose-maker.yml
-========
   frontend:
     build: ./frontend
     # command: yarn run dev
@@ -51,7 +44,6 @@ services:
     networks:
       - app-network
 
->>>>>>>> origin/dev_v2:docker-compose.yml
   db:
     image: mysql:5.7.16
     # image: ibex/debian-mysql-server-5.7
