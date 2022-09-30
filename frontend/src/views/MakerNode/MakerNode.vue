@@ -16,7 +16,7 @@
                     <el-row :gutter="20">
                         <el-col :span="6" v-for="(item, i) in networkList" :key="i">
                             <div class="network_item">
-                                <el-checkbox size="large" @click="chooseNetwork($event, item)"/>
+                                <el-checkbox size="large" v-model="item.isCheck" @click="chooseNetwork($event, item, i)"/>
                                 <svg-icon :iconName="showChainIcon(item.chainid)" style="width: 20px; height: 20px"></svg-icon>
                                 <span>{{item.name}}</span>
                             </div>
@@ -28,7 +28,7 @@
                 <span>Set Withholding Fee, Trading Fee and Trasaction Limit for each transaction pair.</span>
             </div>
             <div class="form_box">
-                <SetTable ref="setTable" :tableList="tableList" @setTabList="setTabList" @setIsValidate="setIsValidate"></SetTable>
+                <SetTable ref="setTable" :tableList="tableList" @setTabList="setTabList" @setIsValidate="setIsValidate" @stopLp="stopLp" @pauseLp="pauseLp"></SetTable>
             </div>
             <div class="margin_box">
                 <div class="margin_test">
@@ -37,7 +37,10 @@
                     <span style="font-weight: bold;font-size: 16px" v-if="pageStatus === 3">The new Margin amount you need to deposit in Orbiter Contract is <span style="color: #DF2E2D">{{ethTotal}} ETH</span>, you need to <span style="color: #DF2E2D">reduce</span> Margin:</span>
                 </div>
                 <div class="margin_input clearfix">
-                    <el-input class="fl" v-model="payEth" placeholder="" readonly/>
+                    <div class="price" v-if="pageStatus == 1"><span>{{payEth}}</span></div>
+                    <div class="price" v-if="pageStatus == 2"><span>+</span><span>{{payEth}}</span></div>
+                    <div class="price" v-if="pageStatus == 3"><span>-</span><span>{{payEth}}</span></div>
+                    <!-- <el-input v-if="pageStatus == 1" class="fl" v-model="payEth" placeholder="" readonly /> -->
                     <span class="fl uint">ETH</span>
                 </div>
             </div>
@@ -74,10 +77,10 @@
                 <div class="margin_btn" @click="createMaker" v-if="pageStatus === 1">
                     <span>Deposit {{payEth}} ETH Margin and Go to Next Step</span>
                 </div>
-                <div class="margin_btn" v-if="pageStatus === 2">
+                <div class="margin_btn" @click="createMaker" v-if="pageStatus === 2">
                     <span>Confirm and Add {{payEth}} ETH Margin</span>
                 </div>
-                <div class="margin_btn" v-if="pageStatus === 3">
+                <div class="margin_btn" @click="reduceStake" v-if="pageStatus === 3">
                     <span>Confirm and Reduce {{payEth}} ETH Margin</span>
                 </div>
             </div>
@@ -87,15 +90,18 @@
 
 
 <script lang="ts">
-import { ref, reactive, nextTick } from 'vue';
+import { ref, reactive, nextTick } from 'vue'
 import TokenSelect from './TokenSelect.vue'
 import SetTable from './SetTable.vue'
-import { chain2icon, makerToken, chainName } from '../../utils/chain2id';
+import { chain2icon, makerToken, chainName } from '../../utils/chain2id'
 import { useQuery } from '@urql/vue';
 import { contract_obj, contractMethod, contract_addr } from '../../contracts'
 import { ElNotification, ElLoading } from 'element-plus'
 import { mapState } from 'vuex' 
-import store from '../../store';
+import store from '../../store'
+import { MerkleTree } from 'merkletreejs'
+import {Buffer} from 'buffer';
+import { $env } from '@/env'
  
 export default {
     components: { TokenSelect, SetTable },
@@ -104,7 +110,10 @@ export default {
         const ethTotal = ref(0)
         const pageStatus = ref(1)
         const payEth = ref(0)
+        const ethAmount = ref(0)
+        const stakeAmount = ref(0)
         const tokenItem = ref(1)
+        const tokenType = ref()
         const networkList = reactive([])
         const checkNetwork = reactive([])
         const pairsData = reactive([])
@@ -114,13 +123,20 @@ export default {
         const loading = ref(true)
         const contract_ORMakerDeposit = ref(null)
         const contract_ORProtocalV1 = ref(null)
+        const result = reactive({})
+        const makerAddr = ref("")
         return {
+            result,
             isCreate: true,
             pageStatus,
             ethTotal,
             payEth,
+            ethAmount,
+            stakeAmount,
             agree: false,
             tokenItem,
+            tokenType,
+            makerAddr,
             networkList,
             checkNetwork,
             pairsData,
@@ -132,13 +148,17 @@ export default {
             contract_ORProtocalV1
         }
     },
-    async mounted() {
-        this.getNetwrokList(this.tokenItem)
+    async created() {
+        await this.getNetwrokList()
         await this.getMaker()
+        this.getIdleAmount()
         this.loading = false
+        let block = await this.$web3.eth.getBlockNumber()
+        console.log("block ==>",block)
+        this.tokenType = makerToken.find(item => item.chainid == this.tokenItem)
     },
     computed: {
-        ...mapState(['account', 'isMaker'])
+        ...mapState(['account', 'isMaker', 'maker']),
     },
     methods: {
         showChainIcon(localChainID) {
@@ -149,39 +169,130 @@ export default {
         },
         setTokenItem(val) {
             this.tokenItem = val
+            this.tokenType = makerToken.find(item => item.chainid == val)
         },
-        setTabList(val) {
+        async getIdleAmount() {
+            if(!this.isMaker) return
+            let tokenType = makerToken.filter(v => v.chainid == this.tokenItem)
+            const ethAmount = await this.contract_ORMakerDeposit.methods.idleAmount(tokenType[0].address).call()
+            this.ethAmount = this.$web3.utils.fromWei(ethAmount, 'ether')
+            const stakeAmount = await this.contract_ORMakerDeposit.methods.usedDeposit(tokenType[0].address).call()
+            this.stakeAmount = this.$web3.utils.fromWei(stakeAmount, 'ether')
+            if (this.ethAmount >= this.stakeAmount) {
+                this.payEth = this.ethAmount
+                this.pageStatus = 3
+            }
+            console.log("amount ==>", this.ethAmount, this.stakeAmount)
+        },
+        async setTabList(val) {
             this.tableList = val
+            let needStake = 0
+            let contract_manager = await contract_obj('ORManager')
+            // if (this.checkNetwork.length === 0) return
+            
+            await Promise.all(this.checkNetwork.map(async (v) => {
+                let ebcAddr = await contract_manager.methods.getEBC(v.ebcId).call()
+                this.contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
+            }))
+            await Promise.all(this.tableList.map(async (v) => {
+                if (v.maxPrice !== '' && v.status == 0) {
+                    let chainEntitie = this.result.chainEntities.filter(item => item.id == v.sourceChain)
+                    console.log('tokentype ==>', chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice, 'ether'))
+                    const needPay = await this.contract_ORProtocalV1.methods.getDepositAmount(chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice, 'ether')).call()
+                    if (this.$web3.utils.fromWei(needPay, 'ether') >= needStake) {
+                        needStake = this.$web3.utils.fromWei(needPay, 'ether')
+                    }
+                }
+            }))
+            // this.ethTotal = needStake
+            if (this.isMaker) {
+                if (needStake >= this.ethAmount) {
+                    nextTick(() => {
+                        this.pageStatus = 2
+                        this.payEth = needStake - this.ethAmount
+                        this.ethTotal = this.stakeAmount
+                    })
+                } else {
+                    nextTick(() => {
+                        this.pageStatus = 3
+                        this.payEth = this.ethAmount - needStake
+                    })
+                }
+            } else {
+                this.ethTotal = needStake
+                this.payEth = this.ethTotal
+            }
+            console.log(this.ethTotal, this.ethAmount, needStake, this.payEth, this.stakeAmount)
         },
         setIsValidate(val) {
             this.isValidate = val
         },
         async getMakerInfo() {
-            
+            let data = this.result.makerEntities[0]
+            let actions = data.effectLpIds
+            let lpList = actions.map(v => data.lps.filter(item => item.id === v))
+            let timer = new Date().getTime() / 1000
+            let contract_manager = await contract_obj('ORManager')
+            lpList.map(async v => {
+                let ebcAddr = await contract_manager.methods.getEBC(v[0].pair.ebcId).call()
+                this.contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
+                const stopDealyTime = await this.contract_ORProtocalV1.methods.getStopDealyTime(v[0].pair.sourceChain).call()
+                const isStop = timer >= (Number(stopDealyTime) + Number(v[0].stopTime)) ? true : false
+                const isPause = v[0].status == 1 ? true : false
+                // console.log('xxxxx ==>', stopDealyTime, isStop, (Number(stopDealyTime) + Number(v[0].stopTime)))
+                this.tableList.push({
+                    from: chainName(v[0].pair.sourceChain),
+                    to: chainName(v[0].pair.destChain),
+                    status: v[0].status,
+                    isStop,
+                    isPause,
+                    sourceChain: v[0].pair.sourceChain,
+                    destChain: v[0].pair.destChain,
+                    sourceTAddress: v[0].pair.sourceToken,
+                    destTAddress: v[0].pair.destToken,
+                    ebcid: v[0].pair.ebcId,
+                    sourcePresion: v[0].sourcePresion,
+                    destPresion: v[0].destPresion,
+                    minPrice: v[0].minPrice,
+                    maxPrice: this.$web3.utils.fromWei(v[0].maxPrice, 'ether'),
+                    gasFee: this.$web3.utils.fromWei(v[0].gasFee, 'ether'),
+                    tradingFee: this.$web3.utils.fromWei(v[0].tradingFee, 'ether'),
+                    startTime: v[0].startTime,
+                    stopTime: v[0].stopTime
+                })
+                this.networkList.map(item => {
+                    if (item.chainid === v[0].pair.sourceChain && v[0].status == 1) {
+                        item.isCheck = true
+                        this.checkNetwork.push(item)
+                    }
+                })
+                console.log(this.tableList)
+            })
         },
         async getMaker() {
             let contract_factory = await contract_obj('ORMakerV1Factory')
-            let makerAddr = await contract_factory.methods.getMaker(this.account).call()
-            if (makerAddr === '0x0000000000000000000000000000000000000000') {
+            this.makerAddr = await contract_factory.methods.getMaker(this.account).call()
+            if (this.makerAddr === '0x0000000000000000000000000000000000000000') {
                 nextTick(() => {
-                    store.commit('setMaker', false)
+                    store.commit('setIsMaker', false)
                     this.pageStatus = 1
                 })
             } else {
                 nextTick(() => {
-                    store.commit('setMaker', true)
+                    store.commit('setIsMaker', true)
                     this.pageStatus = 2
                 })
-                this.contract_ORMakerDeposit = await contract_obj('ORMakerDeposit', makerAddr)
+                this.contract_ORMakerDeposit = await contract_obj('ORMakerDeposit', this.makerAddr)
+                this.getMakerInfo()
             }
         },
-        async getNetwrokList(tokenid) {
+        async getNetwrokList(tokenid = 1) {
             const result = await useQuery({
                 query: `
                 query MyQuery {
-                    chainEntity(id: "${tokenid}") {
-                        batchLimit
+                    chainEntities {
                         id
+                        batchLimit
                     }
                     pairEntities {
                         sourceChain
@@ -189,69 +300,121 @@ export default {
                         destToken
                         sourceToken
                         ebcId
+                        id
+                    }
+                    makerEntities(where: {id: "${this.maker}"}) {
+                        id
+                        createdAt
+                        deletedAt
+                        owner
+                        updatedAt
+                        effectLpIds
+                        lps {
+                            createdAt
+                            destPresion
+                            gasFee
+                            id
+                            maxPrice
+                            minPrice
+                            sourcePresion
+                            startTime
+                            stopTime
+                            tradingFee
+                            status
+                            pair {
+                                sourceChain
+                                destChain
+                                sourceChain
+                                destToken
+                                ebcId
+                                sourceToken
+                            }
+                        }
                     }
                 }
                 `
             });
+            this.result = result.data.value
+            console.log("this.result ==>", this.result)
             const data = result.data.value.pairEntities
             this.pairsData = data
-            console.log("this.pairsData ==>", this.pairsData)
             let tokenType = makerToken.filter(v => v.chainid == tokenid)
             let pairs = data.filter(v => v.sourceToken == tokenType[0].address)
             pairs.map(v => {
                 if (this.networkList.filter((val) => val.chainid == v.sourceChain).length == 0) {
-                    this.networkList.push({chainid: v.sourceChain, name: chainName(v.sourceChain), address: v.sourceToken, ebcId: v.ebcId})
+                    this.networkList.push({chainid: v.sourceChain, name: chainName(v.sourceChain), address: v.sourceToken, ebcId: v.ebcId, isCheck: false})
                 }
             })
         },
-        async chooseNetwork(e, item) {
+        async chooseNetwork(e, item, i) {
             if (e.target.tagName !== 'INPUT') return
+            const loading = ElLoading.service({
+                lock: true,
+                text: 'Loading',
+            })
             let contract_manager = await contract_obj('ORManager')
             if (!this.checkNetwork.includes(item)) {
+                this.networkList[i].isCheck = true
                 this.checkNetwork.push(item)
-                await Promise.all(this.pairsData.map(async v => {
-                    if (v.sourceChain == item.chainid) {
-                        let stake_token = await contract_manager.methods.tokenInfos(v.sourceChain, v.sourceToken).call()
-                        let tokenType = makerToken.filter(v => v.chainid == this.tokenItem)
-                        if (tokenType[0].address == stake_token.mainTokenAddress) {
-                            this.tableList.push({
-                                from: chainName(v.sourceChain),
-                                fromChainid: v.sourceChain,
-                                to: chainName(v.destChain),
-                                toChainid: v.destChain,
-                                limit: '',
-                                withholdingFee: '',
-                                tradingFee: ''
-                            })
+                try {
+                    await Promise.all(this.pairsData.map(async v => {
+                        if (v.sourceChain == item.chainid) {
+                            let sourceChain_token = await contract_manager.methods.getTokenInfo(v.sourceChain, v.sourceToken).call()
+                            let destChain_token = await contract_manager.methods.getTokenInfo(v.destChain, v.destToken).call()
+                            let tokenType = makerToken.filter(item => item.address == v.sourceToken)
+                            let minPrice = $env.defaultMinPrice[this.tokenItem][v.sourceChain]
+                            if (tokenType[0] && sourceChain_token.chainID != 0 && destChain_token.chainID != 0 && tokenType[0].address == sourceChain_token.mainTokenAddress) {
+                                let isPushArr = this.tableList.find((item) => item.sourceChain == v.sourceChain && item.destChain == v.destChain)
+                                if (!isPushArr) {
+                                    this.tableList.push({
+                                        from: chainName(v.sourceChain),
+                                        to: chainName(v.destChain),
+                                        status: 0,
+                                        isStop: false,
+                                        isPause: false,
+                                        sourceChain: v.sourceChain,
+                                        destChain: v.destChain,
+                                        sourceTAddress: v.sourceToken,
+                                        destTAddress: v.destToken,
+                                        sourcePresion: sourceChain_token.tokenPresion,
+                                        destPresion: destChain_token.tokenPresion,
+                                        ebcid: v.ebcId,
+                                        minPrice,
+                                        maxPrice: '1',
+                                        gasFee: '1',
+                                        tradingFee: '1',
+                                        startTime: 0,
+                                    })
+                                }
+                            }
                         }
-                    }
-                }))
+                    }))
+                } catch (error) {
+                    console.log(error)
+                    loading.close()
+                }
             } else {
+                this.networkList[i].isCheck = false
                 this.checkNetwork.splice(this.checkNetwork.indexOf(item),1)
                 let modeArr = this.tableList.map(v => v);
                 modeArr.forEach((v) => {
-                    if (v.fromChainid == item.chainid) {
+                    if (v.sourceChain == item.chainid && v.status == 0) {
                         this.tableList.splice(this.tableList.indexOf(v), 1)
                     }
                 })
-            }
-
-            this.payPrice()
-        },
-        async payPrice() {
-            let contract_manager = await contract_obj('ORManager')
-            let needStake = 0
-            await Promise.all(this.checkNetwork.map(async (v) => {
-                let ebcAddr = await contract_manager.methods.getEBC(v.ebcId).call()
-                let contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
-                let needPay = await contract_ORProtocalV1.methods.getDepositAmount().call()
-                if (needPay >= needStake) {
-                    needStake = needPay
+                if (this.ethAmount > this.stakeAmount) {
+                    this.payEth = this.ethAmount
+                    this.ethTotal = this.stakeAmount
+                    this.pageStatus = 3
+                } else {
+                    this.payEth = this.ethAmount
+                    this.ethTotal = this.stakeAmount
+                    this.pageStatus = 2
                 }
-            }))
-            nextTick(() => {
-                this.payEth = needStake
-            })
+                console.log(this.ethAmount, this.stakeAmount, this.payEth, )
+                
+            }
+            loading.close()
         },
         async createMaker() {
             if (!this.agree) return ElNotification({
@@ -266,32 +429,42 @@ export default {
             })
             this.setTable.handleSubmit()
             if (this.isValidate) {
-                console.log("pass", this.tableList, this.account)
-                let data = {
-                    name: 'createMaker',
-                    inputs: [],
-                    arguments: []
-                }
-                const loading = ElLoading.service({
-                    lock: true,
-                    text: 'Loading',
-                })
-                let res: any = await contractMethod(this.account, contract_addr['ORMakerV1Factory'].addr, data).catch(err => {
+                console.log('ismaker ==>', this.isMaker)
+                if (!this.isMaker) {
+                    let data = {
+                        name: 'createMaker',
+                        contractName: 'ORMakerV1Factory',
+                        contractAddr: contract_addr['ORMakerV1Factory'].addr,
+                        arguments: []
+                    }
+                    const loading = ElLoading.service({
+                        lock: true,
+                        text: 'Loading',
+                    })
+                    let isCreate = false
+                    console.log('createmaker ==>', data)
+                    let res: any = await contractMethod(this.account, data).catch(err => {
+                        loading.close()
+                        ElNotification({
+                            title: 'Error',
+                            message: `Failed transactions: ${err.message}`,
+                            type: 'error',
+                        })
+                    })
+                    if (res && res.code === 200) {
+                        isCreate = true
+                        ElNotification({
+                            title: 'Success',
+                            message: `Create maker successfully`,
+                            type: 'success',
+                        })
+                    }
                     loading.close()
-                    ElNotification({
-                        title: 'Error',
-                        message: `Failed transactions: ${err.message}`,
-                        type: 'error',
-                    })
-                })
-                console.log("res ==>", res)
-                loading.close()
-                if (res.code === 200) {
-                    ElNotification({
-                        title: 'Success',
-                        message: `Create maker successfully`,
-                        type: 'success',
-                    })
+                    if (!isCreate) return
+                    await this.getMaker()
+                    await this.addLp()
+                } else {
+                    this.addLp()
                 }
             } else {
                 ElNotification({
@@ -300,6 +473,219 @@ export default {
                     type: 'error',
                 })
             }
+        },
+
+        getPairID (pair): string {
+            const lpId = this.$web3.utils.soliditySha3(
+                {type: 'uint', value: pair.sourceChain},
+                {type: 'uint', value: pair.destChain},
+                {type: 'address', value: pair.sourceTAddress},
+                {type: 'address', value: pair.destTAddress},
+                {type: 'uint', value: pair.ebcid}
+            )
+            return lpId.replace('0x', '');
+        },
+
+        async reduceStake() {
+            if (!this.agree) return ElNotification({
+                title: 'Error',
+                message: `No consent agreement`,
+                type: 'error',
+            })
+            if (this.ethAmount == 0) return ElNotification({
+                title: 'Error',
+                message: `No idle funds`,
+                type: 'error',
+            })
+
+            const loading = ElLoading.service({
+                lock: true,
+                text: 'Loading',
+            })
+            let tokenType = makerToken.filter(item => item.chainid == this.tokenItem)
+            let data = {
+                name: 'withDrawAssert',
+                contractName: "ORMakerDeposit",
+                contractAddr: this.makerAddr, 
+                arguments: [this.$web3.utils.toWei(this.ethAmount, 'ether'), tokenType[0].address]
+            }
+            console.log('lp reduce data ==>', data, this.account, this.makerAddr)
+            let res: any = await contractMethod(this.account, data).catch(err => {
+                loading.close()
+                ElNotification({
+                    title: 'Error',
+                    message: `Failed transactions: ${err.message}`,
+                    type: 'error',
+                })
+                return
+            })
+            if (res && res.code === 200) {
+                ElNotification({
+                    title: 'Success',
+                    message: `Reduce successfully`,
+                    type: 'success',
+                })
+                setTimeout(() => {
+                    loading.close()
+                    location.reload()
+                }, 3000);
+            }
+        },
+
+        async addLp() {
+            let lpInfos = JSON.parse(JSON.stringify(this.tableList))
+            lpInfos = lpInfos.filter(v => {
+                if (v.status == 0) {
+                    delete v.from
+                    delete v.to
+                    delete v.status
+                    delete v.isStop
+                    delete v.isPause
+                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice, 'ether')
+                    v.gasFee = this.$web3.utils.toWei(v.gasFee, 'ether')
+                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee, 'ether')
+                    return v
+                }
+            })
+            const leafs = this.pairsData.map((row) => {
+                return Buffer.from(row.id.replace('0x', ''), 'hex');
+            });
+            const { keccak256 } = this.$web3.utils;
+            const supportPairTree = new MerkleTree(
+                leafs,
+                keccak256,
+                {
+                    sort: true,
+                },
+            );
+            const pairProofLeavesHash = lpInfos.map((row) => {
+                return Buffer.from(this.getPairID(row), 'hex');
+            })
+            const pairProof = pairProofLeavesHash.map((row) => {
+                return supportPairTree.getHexProof(row);
+            });
+            const loading = ElLoading.service({
+                lock: true,
+                text: 'Loading',
+            })
+            lpInfos.map((item) => {
+                item = JSON.parse(JSON.stringify(item))
+                console.log(item)
+            })
+            console.log("lpInfos ==>", lpInfos)
+            const args = [lpInfos, pairProof];
+            console.log(args);
+            
+            // let data = {
+            //     name: 'LPUpdate',
+            //     contractName: "ORMakerDeposit",
+            //     contractAddr: this.makerAddr, 
+            //     // value: this.$web3.utils.toWei(this.payEth + '', 'ether'),
+            //     arguments: [{"from":"Orbiter (Goerli)","to":"Rinkeby","status":2,"isStop":false,"isPause":false,"sourceChain":"1337","destChain":"5","sourceTAddress":"0x0000000000000000000000000000000000000000","destTAddress":"0x0000000000000000000000000000000000000000","ebcid":"1","sourcePresion":"18","destPresion":"18","minPrice":"5000000000000000","maxPrice":"1","gasFee":"1","tradingFee":"1","startTime":"1664441709","stopTime":"1664516144"}]
+            // }
+            // console.log('lp add data ==>', data, this.account, this.makerAddr)
+            // let res: any = await contractMethod(this.account, data).catch(err => {
+            //     loading.close()
+            //     ElNotification({
+            //         title: 'Error',
+            //         message: `Failed transactions: ${err.message}`,
+            //         type: 'error',
+            //     })
+            //     return
+            // })
+            // console.log("upd res ==>", res)
+
+            let data = {
+                name: 'LPAction',
+                contractName: "ORMakerDeposit",
+                contractAddr: this.makerAddr, 
+                value: this.$web3.utils.toWei(this.payEth + '', 'ether'),
+                arguments: args
+            }
+            console.log('lp add data ==>', data, this.account, this.makerAddr)
+            let res: any = await contractMethod(this.account, data).catch(err => {
+                loading.close()
+                ElNotification({
+                    title: 'Error',
+                    message: `Failed transactions: ${err.message}`,
+                    type: 'error',
+                })
+                return
+            })
+            if (res && res.code === 200) {
+                ElNotification({
+                    title: 'Success',
+                    message: `Added successfully`,
+                    type: 'success',
+                })
+                setTimeout(() => {
+                    loading.close()
+                    location.reload()
+                }, 3000);
+            }
+        },
+
+        async lpChange(type, row) {
+            let lpInfos = JSON.parse(JSON.stringify(row))
+            
+            delete lpInfos.from
+            delete lpInfos.to
+            delete lpInfos.status
+            delete lpInfos.isStop
+            delete lpInfos.isPause
+
+            if (lpInfos instanceof Array) {
+                lpInfos.map(v => {
+                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice, 'ether')
+                    v.gasFee = this.$web3.utils.toWei(v.gasFee, 'ether')
+                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee, 'ether')
+                })
+            } else {
+                lpInfos.maxPrice = this.$web3.utils.toWei(lpInfos.maxPrice, 'ether')
+                lpInfos.gasFee = this.$web3.utils.toWei(lpInfos.gasFee, 'ether')
+                lpInfos.tradingFee = this.$web3.utils.toWei(lpInfos.tradingFee, 'ether')
+            }
+            const loading = ElLoading.service({
+                lock: true,
+                text: 'Loading',
+            })
+            let name = type == 1 ? 'LPPause' : 'LPStop'
+            let LPData = {
+                name,
+                contractName: "ORMakerDeposit",
+                contractAddr: this.makerAddr, 
+                arguments: [lpInfos]
+            }
+            console.log('LPData ==>', LPData, this.account, this.makerAddr)
+            let res: any = await contractMethod(this.account, LPData).catch(err => {
+                loading.close()
+                ElNotification({
+                    title: 'Error',
+                    message: `Failed transactions: ${err.message}`,
+                    type: 'error',
+                })
+                return
+            })
+            if (res && res.code === 200) {
+                ElNotification({
+                    title: 'Success',
+                    message: type == 1 ? `Pause successfully`: `Stop successfully`,
+                    type: 'success',
+                })
+                setTimeout(() => {
+                    loading.close()
+                    location.reload()
+                }, 3000);
+            }
+            
+        },
+
+        async pauseLp(row) {
+            await this.lpChange(1, [row])
+        },
+
+        async stopLp(row) {
+            await this.lpChange(2, row)
         }
     }
 }
@@ -394,17 +780,21 @@ export default {
                 display: flex;
                 align-items: center;
                 margin: 0 auto;
-                :deep(.el-input__inner) {
-                    background-color: transparent;
-                    border: none;
+                .price {
+                    display: flex;
+                    align-items: center;
+                    justify-content: center;
                     border-bottom: 1px solid #333;
-                    border-radius: 0;
                     height: 30px;
                     font-size: 20px;
                     color: #DF2E2D;
                     width: 100%;
                     text-align: center;
                     font-weight: bold;
+                    & span:first-child {
+                        margin-top: -2px;
+                        margin-right: 5px;
+                    }
                 }
                 .uint {
                     margin-left: 10px;

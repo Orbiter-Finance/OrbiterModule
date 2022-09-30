@@ -7,6 +7,7 @@ import router from './router'
 import store from './store'
 import urql from '@urql/vue';
 import SvgIcon from './components/SvgIcon/SvgIcon.vue'
+import Web3 from 'web3'
 // Vue.component('svg-icon', SvgIcon)
 
 // import './icons'
@@ -18,13 +19,17 @@ router.beforeEach((to, from, next) => {
         next({path: '/'})
     }
 })
-const app = createApp(App).use(store).use(router)
-installElementPlus(app)
-installVxeTale(app)
-app.component('svg-icon', SvgIcon)
+const app = createApp(App)
+app.config.globalProperties.$web3 = new Web3(process.env.VUE_APP_CHAIN_RPC as any)
+app.use(store).use(router)
 app.use(urql, {
     url: process.env.VUE_APP_GRAPHQL_URL,
 });
+installElementPlus(app)
+installVxeTale(app)
+app.component('svg-icon', SvgIcon)
+
+app.provide('$web3', app.config.globalProperties.$web3)
 const req = require.context('./icons/svg', false, /\.svg$/)
 const requireAll = (requireContext) => requireContext.keys().map(requireContext)
 requireAll(req)

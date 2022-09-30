@@ -52,7 +52,9 @@
       </el-aside> -->
       <el-container>
         <el-main>
-          <router-view  v-if="isReload"/>
+          <transition name="el-fade-in-linear">
+            <router-view  v-if="isReload"/>
+          </transition>
         </el-main>
         <!-- <el-footer>Footer</el-footer> -->
       </el-container>
@@ -67,7 +69,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 import store from './store'
 import util from './utils/util'
-import { contract_obj } from './contracts'
+import { contract_obj, defaultChainInfo } from './contracts'
 
 const route = useRoute()
 const router = useRouter()
@@ -104,13 +106,13 @@ const getLinksStatus = async () => {
     }
     const addr = await ethereum.request({ method: 'eth_requestAccounts' })
     store.commit('setAccount', addr[0])
-    let isCheck = true
-    // let isCheck = false
-    // if (ethereum.networkVersion != defaultChainInfo.chainid) {
-    //   isCheck = await linkNetwork()
-    // } else {
-    //   isCheck = true
-    // }
+    // let isCheck = true
+    let isCheck = false
+    if (ethereum.networkVersion != defaultChainInfo.chainid) {
+      isCheck = await linkNetwork()
+    } else {
+      isCheck = true
+    }
     if (isCheck) {
       walletAccount.value = util.shortAddress(addr[0])
       isLink.value = true
@@ -121,12 +123,14 @@ const getLinksStatus = async () => {
       })
       let contract_factory = await contract_obj('ORMakerV1Factory')
       let makerAddr = await contract_factory.methods.getMaker(addr[0]).call()
+      console.log(makerAddr)
       if (makerAddr != '0x0000000000000000000000000000000000000000') {
         isMaker.value = true
-        store.commit('setMaker', true)
+        store.commit('setIsMaker', true)
+        store.commit('setMaker', makerAddr.toLowerCase())
       } else {
         isMaker.value = false
-        store.commit('setMaker', false)
+        store.commit('setIsMaker', false)
       }
     }
     
@@ -138,7 +142,7 @@ const getLinksStatus = async () => {
         if (accounts.length != 0) {
           walletAccount.value = util.shortAddress(accounts[0])
           store.commit('setAccount', accounts[0])
-          reload()
+          location.reload()
         } else {
           isLink.value = false
           router.removeRoute('MakerNode')
@@ -146,40 +150,40 @@ const getLinksStatus = async () => {
     });
     
   } catch (error) {
-    throw new Error(`links err`);
+    throw new Error(`links err:${error}`);
   }
 }
 getLinksStatus()
 
-// const linkNetwork = async ():Promise<boolean> => {
-//   const ethereum = (window as any).ethereum
-//   if (!ethereum) {
-//     return false
-//   }
-//   console.log(defaultChainInfo)
-//   const result = await ethereum.request({
-//       method: 'wallet_addEthereumChain',
-//       params: [
-//         {
-//           chainId: defaultChainInfo.chainid,
-//           chainName: defaultChainInfo.name,
-//           nativeCurrency: {
-//             name: defaultChainInfo.symbol,
-//             symbol: defaultChainInfo.symbol,
-//             decimals: defaultChainInfo.decimals
-//           },
-//           rpcUrls: [defaultChainInfo.rpcUrls],
-//           blockExplorerUrls: [defaultChainInfo.blockExplorerUrls]
-//         }
-//       ]
-//   })
-//   return result;
-//   // .then(() => {
-//   //     return true
-//   // }).catch(() => {
-//   //     return false
-//   // })
-// }
+const linkNetwork = async ():Promise<boolean> => {
+  const ethereum = (window as any).ethereum
+  if (!ethereum) {
+    return false
+  }
+  console.log(defaultChainInfo)
+  const result = await ethereum.request({
+      method: 'wallet_addEthereumChain',
+      params: [
+        {
+          chainId: defaultChainInfo.chainid,
+          chainName: defaultChainInfo.name,
+          nativeCurrency: {
+            name: defaultChainInfo.symbol,
+            symbol: defaultChainInfo.symbol,
+            decimals: defaultChainInfo.decimals
+          },
+          rpcUrls: [defaultChainInfo.rpcUrls],
+          blockExplorerUrls: [defaultChainInfo.blockExplorerUrls]
+        }
+      ]
+  })
+  return result;
+  // .then(() => {
+  //     return true
+  // }).catch(() => {
+  //     return false
+  // })
+}
 
 const getGlobalInfo = async () => {
   const resp = await $axios.get('global')

@@ -16,21 +16,21 @@
                         </div>
                     </template>
                 </el-table-column>
-                <el-table-column prop="limit" label="Limit">
+                <el-table-column prop="maxPrice" label="Limit">
                     <template #default="{ row, $index }">
-                        <el-form-item :prop="`tableData[${$index}].limit`" :rules="rules.limit">
+                        <el-form-item :prop="`tableData[${$index}].maxPrice`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.limit" placeholder="0"/>
+                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.maxPrice" placeholder="0" :readonly="row.status != 0"/>
                                 <span class="fl uint">ETH</span>
                             </div>
                         </el-form-item>
                     </template>
                 </el-table-column>
-                <el-table-column prop="withholdingFee" label="Withholding Fee">
+                <el-table-column prop="gasFee" label="Withholding Fee">
                     <template #default="{ row, $index }">
-                        <el-form-item :prop="`tableData[${$index}].withholdingFee`" :rules="rules.limit">
+                        <el-form-item :prop="`tableData[${$index}].gasFee`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.withholdingFee" placeholder="0"/>
+                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.gasFee" placeholder="0" :readonly="row.status != 0"/>
                                 <span class="fl uint">ETH</span>
                             </div>
                         </el-form-item>
@@ -38,10 +38,33 @@
                 </el-table-column>
                 <el-table-column prop="tradingFee" label="Trading Fee">
                     <template #default="{ row, $index }">
-                        <el-form-item :prop="`tableData[${$index}].tradingFee`" :rules="rules.limit">
+                        <el-form-item :prop="`tableData[${$index}].tradingFee`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.tradingFee" placeholder="0"/>
+                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.tradingFee" placeholder="0" :readonly="row.status != 0"/>
                                 <span class="fl uint">%</span>
+                            </div>
+                        </el-form-item>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="status" width="100px" label="Status">
+                    <template #default="{ row }">
+                        <el-form-item>
+                            <div class="status_btn">
+                                <span v-if="row.status == 0" style="color: #d44839;">Stop</span>
+                                <span v-if="row.status == 1" style="color: #4aa34a">Start</span>
+                                <span v-if="row.status == 2" style="color: #dca551">Pause</span>
+                            </div>
+                        </el-form-item>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="status" width="100px" label="Operation">
+                    <template #default="{ row }">
+                        <el-form-item>
+                            <div class="status_btn">
+                                <span class="status_stop" v-if="row.isStop && row.status == 2" @click="stopLp(row)">Stop</span>
+                                <span class="status_stop_not" v-if="!row.isStop && row.status == 2">Stop</span>
+                                <span class="status_pause" v-if="row.isPause && row.status == 1"  @click="pauseLp(row)">Pause</span>
+                                <span class="status_pause_not" v-if="!row.isPause && row.status == 1">Pause</span>
                             </div>
                         </el-form-item>
                     </template>
@@ -53,10 +76,13 @@
 
 <script lang="ts" setup>
 import { toRefs, defineProps, defineEmits, watch, ref, defineExpose } from 'vue'
+// import { makerToken } from '../../utils/chain2id'
 
-const emits = defineEmits(["setTabList", "setIsValidate"])
+const emits = defineEmits(["setTabList", "setIsValidate", 'stopLp', 'pauseLp'])
 const formTableRef = ref()
-
+// const verifyLimit = (rule: any, value: any, callback: any) => {
+//     let tokenType = makerToken.filter(v => v.chainid == this.tokenItem)
+// } 
 const verifyNumber = (rule: any, value: any, callback: any) => {
     if (!value) {
         return callback(new Error('value null'))
@@ -67,7 +93,7 @@ const verifyNumber = (rule: any, value: any, callback: any) => {
     }
 }
 const rules = {
-    limit: [{ required: true, validator: verifyNumber, type: 'number', trigger: 'blur' }]
+    maxPrice: [{ required: true, validator: verifyNumber, type: 'number', trigger: 'blur' }]
 }
 const props = defineProps({
     tableList: Array,
@@ -82,6 +108,15 @@ const handleSubmit = () => {
         emits("setIsValidate", valid)
     })
 }
+
+const stopLp = (item) => {
+    emits("stopLp", item)
+}
+
+const pauseLp = (item) => {
+    emits("pauseLp", item)
+}
+
 defineExpose({
     handleSubmit
 })
@@ -91,6 +126,7 @@ watch(() => tableData, (newVal) => {
         emits("setTabList", newVal)
     }
 }, { deep: true, immediate: true})
+
 </script>
 
 <style lang="scss" scoped>
@@ -110,6 +146,44 @@ watch(() => tableData, (newVal) => {
 
         input {
             color: #5EC2B7;
+        }
+    }
+    // .status_btn {
+    //     width: 100%;
+    // }
+    .status_stop, .status_pause, .status_stop_not, .status_pause_not {
+        display: inline-block;
+        width: 70px;
+        height: 30px;
+        box-sizing: border-box;
+        border-radius: 40px;
+        background: linear-gradient(90.46deg, #EB382D 4.07%, #BC3035 98.55%);
+        box-shadow: inset 0px -8px 0px rgba(0, 0, 0, 0.16);
+        text-align: center;
+        line-height: 30px;
+        font-weight: bold;
+        // padding: 3px 10px;
+        color: #ffffff;
+        cursor: pointer;
+        &:hover {
+            background: #BC3035;
+            box-shadow: inset 0px -6px 0px rgba(0, 0, 0, 0.16);
+        }
+    }
+    .status_stop_not, .status_pause_not {
+        background: linear-gradient(90.46deg, #d4d3d3 4.07%, #b6b6b5 98.55%);
+        box-shadow: inset 0px -8px 0px rgba(0, 0, 0, 0.16);
+        &:hover {
+            background: #b6b6b5;
+            box-shadow: inset 0px -6px 0px rgba(0, 0, 0, 0.16);
+        }
+    }
+    .status_pause {
+        background: linear-gradient(90.46deg, #e4ad5a 4.07%, #dca551 98.55%);
+        box-shadow: inset 0px -8px 0px rgba(0, 0, 0, 0.16);
+        &:hover {
+            background: #dca551;
+            box-shadow: inset 0px -6px 0px rgba(0, 0, 0, 0.16);
         }
     }
     // /deep/ .el-table {

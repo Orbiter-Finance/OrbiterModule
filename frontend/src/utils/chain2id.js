@@ -62,6 +62,7 @@ export const chainNameMap = {
   15: "BNBChain",
   16: "Arbitrum Nova",
   516: "Arbitrum Nova(Goerli)",
+  1337: 'Orbiter (Goerli)'
 }
 export const makerToken = [
   {

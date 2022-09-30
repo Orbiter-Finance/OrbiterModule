@@ -1,36 +1,21 @@
 import Web3 from 'web3'
-import { defaultRpc } from './index'
+import { defaultRpc, contract_obj } from './index'
 
 /**
  * @param {String} accounts address
- * @param {Object} contractAddr address
- * @param {Object} params data {name: "", value: 0, inputs:[{}...], arguments: [...]}
+ * @param {Object} params data {name: "", value: 0, contractName: '', contractName: '' , arguments: [...]}
  */
-export const contractMethod = async (accounts, contractAddr, params) => {
+export const contractMethod = async (accounts, params) => {
     const web3 = await new Web3(defaultRpc as any);
-    const data = web3.eth.abi.encodeFunctionCall({
-        name: params.name,
-        type: "function",
-        inputs: params.inputs,
-    }, params.arguments);
+    const contract = await contract_obj(params.contractName, params.contractAddr)
     const nonce =  await web3.eth.getTransactionCount(accounts)
     const gasPrice = await web3.eth.getGasPrice()
     const value = params.value ? params.value : 0
-    let gasLimit = 0
-    await web3.eth.estimateGas({
-        nonce,
-        from: accounts, 
-        to: contractAddr, 
-        gasPrice: web3.utils.numberToHex(gasPrice),
-        value: web3.utils.toHex(value),
-        data,
-    }).then(res => {
-        gasLimit = res
-    }).catch(err => {
-        throw new Error(err)
-    })
+    const parameters = params.arguments.length === 0 ? null : params.arguments
+    const data = parameters == null ? await contract.methods[params.name]().encodeABI() : await contract.methods[params.name](...parameters).encodeABI()
+    let gasLimit = parameters == null ? await contract.methods[params.name]().estimateGas({from: accounts, to: params.contractAddr,gasPrice: web3.utils.toHex(gasPrice), value: web3.utils.toHex(value)}) : await contract.methods[params.name](...parameters).estimateGas({from: accounts, to: params.contractAddr, gasPrice: web3.utils.toHex(gasPrice), value: web3.utils.toHex(value)})
+    gasLimit = parseInt(gasLimit * 1.2 + '')
 
-    
     return new Promise((resolve, reject) => {
 
         const callback = (status, hax = null) => {
@@ -66,10 +51,11 @@ export const contractMethod = async (accounts, contractAddr, params) => {
             gasPrice: web3.utils.toHex(gasPrice),
             gas: web3.utils.toHex(gasLimit),
             from: accounts,
-            to: contractAddr,
+            to: params.contractAddr,
             value: web3.utils.toHex(value),
             data
         }]
+        console.log('param ==>', param)
         const ethereum = (window as any).ethereum
         if (!ethereum) {
             reject({
@@ -99,7 +85,7 @@ export const contractMethod = async (accounts, contractAddr, params) => {
                             clearInterval(timer_takeGain);
                             number_takeGain = 1;
                         }
-                    }, 2000)
+                    }, 3000)
                 }
             }).catch(err => {
                 callback('refuse', err)
