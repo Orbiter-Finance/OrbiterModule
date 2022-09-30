@@ -20,7 +20,6 @@ import { MakerNodeTodo } from '../../model/maker_node_todo'
 import { MakerZkHash } from '../../model/maker_zk_hash'
 import { BobaListen } from '../../service/boba/boba_listen'
 import { factoryIMXListen } from '../../service/immutablex/imx_listen'
-import { StarknetHelp } from '../../service/starknet/helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import loopring_help from '../../service/loopring/loopring_help'
 import { Core } from '../core'
@@ -28,15 +27,15 @@ import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
-import { makerList, makerListHistory } from './maker_list'
+import { makerListHistory, MakerUtil } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderByChainId } from '../../service/starknet/helper'
-import { L1Signer } from 'zksync-web3'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
-// import { doSms } from '../../sms/smsSchinese'
+import { doSms } from '../../sms/smsSchinese'
+import { IMarket } from './new_maker'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -126,12 +125,12 @@ export async function startMaker(makerInfo: any) {
   // new maker trx pull
 }
 
-export async function getMakerList() {
-  return makerList
+export async function getMakerList():Promise<Array<IMarket>> {
+  return MakerUtil.makerList;
 }
 
 export async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
+  return MakerUtil.makerList.concat(MakerUtil.makerListHistory)
 }
 
 export function expanPool(pool) {
@@ -412,6 +411,7 @@ async function watchTransfers(pool, state) {
     return
   }
   const isPolygon = fromChainID == 6 || fromChainID == 66
+  const isMetis = fromChainID == 10 || fromChainID == 510
   if (isEthTokenAddress(tokenAddress)) {
     let startBlockNumber = 0
     new EthListen(
@@ -576,7 +576,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                       }
                       matchHashList.push(element.txHash)
                       accessLogger.info('element =', element)
-                      accessLogger.info('zk match one transaction')
+                      accessLogger.info('match one transaction')
                       let nonce = element.op.nonce
                       accessLogger.info(
                         'Transaction with hash ' +
@@ -667,7 +667,8 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
                         })
                         accessLogger.info('newHashResult =', rst)
                       } catch (error) {
-                        errorLogger.error('newHashSqlError =', error)
+                        //error
+                        // errorLogger.error('newHashSqlError =', error)
                       }
                     }
                   }
@@ -686,6 +687,7 @@ function confirmZKTransaction(httpEndPoint, pool, tokenAddress, state) {
         errorLogger.error('error3 = getZKTransactionListError', error)
       })
   }
+
   setInterval(ticker, 10 * 1000)
 }
 
@@ -830,11 +832,10 @@ function confirmLPTransaction(pool, tokenAddress, state) {
                   )
                   continue
                 }
-
                 matchHashList.push(lpTransaction.hash)
                 loopringLastHash = lpTransaction.hash
                 accessLogger.info('element =', lpTransaction)
-                accessLogger.info('lp match one transaction')
+                accessLogger.info('match one transaction')
                 let nonce = (lpTransaction['storageInfo'].storageId - 1) / 2
                 accessLogger.info(
                   'Transaction with hash ' +
@@ -1009,7 +1010,7 @@ function confirmZKSTransaction(pool, tokenAddress, state) {
               let validPText = (9000 + Number(toChainID)).toString()
               const realAmount = orbiterCore.getRAmountFromTAmount(
                 fromChainID,
-                amount.toString()
+                amount
               )
               if (realAmount.state === false) {
                 continue
@@ -1312,11 +1313,7 @@ function confirmFromTransaction(
     if (!trxConfirmations) {
       return confirmFromTransaction(pool, state, txHash, confirmations, isFirst)
     }
-
-    if (fromChainID == 10 || fromChainID == 510) {
-      confirmations = 1
-    }
-    var trx = trxConfirmations.trx
+    const trx = trxConfirmations.trx
 
     accessLogger.info(
       'Transaction with hash ' +
@@ -1589,6 +1586,7 @@ function confirmToZKTransaction(syncProvider, txID, transactionID) {
     if (!transferReceipt.success && transferReceipt.failReason) {
       return
     }
+
     return confirmToZKTransaction(syncProvider, txID, transactionID)
   }, 8 * 1000)
 }
@@ -1771,7 +1769,6 @@ function confirmToZKSTransaction(
       }
       return
     }
-
     // When failReason, don't try again
     if (
       !transferReceipt.success ||
@@ -1780,6 +1777,7 @@ function confirmToZKSTransaction(
     ) {
       return
     }
+
     return confirmToZKSTransaction(txID, transactionID, toChainId, makerAddress)
   }, 8 * 1000)
 }
@@ -2010,123 +2008,128 @@ export async function sendTransaction(
     fromChainID,
     nonce,
     ownerAddress
-  )
-    .then(async (response) => {
-      accessLogger.info('response =', response)
-      if (!response.code) {
-        var txID = response.txid
-        accessLogger.info(
-          `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
-        )
-        try {
-          await repositoryMakerNode().update(
-            { transactionID: transactionID },
-            {
-              toTx: txID,
-              toAmount: tAmount,
-              state: 2,
-            }
-          )
-          accessLogger.info(
-            `[${transactionID}] sendTransaction toChain ${toChain} update success`
-          )
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
-          return
-        }
-        if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
-          let syncProvider = response.zkProvider
-          confirmToZKTransaction(syncProvider, txID, transactionID)
-        } else if (toChainID === 4 || toChainID === 44) {
-          confirmToSNTransaction(
-            txID,
-            transactionID,
-            toChainID,
-            makerAddress
-          ).then((success) => {
-            success === false && response.rollback()
-          })
-        } else if (toChainID === 8 || toChainID === 88) {
-          console.warn({ toChainID, toChain, txID, transactionID })
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 9 || toChainID === 99) {
-          confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
-        } else if (toChainID === 11 || toChainID === 511) {
-          accessLogger.info(
-            `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
-          )
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 12 || toChainID === 512) {
-          if (txID.indexOf('sync-tx:') != -1) {
-            txID = txID.replace('sync-tx:', '0x')
+  ).then(async (response) => {
+    accessLogger.info('response =', response)
+    if (!response.code) {
+      var txID = response.txid
+      accessLogger.info(
+        `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
+      )
+      try {
+        await repositoryMakerNode().update(
+          { transactionID: transactionID },
+          {
+            toTx: txID,
+            toAmount: tAmount,
+            state: 2,
           }
-          confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
-        } else {
-          confirmToTransaction(toChainID, toChain, txID, transactionID)
-        }
-        await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
-        // update todo
-      } else {
-        errorLogger.error(
-          'updateError maker_node =',
-          `state = 20 WHERE transactionID = '${transactionID}'`
         )
-        try {
-          await repositoryMakerNode().update(
-            { transactionID: transactionID },
-            { state: 20 }
-          )
-          accessLogger.info(
-            `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
-          )
-          // todo need result_nonce
-          // if (response.result_nonce > 0) {
-          //   // insert or update todo
-          //   const todo = await repositoryMakerNodeTodo().findOne({
-          //     transactionID,
-          //   })
-          //   if (todo) {
-          //     await repositoryMakerNodeTodo().increment(
-          //       { transactionID },
-          //       'do_current',
-          //       1
-          //     )
-          //   } else {
-          //     await repositoryMakerNodeTodo().insert({
-          //       transactionID,
-          //       makerAddress,
-          //       data: JSON.stringify({
-          //         transactionID,
-          //         fromChainID,
-          //         toChainID,
-          //         toChain,
-          //         tokenAddress,
-          //         amountStr,
-          //         fromAddress,
-          //         pool,
-          //         nonce,
-          //         result_nonce: response.result_nonce,
-          //       }),
-          //       do_state: 20,
-          //     })
-          //   }
-          // }
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
-          return
-        }
-        let alert = 'Send Transaction Error ' + transactionID
-        try {
-          // doSms(alert)
-        } catch (error) {
-          errorLogger.error(
-            `[${transactionID}] sendTransactionErrorMessage =`,
-            error
-          )
-        }
+        accessLogger.info(
+          `[${transactionID}] sendTransaction toChain ${toChain} update success`
+        )
+      } catch (error) {
+        errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
+        return
       }
-    })
-    .catch((error) => {
-      errorLogger.warn(error)
-    })
+      if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
+        let syncProvider = response.zkProvider
+        confirmToZKTransaction(syncProvider, txID, transactionID)
+      } else if (toChainID === 4 || toChainID === 44) {
+        confirmToSNTransaction(
+          txID,
+          transactionID,
+          toChainID,
+          makerAddress
+        ).then((success) => {
+          success === false && response.rollback()
+        })
+      } else if (toChainID === 8 || toChainID === 88) {
+        console.warn({ toChainID, toChain, txID, transactionID })
+        // confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 9 || toChainID === 99) {
+        confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+      } else if (toChainID === 11 || toChainID === 511) {
+        accessLogger.info(
+          `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
+        )
+        // confirmToSNTransaction(txID, transactionID, toChainID)
+      } else if (toChainID === 12 || toChainID === 512) {
+        if (txID.indexOf('sync-tx:') != -1) {
+          txID = txID.replace('sync-tx:', '0x')
+        }
+        confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
+      } else {
+        confirmToTransaction(toChainID, toChain, txID, transactionID)
+      }
+
+      // update todo
+      await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
+    } else {
+      errorLogger.error(
+        'updateError maker_node =',
+        `state = 20 WHERE transactionID = '${transactionID}'`
+      )
+      try {
+        await repositoryMakerNode().update(
+          { transactionID: transactionID },
+          { state: 20 }
+        )
+        accessLogger.info(
+          `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
+        )
+        // todo need result_nonce
+        // if (response.result_nonce > 0) {
+        //   // insert or update todo
+        //   const todo = await repositoryMakerNodeTodo().findOne({
+        //     transactionID,
+        //   })
+        //   if (todo) {
+        //     await repositoryMakerNodeTodo().increment(
+        //       { transactionID },
+        //       'do_current',
+        //       1
+        //     )
+        //   } else {
+        //     await repositoryMakerNodeTodo().insert({
+        //       transactionID,
+        //       makerAddress,
+        //       data: JSON.stringify({
+        //         transactionID,
+        //         fromChainID,
+        //         toChainID,
+        //         toChain,
+        //         tokenAddress,
+        //         amountStr,
+        //         fromAddress,
+        //         pool,
+        //         nonce,
+        //         result_nonce: response.result_nonce,
+        //       }),
+        //       do_state: 20,
+        //     })
+        //   }
+        // }
+      } catch (error) {
+        errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
+        return
+      }
+      var myDate = new Date()
+      let alert =
+        'Send Transaction Error ' +
+        transactionID +
+        myDate.getHours() +
+        ':' +
+        myDate.getMinutes() +
+        ':' +
+        myDate.getSeconds()
+      try {
+        doSms(alert)
+      } catch (error) {
+        errorLogger.error(
+          `[${transactionID}] sendTransactionErrorMessage =`,
+          error
+        )
+      }
+    }
+  })
 }

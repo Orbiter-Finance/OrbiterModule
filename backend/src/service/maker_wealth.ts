@@ -288,25 +288,25 @@ export async function getWealthsChains(makerAddress: string) {
     return item
   }
   for (const item of makerList) {
-    if (item.makerAddress != makerAddress) {
+    if (item.sender != makerAddress) {
       continue
     }
     // find token 
-    const chain1 = chains.getChainByInternalId(String(item.c1ID))
-    const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
+    const chain1 = chains.getChainByInternalId(String(item.fromChain.id))
+    const token1 = chains.getTokenByAddress(chain1.chainId, item.fromChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.makerAddress, item.c1ID, item.c1Name),
-      item.t1Address,
+      pushToChains(item.sender, item.fromChain.id, item.fromChain.symbol),
+      item.fromChain.tokenAddress,
       token1?.symbol || "",
-      token1?.decimals || item.precision
+      token1?.decimals || item.fromChain.decimals
     )
-    const chain2 = chains.getChainByInternalId(String(item.c2ID))
-    const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
+    const chain2 = chains.getChainByInternalId(String(item.toChain.id))
+    const token2 = chains.getTokenByAddress(chain2.chainId, item.toChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.makerAddress, item.c2ID, item.c2Name),
-      item.t2Address,
+      pushToChains(item.sender, item.toChain.id, item.toChain.symbol),
+      item.toChain.tokenAddress,
       token2?.symbol || "",
-      token2?.decimals || item.precision
+      token2?.decimals || item.toChain.decimals
     )
   }
   // get tokan balance

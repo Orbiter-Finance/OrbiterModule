@@ -40,8 +40,8 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
     const makerList = await getMakerList()
     for (const item of makerList) {
-      pushChain(item.c1ID, item.c1Name)
-      pushChain(item.c2ID, item.c2Name)
+      pushChain(item.fromChain.id, item.fromChain.symbol)
+      pushChain(item.toChain.id, item.toChain.symbol)
     }
 
     const earliestMakrNode = await serviceMaker.getEarliestMakerNode()

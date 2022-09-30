@@ -28,7 +28,7 @@ export async function waittingStartMaker() {
     const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
-      const makerAddress = item.makerAddress
+      const makerAddress = item.sender
       if (
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
