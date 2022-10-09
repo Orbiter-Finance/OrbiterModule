@@ -382,7 +382,6 @@ export async function getNewMarketList(): Promise<Array<IMarket>> {
   if (!process.env['SUBGRAPHS']) {
     throw new Error('Get SUBGRAPHS URL Config fail');
   }
-  await MakerUtil.refreshMakerList();
   return MakerUtil.makerList;
 }
 export function groupWatchAddressByChain(makerList: Array<IMarket>): {

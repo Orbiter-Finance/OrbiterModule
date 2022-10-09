@@ -15,8 +15,9 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-import { chains, utils } from 'orbiter-chaincore'
+import { chains, chainService, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+import { ArbitrumNova } from 'orbiter-chaincore/src/chain'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -166,11 +167,12 @@ async function getTokenBalance(
         }
         break
       case 'arbitrum_nova':
-        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        const chainConfig = utils.chains.getChainByInternalId(String(chainId));
+        const chainService = new ArbitrumNova(chainConfig);
         if (isEthTokenAddress(tokenAddress)) {
-          value = await arWeb3.eth.getBalance(makerAddress)
+          value = (await chainService.getBalance(makerAddress)).toString()
         } else {
-          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
+          value = (await chainService.getTokenBalance(makerAddress, tokenAddress)).toString();
         }
         break
       default:

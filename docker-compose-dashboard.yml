@@ -46,9 +46,7 @@ services:
     links:
       - db
     volumes:
-      - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'
-      - './backend/cache:/app/cache'
     #   - './backend:/app'
     ports:
       - '3002:3002'

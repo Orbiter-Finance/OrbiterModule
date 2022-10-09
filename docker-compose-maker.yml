@@ -19,10 +19,9 @@ services:
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
+      SUBGRAPHS: '${SUBGRAPHS}'
     volumes:
-      - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'
-      - './backend/cache:/app/cache'
       - './backend/runtime:/app/runtime'
 
     #   - './backend:/app'
