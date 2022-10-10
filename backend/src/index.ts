@@ -12,6 +12,7 @@ import { clusterIsPrimary, sleep } from './util'
 import { startMasterJobs, startWorkerJobs } from './schedule'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
+import { MakerUtil } from './util/maker/maker_list'
 
 export const startKoa = () => {
   const koa = new Koa()
@@ -52,6 +53,7 @@ export const startKoa = () => {
 
 const main = async () => {
   try {
+    await MakerUtil.refreshMakerList();
     // initialize mysql connect, waiting for mysql server started
     accessLogger.info(`process: ${process.pid}. Connecting to the database...`)
     const reconnectTotal = 18
