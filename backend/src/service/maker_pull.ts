@@ -565,7 +565,7 @@ export class ServiceMakerPull {
       const makerList = await getNewMarketList()
       const marketItem = makerList.find(
         (m) =>
-          core.equals(m.fromChain.id, String(makerPull.chainId)) &&
+          core.equals(m.fromChain.id, makerPull.chainId) &&
           core.equals(String(m.toChain.id), makerPull.amount_flag) &&
           core.equals(
             m.fromChain.tokenAddress,
@@ -580,8 +580,8 @@ export class ServiceMakerPull {
         return
       }
       if (
-        ['4', '44'].includes(marketItem.fromChain.id) ||
-        ['4', '44'].includes(marketItem.toChain.id)
+        [4, 44].includes(marketItem.fromChain.id) ||
+        [4, 44].includes(marketItem.toChain.id)
       ) {
         _mp = await repositoryMakerPull().findOne({
           chainId: Number(makerPull.amount_flag),
@@ -1928,7 +1928,7 @@ export class ServiceMakerPull {
           const toChain = chains.getChainByInternalId(String(amount_flag))
           const marketItem = makerList.find(
             (m) =>
-              core.equals(m.fromChain.id, String(txChainId)) &&
+              core.equals(m.fromChain.id, txChainId) &&
               core.equals(String(m.toChain.id), toChain.internalId) &&
               core.equals(m.fromChain.tokenAddress, String(tx.tokenAddress)) &&
               core.equals(m.toChain.symbol, tx.symbol)
@@ -1940,10 +1940,10 @@ export class ServiceMakerPull {
             continue
           }
           makerPull.makerSender = marketItem.sender
-          if (['4', '44'].includes(marketItem.fromChain.id)) {
+          if ([4, 44].includes(marketItem.fromChain.id)) {
             makerPull.txExt = <any>{ ext: tx.extra['ext'] }
             makerPull.userReceive = tx.extra['ext']
-          } else if (['4', '44'].includes(marketItem.toChain.id)) {
+          } else if ([4, 44].includes(marketItem.toChain.id)) {
             makerPull.userReceive = fix0xPadStartAddress(String(makerPull.txExt?.value), 66)
           }
           //

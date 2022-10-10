@@ -15,8 +15,9 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-import { chains, utils } from 'orbiter-chaincore'
+import { chains, chainService, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+import { ArbitrumNova } from 'orbiter-chaincore/src/chain'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -166,11 +167,12 @@ async function getTokenBalance(
         }
         break
       case 'arbitrum_nova':
-        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
+        const chainConfig = utils.chains.getChainByInternalId(String(chainId));
+        const chainService = new ArbitrumNova(chainConfig);
         if (isEthTokenAddress(tokenAddress)) {
-          value = await arWeb3.eth.getBalance(makerAddress)
+          value = (await chainService.getBalance(makerAddress)).toString()
         } else {
-          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
+          value = (await chainService.getTokenBalance(makerAddress, tokenAddress)).toString();
         }
         break
       default:
@@ -288,25 +290,25 @@ export async function getWealthsChains(makerAddress: string) {
     return item
   }
   for (const item of makerList) {
-    if (item.makerAddress != makerAddress) {
+    if (item.sender != makerAddress) {
       continue
     }
     // find token 
-    const chain1 = chains.getChainByInternalId(String(item.c1ID))
-    const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
+    const chain1 = chains.getChainByInternalId(String(item.fromChain.id))
+    const token1 = chains.getTokenByAddress(chain1.chainId, item.fromChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.makerAddress, item.c1ID, item.c1Name),
-      item.t1Address,
+      pushToChains(item.sender, item.fromChain.id, item.fromChain.symbol),
+      item.fromChain.tokenAddress,
       token1?.symbol || "",
-      token1?.decimals || item.precision
+      token1?.decimals || item.fromChain.decimals
     )
-    const chain2 = chains.getChainByInternalId(String(item.c2ID))
-    const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
+    const chain2 = chains.getChainByInternalId(String(item.toChain.id))
+    const token2 = chains.getTokenByAddress(chain2.chainId, item.toChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.makerAddress, item.c2ID, item.c2Name),
-      item.t2Address,
+      pushToChains(item.sender, item.toChain.id, item.toChain.symbol),
+      item.toChain.tokenAddress,
       token2?.symbol || "",
-      token2?.decimals || item.precision
+      token2?.decimals || item.toChain.decimals
     )
   }
   // get tokan balance

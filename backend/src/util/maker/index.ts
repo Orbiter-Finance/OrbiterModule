@@ -27,7 +27,7 @@ import { CrossAddress, CrossAddressExt } from '../cross_address'
 import { accessLogger, errorLogger } from '../logger'
 import * as orbiterCore from './core'
 import { EthListen } from './eth_listen'
-import { makerList, makerListHistory } from './maker_list'
+import { makerListHistory, MakerUtil } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
@@ -35,6 +35,7 @@ import { getProviderByChainId } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
+import { IMarket } from './new_maker'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -124,12 +125,12 @@ export async function startMaker(makerInfo: any) {
   // new maker trx pull
 }
 
-export async function getMakerList() {
-  return makerList
+export async function getMakerList():Promise<Array<IMarket>> {
+  return MakerUtil.makerList;
 }
 
 export async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
+  return MakerUtil.makerList.concat(MakerUtil.makerListHistory)
 }
 
 export function expanPool(pool) {

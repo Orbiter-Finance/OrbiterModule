@@ -2,12 +2,14 @@ import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList, startMaker } from '../util/maker'
+import { MakerUtil } from '../util/maker/maker_list'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   jobBalanceAlarm,
   jobGetWealths,
   // jobMakerNodeTodo,
   jobMakerPull,
+  MJobPessimism,
   startNewDashboardPull,
 } from './jobs'
 import { doSms } from '../sms/smsSchinese'
@@ -29,8 +31,7 @@ async function waittingStartMaker() {
 
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
-      const makerAddress = item.makerAddress
-
+      const makerAddress = item.sender
       if (
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
@@ -106,6 +107,12 @@ export const startMasterJobs = async () => {
 
   // pull makerList
 
+  new MJobPessimism(
+    '*/10 * * * * *',
+    MakerUtil.refreshMakerList,
+    MakerUtil.refreshMakerList.name
+  ).schedule()
+  
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
     jobMakerPull()

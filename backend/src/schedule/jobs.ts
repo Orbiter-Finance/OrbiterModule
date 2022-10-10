@@ -62,7 +62,7 @@ class MJob {
 }
 
 // Pessimism Lock Job
-class MJobPessimism extends MJob {
+export class MJobPessimism extends MJob {
   public schedule(): schedule.Job {
     let pessimismLock = false
 

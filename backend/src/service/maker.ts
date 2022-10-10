@@ -49,10 +49,10 @@ export async function getMakerAddresses() {
 
   const makerAddresses: string[] = []
   for (const item of makerList) {
-    if (makerAddresses.indexOf(item.makerAddress) > -1) {
+    if (makerAddresses.indexOf(item.sender) > -1) {
       continue
     }
-    makerAddresses.push(item.makerAddress)
+    makerAddresses.push(item.sender)
   }
 
   return makerAddresses
@@ -68,7 +68,8 @@ export async function statisticsProfit(
 
   const makerList = await getMakerList()
   for (const item of makerList) {
-    let makerAddress =item.makerAddress;
+    const precision = item.fromChain.decimals;
+    let makerAddress =item.recipient;
     if (['4','44'].includes(makerNode.fromChain)) {
       const addrMap = makerConfig.starknetL1MapL2[makerNode.toChain =='44' ? 'georli-alpha':'mainnet-alpha'];
       for(let L1Addr in addrMap) {
@@ -83,15 +84,15 @@ export async function statisticsProfit(
     }
 
     if (
-      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
-      equalsIgnoreCase(item.t2Address, makerNode.txToken)
+      equalsIgnoreCase(item.fromChain.tokenAddress, makerNode.txToken) ||
+      equalsIgnoreCase(item.toChain.tokenAddress, makerNode.txToken)
     ) {
-      fromToCurrency = item.tName
-      fromToPrecision = item.precision
+      fromToCurrency = item.fromChain.symbol
+      fromToPrecision = precision
     }
 
-    if (equalsIgnoreCase(item.tName, makerNode.gasCurrency)) {
-      gasPrecision = item.precision
+    if (equalsIgnoreCase(item.fromChain.symbol, makerNode.gasCurrency)) {
+      gasPrecision = precision
     }
   }
 
@@ -148,12 +149,12 @@ export async function getTokenInfo(
   const makerList = await getMakerList()
   for (const item of makerList) {
     if (
-      (item.c1ID == chainId || item.c2ID == chainId) &&
-      (equalsIgnoreCase(item.t1Address, tokenAddress) ||
-        equalsIgnoreCase(item.t2Address, tokenAddress))
+      (equals(item.fromChain.id,chainId) || equals(item.toChain.id, chainId)) &&
+      (equalsIgnoreCase(item.fromChain.tokenAddress, tokenAddress) ||
+        equalsIgnoreCase(item.toChain.tokenAddress, tokenAddress))
     ) {
-      decimals = item.precision
-      tokenName = item.tName
+      decimals = item.fromChain.decimals
+      tokenName = item.fromChain.symbol
       break
     }
   }

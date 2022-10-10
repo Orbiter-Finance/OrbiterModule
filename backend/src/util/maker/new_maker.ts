@@ -16,6 +16,7 @@ import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import { equals } from 'orbiter-chaincore/src/utils/core';
 import dayjs from 'dayjs';
+import { convertChainLPToOldLP, MakerUtil } from './maker_list';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -28,16 +29,18 @@ export interface IMarket {
   recipient: string;
   sender: string;
   fromChain: {
-    id: string;
+    id: number;
     name: string;
     tokenAddress: string;
     symbol: string;
+    decimals:number;
   };
   toChain: {
-    id: string;
+    id: number;
     name: string;
     tokenAddress: string;
     symbol: string;
+    decimals:number;
   };
   times: Number[];
   pool?: any;
@@ -114,7 +117,7 @@ function getCacheClient(chainId: string) {
 }
 export async function startNewMakerTrxPull() {
   const makerList = await getNewMarketList()
-  const convertMakerList = groupWatchAddressByChain(makerList)
+  const convertMakerList = groupWatchAddressByChain(makerList);
   const scanChain = new ScanChainMain(<any>allChainsConfig)
   for (const intranetId in convertMakerList) {
     convertMakerList[intranetId].forEach((address) => {
@@ -375,140 +378,11 @@ export async function confirmTransactionSendMoneyBack(
       return
     })
 }
-export const fecthSubgraphFetchLp = async (endpoint: string) => {
-  const headers = {
-    "content-type": "application/json",
-  };
-  const graphqlQuery = {
-    operationName: "fetchLpList",
-    query: `query fetchLpList {
-      lpEntities(where: { status: 1 }) {
-        id
-        createdAt
-        maxPrice
-        minPrice
-        sourcePresion
-        destPresion
-        tradingFee
-        gasFee
-        startTime
-        stopTime
-          maker {
-          id
-          owner
-        }
-          pair {
-          id
-          sourceChain
-          destChain
-          sourceToken
-          destToken
-          ebcId
-        }
-      }
-    }`,
-    variables: {},
-  };
-
-  const options = {
-    method: "POST",
-    headers: headers,
-    body: JSON.stringify(graphqlQuery),
-  };
-
-  const response = await fetch(endpoint, options);
-  const data = await response.json();
-  //
-  const lpEntities = data.data["lpEntities"];
-  if (!(lpEntities && Array.isArray(lpEntities))) {
-    throw new Error("Get LP List Fail");
-  }
-  const convertData = convertChainLPToOldLP(lpEntities);
-  return convertData;
-};
-export function convertChainLPToOldLP(oldLpList: Array<any>): Array<IMarket> {
-  return oldLpList.map(row => {
-    const pair = row["pair"];
-    const maker = row["maker"];
-    const fromChain = chains.getChainByInternalId(pair.sourceChain);
-    const fromToken = fromChain.tokens.find(row =>
-      equals(row.address, pair.sourceToken),
-    );
-    const toChain = chains.getChainByInternalId(pair.destChain);
-    const toToken = toChain.tokens.find(row =>
-      equals(row.address, pair.destToken),
-    );
-    const recipientAddress = maker["owner"];
-    const senderAddress = maker["owner"];
-    const fromChainId = pair.sourceChain;
-    const toChainId = pair.destChain;
-    const minPrice = new BigNumber(
-      Number(row["minPrice"]) / Math.pow(10, Number(row["sourcePresion"])),
-    ).toNumber();
-    const maxPrice = new BigNumber(
-      Number(row["maxPrice"]) / Math.pow(10, Number(row["sourcePresion"])),
-    ).toNumber();
-    const times = [
-      Number(row["startTime"]),
-      Number(row["stopTime"] || 9999999999),
-    ];
-    return {
-      id: row["id"],
-      recipient: recipientAddress,
-      sender: senderAddress,
-      makerId: maker.id,
-      ebcId: pair["ebcId"],
-      fromChain: {
-        id: fromChainId,
-        name: fromChain.name,
-        tokenAddress: pair.sourceToken,
-        symbol: fromToken?.symbol || "",
-      },
-      toChain: {
-        id: toChainId,
-        name: toChain.name,
-        tokenAddress: pair.destToken,
-        symbol: toToken?.symbol || "",
-      },
-      times,
-      pool: {
-        //Subsequent versions will modify the structure
-        makerAddress: recipientAddress,
-        c1ID: fromChainId,
-        c2ID: toChainId,
-        c1Name: fromChain.name,
-        c2Name: toChain.name,
-        t1Address: pair.sourceToken,
-        t2Address: pair.destToken,
-        tName: fromToken?.symbol,
-        minPrice,
-        maxPrice,
-        precision: Number(row["sourcePresion"]),
-        avalibleDeposit: 1000,
-        tradingFee: new BigNumber(
-          Number(row["tradingFee"]) / Math.pow(10, Number(row["destPresion"])),
-        ).toNumber(),
-        gasFee: new BigNumber(
-          Number(row["gasFee"]) / Math.pow(10, Number(row["destPresion"])),
-        ).toNumber(),
-        avalibleTimes: times,
-      },
-    };
-  });
-  // return lpList;
-}
 export async function getNewMarketList(): Promise<Array<IMarket>> {
   if (!process.env['SUBGRAPHS']) {
     throw new Error('Get SUBGRAPHS URL Config fail');
   }
-  const makerList = await fecthSubgraphFetchLp(process.env['SUBGRAPHS']);
-  return makerList;
-  // const makerList = await getMakerList()
-  // return chainCoreUtil.flatten(
-  //   makerList.map((row) => {
-  //     return newExpanPool(row)
-  //   })
-  // )
+  return MakerUtil.makerList;
 }
 export function groupWatchAddressByChain(makerList: Array<IMarket>): {
   [key: string]: Array<string>
@@ -542,16 +416,18 @@ export function newExpanPool(pool): Array<IMarket> {
       recipient: pool.makerAddress,
       sender: pool.makerAddress,
       fromChain: {
-        id: String(pool.c1ID),
+        id: Number(pool.c1ID),
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
+        decimals:pool.precision
       },
       toChain: {
-        id: String(pool.c2ID),
+        id: Number(pool.c2ID),
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
+        decimals:pool.precision
       },
       times: [
         pool["c1AvalibleTimes"][0].startTime,
@@ -590,16 +466,19 @@ export function newExpanPool(pool): Array<IMarket> {
       recipient: pool.makerAddress,
       sender: pool.makerAddress,
       fromChain: {
-        id: String(pool.c2ID),
+        id: Number(pool.c2ID),
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
+        decimals:pool.precision
+
       },
       toChain: {
-        id: String(pool.c1ID),
+        id: Number(pool.c1ID),
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
+        decimals:pool.precision
       },
       times: [
         pool["c2AvalibleTimes"][0].startTime,
@@ -632,17 +511,17 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
   ].map((row) => {
-    if (['4', '44'].includes(row.toChain.id)) {
+    if ([4, 44].includes(row.toChain.id)) {
       const L1L2Maping =
-        row.toChain.id === '4'
+        row.toChain.id === 4
           ? makerConfig.starknetL1MapL2['mainnet-alpha']
           : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
       row.sender = L1L2Maping[row.sender.toLowerCase()]
     }
-    if (['4', '44'].includes(row.fromChain.id)) {
+    if ([4, 44].includes(row.fromChain.id)) {
       const L1L2Maping =
-        row.fromChain.id === '4'
+        row.fromChain.id === 4
           ? makerConfig.starknetL1MapL2['mainnet-alpha']
           : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
