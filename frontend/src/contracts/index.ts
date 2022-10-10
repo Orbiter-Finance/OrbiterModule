@@ -1,14 +1,25 @@
 import Web3 from 'web3'
 import { contractMethod } from './request_tx'
+import { linkNetwork } from './metamask'
+import { $env } from '@/env'
+import { metamaskChains } from '@/configs/chains'
 
-export const defaultRpc = process.env.VUE_APP_CHAIN_RPC
-export const defaultChainInfo = {
-    chainid: process.env.VUE_APP_CHAIN_ID,
-    name: process.env.VUE_APP_CHAIN_NAME,
-    symbol: process.env.VUE_APP_CHAIN_SYMBOL,
-    decimals: process.env.VUE_APP_CHAIN_DECIMALS,
-    rpcUrls: process.env.VUE_APP_CHAIN_RPC,
-    blockExplorerUrls: process.env.VUE_APP_CHAIN_BLOCK
+export const defaultRpc = () => {
+    const chainid = process.env.VUE_APP_MAKER_CHAIN_ID
+    return $env.localProvider[chainid as string];
+}
+export const defaultChainInfo = () => {
+    const chainid = process.env.VUE_APP_MAKER_CHAIN_ID
+    const chainsItem = metamaskChains.chainList.filter(item => item.chainId == Number(chainid as string))
+    console.log("chainsItem ==>", chainsItem)
+    return {
+        chainid: chainsItem[0].chainId,
+        name: chainsItem[0].name,
+        symbol: chainsItem[0].nativeCurrency.symbol,
+        decimals: chainsItem[0].nativeCurrency.decimals,
+        rpcUrls: $env.localProvider[chainid as string],
+        blockExplorerUrls: chainsItem[0].blockExplorerUrls
+    }
 }
 export const contract_addr = {
     ORMakerDeposit: {
@@ -28,10 +39,10 @@ export const contract_addr = {
 }
 
 export const contract_obj = async (name, addr = '') => {
-    const web3 = await new Web3(defaultRpc as any);
+    const web3 = await new Web3(defaultRpc());
     const contractObj = new web3.eth.Contract(contract_addr[name].abi, addr === '' ? contract_addr[name].addr : addr)
     return contractObj
 }
 
-export { contractMethod }
+export { contractMethod, linkNetwork }
 

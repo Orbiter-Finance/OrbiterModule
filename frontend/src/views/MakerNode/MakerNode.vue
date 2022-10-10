@@ -37,11 +37,13 @@
                     <span style="font-weight: bold;font-size: 16px" v-if="pageStatus === 3">The new Margin amount you need to deposit in Orbiter Contract is <span style="color: #DF2E2D">{{ethTotal}} ETH</span>, you need to <span style="color: #DF2E2D">reduce</span> Margin:</span>
                 </div>
                 <div class="margin_input clearfix">
-                    <div class="price" v-if="pageStatus == 1"><span>{{payEth}}</span></div>
-                    <div class="price" v-if="pageStatus == 2"><span>+</span><span>{{payEth}}</span></div>
-                    <div class="price" v-if="pageStatus == 3"><span>-</span><span>{{payEth}}</span></div>
-                    <!-- <el-input v-if="pageStatus == 1" class="fl" v-model="payEth" placeholder="" readonly /> -->
-                    <span class="fl uint">ETH</span>
+                    <div class="margin_input_box">
+                        <div class="price" v-if="pageStatus == 1"><span>{{payEth}}</span></div>
+                        <div class="price" v-if="pageStatus == 2"><span>+</span><span>{{payEth}}</span></div>
+                        <div class="price" v-if="pageStatus == 3"><span>-</span><span>{{payEth}}</span></div>
+                        <!-- <el-input v-if="pageStatus == 1" class="fl" v-model="payEth" placeholder="" readonly /> -->
+                        <span class="fl uint">ETH</span>
+                    </div>
                 </div>
             </div>
             <div class="margin_detail">
@@ -95,7 +97,7 @@ import TokenSelect from './TokenSelect.vue'
 import SetTable from './SetTable.vue'
 import { chain2icon, makerToken, chainName } from '../../utils/chain2id'
 import { useQuery } from '@urql/vue';
-import { contract_obj, contractMethod, contract_addr } from '../../contracts'
+import { contract_obj, contractMethod, contract_addr, linkNetwork } from '../../contracts'
 import { ElNotification, ElLoading } from 'element-plus'
 import { mapState } from 'vuex' 
 import store from '../../store'
@@ -153,8 +155,6 @@ export default {
         await this.getMaker()
         this.getIdleAmount()
         this.loading = false
-        let block = await this.$web3.eth.getBlockNumber()
-        console.log("block ==>",block)
         this.tokenType = makerToken.find(item => item.chainid == this.tokenItem)
     },
     computed: {
@@ -176,9 +176,11 @@ export default {
             let tokenType = makerToken.filter(v => v.chainid == this.tokenItem)
             const ethAmount = await this.contract_ORMakerDeposit.methods.idleAmount(tokenType[0].address).call()
             this.ethAmount = this.$web3.utils.fromWei(ethAmount, 'ether')
+            // let banl = await this.$web3.eth.getBalance(this.makerAddr)
+            // console.log("getBalance ==>", this.$web3.utils.fromWei(banl, 'ether'))
             const stakeAmount = await this.contract_ORMakerDeposit.methods.usedDeposit(tokenType[0].address).call()
             this.stakeAmount = this.$web3.utils.fromWei(stakeAmount, 'ether')
-            if (this.ethAmount >= this.stakeAmount) {
+            if (this.ethAmount > this.stakeAmount) {
                 this.payEth = this.ethAmount
                 this.pageStatus = 3
             }
@@ -205,12 +207,13 @@ export default {
                 }
             }))
             // this.ethTotal = needStake
+            console.log('needStake ==>', needStake, this.ethAmount)
             if (this.isMaker) {
-                if (needStake >= this.ethAmount) {
+                if (Number(needStake) >= Number(this.ethAmount)) {
                     nextTick(() => {
                         this.pageStatus = 2
                         this.payEth = needStake - this.ethAmount
-                        this.ethTotal = this.stakeAmount
+                        this.ethTotal = this.payEth
                     })
                 } else {
                     nextTick(() => {
@@ -230,44 +233,46 @@ export default {
         async getMakerInfo() {
             let data = this.result.makerEntities[0]
             let actions = data.effectLpIds
-            let lpList = actions.map(v => data.lps.filter(item => item.id === v))
-            let timer = new Date().getTime() / 1000
-            let contract_manager = await contract_obj('ORManager')
-            lpList.map(async v => {
-                let ebcAddr = await contract_manager.methods.getEBC(v[0].pair.ebcId).call()
-                this.contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
-                const stopDealyTime = await this.contract_ORProtocalV1.methods.getStopDealyTime(v[0].pair.sourceChain).call()
-                const isStop = timer >= (Number(stopDealyTime) + Number(v[0].stopTime)) ? true : false
-                const isPause = v[0].status == 1 ? true : false
-                // console.log('xxxxx ==>', stopDealyTime, isStop, (Number(stopDealyTime) + Number(v[0].stopTime)))
-                this.tableList.push({
-                    from: chainName(v[0].pair.sourceChain),
-                    to: chainName(v[0].pair.destChain),
-                    status: v[0].status,
-                    isStop,
-                    isPause,
-                    sourceChain: v[0].pair.sourceChain,
-                    destChain: v[0].pair.destChain,
-                    sourceTAddress: v[0].pair.sourceToken,
-                    destTAddress: v[0].pair.destToken,
-                    ebcid: v[0].pair.ebcId,
-                    sourcePresion: v[0].sourcePresion,
-                    destPresion: v[0].destPresion,
-                    minPrice: v[0].minPrice,
-                    maxPrice: this.$web3.utils.fromWei(v[0].maxPrice, 'ether'),
-                    gasFee: this.$web3.utils.fromWei(v[0].gasFee, 'ether'),
-                    tradingFee: this.$web3.utils.fromWei(v[0].tradingFee, 'ether'),
-                    startTime: v[0].startTime,
-                    stopTime: v[0].stopTime
+            if (actions != null) {
+                let lpList = actions.map(v => data.lps.filter(item => item.id === v))
+                let timer = new Date().getTime() / 1000
+                let contract_manager = await contract_obj('ORManager')
+                lpList.map(async v => {
+                    let ebcAddr = await contract_manager.methods.getEBC(v[0].pair.ebcId).call()
+                    this.contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
+                    const stopDealyTime = await this.contract_ORProtocalV1.methods.getStopDealyTime(v[0].pair.sourceChain).call()
+                    const isStop = timer >= (Number(stopDealyTime) + Number(v[0].stopTime)) ? true : false
+                    const isPause = v[0].status == 1 ? true : false
+                    // console.log('xxxxx ==>', stopDealyTime, isStop, (Number(stopDealyTime) + Number(v[0].stopTime)))
+                    this.tableList.push({
+                        from: chainName(v[0].pair.sourceChain),
+                        to: chainName(v[0].pair.destChain),
+                        status: v[0].status,
+                        isStop,
+                        isPause,
+                        sourceChain: v[0].pair.sourceChain,
+                        destChain: v[0].pair.destChain,
+                        sourceTAddress: v[0].pair.sourceToken,
+                        destTAddress: v[0].pair.destToken,
+                        ebcid: v[0].pair.ebcId,
+                        sourcePresion: v[0].sourcePresion,
+                        destPresion: v[0].destPresion,
+                        minPrice: v[0].minPrice,
+                        maxPrice: this.$web3.utils.fromWei(v[0].maxPrice, 'ether'),
+                        gasFee: this.$web3.utils.fromWei(v[0].gasFee, 'ether'),
+                        tradingFee: this.$web3.utils.fromWei(v[0].tradingFee, 'ether'),
+                        startTime: v[0].startTime,
+                        stopTime: v[0].stopTime
+                    })
+                    this.networkList.map(item => {
+                        if (item.chainid === v[0].pair.sourceChain && v[0].status == 1) {
+                            item.isCheck = true
+                            this.checkNetwork.push(item)
+                        }
+                    })
+                    console.log(this.tableList)
                 })
-                this.networkList.map(item => {
-                    if (item.chainid === v[0].pair.sourceChain && v[0].status == 1) {
-                        item.isCheck = true
-                        this.checkNetwork.push(item)
-                    }
-                })
-                console.log(this.tableList)
-            })
+            }
         },
         async getMaker() {
             let contract_factory = await contract_obj('ORMakerV1Factory')
@@ -287,6 +292,7 @@ export default {
             }
         },
         async getNetwrokList(tokenid = 1) {
+            console.log('maker ==>', this.maker)
             const result = await useQuery({
                 query: `
                 query MyQuery {
@@ -443,21 +449,32 @@ export default {
                     })
                     let isCreate = false
                     console.log('createmaker ==>', data)
-                    let res: any = await contractMethod(this.account, data).catch(err => {
+                    const isNetwork = await linkNetwork()
+                    if (isNetwork) {
+                        let res: any = await contractMethod(this.account, data).catch(err => {
+                            if (err.message == "Returned error: execution reverted: Exists Maker") {
+                                isCreate = true
+                            } else {
+                                isCreate = false
+                                loading.close()
+                                ElNotification({
+                                    title: 'Error',
+                                    message: `Failed transactions: ${err.message}`,
+                                    type: 'error',
+                                })
+                            }
+                        })
+                        if (res && res.code === 200) {
+                            isCreate = true
+                            ElNotification({
+                                title: 'Success',
+                                message: `Create maker successfully`,
+                                type: 'success',
+                            })
+                        }
+                    } else {
                         loading.close()
-                        ElNotification({
-                            title: 'Error',
-                            message: `Failed transactions: ${err.message}`,
-                            type: 'error',
-                        })
-                    })
-                    if (res && res.code === 200) {
-                        isCreate = true
-                        ElNotification({
-                            title: 'Success',
-                            message: `Create maker successfully`,
-                            type: 'success',
-                        })
+                        return
                     }
                     loading.close()
                     if (!isCreate) return
@@ -510,30 +527,43 @@ export default {
                 arguments: [this.$web3.utils.toWei(this.ethAmount, 'ether'), tokenType[0].address]
             }
             console.log('lp reduce data ==>', data, this.account, this.makerAddr)
-            let res: any = await contractMethod(this.account, data).catch(err => {
-                loading.close()
-                ElNotification({
-                    title: 'Error',
-                    message: `Failed transactions: ${err.message}`,
-                    type: 'error',
-                })
-                return
-            })
-            if (res && res.code === 200) {
-                ElNotification({
-                    title: 'Success',
-                    message: `Reduce successfully`,
-                    type: 'success',
-                })
-                setTimeout(() => {
+            const isNetwork = await linkNetwork()
+            if (isNetwork) {
+                let res: any = await contractMethod(this.account, data).catch(err => {
                     loading.close()
-                    location.reload()
-                }, 3000);
+                    ElNotification({
+                        title: 'Error',
+                        message: `Failed transactions: ${err.message}`,
+                        type: 'error',
+                    })
+                    return
+                })
+                if (res && res.code === 200) {
+                    ElNotification({
+                        title: 'Success',
+                        message: `Reduce successfully`,
+                        type: 'success',
+                    })
+                    setTimeout(() => {
+                        loading.close()
+                        location.reload()
+                    }, 3000);
+                }
+            } else {
+                loading.close()
             }
         },
 
         async addLp() {
             let lpInfos = JSON.parse(JSON.stringify(this.tableList))
+            if (lpInfos.length == 0) {
+                ElNotification({
+                    title: 'Error',
+                    message: `Select Network`,
+                    type: 'error',
+                })
+                return
+            }
             lpInfos = lpInfos.filter(v => {
                 if (v.status == 0) {
                     delete v.from
@@ -575,25 +605,6 @@ export default {
             console.log("lpInfos ==>", lpInfos)
             const args = [lpInfos, pairProof];
             console.log(args);
-            
-            // let data = {
-            //     name: 'LPUpdate',
-            //     contractName: "ORMakerDeposit",
-            //     contractAddr: this.makerAddr, 
-            //     // value: this.$web3.utils.toWei(this.payEth + '', 'ether'),
-            //     arguments: [{"from":"Orbiter (Goerli)","to":"Rinkeby","status":2,"isStop":false,"isPause":false,"sourceChain":"1337","destChain":"5","sourceTAddress":"0x0000000000000000000000000000000000000000","destTAddress":"0x0000000000000000000000000000000000000000","ebcid":"1","sourcePresion":"18","destPresion":"18","minPrice":"5000000000000000","maxPrice":"1","gasFee":"1","tradingFee":"1","startTime":"1664441709","stopTime":"1664516144"}]
-            // }
-            // console.log('lp add data ==>', data, this.account, this.makerAddr)
-            // let res: any = await contractMethod(this.account, data).catch(err => {
-            //     loading.close()
-            //     ElNotification({
-            //         title: 'Error',
-            //         message: `Failed transactions: ${err.message}`,
-            //         type: 'error',
-            //     })
-            //     return
-            // })
-            // console.log("upd res ==>", res)
 
             let data = {
                 name: 'LPAction',
@@ -603,25 +614,30 @@ export default {
                 arguments: args
             }
             console.log('lp add data ==>', data, this.account, this.makerAddr)
-            let res: any = await contractMethod(this.account, data).catch(err => {
-                loading.close()
-                ElNotification({
-                    title: 'Error',
-                    message: `Failed transactions: ${err.message}`,
-                    type: 'error',
-                })
-                return
-            })
-            if (res && res.code === 200) {
-                ElNotification({
-                    title: 'Success',
-                    message: `Added successfully`,
-                    type: 'success',
-                })
-                setTimeout(() => {
+            const isNetwork = await linkNetwork()
+            if (isNetwork) {
+                let res: any = await contractMethod(this.account, data).catch(err => {
                     loading.close()
-                    location.reload()
-                }, 3000);
+                    ElNotification({
+                        title: 'Error',
+                        message: `Failed transactions: ${err.message}`,
+                        type: 'error',
+                    })
+                    return
+                })
+                if (res && res.code === 200) {
+                    ElNotification({
+                        title: 'Success',
+                        message: `Added successfully`,
+                        type: 'success',
+                    })
+                    setTimeout(() => {
+                        loading.close()
+                        location.reload()
+                    }, 3000);
+                }
+            } else {
+                loading.close()
             }
         },
 
@@ -657,27 +673,31 @@ export default {
                 arguments: [lpInfos]
             }
             console.log('LPData ==>', LPData, this.account, this.makerAddr)
-            let res: any = await contractMethod(this.account, LPData).catch(err => {
-                loading.close()
-                ElNotification({
-                    title: 'Error',
-                    message: `Failed transactions: ${err.message}`,
-                    type: 'error',
-                })
-                return
-            })
-            if (res && res.code === 200) {
-                ElNotification({
-                    title: 'Success',
-                    message: type == 1 ? `Pause successfully`: `Stop successfully`,
-                    type: 'success',
-                })
-                setTimeout(() => {
+            const isNetwork = await linkNetwork()
+            if (isNetwork) {
+                let res: any = await contractMethod(this.account, LPData).catch(err => {
                     loading.close()
-                    location.reload()
-                }, 3000);
+                    ElNotification({
+                        title: 'Error',
+                        message: `Failed transactions: ${err.message}`,
+                        type: 'error',
+                    })
+                    return
+                })
+                if (res && res.code === 200) {
+                    ElNotification({
+                        title: 'Success',
+                        message: type == 1 ? `Pause successfully`: `Stop successfully`,
+                        type: 'success',
+                    })
+                    setTimeout(() => {
+                        loading.close()
+                        location.reload()
+                    }, 3000);
+                }
+            } else {
+                loading.close()
             }
-            
         },
 
         async pauseLp(row) {
@@ -776,29 +796,33 @@ export default {
                 }
             }
             .margin_input {
-                width: 150px;
-                display: flex;
-                align-items: center;
-                margin: 0 auto;
-                .price {
+                width: 100%;
+                .margin_input_box {
                     display: flex;
                     align-items: center;
                     justify-content: center;
-                    border-bottom: 1px solid #333;
-                    height: 30px;
-                    font-size: 20px;
-                    color: #DF2E2D;
-                    width: 100%;
-                    text-align: center;
-                    font-weight: bold;
-                    & span:first-child {
-                        margin-top: -2px;
-                        margin-right: 5px;
+                    margin: 0 auto;
+                    
+                    .price {
+                        min-width: 150px;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        border-bottom: 1px solid #333;
+                        height: 30px;
+                        font-size: 20px;
+                        color: #DF2E2D;
+                        text-align: center;
+                        font-weight: bold;
+                        & span:first-child {
+                            margin-top: -2px;
+                            margin-right: 5px;
+                        }
                     }
-                }
-                .uint {
-                    margin-left: 10px;
-                    font-weight: bolder;
+                    .uint {
+                        margin-left: 10px;
+                        font-weight: bolder;
+                    }
                 }
             }
         }

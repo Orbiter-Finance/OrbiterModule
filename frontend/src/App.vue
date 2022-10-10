@@ -69,7 +69,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 import store from './store'
 import util from './utils/util'
-import { contract_obj, defaultChainInfo } from './contracts'
+import { contract_obj, linkNetwork } from './contracts'
+import { ElNotification } from 'element-plus'
 
 const route = useRoute()
 const router = useRouter()
@@ -106,13 +107,7 @@ const getLinksStatus = async () => {
     }
     const addr = await ethereum.request({ method: 'eth_requestAccounts' })
     store.commit('setAccount', addr[0])
-    // let isCheck = true
-    let isCheck = false
-    if (ethereum.networkVersion != defaultChainInfo.chainid) {
-      isCheck = await linkNetwork()
-    } else {
-      isCheck = true
-    }
+    let isCheck = await linkNetwork()
     if (isCheck) {
       walletAccount.value = util.shortAddress(addr[0])
       isLink.value = true
@@ -132,10 +127,17 @@ const getLinksStatus = async () => {
         isMaker.value = false
         store.commit('setIsMaker', false)
       }
+    } else {
+      ElNotification({
+        title: 'Error',
+        message: `Network error`,
+        type: 'error',
+      })
     }
     
     ethereum.on("chainChanged", function network(networkIDstring) {
       console.log("networkIDstring ==>", networkIDstring)
+      location.reload()
     });
     
     ethereum.on("accountsChanged", (accounts) => {
@@ -155,35 +157,35 @@ const getLinksStatus = async () => {
 }
 getLinksStatus()
 
-const linkNetwork = async ():Promise<boolean> => {
-  const ethereum = (window as any).ethereum
-  if (!ethereum) {
-    return false
-  }
-  console.log(defaultChainInfo)
-  const result = await ethereum.request({
-      method: 'wallet_addEthereumChain',
-      params: [
-        {
-          chainId: defaultChainInfo.chainid,
-          chainName: defaultChainInfo.name,
-          nativeCurrency: {
-            name: defaultChainInfo.symbol,
-            symbol: defaultChainInfo.symbol,
-            decimals: defaultChainInfo.decimals
-          },
-          rpcUrls: [defaultChainInfo.rpcUrls],
-          blockExplorerUrls: [defaultChainInfo.blockExplorerUrls]
-        }
-      ]
-  })
-  return result;
-  // .then(() => {
-  //     return true
-  // }).catch(() => {
-  //     return false
-  // })
-}
+// const linkNetwork = async ():Promise<boolean> => {
+//   const ethereum = (window as any).ethereum
+//   if (!ethereum) {
+//     return false
+//   }
+//   console.log(defaultChainInfo)
+//   const result = await ethereum.request({
+//       method: 'wallet_addEthereumChain',
+//       params: [
+//         {
+//           chainId: defaultChainInfo.chainid,
+//           chainName: defaultChainInfo.name,
+//           nativeCurrency: {
+//             name: defaultChainInfo.symbol,
+//             symbol: defaultChainInfo.symbol,
+//             decimals: defaultChainInfo.decimals
+//           },
+//           rpcUrls: [defaultChainInfo.rpcUrls],
+//           blockExplorerUrls: [defaultChainInfo.blockExplorerUrls]
+//         }
+//       ]
+//   })
+//   return result;
+//   // .then(() => {
+//   //     return true
+//   // }).catch(() => {
+//   //     return false
+//   // })
+// }
 
 const getGlobalInfo = async () => {
   const resp = await $axios.get('global')

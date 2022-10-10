@@ -72,7 +72,8 @@ const metamaskChains = {
         "https://goerli-faucet.slock.it/?address=${ADDRESS}",
         "https://faucet.goerli.mudit.blog"
       ],
-      "infoURL": "https://goerli.net/#about"
+      "infoURL": "https://goerli.net/#about",
+      "blockExplorerUrls": "https://goerli.etherscan.io/"
     },
     {
       "name": "Arbitrum",

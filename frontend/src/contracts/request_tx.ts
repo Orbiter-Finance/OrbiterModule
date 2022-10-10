@@ -6,15 +6,21 @@ import { defaultRpc, contract_obj } from './index'
  * @param {Object} params data {name: "", value: 0, contractName: '', contractName: '' , arguments: [...]}
  */
 export const contractMethod = async (accounts, params) => {
-    const web3 = await new Web3(defaultRpc as any);
+    const web3 = await new Web3(defaultRpc());
     const contract = await contract_obj(params.contractName, params.contractAddr)
     const nonce =  await web3.eth.getTransactionCount(accounts)
     const gasPrice = await web3.eth.getGasPrice()
     const value = params.value ? params.value : 0
     const parameters = params.arguments.length === 0 ? null : params.arguments
     const data = parameters == null ? await contract.methods[params.name]().encodeABI() : await contract.methods[params.name](...parameters).encodeABI()
+    console.log('data abi ==>', data)
     let gasLimit = parameters == null ? await contract.methods[params.name]().estimateGas({from: accounts, to: params.contractAddr,gasPrice: web3.utils.toHex(gasPrice), value: web3.utils.toHex(value)}) : await contract.methods[params.name](...parameters).estimateGas({from: accounts, to: params.contractAddr, gasPrice: web3.utils.toHex(gasPrice), value: web3.utils.toHex(value)})
-    gasLimit = parseInt(gasLimit * 1.2 + '')
+    if (gasLimit < 210000) {
+        gasLimit = 210000
+    } else {
+        gasLimit = parseInt(gasLimit * 1.3 + '')
+    }
+    console.log("gaslimit ==>", gasLimit)
 
     return new Promise((resolve, reject) => {
 
@@ -80,7 +86,7 @@ export const contractMethod = async (accounts, params) => {
                                 clearInterval(timer_takeGain);
                             }
                         });
-                        if (number_takeGain > 10) {
+                        if (number_takeGain > 20) {
                             callback("timeout")
                             clearInterval(timer_takeGain);
                             number_takeGain = 1;
