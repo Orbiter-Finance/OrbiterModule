@@ -288,6 +288,8 @@ export default {
                     this.pageStatus = 2
                 })
                 this.contract_ORMakerDeposit = await contract_obj('ORMakerDeposit', this.makerAddr)
+                // let banlance = await this.$web3.eth.getBalance(this.makerAddr)
+                // console.log("makerAddr balance ==>", this.$web3.utils.fromWei(banlance, 'ether'))
                 this.getMakerInfo()
             }
         },

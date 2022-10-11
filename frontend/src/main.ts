@@ -8,6 +8,7 @@ import store from './store'
 import urql from '@urql/vue';
 import SvgIcon from './components/SvgIcon/SvgIcon.vue'
 import Web3 from 'web3'
+import { defaultRpc } from './contracts'
 // Vue.component('svg-icon', SvgIcon)
 
 // import './icons'
@@ -20,7 +21,7 @@ router.beforeEach((to, from, next) => {
     }
 })
 const app = createApp(App)
-app.config.globalProperties.$web3 = new Web3(process.env.VUE_APP_CHAIN_RPC as any)
+app.config.globalProperties.$web3 = new Web3(defaultRpc())
 app.use(store).use(router)
 app.use(urql, {
     url: process.env.VUE_APP_GRAPHQL_URL,
