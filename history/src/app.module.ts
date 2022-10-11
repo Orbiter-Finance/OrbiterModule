@@ -10,20 +10,22 @@ import * as path from 'path'
 
 isLocal() && dotenv.config({ path: path.resolve(__dirname, '../../.env') })
 
+const DBConfig:any = {
+  type: 'mysql',
+  host: getEnv('DB_HOST'),
+  port: getEnv('DB_PORT'),
+  username: getEnv('DB_USER'),
+  password: getEnv('DB_PASS'),
+  database: getEnv('DB_NAME'),
+  entities: [
+    './**/**.entity{.ts,.js}',
+  ],
+  // synchronize: isLocal()
+}
+console.log('dbConfig ----', DBConfig);
 @Module({
   imports: [
-    TypeOrmModule.forRoot({
-      type: 'mysql',
-      host: getEnv('DB_HOST'),
-      port: getEnv('DB_PORT'),
-      username: getEnv('DB_USER'),
-      password: getEnv('DB_PASS'),
-      database: getEnv('DB_NAME'),
-      entities: [
-        './**/**.entity{.ts,.js}',
-      ],
-      // synchronize: isLocal()
-    }),
+    TypeOrmModule.forRoot(DBConfig),
     TransactionModule,
     MakerTransactionModule
   ],
