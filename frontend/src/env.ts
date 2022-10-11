@@ -48,7 +48,7 @@ export const $env = {
   localProvider: {
     1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
-    5: 'https://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // goerli
+    5: 'https://goerli.infura.io/v3/95c83e0d37784557bb8ee3bab60d350c', // goerli
     22: 'https://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     15: 'https://bsc-dataseed1.binance.org',
   },
