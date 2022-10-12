@@ -1,8 +1,8 @@
 export const $env = {
   baseUrl: '',
-  apiBaseUrl: '//ec2-54-178-23-104.ap-northeast-1.compute.amazonaws.com/api/dashboard/',
+  apiBaseUrl: '//maker_dashboard_test.orbiter.finance/api/dashboard/',
   // apiBaseUrl: '',
-  historyApiUrl: `//ec2-54-178-23-104.ap-northeast-1.compute.amazonaws.com/api/history/`,
+  historyApiUrl: `//maker_dashboard_test.orbiter.finance/api/history/`,
   credential: false,
   starknetL1MapL2: {
     'mainnet-alpha': {
