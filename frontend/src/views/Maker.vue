@@ -52,7 +52,7 @@
       <el-row :gutter="20">
         <el-col :span="4" class="maker-search__item">
           <div class="title">From chain</div>
-          <el-select v-model="state.state.fromChainId" placeholder="Select">
+          <el-select v-model="state.fromChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -63,7 +63,7 @@
         </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">To chain</div>
-          <el-select v-model="state.state.toChainId" placeholder="Select">
+          <el-select v-model="state.toChainId" placeholder="Select">
             <el-option
               v-for="(item, index) in chains"
               :key="index"
@@ -75,7 +75,7 @@
         <el-col v-if="!state.keyword" :span="8" class="maker-search__item">
           <div class="title">From date range</div>
           <el-date-picker
-            v-model="state.state.rangeDate"
+            v-model="state.rangeDate"
             type="datetimerange"
             range-separator="To"
             :shortcuts="shortcuts"
@@ -89,7 +89,7 @@
         <el-col :span="8" class="maker-search__item">
           <div class="title">TransactionID | User | FromTx | ToTx</div>
           <el-input
-            v-model="state.state.keyword"
+            v-model="state.keyword"
             placeholder="Input search keyword."
             :clearable="true"
           />
@@ -158,7 +158,7 @@
               <div
                 v-for="(item, index) in userAddressList"
                 :key="index"
-                @click="state.state.userAddressSelected = item.address"
+                @click="state.userAddressSelected = item.address"
               >
                 {{ item.address }}
                 <span>&nbsp;({{ item.count }})</span>
