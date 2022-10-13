@@ -822,6 +822,9 @@ watch(() => makerAddressSelected?.value, init)
     font-size: 18px;
     font-weight: bold;
     color: #555555;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 
   & > * {
