@@ -176,7 +176,7 @@ async function getTokenBalance(
         }
         break
       default:
-        const alchemyUrl = makerConfig[chainName]?.httpEndPoint
+        const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId].httpEndPoint
         if (!alchemyUrl) {
           break
         }
@@ -189,7 +189,6 @@ async function getTokenBalance(
           const resp = await createAlchemyWeb3(
             alchemyUrl
           ).alchemy.getTokenBalances(makerAddress, [tokenAddress])
-
           for (const item of resp.tokenBalances) {
             if (item.error) {
               continue
@@ -297,7 +296,7 @@ export async function getWealthsChains(makerAddress: string) {
     const chain1 = chains.getChainByInternalId(String(item.fromChain.id))
     const token1 = chains.getTokenByAddress(chain1.chainId, item.fromChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.sender, item.fromChain.id, item.fromChain.symbol),
+      pushToChains(item.sender, item.fromChain.id, item.fromChain.name),
       item.fromChain.tokenAddress,
       token1?.symbol || "",
       token1?.decimals || item.fromChain.decimals
@@ -305,7 +304,7 @@ export async function getWealthsChains(makerAddress: string) {
     const chain2 = chains.getChainByInternalId(String(item.toChain.id))
     const token2 = chains.getTokenByAddress(chain2.chainId, item.toChain.tokenAddress);
     pushToChainBalances(
-      pushToChains(item.sender, item.toChain.id, item.toChain.symbol),
+      pushToChains(item.sender, item.toChain.id, item.toChain.name),
       item.toChain.tokenAddress,
       token2?.symbol || "",
       token2?.decimals || item.toChain.decimals
