@@ -123,7 +123,9 @@ export async function startNewMakerTrxPull() {
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
-  pubSub.subscribe(`ACCEPTED_ON_L2:4`, subscribeNewTransaction)
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`,tx=> {
+    return subscribeNewTransaction([tx])
+  })
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
@@ -277,12 +279,10 @@ export async function confirmTransactionSendMoneyBack(
   market: IMarket,
   tx: ITransaction
 ) {
-
-  if (Number(tx.chainId) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
+  const fromChainID = Number(market.fromChain.id)
+  if (Number(fromChainID) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
     return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
   }
-
-  const fromChainID = Number(market.fromChain.id)
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
   const makerAddress = market.sender
