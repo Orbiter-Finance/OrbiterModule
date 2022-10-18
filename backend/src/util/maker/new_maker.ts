@@ -14,6 +14,7 @@ import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
+import dayjs from 'dayjs';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -96,7 +97,7 @@ function getCacheClient(chainId: string) {
   }
   const cache = new Keyv({
     store: new KeyvFile({
-      filename: `logs/transfer/${chainId}`, // the file path to store the data
+      filename: `logs/transfer/${dayjs().format("YYYYMM")}-${chainId}`, // the file path to store the data
       expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
       writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
@@ -121,6 +122,8 @@ export async function startNewMakerTrxPull() {
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
+  // L2 push
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`, subscribeNewTransaction)
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
@@ -274,6 +277,11 @@ export async function confirmTransactionSendMoneyBack(
   market: IMarket,
   tx: ITransaction
 ) {
+
+  if (Number(tx.chainId) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
+    return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+  }
+
   const fromChainID = Number(market.fromChain.id)
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
@@ -349,9 +357,7 @@ export async function confirmTransactionSendMoneyBack(
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
       }
-      if (Number(fromChainID) === 4) {
-        return  errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
-      }
+
       await sendTransaction(
         makerAddress,
         transactionID,
