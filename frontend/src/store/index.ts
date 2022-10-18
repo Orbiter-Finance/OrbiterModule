@@ -4,7 +4,7 @@ export default createStore({
   state: {
     account: '',
     isMaker: false,
-    maker: ''
+    maker: '',
   },
   mutations: {
     setAccount(state, data) {
@@ -15,7 +15,7 @@ export default createStore({
     },
     setMaker(state, data) {
       state.maker = data
-    }
+    },
   },
   actions: {
   },

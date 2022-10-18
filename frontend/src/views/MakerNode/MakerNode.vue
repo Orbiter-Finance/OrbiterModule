@@ -28,7 +28,7 @@
                 <span>Set Withholding Fee, Trading Fee and Trasaction Limit for each transaction pair.</span>
             </div>
             <div class="form_box">
-                <SetTable ref="setTable" :tableList="tableList" @setTabList="setTabList" @setIsValidate="setIsValidate" @stopLp="stopLp" @pauseLp="pauseLp"></SetTable>
+                <SetTable ref="setTable" :tableList="tableList" @setMultipleSelection="setMultipleSelection" @setTabList="setTabList" @setIsValidate="setIsValidate" @stopLp="stopLp" @pauseLp="pauseLp"></SetTable>
             </div>
             <div class="margin_box">
                 <div class="margin_test">
@@ -64,7 +64,7 @@
                 </div>
                 <div class="details_item">
                     <svg-icon :iconName="'sigh-b'" style="width: 16px; height: 16px"></svg-icon>
-                    <span>In oder to response to the users in time, you’d better <span style="font-weight: bold;">keep 110 ~180 ETH in the Node Account (0x1234…1234)</span> as liquidity. </span>
+                    <span>In oder to response to the users in time, you’d better <span style="font-weight: bold;">keep 110 ~180 ETH in the Node Account {{`${showMakerAddr}`}}</span> as liquidity. </span>
                 </div>
                 <div class="details_item">
                     <svg-icon :iconName="'sigh-b'" style="width: 16px; height: 16px"></svg-icon>
@@ -127,6 +127,7 @@ export default {
         const contract_ORProtocalV1 = ref(null)
         const result = reactive({})
         const makerAddr = ref("")
+        const multipleSelection = reactive([])
         return {
             result,
             isCreate: true,
@@ -147,10 +148,11 @@ export default {
             setTable,
             loading,
             contract_ORMakerDeposit,
-            contract_ORProtocalV1
+            contract_ORProtocalV1,
+            multipleSelection
         }
     },
-    async created() {
+    async mounted() {
         await this.getNetwrokList()
         await this.getMaker()
         this.getIdleAmount()
@@ -159,6 +161,15 @@ export default {
     },
     computed: {
         ...mapState(['account', 'isMaker', 'maker']),
+        showMakerAddr() {
+            if (this.isMaker) {
+                let str1 = this.makerAddr.substr(0, 6)
+                let str2 = this.makerAddr.substr(this.makerAddr.length - 4, 4)
+                return `(${str1}...${str2})`
+            } else {
+                return ''
+            }
+        },
     },
     methods: {
         showChainIcon(localChainID) {
@@ -170,6 +181,9 @@ export default {
         setTokenItem(val) {
             this.tokenItem = val
             this.tokenType = makerToken.find(item => item.chainid == val)
+        },
+        setMultipleSelection(val) {
+            this.multipleSelection = val
         },
         async getIdleAmount() {
             if(!this.isMaker) return
@@ -187,7 +201,10 @@ export default {
             console.log("amount ==>", this.ethAmount, this.stakeAmount)
         },
         async setTabList(val) {
+            // console.log("val", val)
             this.tableList = val
+            this.setTable.toggleSelection(val)
+            // console.log(this.tableList)
             let needStake = 0
             let contract_manager = await contract_obj('ORManager')
             // if (this.checkNetwork.length === 0) return
@@ -199,10 +216,10 @@ export default {
             await Promise.all(this.tableList.map(async (v) => {
                 if (v.maxPrice !== '' && v.status == 0) {
                     let chainEntitie = this.result.chainEntities.filter(item => item.id == v.sourceChain)
-                    console.log('tokentype ==>', chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice, 'ether'))
-                    const needPay = await this.contract_ORProtocalV1.methods.getDepositAmount(chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice, 'ether')).call()
-                    if (this.$web3.utils.fromWei(needPay, 'ether') >= needStake) {
-                        needStake = this.$web3.utils.fromWei(needPay, 'ether')
+                    console.log('tokentype ==>', chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice + '', 'ether'))
+                    const needPay = await this.contract_ORProtocalV1.methods.getDepositAmount(chainEntitie[0].batchLimit, this.$web3.utils.toWei(v.maxPrice + '', 'ether')).call()
+                    if (this.$web3.utils.fromWei(needPay + '', 'ether') >= needStake) {
+                        needStake = this.$web3.utils.fromWei(needPay + '', 'ether')
                     }
                 }
             }))
@@ -231,6 +248,7 @@ export default {
             this.isValidate = val
         },
         async getMakerInfo() {
+            if (!this.result || this.result.makerEntities.length == 0) return
             let data = this.result.makerEntities[0]
             let actions = data.effectLpIds
             if (actions != null) {
@@ -250,6 +268,7 @@ export default {
                         status: v[0].status,
                         isStop,
                         isPause,
+                        isChoose: true,
                         sourceChain: v[0].pair.sourceChain,
                         destChain: v[0].pair.destChain,
                         sourceTAddress: v[0].pair.sourceToken,
@@ -257,10 +276,11 @@ export default {
                         ebcid: v[0].pair.ebcId,
                         sourcePresion: v[0].sourcePresion,
                         destPresion: v[0].destPresion,
-                        minPrice: v[0].minPrice,
-                        maxPrice: this.$web3.utils.fromWei(v[0].maxPrice, 'ether'),
-                        gasFee: this.$web3.utils.fromWei(v[0].gasFee, 'ether'),
-                        tradingFee: this.$web3.utils.fromWei(v[0].tradingFee, 'ether'),
+                        minPrice: Number(v[0].minPrice),
+                        numberMinPrice: Number(this.$web3.utils.fromWei(v[0].minPrice + '', 'ether')),
+                        maxPrice: Number(this.$web3.utils.fromWei(v[0].maxPrice + '', 'ether')),
+                        gasFee: Number(this.$web3.utils.fromWei(v[0].gasFee + '', 'ether')),
+                        tradingFee: Number(this.$web3.utils.fromWei(v[0].tradingFee + '', 'ether')),
                         startTime: v[0].startTime,
                         stopTime: v[0].stopTime
                     })
@@ -294,7 +314,7 @@ export default {
             }
         },
         async getNetwrokList(tokenid = 1) {
-            console.log('maker ==>', this.maker)
+            console.log(this.maker)
             const result = await useQuery({
                 query: `
                 query MyQuery {
@@ -344,15 +364,18 @@ export default {
             });
             this.result = result.data.value
             console.log("this.result ==>", this.result)
-            const data = result.data.value.pairEntities
-            this.pairsData = data
-            let tokenType = makerToken.filter(v => v.chainid == tokenid)
-            let pairs = data.filter(v => v.sourceToken == tokenType[0].address)
-            pairs.map(v => {
-                if (this.networkList.filter((val) => val.chainid == v.sourceChain).length == 0) {
-                    this.networkList.push({chainid: v.sourceChain, name: chainName(v.sourceChain), address: v.sourceToken, ebcId: v.ebcId, isCheck: false})
-                }
-            })
+            if (this.result) {
+                const data = result.data.value.pairEntities
+                this.pairsData = data
+                let tokenType = makerToken.filter(v => v.chainid == tokenid)
+                let pairs = data.filter(v => v.sourceToken == tokenType[0].address)
+                pairs.map(v => {
+                    if (this.networkList.filter((val) => val.chainid == v.sourceChain).length == 0) {
+                        this.networkList.push({chainid: v.sourceChain, name: chainName(v.sourceChain), address: v.sourceToken, ebcId: v.ebcId, isCheck: false})
+                    }
+                })
+                console.log("networkList ==>", this.networkList)
+            }
         },
         async chooseNetwork(e, item, i) {
             if (e.target.tagName !== 'INPUT') return
@@ -380,6 +403,7 @@ export default {
                                         status: 0,
                                         isStop: false,
                                         isPause: false,
+                                        isChoose: false,
                                         sourceChain: v.sourceChain,
                                         destChain: v.destChain,
                                         sourceTAddress: v.sourceToken,
@@ -388,9 +412,10 @@ export default {
                                         destPresion: destChain_token.tokenPresion,
                                         ebcid: v.ebcId,
                                         minPrice,
-                                        maxPrice: '1',
-                                        gasFee: '1',
-                                        tradingFee: '1',
+                                        numberMinPrice: Number(this.$web3.utils.fromWei(minPrice + '', 'ether')),
+                                        maxPrice: 1,
+                                        gasFee: 1,
+                                        tradingFee: 1,
                                         startTime: 0,
                                     })
                                 }
@@ -526,7 +551,7 @@ export default {
                 name: 'withDrawAssert',
                 contractName: "ORMakerDeposit",
                 contractAddr: this.makerAddr, 
-                arguments: [this.$web3.utils.toWei(this.ethAmount, 'ether'), tokenType[0].address]
+                arguments: [this.$web3.utils.toWei(this.ethAmount + '', 'ether'), tokenType[0].address]
             }
             console.log('lp reduce data ==>', data, this.account, this.makerAddr)
             const isNetwork = await linkNetwork()
@@ -549,7 +574,7 @@ export default {
                     setTimeout(() => {
                         loading.close()
                         location.reload()
-                    }, 3000);
+                    }, 10000);
                 }
             } else {
                 loading.close()
@@ -557,7 +582,8 @@ export default {
         },
 
         async addLp() {
-            let lpInfos = JSON.parse(JSON.stringify(this.tableList))
+            let lpInfos = JSON.parse(JSON.stringify(this.multipleSelection))
+            console.log(lpInfos)
             if (lpInfos.length == 0) {
                 ElNotification({
                     title: 'Error',
@@ -573,9 +599,11 @@ export default {
                     delete v.status
                     delete v.isStop
                     delete v.isPause
-                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice, 'ether')
-                    v.gasFee = this.$web3.utils.toWei(v.gasFee, 'ether')
-                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee, 'ether')
+                    delete v.isChoose
+                    delete v.numberMinPrice
+                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice + '', 'ether')
+                    v.gasFee = this.$web3.utils.toWei(v.gasFee + '', 'ether')
+                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee + '', 'ether')
                     return v
                 }
             })
@@ -620,11 +648,20 @@ export default {
             if (isNetwork) {
                 let res: any = await contractMethod(this.account, data).catch(err => {
                     loading.close()
-                    ElNotification({
-                        title: 'Error',
-                        message: `Failed transactions: ${err.message}`,
-                        type: 'error',
-                    })
+                    console.log('err ==>', err.message)
+                    if (err.message == 'Returned error: insufficient funds for transfer') {
+                        ElNotification({
+                            title: 'Error',
+                            message: `Failed transactions: Insufficient balance`,
+                            type: 'error',
+                        })
+                    } else {
+                        ElNotification({
+                            title: 'Error',
+                            message: `Failed transactions: ${err.message}`,
+                            type: 'error',
+                        })
+                    }
                     return
                 })
                 if (res && res.code === 200) {
@@ -636,7 +673,7 @@ export default {
                     setTimeout(() => {
                         loading.close()
                         location.reload()
-                    }, 3000);
+                    }, 10000);
                 }
             } else {
                 loading.close()
@@ -651,17 +688,19 @@ export default {
             delete lpInfos.status
             delete lpInfos.isStop
             delete lpInfos.isPause
+            delete lpInfos.isChoose
+            delete lpInfos.numberMinPrice
 
             if (lpInfos instanceof Array) {
                 lpInfos.map(v => {
-                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice, 'ether')
-                    v.gasFee = this.$web3.utils.toWei(v.gasFee, 'ether')
-                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee, 'ether')
+                    v.maxPrice = this.$web3.utils.toWei(v.maxPrice + '', 'ether')
+                    v.gasFee = this.$web3.utils.toWei(v.gasFee + '', 'ether')
+                    v.tradingFee = this.$web3.utils.toWei(v.tradingFee + '', 'ether')
                 })
             } else {
-                lpInfos.maxPrice = this.$web3.utils.toWei(lpInfos.maxPrice, 'ether')
-                lpInfos.gasFee = this.$web3.utils.toWei(lpInfos.gasFee, 'ether')
-                lpInfos.tradingFee = this.$web3.utils.toWei(lpInfos.tradingFee, 'ether')
+                lpInfos.maxPrice = this.$web3.utils.toWei(lpInfos.maxPrice + '', 'ether')
+                lpInfos.gasFee = this.$web3.utils.toWei(lpInfos.gasFee + '', 'ether')
+                lpInfos.tradingFee = this.$web3.utils.toWei(lpInfos.tradingFee + '', 'ether')
             }
             const loading = ElLoading.service({
                 lock: true,
@@ -695,7 +734,7 @@ export default {
                     setTimeout(() => {
                         loading.close()
                         location.reload()
-                    }, 3000);
+                    }, 10000);
                 }
             } else {
                 loading.close()

@@ -11,11 +11,14 @@ export const linkNetwork = async () => {
     if (ethereum.networkVersion != utils.utils.toHex(chainInfo.chainid + '')) {
         try {
             await ethereum.request({
-              method: 'wallet_switchEthereumChain',
-              params: [{ chainId: utils.utils.toHex(chainInfo.chainid + '') }],
+                method: 'wallet_switchEthereumChain',
+                params: [{ chainId: utils.utils.toHex(chainInfo.chainid + '') }],
+            }).catch(err => {
+                console.log(err)
             });
             return true
         } catch (switchError) {
+            console.log(switchError)
             if (switchError.code === 4902) {
                 const result = await ethereum.request({
                     method: 'wallet_addEthereumChain',
@@ -46,6 +49,7 @@ export const linkNetwork = async () => {
             }
         }
     } else {
+        console.log('xxxxx')
         return true
     }
 }

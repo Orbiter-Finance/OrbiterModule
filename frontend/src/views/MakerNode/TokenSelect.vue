@@ -71,26 +71,28 @@ const netList = async () => {
         }
         `
     });
-    let data = pairEntities.data.value.pairEntities
-    // for (const row of data) {
-    //     const token = makerToken.find(item=> item.chainid === row.sourceChain&&item.address === row.sourceToken);
-    //     if (token) {
-    //         row.sourceSymbol = token.symbol;
-    //     }
-    // }
-    // data.filter(row=> row.sourceSymbol === 'ETH')
-    let tokens = reactive([] as any[]);
-    data.map((v) => {
-        if (!tokens.find((val) => val.addr == v.destToken)) {
-            let tokenItem = makerToken.filter((item) => item.address == v.destToken)
-            tokens.push({addr: v.destToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
-        } else if (!tokens.find((val) => val.addr == v.sourceToken)) {
-            let tokenItem = makerToken.filter((item) => item.address == v.destToken)
-            tokens.push({addr: v.sourceToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
-        }
-    })
-    tokenList.value = tokens
-    token = tokens
+    if (pairEntities && pairEntities.data.value) {
+        let data = pairEntities.data.value.pairEntities
+        // for (const row of data) {
+        //     const token = makerToken.find(item=> item.chainid === row.sourceChain&&item.address === row.sourceToken);
+        //     if (token) {
+        //         row.sourceSymbol = token.symbol;
+        //     }
+        // }
+        // data.filter(row=> row.sourceSymbol === 'ETH')
+        let tokens = reactive([] as any[]);
+        data.map((v) => {
+            if (!tokens.find((val) => val.addr == v.destToken)) {
+                let tokenItem = makerToken.filter((item) => item.address == v.destToken)
+                tokens.push({addr: v.destToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
+            } else if (!tokens.find((val) => val.addr == v.sourceToken)) {
+                let tokenItem = makerToken.filter((item) => item.address == v.destToken)
+                tokens.push({addr: v.sourceToken, name: tokenItem[0].symbol, currencyid: tokenItem[0].chainid})
+            }
+        })
+        tokenList.value = tokens
+        token = tokens
+    }
 }
 netList()
 const emits = defineEmits(['setTokenItem'])

@@ -8,12 +8,21 @@ import store from './store'
 import urql from '@urql/vue';
 import SvgIcon from './components/SvgIcon/SvgIcon.vue'
 import Web3 from 'web3'
-import { defaultRpc } from './contracts'
+import { contract_obj, defaultRpc } from './contracts'
 // Vue.component('svg-icon', SvgIcon)
 
 // import './icons'
 // beforeEach
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
+    console.log(to, from)
+    if (to.fullPath == '/makerNode' && to.matched.length == 0) {
+        router.addRoute({
+            path: '/makerNode',
+            name: 'MakerNode',
+            component: () => import('./views/MakerNode/MakerNode.vue'),
+        })
+        next({path: '/makerNode'})
+    } 
     if (to.matched.length !== 0) {
         next()
     } else {

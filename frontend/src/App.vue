@@ -64,7 +64,7 @@
 
 <script lang="ts" setup>
 import { ArrowDown } from '@element-plus/icons'
-import { provide, reactive, toRef, ref, nextTick } from 'vue'
+import { provide, reactive, toRef, ref, nextTick, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
 import store from './store'
@@ -118,11 +118,12 @@ const getLinksStatus = async () => {
       })
       let contract_factory = await contract_obj('ORMakerV1Factory')
       let makerAddr = await contract_factory.methods.getMaker(addr[0]).call()
-      console.log(makerAddr)
       if (makerAddr != '0x0000000000000000000000000000000000000000') {
         isMaker.value = true
         store.commit('setIsMaker', true)
         store.commit('setMaker', makerAddr.toLowerCase())
+        reload()
+        // sessionStorage.setItem("maker", makerAddr.toLowerCase())
       } else {
         isMaker.value = false
         store.commit('setIsMaker', false)
@@ -141,21 +142,28 @@ const getLinksStatus = async () => {
     });
     
     ethereum.on("accountsChanged", (accounts) => {
-        if (accounts.length != 0) {
-          walletAccount.value = util.shortAddress(accounts[0])
-          store.commit('setAccount', accounts[0])
-          location.reload()
-        } else {
-          isLink.value = false
-          router.removeRoute('MakerNode')
-        }
+      if (accounts.length != 0) {
+        walletAccount.value = util.shortAddress(accounts[0])
+        store.commit('setAccount', accounts[0])
+        sessionStorage.clear()
+        location.reload()
+      } else {
+        isLink.value = false
+        localStorage.clear()
+        sessionStorage.clear()
+        router.removeRoute('MakerNode')
+        router.push({path: '/'})
+      }
     });
     
   } catch (error) {
     throw new Error(`links err:${error}`);
   }
 }
-getLinksStatus()
+
+onMounted(async () => {
+  await getLinksStatus()
+})
 
 // const linkNetwork = async ():Promise<boolean> => {
 //   const ethereum = (window as any).ethereum

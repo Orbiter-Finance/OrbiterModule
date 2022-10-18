@@ -1,8 +1,13 @@
 <template>
     <div class="table_box">
         <el-form ref="formTableRef" :model="formTable" :rules="rules">
-            <el-table :data="tableData" style="width: 100%">
-                <el-table-column prop="from" label="From">
+            <el-table ref="multipleTableRef" :data="tableData" style="width: 100%" @selection-change="handleSelectionChange">
+                <el-table-column
+                    prop="isChoose"
+                    type="selection"
+                    width="55">
+                </el-table-column>
+                <el-table-column prop="from" label="From" class="test">
                     <template #default="scope">
                         <div class="from_item">
                             <span>{{ scope.row.from }}</span>
@@ -20,7 +25,8 @@
                     <template #default="{ row, $index }">
                         <el-form-item :prop="`tableData[${$index}].maxPrice`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.maxPrice" placeholder="0" :readonly="row.status != 0"/>
+                                <el-input-number v-model="row.maxPrice" :min="row.numberMinPrice" :disabled="row.status != 0"></el-input-number>
+                                <!-- <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.maxPrice" placeholder="0" :readonly="row.status != 0"/> -->
                                 <span class="fl uint">ETH</span>
                             </div>
                         </el-form-item>
@@ -30,7 +36,8 @@
                     <template #default="{ row, $index }">
                         <el-form-item :prop="`tableData[${$index}].gasFee`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.gasFee" placeholder="0" :readonly="row.status != 0"/>
+                                <el-input-number v-model="row.gasFee" :disabled="row.status != 0"></el-input-number>
+                                <!-- <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.gasFee" placeholder="0" :readonly="row.status != 0"/> -->
                                 <span class="fl uint">ETH</span>
                             </div>
                         </el-form-item>
@@ -40,7 +47,8 @@
                     <template #default="{ row, $index }">
                         <el-form-item :prop="`tableData[${$index}].tradingFee`" :rules="rules.maxPrice">
                             <div class="from_item clearfix">
-                                <el-input oninput="value = value.replace(/[^0-9.]/g,'')" class="fl" v-model="row.tradingFee" placeholder="0" :readonly="row.status != 0"/>
+                                <el-input-number v-model="row.tradingFee" :disabled="row.status != 0"></el-input-number>
+                                <!-- <el-input oninput="value = value.replace(/[^0-9.?]/g,'')" class="fl" v-model="row.tradingFee" placeholder="0" :readonly="row.status != 0"/> -->
                                 <span class="fl uint">%</span>
                             </div>
                         </el-form-item>
@@ -62,7 +70,7 @@
                         <el-form-item>
                             <div class="status_btn">
                                 <span class="status_stop" v-if="row.isStop && row.status == 2" @click="stopLp(row)">Stop</span>
-                                <span class="status_stop_not" v-if="!row.isStop && row.status == 2">Stop</span>
+                                <span class="status_stop_not" v-if="!row.isStop && row.status == 2" @click="notStop(row)">Stop</span>
                                 <span class="status_pause" v-if="row.isPause && row.status == 1"  @click="pauseLp(row)">Pause</span>
                                 <span class="status_pause_not" v-if="!row.isPause && row.status == 1">Pause</span>
                             </div>
@@ -75,15 +83,22 @@
 </template>
 
 <script lang="ts" setup>
-import { toRefs, defineProps, defineEmits, watch, ref, defineExpose } from 'vue'
+import { contract_obj } from '@/contracts';
+import util from '@/utils/util';
+import { ElLoading, ElNotification } from 'element-plus';
+import { toRefs, defineProps, defineEmits, watch, ref, defineExpose, reactive, nextTick } from 'vue'
 // import { makerToken } from '../../utils/chain2id'
 
-const emits = defineEmits(["setTabList", "setIsValidate", 'stopLp', 'pauseLp'])
+const multipleSelection = reactive([])
+
+const emits = defineEmits(["setMultipleSelection", "setTabList", "setIsValidate", 'stopLp', 'pauseLp'])
 const formTableRef = ref()
+const multipleTableRef = ref()
 // const verifyLimit = (rule: any, value: any, callback: any) => {
 //     let tokenType = makerToken.filter(v => v.chainid == this.tokenItem)
 // } 
 const verifyNumber = (rule: any, value: any, callback: any) => {
+    console.log("rule ==>", rule)
     if (!value) {
         return callback(new Error('value null'))
     } else if (value == 0) {
@@ -109,8 +124,43 @@ const handleSubmit = () => {
     })
 }
 
+const handleSelectionChange = (val) => {
+    multipleSelection.values = val
+    toggleSelection(val)
+    emits("setMultipleSelection", val)
+    // console.log("multipleSelection ==>", multipleSelection.values)
+}
+const toggleSelection = (rows) => {
+    if (rows) {
+        rows.forEach(row => {
+            nextTick(() => {
+                multipleTableRef.value.toggleRowSelection(row, true);
+            })
+        });
+    }
+}
+
 const stopLp = (item) => {
     emits("stopLp", item)
+}
+const notStop = async (item) => {
+    console.log("notStop item ==>", item)
+    const loading = ElLoading.service({
+        lock: true,
+        text: 'Loading',
+    })
+    const contract_manager = await contract_obj('ORManager')
+    let ebcAddr = await contract_manager.methods.getEBC(item.ebcid).call()
+    const contract_ORProtocalV1 = await contract_obj('ORProtocalV1', ebcAddr)
+    const stopDealyTime = await contract_ORProtocalV1.methods.getStopDealyTime(item.sourceChain).call()
+    const stopTime = (Number(stopDealyTime) + Number(item.stopTime))
+    const time = util.transferTimeStampToTime(stopTime)
+    loading.close()
+    ElNotification({
+        title: 'Error',
+        message: `Time not up: ${time}`,
+        type: 'error',
+    })
 }
 
 const pauseLp = (item) => {
@@ -118,7 +168,8 @@ const pauseLp = (item) => {
 }
 
 defineExpose({
-    handleSubmit
+    handleSubmit,
+    toggleSelection
 })
 
 watch(() => tableData, (newVal) => {
@@ -245,7 +296,26 @@ watch(() => tableData, (newVal) => {
     :deep(.el-table::before) {
         display: none;
     }
-
+    :deep(.el-input-number__decrease) {
+        display: none;
+    }
+    :deep(.el-input-number__increase) {
+        display: none;
+    }
+    :deep(.el-input-number) {
+        width: auto;
+        line-height: 0;
+        .el-input {
+            display: inline-block;
+            height: 100%;
+        }
+        .el-input__inner {
+            padding: 0;
+            height: 20px;
+            position: absolute;
+            top: 0;
+        }
+    }
 }
 </style>
 

@@ -11,7 +11,7 @@ export const defaultRpc = () => {
 export const defaultChainInfo = () => {
     const chainid = process.env.VUE_APP_MAKER_CHAIN_ID
     const chainsItem = metamaskChains.chainList.filter(item => item.chainId == Number(chainid as string))
-    console.log("chainsItem ==>", chainsItem)
+    // console.log("chainsItem ==>", chainsItem)
     return {
         chainid: chainsItem[0].chainId,
         name: chainsItem[0].name,
