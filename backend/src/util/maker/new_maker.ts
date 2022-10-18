@@ -349,6 +349,9 @@ export async function confirmTransactionSendMoneyBack(
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
       }
+      if (Number(fromChainID) === 4) {
+        return  errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+      }
       await sendTransaction(
         makerAddress,
         transactionID,
