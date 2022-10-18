@@ -615,11 +615,13 @@ const getStatistics = async (more: any = {}) => {
       state: state.status,
       ...prevMore,
     })
-    statistics.total = result.trxCount
-    statistics.fromAmount = result.fromAmount
-    statistics.toAmount = result.toAmount
-    statistics.profitAmount = result.profitAmount
-    statistics.profit = result.profit
+    if (result) {
+      statistics.total = result.trxCount
+      statistics.fromAmount = result.fromAmount
+      statistics.toAmount = result.toAmount
+      statistics.profitAmount = result.profitAmount
+      statistics.profit = result.profit
+    }
   } catch (error) {
     throw new Error(error)
   } finally {
