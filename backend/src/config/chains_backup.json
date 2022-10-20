@@ -355,7 +355,26 @@
     },
     "rpc": [],
     "watch": ["rpc"],
-    "tokens": []
+    "tokens": [
+      {
+        "name": "DAI",
+        "symbol": "DAI",
+        "decimals": 18,
+        "address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3"
+      },
+      {
+        "name": "Tether USD",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0x068f5c6a61780768455de69077e07e89787839bf8166decfbf92b645209c0fb8"
+      },
+      {
+        "name": "USD Coin",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8"
+      }
+    ]
   },
   {
     "api": {
@@ -384,7 +403,8 @@
         "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
       }
     ]
-  }, {
+  },
+  {
     "api": {
       "url": "https://nova-explorer.arbitrum.io/api",
       "key": ""

@@ -17,14 +17,14 @@ export const $env = {
     1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     5: 'https://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // goerli
-    22: 'https://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
+    22: 'https://goerli-rollup.arbitrum.io/rpc/',
     15: 'https://bsc-dataseed1.binance.org',
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
     2: 'wss://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
     5: 'wss://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
-    22: 'wss://arb-rinkeby.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
+    22: 'https://goerli-rollup.arbitrum.io/rpc/',
     6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
@@ -65,7 +65,7 @@ export const $env = {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
     5: 'https://goerli.etherscan.io/tx/', // /tx/  /address/
     2: 'https://arbiscan.io/tx/', // /tx/  /address/
-    22: 'https://testnet.arbiscan.io/tx/',
+    22: 'https://goerli.arbiscan.io/tx/',
     3: 'https://zkscan.io/explorer/transactions/',
     33: 'https://goerli.zkscan.io/explorer/transactions/', // /explorer/transactions/   /explorer/accounts/
     4: 'https://beta.voyager.online/tx/',
@@ -96,7 +96,7 @@ export const $env = {
     1: 'https://etherscan.io/address/', // /tx/  /address/
     5: 'https://goerli.etherscan.io/address/', // /tx/  /address/
     2: 'https://arbiscan.io/address/', // /tx/  /address/
-    22: 'https://testnet.arbiscan.io/address/',
+    22: 'https://goerli.arbiscan.io/address/',
     3: 'https://zkscan.io/explorer/accounts/',
     33: 'https://goerli.zkscan.io/explorer/accounts/', // /explorer/transactions/   /explorer/accounts/
     4: 'https://beta.voyager.online/contract/',
@@ -127,7 +127,7 @@ export const $env = {
     1: 'https://etherscan.io/token/', // /token/
     5: 'https://goerli.etherscan.io/token/', // /token/
     2: 'https://arbiscan.io/address/', // /address/
-    22: 'https://testnet.arbitrum.io/address/',
+    22: 'https://goerli.arbiscan.io/token/',
     3: 'https://etherscan.io/token/', // same as etherscan
     33: 'https://goerli.etherscan.io/token/',
     4: 'https://beta.voyager.online/token/',

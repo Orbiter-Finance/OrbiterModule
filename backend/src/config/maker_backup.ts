@@ -238,6 +238,16 @@ export default {
     gasPrice: 2,
     customChainId: 28,
   },
+  polygon_zkevm_test: {
+    wsEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPointInfura: "",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    customChainId: 1402,
+  },
   zksync2_test: {
     wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
     httpEndPoint: 'https://zksync2-testnet.zksync.dev',

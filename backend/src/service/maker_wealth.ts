@@ -15,8 +15,10 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-import { chains, utils } from 'orbiter-chaincore'
+import { chains, chainService, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+
+import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance/chainService'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -38,8 +40,9 @@ async function getTokenBalance(
 ): Promise<string | undefined> {
   let value: string | undefined
   try {
-    switch (CHAIN_INDEX[chainId]) {
-      case 'zksync':
+    switch (chainId) {
+      case 3:
+      case 33:
         {
           let api = makerConfig.zksync.api
           if (chainId == 33) {
@@ -57,13 +60,8 @@ async function getTokenBalance(
           }
         }
         break
-      case 'zksync2':
-        {
-          const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
-          value = await getBalanceByCommon(web3, makerAddress, tokenAddress)
-        }
-        break
-      case 'loopring':
+      case 9:
+      case 99:
         {
           let api = makerConfig.loopring.api
           let httpEndPoint = makerConfig.loopring.httpEndPoint
@@ -99,30 +97,20 @@ async function getTokenBalance(
           }
         }
         break
-      case 'starknet':
-        value = String(
-          await getErc20Balance(makerAddress, tokenAddress, chainId)
-        )
-        break
-      case 'immutablex':
+      case 8:
+      case 88:
         const imxHelper = new IMXHelper(chainId)
         value = (
           await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
         ).toString()
         break
-      case 'metis':
-        const web3 = new Web3(makerConfig[chainName]?.httpEndPoint)
-        if (tokenAddress) {
-          value = await getBalanceByCommon(web3, makerAddress, tokenAddress)
-        } else {
-          value = await web3.eth.getBalance(makerAddress)
-        }
-        break
-      case 'dydx':
+      case 11:
+      case 511:
         const dydxHelper = new DydxHelper(chainId)
         value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
         break
-      case 'zkspace':
+      case 12:
+      case 512:
         let balanceInfo = await ZKSpaceHelper.getZKSBalance({
           account: makerAddress,
           localChainID: chainId,
@@ -154,27 +142,31 @@ async function getTokenBalance(
             ''
             : '0'
         break
-      case 'bnbchain':
-        tokenAddress = tokenAddress
-          ? tokenAddress
-          : '0x0000000000000000000000000000000000000000'
-        const bscWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
-        if (isEthTokenAddress(tokenAddress)) {
-          value = await bscWeb3.eth.getBalance(makerAddress)
-        } else {
-          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
-        }
-        break
-      case 'arbitrum_nova':
-        const arWeb3 = new Web3(makerConfig[chainName]?.httpEndPoint)
-        if (isEthTokenAddress(tokenAddress)) {
-          value = await arWeb3.eth.getBalance(makerAddress)
-        } else {
-          value = await getBalanceByCommon(arWeb3, makerAddress, tokenAddress)
-        }
+      case 16:
+      case 516:
+      case 1:
+      case 5:
+      case 4:
+      case 44:
+      case 7:
+      case 77:
+      case 10:
+      case 510:
+      case 12:
+      case 512:
+      case 14:
+      case 514:
+      case 15:
+      case 515:
+      case 16:
+      case 516:
+      case 17:
+      case 517:
+        const balanceService = new ChainServiceTokenBalance(String(chainId));
+        value = await balanceService.getBalance(makerAddress, tokenAddress);
         break
       default:
-        const alchemyUrl = makerConfig[chainName]?.httpEndPoint
+        const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
         if (!alchemyUrl) {
           break
         }
@@ -321,7 +313,7 @@ export async function getWealthsChains(makerAddress: string) {
       if (
         nativeCurrency &&
         chain.balances.findIndex(
-          (row) => equals(row.tokenAddress,nativeCurrency.address)
+          (row) => equals(row.tokenAddress, nativeCurrency.address)
         ) < 0
       ) {
         chain.balances.push({
