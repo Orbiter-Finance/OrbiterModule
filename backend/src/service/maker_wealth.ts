@@ -15,8 +15,10 @@ import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { getErc20Balance } from './starknet/helper'
-import { chains, utils } from 'orbiter-chaincore'
+import { chains, chainService, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
+
+import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance/chainService'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
@@ -95,12 +97,6 @@ async function getTokenBalance(
           }
         }
         break
-      case 4:
-      case 44:
-        value = String(
-          await getErc20Balance(makerAddress, tokenAddress, chainId)
-        )
-        break
       case 8:
       case 88:
         const imxHelper = new IMXHelper(chainId)
@@ -146,28 +142,29 @@ async function getTokenBalance(
             ''
             : '0'
         break
+      case 16:
+      case 516:
+      case 1:
+      case 5:
+      case 4:
+      case 44:
       case 7:
       case 77:
       case 10:
       case 510:
+      case 12:
+      case 512:
       case 14:
       case 514:
       case 15:
       case 515:
       case 16:
       case 516:
-        tokenAddress = tokenAddress
-          ? tokenAddress
-          : '0x0000000000000000000000000000000000000000'
-        const rpc = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
-        const bscWeb3 = new Web3(rpc)
-        if (isEthTokenAddress(tokenAddress)) {
-          value = await bscWeb3.eth.getBalance(makerAddress)
-        } else {
-          value = await getBalanceByCommon(bscWeb3, makerAddress, tokenAddress)
-        }
+      case 17:
+      case 517:
+        const balanceService = new ChainServiceTokenBalance(String(chainId));
+        value = await balanceService.getBalance(makerAddress, tokenAddress);
         break
-
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
         if (!alchemyUrl) {

@@ -26,7 +26,8 @@ import { getTargetMakerPool } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
-import { equals } from 'orbiter-chaincore/src/utils/core'
+import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
+import { IsEmpty } from 'class-validator'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -86,6 +87,10 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         } else {
           gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
         }
+      }
+      if (toChain == 'rinkeby') {
+        gasPrice = Web3.utils.toHex(20000000000)
+        // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
 
       accessLogger.info('gasPrice =', gasPrice)
@@ -504,9 +509,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -879,10 +884,17 @@ async function sendConsumer(value: any) {
       }
     }
   }
-
-  let web3Net = makerConfig[toChain].httpEndPointInfura
-  if (!web3Net) {
-    web3Net = makerConfig[toChain].httpEndPoint
+  let web3Net = '';
+  if (makerConfig[toChain]) {
+    web3Net = makerConfig[toChain].httpEndPointInfura || makerConfig[toChain].httpEndPoint
+    accessLogger.info(`RPC from makerConfig ${toChain}`)
+  } else {
+    // 
+    accessLogger.info(`RPC from ChainCore ${toChain}`)
+  }
+  if (isEmpty(web3Net)) {
+    errorLogger.error(`RPC not obtained ToChain ${toChain}`);
+    return;
   }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress

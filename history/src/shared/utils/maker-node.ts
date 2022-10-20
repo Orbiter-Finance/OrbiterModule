@@ -19,7 +19,8 @@ async function getMakerList() {
 const token2Decimals = {
   'ETH': 18,
   'USDC': 6,
-  'USDT': 6
+  'USDT': 6,
+  'DAI': 18
 }
 
 
