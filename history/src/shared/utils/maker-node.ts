@@ -304,13 +304,16 @@ export async function transforeData(list = []) {
       return (row.c1ID == item['fromChain'] && row.c2ID == item['toChain'] && row['tName'] == item['tokenName'])
         || (row.c1ID == item['toChain'] && row.c2ID == item['fromChain'] && row['tName'] == item['tokenName'])
     });
-    if (market.c1ID == item['fromChain']) {
-      needTo.decimals = market.precision;
-      needTo.tokenAddress = market.t2Address;
-    } else if (market.c2ID == item['fromChain']) {
-      needTo.decimals = market.precision;
-      needTo.tokenAddress = market.t1Address;
+    if (market) {
+      if (market.c1ID == item['fromChain']) {
+        needTo.decimals = market.precision;
+        needTo.tokenAddress = market.t2Address;
+      } else if (market.c2ID == item['fromChain']) {
+        needTo.decimals = market.precision;
+        needTo.tokenAddress = market.t1Address;
+      }
     }
+   
     // old:
     // if (item.state == 1 || item.state == 20) {
     // new:
