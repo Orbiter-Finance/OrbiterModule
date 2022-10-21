@@ -250,7 +250,7 @@
   },
   {
     "api": {
-      "url": "https://api.ropsten.x.immutable.com/v1",
+      "url": "https://api.sandbox.x.immutable.com/v1",
       "key": ""
     },
     "chainId": "immutableX_testnet",
