@@ -486,19 +486,12 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
   ].map((row) => {
+    const L1L2Maping = makerConfig.starknetAddress;
     if (['4', '44'].includes(row.toChain.id)) {
-      const L1L2Maping =
-        row.toChain.id === '4'
-          ? makerConfig.starknetL1MapL2['mainnet-alpha']
-          : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
       row.sender = L1L2Maping[row.sender.toLowerCase()]
     }
     if (['4', '44'].includes(row.fromChain.id)) {
-      const L1L2Maping =
-        row.fromChain.id === '4'
-          ? makerConfig.starknetL1MapL2['mainnet-alpha']
-          : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
       row.recipient = L1L2Maping[row.recipient.toLowerCase()]
     }

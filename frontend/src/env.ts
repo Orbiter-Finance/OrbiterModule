@@ -7,6 +7,7 @@ export const $env = {
   starknetL1MapL2: {
     'mainnet-alpha': {
       '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+      '0x095D2918B03b2e86D68551DCF11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',
     },
     'georli-alpha': {
       '0x0043d60e87c5dd08c86c3123340705a1556c4719':
@@ -19,6 +20,7 @@ export const $env = {
     5: 'https://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // goerli
     22: 'https://goerli-rollup.arbitrum.io/rpc/',
     15: 'https://bsc-dataseed1.binance.org',
+    517: 'https://public.zkevm-test.net:2083'
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -30,7 +32,7 @@ export const $env = {
   },
   supportLocalNetWorksIDs: [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15, 515, 15,
-    515, 16, 516,
+    515, 16, 516,517
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -60,6 +62,7 @@ export const $env = {
     515: '97', // bsc(R)
     16: '42170',
     516: '421613',
+    517: '1402'
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -91,6 +94,7 @@ export const $env = {
     515: 'https://testnet.bscscan.com/tx/',
     16: 'https://nova-explorer.arbitrum.io/tx/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/tx/',
+    517: 'https://public.zkevm-test.net:8443/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -122,6 +126,7 @@ export const $env = {
     515: 'https://testnet.bscscan.com/address/',
     16: 'https://nova-explorer.arbitrum.io/address/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/address/',
+    517: 'https://public.zkevm-test.net:8443/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -149,5 +154,6 @@ export const $env = {
     515: 'https://testnet.bscscan.com/tokens',
     16: 'https://nova-explorer.arbitrum.io/token/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/token/',
+    517: 'https://public.zkevm-test.net:8443/token/'
   },
 }

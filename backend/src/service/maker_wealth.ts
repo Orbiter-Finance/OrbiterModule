@@ -357,9 +357,7 @@ export async function getWealths(
         if (item.chainId === 4 || item.chainId === 44) {
           // mapping
           makerAddress =
-            makerConfig.starknetL1MapL2[
-            item.chainId == 44 ? 'georli-alpha' : 'mainnet-alpha'
-            ][item.makerAddress.toLowerCase()]
+            makerConfig.starknetAddress[item.makerAddress.toLowerCase()]
         }
         let value = await getTokenBalance(
           makerAddress,

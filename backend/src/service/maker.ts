@@ -68,18 +68,18 @@ export async function statisticsProfit(
 
   const makerList = await getMakerList()
   for (const item of makerList) {
-    let makerAddress =item.makerAddress;
-    if (['4','44'].includes(makerNode.fromChain)) {
-      const addrMap = makerConfig.starknetL1MapL2[makerNode.toChain =='44' ? 'georli-alpha':'mainnet-alpha'];
-      for(let L1Addr in addrMap) {
+    let makerAddress = item.makerAddress;
+    if (['4', '44'].includes(makerNode.fromChain)) {
+      const addrMap = makerConfig.starknetAddress;
+      for (let L1Addr in addrMap) {
         if (equals(L1Addr, makerAddress)) {
           makerAddress = addrMap[L1Addr];
         }
       }
     }
-  
+
     if (!equalsIgnoreCase(makerAddress, makerNode.makerAddress)) {
-        continue
+      continue
     }
 
     if (
@@ -180,9 +180,8 @@ export function newMakeTransactionID(
   fromTxNonce: string | number,
   symbol: string | undefined
 ) {
-  return `${fromAddress}${padStart(String(fromChainId), 4, '00')}${
-    symbol || 'NULL'
-  }${fromTxNonce}`.toLowerCase()
+  return `${fromAddress}${padStart(String(fromChainId), 4, '00')}${symbol || 'NULL'
+    }${fromTxNonce}`.toLowerCase()
 }
 
 /**
@@ -228,14 +227,12 @@ export async function getMakerNodes(
   queryBuilder.where('makerAddress = :makerAddress', {
     makerAddress,
   })
-  const starknetL1MapL2 =
-    makerConfig.starknetL1MapL2[
-      process.env.NODE_ENV == 'development' ? 'georli-alpha' : 'mainnet-alpha'
-    ]
-  if (starknetL1MapL2[makerAddress.toLowerCase()]) {
+  const starknetAddress =
+    makerConfig.starknetAddress;
+  if (starknetAddress[makerAddress.toLowerCase()]) {
     queryBuilder.where(
       'makerAddress in(:makerAddress)',
-      { makerAddress: [starknetL1MapL2[makerAddress.toLowerCase()],makerAddress]}
+      { makerAddress: [starknetAddress[makerAddress.toLowerCase()], makerAddress] }
     )
   }
   if (keyword) {
