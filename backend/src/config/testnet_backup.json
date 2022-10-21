@@ -146,6 +146,13 @@
     "contracts": [],
     "tokens": [
       {
+        "id": 4,
+        "name": "DAI",
+        "symbol": "DAI",
+        "decimals": 6,
+        "address": "0x5c221e77624690fff6dd741493d735a17716c26b"
+      },
+      {
         "id": 2,
         "name": "USDC",
         "symbol": "USDC",
@@ -399,7 +406,7 @@
         "name": "Testnet ETH",
         "symbol": "ETH",
         "decimals": 18,
-        "address": "0x2ceea9fead4584aba77ecde697e9fc80c9bd4c56"
+        "address": "0x2ceEA9FeAD4584aBA77eCdE697E9fc80C9BD4c56"
       }
     ]
   },
