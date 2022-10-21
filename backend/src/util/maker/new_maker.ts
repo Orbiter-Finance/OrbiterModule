@@ -365,7 +365,7 @@ export async function confirmTransactionSendMoneyBack(
         toChainID,
         toChainName,
         toTokenAddress,
-        tx.value.toNumber(),
+        tx.value.toString(),
         userAddress,
         market.pool,
         tx.nonce,
