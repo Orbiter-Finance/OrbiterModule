@@ -1,7 +1,7 @@
+
 import { equalsIgnoreCase, sleep } from '../../util'
 import { accessLogger, errorLogger } from '../../util/logger'
 import { IMXHelper, Transaction } from './imx_helper'
-
 type Filter = {
   from?: string
   to?: string
@@ -75,7 +75,6 @@ class IMXListen {
       this.isFirstTicker = false
     }
     ticker()
-
     this.tickerTimer = setInterval(ticker, IMX_LISTEN_TRANSFER_DURATION)
   }
 
@@ -85,6 +84,7 @@ class IMXListen {
    * @returns
    */
   private async doTransfer(transfer: any, retryCount = 0) {
+
     const { transaction_id } = transfer
     if (!transaction_id) {
       return

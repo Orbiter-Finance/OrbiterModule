@@ -71,8 +71,8 @@ export class StarknetHelp {
     if (nonces && nonces.length <= 5) {
       // render
       let localLastNonce: number = max(nonces) || 0
-      const networkLastNonce = await this.getNetworkNonce()
-      accessLogger.info('starkNet_networkLastNonce =', networkLastNonce)
+      const networkLastNonce = await this.getNetworkNonce();
+      accessLogger.info('starknet_getNetwork_nonce =', networkLastNonce)
       if (networkLastNonce > localLastNonce) {
         nonces = [networkLastNonce]
         localLastNonce = networkLastNonce

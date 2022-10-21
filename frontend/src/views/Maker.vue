@@ -24,7 +24,7 @@
                   class="maker-header--balances__info"
                 >
                   TokenAddress:&nbsp;
-                  <a  
+                  <a
                     :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
                     target="_blank"
                   >
@@ -78,6 +78,7 @@
             v-model="state.rangeDate"
             type="datetimerange"
             range-separator="To"
+            :shortcuts="shortcuts"
             start-placeholder="Start date"
             end-placeholder="End date"
             :clearable="false"
@@ -109,7 +110,9 @@
         <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
-          <el-button type="primary" @click="() => getMakerNodes({current:1})">Apply</el-button>
+          <el-button type="primary" @click="() => clickApply()"
+            >Apply</el-button
+          >
         </el-col>
       </el-row>
       <el-row v-if="state.userAddressSelected">
@@ -118,7 +121,10 @@
         </el-tag>
       </el-row>
     </div>
-    <div class="maker-block maker-header maker-header__statistics">
+    <div
+      class="maker-block maker-header maker-header__statistics"
+      v-loading="loadingStatistics"
+    >
       <el-button-group v-if="false">
         <el-button
           :disabled="loadingNodes"
@@ -135,8 +141,7 @@
           Next Page
         </el-button>
       </el-button-group>
-      <div>TransactionTotal: {{ list.length }}</div>
-      
+      <div>TransactionTotal: {{ statistics.total }}</div>
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
@@ -156,16 +161,31 @@
           </template>
         </el-popover>
       </div>
-      <div>FromAmountTotal: {{ fromAmountTotal }}</div>
-      <div>ToAmountTotal: {{ toAmountTotal }}</div>
+      <div>FromAmountTotal: {{ statistics.fromAmount }}</div>
+      <div>ToAmountTotal: {{ statistics.toAmount }}</div>
       <div style="color: #67c23a; font-weight: 600">
-        +{{ diffAmountTotal }} USD
+        +{{ statistics.profit['USD'] }} USD
       </div>
-      <div style="color: #409eff; font-weight: 600">
-        +{{ diffAmountTotalETH }} ETH
-      </div>
+      <el-dropdown>
+        <div style="color: #409eff; font-weight: 600">
+          +{{ statistics.profit['ETH'] }} ETH
+        </div>
+        <template #dropdown>
+          <el-dropdown-menu>
+            <el-dropdown-item
+              v-for="(val, key) in statistics.profit"
+              :key="key"
+            >
+              <div style="color: #409eff; font-weight: 600">
+                + {{ val }} {{ key }}
+              </div>
+            </el-dropdown-item>
+          </el-dropdown-menu>
+        </template>
+      </el-dropdown>
+
       <div style="color: #f56c6c; font-weight: 600">
-        +{{ diffAmountTotalCNY }} CNY
+        +{{ statistics.profit['CNY'] }} CNY
       </div>
       <div style="margin-left: auto">
         <router-link
@@ -178,7 +198,15 @@
     </div>
     <div class="maker-block">
       <template v-if="list.length > 0">
-        <div v-if="!state.userAddressSelected" style="display:flex;justify-content:center;item-align:center;margin: 10px;">
+        <div
+          v-if="!state.userAddressSelected"
+          style="
+            display: flex;
+            justify-content: center;
+            item-align: center;
+            margin: 10px;
+          "
+        >
           <el-pagination
             v-model:currentPage="currentPage"
             v-model:page-size="pageSize"
@@ -190,7 +218,7 @@
             @current-change="handleCurrentChange"
           />
         </div>
-        
+
         <el-table :data="list" stripe style="width: 100%">
           <el-table-column label="TransactionID">
             <template #default="scope">
@@ -346,15 +374,23 @@
 
       <el-empty v-else description="Empty"></el-empty>
     </div>
+    <el-backtop :right="100" :bottom="100" />
   </div>
 </template>
 
 <script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerInfo, MakerNode, makerWealth, useTransactionHistory } from '@/hooks/maker'
-import { BigNumber } from 'bignumber.js'
+import {
+  makerInfo,
+  MakerNode,
+  makerWealth,
+  useTransactionHistory,
+  requestStatistics,
+} from '@/hooks/maker'
+// import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
 import { BigNumberish, ethers, providers } from 'ethers'
+import dayjs from 'dayjs'
 import {
   TransactionDydx,
   TransactionEvm,
@@ -363,14 +399,7 @@ import {
   TransactionZksync,
   utils,
 } from 'orbiter-sdk'
-import {
-  ref,
-  computed,
-  inject,
-  reactive,
-  toRef,
-  watch,
-} from 'vue'
+import { ref, computed, inject, reactive, toRef, watch } from 'vue'
 import Web3 from 'web3'
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
@@ -391,25 +420,79 @@ const stateTags = {
 const status = [
   {
     value: -1,
-    label: 'All'
-  }
-].concat(Object.keys(stateTags).map(key => ({value: +key, label: stateTags[key].label})))
-// Default time duration 10800 
+    label: 'All',
+  },
+].concat(
+  Object.keys(stateTags).map((key) => ({
+    value: +key,
+    label: stateTags[key].label,
+  }))
+)
+// Default time duration 10800
 const DEFAULT_TIME_DURATION = 1 * 24 * 60 * 60 * 1000
 
 const makerAddressSelected: any = inject('makerAddressSelected')
-const exchangeRates: any = inject('exchangeRates')
+// const exchangeRates: any = inject('exchangeRates')
 const state = reactive({
   rangeDate: [] as Date[],
   fromChainId: '',
   toChainId: '',
   userAddressSelected: '',
   keyword: '',
-  status: -1
+  status: -1,
+})
+const shortcuts = [
+  {
+    text: 'Today',
+    value: () => {
+      return [dayjs().startOf('d'), dayjs().endOf('d')]
+    },
+  },
+  {
+    text: 'Last week',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 7)
+      return [start, end]
+    },
+  },
+  {
+    text: 'Last month',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 30)
+      return [start, end]
+    },
+  },
+  {
+    text: 'Last 3 months',
+    value: () => {
+      const end = new Date()
+      const start = new Date()
+      start.setTime(start.getTime() - 3600 * 1000 * 24 * 90)
+      return [start, end]
+    },
+  },
+]
+const statistics = reactive({
+  total: 0,
+  fromAmount: 0,
+  toAmount: 0,
+  profit: {},
+  profitAmount: 0,
 })
 const makerNodes: any = ref([])
 // computeds
-const list = computed(() => makerNodes.value.filter(item => !state.userAddressSelected || item.userAddress == state.userAddressSelected))
+const list = computed(() =>
+  makerNodes.value.filter(
+    (item) =>
+      !state.userAddressSelected ||
+      item.userAddress == state.userAddressSelected
+  )
+)
+
 const userAddressList = computed(() => {
   const userAddressList: { address: string; count: number }[] = []
   for (const item of makerNodes.value) {
@@ -433,97 +516,76 @@ const userAddressList = computed(() => {
 
   return userAddressList
 })
-const fromAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    num = num.plus(item.fromAmountFormat)
-  }
-  return num.toFixed(5)
-})
-const toAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    num = num.plus(item.toAmountFormat)
-  }
-  return num.toFixed(5)
-})
-const diffAmountTotal = computed(() => {
-  let num = new BigNumber(0)
-  for (const item of list.value) {
-    if (!item.profitUSD) {
-      continue
-    }
+// const diffAmountTotal = computed(() => {
+//   let num = new BigNumber(0)
+//   for (const item of list.value) {
+//     if (!item.profitUSD) {
+//       continue
+//     }
 
-    num = num.plus(item.profitUSD)
-  }
-  return num.toNumber().toFixed(2)
-})
-const diffAmountTotalETH = computed(() => {
-  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-    exchangeRates?.value?.ETH || 0
-  )
-  return num.toFixed(5)
-})
-const diffAmountTotalCNY = computed(() => {
-  const num = new BigNumber(diffAmountTotal.value).multipliedBy(
-    exchangeRates?.value?.CNY || 0
-  )
-  return num.toFixed(2)
-})
+//     num = num.plus(item.profitUSD)
+//   }
+//   return num.toNumber().toFixed(2)
+// })
+// const diffAmountTotalETH = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.ETH || 0
+//   )
+//   return num.toFixed(5)
+// })
+// const diffAmountTotalCNY = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.CNY || 0
+//   )
+//   return num.toFixed(2)
+// })
 const chains = toRef(makerInfo.state, 'chains')
 const loadingWealths = toRef(makerWealth.state, 'loading')
 const wealths = toRef(makerWealth.state, 'list')
 const loadingNodes = ref(false)
+const loadingStatistics = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
-const pagesizes = computed(() => Array.from(new Set([100, 200, 300, 400, Math.ceil((total.value / 100))* 100])))
+const pagesizes = computed(() =>
+  Array.from(new Set([100, 200, 300, 400, Math.ceil(total.value / 100) * 100]))
+)
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val
-  getMakerNodes({size: val})
+  getMakerNodes({ size: val })
 }
 const handleCurrentChange = (val: number) => {
   currentPage.value = val
-  getMakerNodes({current: val})
+  getMakerNodes({ current: val })
 }
 const getMakerWealth = () => makerWealth.get(makerAddressSelected?.value)
 const reset = () => {
-  const endTime = new Date()
-  const startTime = new Date(endTime.getTime() - DEFAULT_TIME_DURATION)
-  state.rangeDate = [startTime, endTime]
+  state.rangeDate = [dayjs().startOf('d').toDate(), dayjs().endOf('d').toDate()]
   state.fromChainId = ''
   state.toChainId = ''
   state.userAddressSelected = ''
   state.keyword = ''
   state.status = -1
-  
+
   getMakerNodes()
+  getStatistics()
 }
-/*
-const getMakerNodes = async (more: any = {}) => {
-  const { list, loading } = await useMakerNodes(
-    makerAddressSelected?.value, 
-    Number(state.fromChainId),
-    Number(state.toChainId),
-    state.rangeDate,
-    state.keyword
-  )
-  loadingNodes.value = loading.value
-  makerNodes.value = list.value
-}
-*/
 let prevMore = {}
+const clickApply = () => {
+  getMakerNodes({ current: 1 })
+  getStatistics()
+}
 const getMakerNodes = async (more: any = {}) => {
   loadingNodes.value = true
   prevMore = {
     ...prevMore,
-    ...more
+    ...more,
   }
   const {
     list: _list,
     // loading,
-    total: _total
+    total: _total,
   } = await useTransactionHistory({
     makerAddress: makerAddressSelected?.value,
     fromChain: state.fromChainId ? +state.fromChainId : null,
@@ -532,10 +594,39 @@ const getMakerNodes = async (more: any = {}) => {
     keyword: state.keyword.trim(),
     state: state.status,
     ...prevMore,
-  });
+  })
   loadingNodes.value = false
   makerNodes.value = _list.value
   total.value = _total.value
+}
+const getStatistics = async (more: any = {}) => {
+  loadingStatistics.value = true
+  try {
+    prevMore = {
+      ...prevMore,
+      ...more,
+    }
+    const result = await requestStatistics({
+      makerAddress: makerAddressSelected?.value,
+      fromChain: state.fromChainId ? +state.fromChainId : null,
+      toChain: state.toChainId ? +state.toChainId : null,
+      rangeDate: state.rangeDate,
+      keyword: state.keyword.trim(),
+      state: state.status,
+      ...prevMore,
+    })
+    if (result) {
+      statistics.total = result.trxCount
+      statistics.fromAmount = result.fromAmount
+      statistics.toAmount = result.toAmount
+      statistics.profitAmount = result.profitAmount
+      statistics.profit = result.profit
+    }
+  } catch (error) {
+    throw new Error(error)
+  } finally {
+    loadingStatistics.value = false
+  }
 }
 // Methods
 const mappingChainName = (chainName: string) => {
@@ -684,7 +775,7 @@ const onClickPageButton = (next: boolean) => {
   ]
   getMakerNodes()
 }
-const init = () => getMakerWealth() + getMakerNodes()
+const init = () => getMakerWealth() + getMakerNodes() + getStatistics()
 
 makerInfo.get()
 reset()

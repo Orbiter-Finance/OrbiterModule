@@ -1,44 +1,36 @@
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerList, startMaker } from '../util/maker'
+import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   jobBalanceAlarm,
-  jobCacheCoinbase,
   jobGetWealths,
-  // jobMakerNodeTodo,
-  jobMakerPull,
-  startNewDashboardPull,
 } from './jobs'
-import { doSms } from '../sms/smsSchinese'
+// import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
 
-async function waittingStartMaker() {
+export async function waittingStartMaker() {
   const makerList = await getMakerList()
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
   }
-
   // wait makerConfig.privateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
+
   while (startedIndexs.length < makerList.length) {
     const missPrivateKeyMakerAddresses: string[] = []
-
     for (let index = 0; index < makerList.length; index++) {
       const item = makerList[index]
       const makerAddress = item.makerAddress
-
       if (
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
       ) {
-        // startMaker(item)
         // jobMakerNodeTodo(item.makerAddress)
-
         startedIndexs.push(index)
         isPrivateKeysChanged = true
 
@@ -62,7 +54,7 @@ async function waittingStartMaker() {
 
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
-          doSms(alert)
+          // doSms(alert)
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime
@@ -102,20 +94,19 @@ async function waittingStartMaker() {
 
 export const startMasterJobs = async () => {
   const scene = process.env.ORBITER_SCENE
+
   // cache coinbase
   // jobCacheCoinbase()
 
+  // pull makerList
+
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
-    jobMakerPull()
-    //
-    startNewDashboardPull()
     // get wealths
     jobGetWealths()
 
     jobBalanceAlarm()
   }
-
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()

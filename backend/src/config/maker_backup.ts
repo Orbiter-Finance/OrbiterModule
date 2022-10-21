@@ -1,17 +1,13 @@
 export default {
-  starknetL1MapL2: {
-    'mainnet-alpha': {
-      'xxxxx': 'xxxx',
-    },
-    'georli-alpha': {
-      '0x8a3214f28946a797088944396c476f014f88dd37':
-        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
-    },
+  starknetAddress: {
+    '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+    '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',
+    '0x0043d60e87c5dd08c86c3123340705a1556c4719':
+      '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
   },
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.etherscan.io/api',
       key: 'Your Key', // limit
@@ -20,19 +16,18 @@ export default {
     gasPrice: 0,
   },
   rinkeby: {
-    wsEndPoint: 'wss://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPoint: 'https://eth-rinkeby.alchemyapi.io/v2/Your Key',
-    httpEndPointInfura: 'https://rinkeby.infura.io/v3/Your Key',
+    wsEndPoint: 'wss://eth-goerli.g.alchemy.com/v2/Your Key',
+    httpEndPoint: 'https://eth-goerli.g.alchemy.com/v2/Your Key',
     api: {
-      endPoint: 'https://api-rinkeby.etherscan.io/api',
-      key: 'Your Key',
+      endPoint: 'https://api-goerli.etherscan.io/api',
+      key: '',
     },
+    customChainId: 5,
     gasPrice: 2,
   },
   arbitrum: {
     wsEndPoint: 'wss://arb-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.arbiscan.io/api',
       key: '',
@@ -43,9 +38,8 @@ export default {
   arbitrum_test: {
     wsEndPoint: 'wss://arb-rinkeby.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://arb-rinkeby.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://arbitrum-mainnet.infura.io/v3/Your Key',
     api: {
-      endPoint: 'https://testnet.arbiscan.io/api',
+      endPoint: 'https://testnet.arbiscan.io/',
       key: '',
     },
     gasPrice: 2,
@@ -90,7 +84,6 @@ export default {
   polygon: {
     wsEndPoint: 'wss://polygon-mainnet.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mainnet.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api.polygonscan.com/api',
       key: 'Your Key',
@@ -101,7 +94,6 @@ export default {
   polygon_test: {
     wsEndPoint: 'wss://polygon-mumbai.g.alchemy.com/v2/Your Key',
     httpEndPoint: 'https://polygon-mumbai.g.alchemy.com/v2/Your Key',
-    httpEndPointInfura: 'https://polygon-mumbai.infura.io/v3/Your Key',
     api: {
       endPoint: 'https://api-testnet.polygonscan.com/api',
       key: 'Your Key',
@@ -140,14 +132,14 @@ export default {
     customChainId: 10,
   },
   optimism_test: {
-    wsEndPoint: 'wss://opt-kovan.g.alchemy.com/v2/Your Key',
-    httpEndPoint: 'https://opt-kovan.g.alchemy.com/v2/Your Key',
+    wsEndPoint: 'wss://opt-goerli.g.alchemy.com/v2/KEY',
+    httpEndPoint: 'https://opt-goerli.g.alchemy.com/v2/KEY',
     api: {
-      endPoint: 'https://api-kovan-optimistic.etherscan.io/api',
-      key: 'Your Key',
+      endPoint: 'https://api-goerli-optimistic.etherscan.io/api',
+      key: 'KEY',
     },
     gasPrice: 2,
-    customChainId: 69,
+    customChainId: 420,
   },
   immutableX: {
     wsEndPoint: null,
@@ -243,6 +235,16 @@ export default {
     gasPrice: 2,
     customChainId: 28,
   },
+  polygon_zkevm_test: {
+    wsEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPointInfura: "",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    customChainId: 1402,
+  },
   zksync2_test: {
     wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
     httpEndPoint: 'https://zksync2-testnet.zksync.dev',
@@ -256,7 +258,7 @@ export default {
   bnbchain: {
     wsEndPoint: 'wss://bsc-ws-node.nariox.org',
     httpEndPoint: 'https://bsc-dataseed1.binance.org',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: '',
       key: '',
@@ -267,7 +269,7 @@ export default {
   bnbchain_test: {
     wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
     httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: '',
       key: '',
@@ -278,7 +280,7 @@ export default {
   arbitrum_nova: {
     wsEndPoint: 'https://nova.arbitrum.io/rpc',
     httpEndPoint: 'https://nova.arbitrum.io/rpc',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: 'https://nova-explorer.arbitrum.io/api',
       key: '',
@@ -289,7 +291,7 @@ export default {
   arbitrum_nova_test: {
     wsEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
     httpEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
-    httpEndPointInfura:"",
+    httpEndPointInfura: "",
     api: {
       endPoint: 'https://goerli-rollup-explorer.arbitrum.io/api',
       key: '',

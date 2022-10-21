@@ -19,7 +19,8 @@ async function getMakerList() {
 const token2Decimals = {
   'ETH': 18,
   'USDC': 6,
-  'USDT': 6
+  'USDT': 6,
+  'DAI': 18
 }
 
 
@@ -42,8 +43,8 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
     return undefined
   }
 }
-async function getRates(currency) {
-  const cacheData = await keyv.get(`rates:${currency}`);
+export async function getRates(currency) {
+    const cacheData = await keyv.get(`rates:${currency}`);
   if (cacheData) {
     return cacheData;
   }
@@ -55,7 +56,7 @@ async function getRates(currency) {
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
-  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60); // true
+  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60 * 5); // true
   return data.rates
 }
 
@@ -303,13 +304,16 @@ export async function transforeData(list = []) {
       return (row.c1ID == item['fromChain'] && row.c2ID == item['toChain'] && row['tName'] == item['tokenName'])
         || (row.c1ID == item['toChain'] && row.c2ID == item['fromChain'] && row['tName'] == item['tokenName'])
     });
-    if (market.c1ID == item['fromChain']) {
-      needTo.decimals = market.precision;
-      needTo.tokenAddress = market.t2Address;
-    } else if (market.c2ID == item['fromChain']) {
-      needTo.decimals = market.precision;
-      needTo.tokenAddress = market.t1Address;
+    if (market) {
+      if (market.c1ID == item['fromChain']) {
+        needTo.decimals = market.precision;
+        needTo.tokenAddress = market.t2Address;
+      } else if (market.c2ID == item['fromChain']) {
+        needTo.decimals = market.precision;
+        needTo.tokenAddress = market.t1Address;
+      }
     }
+   
     // old:
     // if (item.state == 1 || item.state == 20) {
     // new:

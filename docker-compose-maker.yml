@@ -48,7 +48,7 @@ services:
       - './mysql/data:/var/lib/mysql'
       - './mysql/conf.d:/etc/mysql/conf.d'
     ports:
-      - '3306:3306'
+      - '3307:3306'
     restart: always
     networks:
       - app-network

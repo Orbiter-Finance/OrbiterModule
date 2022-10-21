@@ -16,7 +16,8 @@ const MAX_BITS = {
   boba: 256,
   zkspace: 35,
   bnbchain: 256,
-  arbitrum_nova: 256
+  arbitrum_nova: 256,
+  polygon_zkevm: 256
 }
 
 const precisionResolverMap = {
@@ -55,7 +56,8 @@ export const CHAIN_INDEX = {
   15: "bnbchain",
   515: "bnbchain",
   16: 'arbitrum_nova',
-  516: 'arbitrum_nova'
+  516: 'arbitrum_nova',
+  517: 'polygon_zkevm'
 }
 
 export const SIZE_OP = {

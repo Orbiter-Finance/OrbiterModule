@@ -138,6 +138,30 @@ async function getMakerNode(params: any = {}) {
   transforeData(list)
   return list
 }
+export const requestStatistics = async (params: any = {}) => {
+  const loading = ref(false)
+  if (params.makerAddress) {
+    transforeDate(params)
+    if ($env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]) {
+      params.makerAddress = `${params.makerAddress},${$env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]}`;
+    }
+    loading.value = true
+    try {
+      const res: any = await http.get(`/api/transaction/statistics`, {
+        params: params
+      })
+      if (res.code === 0) {
+        const data = res.data
+        return data;
+      }
+    } catch (error) {
+      console.error(error)
+    }
+    loading.value = false
+  }
+}
+
+
 export const useMakerNodes = async (
   makerAddress: string,
   fromChain: number = 0,
