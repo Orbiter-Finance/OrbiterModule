@@ -29,7 +29,6 @@ const repositorySystemSetting = (): Repository<SystemSetting> => {
   return Core.db.getRepository(SystemSetting)
 }
 const BALANCE_ALARM_KEY = 'balance_alarm'
-const MAKER_PULL_START_KEY = 'maker_pull_start'
 
 // Default Baseline
 export const DEFAULT_BALANCE_ALARM_BASELINE = 0
@@ -145,19 +144,6 @@ export async function saveBalanceAlarms(
   return true
 }
 
-export async function getMakerPullStart() {
-  const value = await getSettingValueJson(MAKER_PULL_START_KEY)
-
-  const makerPullStart = DEFAULT_MAKER_PULL_START
-  if (value?.totalPull) {
-    makerPullStart.totalPull = Number(value.totalPull)
-  }
-  if (value?.incrementPull) {
-    makerPullStart.incrementPull = Number(value.incrementPull)
-  }
-
-  return makerPullStart
-}
 
 export async function saveMakerPullStart(value: any) {
 

@@ -1,14 +1,11 @@
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerList, startMaker } from '../util/maker'
+import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   jobBalanceAlarm,
   jobGetWealths,
-  // jobMakerNodeTodo,
-  jobMakerPull,
-  startNewDashboardPull,
 } from './jobs'
 // import { doSms } from '../sms/smsSchinese'
 
@@ -33,9 +30,7 @@ export async function waittingStartMaker() {
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
       ) {
-        // startMaker(item)
         // jobMakerNodeTodo(item.makerAddress)
-
         startedIndexs.push(index)
         isPrivateKeysChanged = true
 
@@ -107,9 +102,6 @@ export const startMasterJobs = async () => {
 
   // dashboard
   if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
-    jobMakerPull()
-    //
-    startNewDashboardPull()
     // get wealths
     jobGetWealths()
 

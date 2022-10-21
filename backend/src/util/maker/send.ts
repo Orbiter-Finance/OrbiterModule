@@ -27,7 +27,6 @@ import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
-import { IsEmpty } from 'class-validator'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
