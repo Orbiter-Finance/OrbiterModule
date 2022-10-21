@@ -1123,6 +1123,9 @@ async function sendConsumer(value: any) {
     if (fromChainID === 3 && chainID === 1) {
       maxPrice = 85
     }
+    if (fromChainID === 6 && chainID === 1) {
+      maxPrice = 85
+    }
   }
   const gasPrices = await getCurrentGasPrices(
     toChain,
