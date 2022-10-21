@@ -1110,6 +1110,20 @@ async function sendConsumer(value: any) {
       maxPrice = 80
     }
   }
+  if (tokenInfo && tokenInfo.symbol === 'DAI') {
+    if (fromChainID === 4 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 2 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 7 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 3 && chainID === 1) {
+      maxPrice = 85
+    }
+  }
   const gasPrices = await getCurrentGasPrices(
     toChain,
     // isEthTokenAddress(tokenAddress) ? maxPrice : undefined
