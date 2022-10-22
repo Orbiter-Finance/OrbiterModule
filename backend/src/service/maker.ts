@@ -25,22 +25,6 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 
 /**
- * @param chainId
- * @param amount
- * @returns
- */
-export function getAmountFlag(
-  chainId: string | number,
-  amount: string | number
-): string {
-  const rst = getPTextFromTAmount(chainId, amount)
-  if (!rst.state) {
-    return '0'
-  }
-  return (Number(rst.pText) % 9000) + ''
-}
-
-/**
  * Get maker's addresses
  * @returns
  */

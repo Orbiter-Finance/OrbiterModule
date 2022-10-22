@@ -29,6 +29,7 @@ import { getProviderByChainId } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
+import { getAmountToSend } from './core'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -200,31 +201,12 @@ function confirmToTransaction(
       } catch (error) {
         errorLogger.error('getBlockError =', error)
       }
-      var timestamp = orbiterCore.transferTimeStampToTime(
-        info.timestamp ? info.timestamp : '0'
-      )
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
           txHash +
           ' has been successfully confirmed'
       )
-      accessLogger.info(
-        'update maker_node =',
-        `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
-      )
-      try {
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          { toTimeStamp: timestamp, state: 3 }
-        )
-        accessLogger.info(
-          `[${transactionID}]  confirmToTransaction->Chain:${Chain} update success`
-        )
-      } catch (error) {
-        errorLogger.error(`[${transactionID}]  updateToSqlError =`, error)
-        return
-      }
       return
     }
     return confirmToTransaction(
@@ -320,13 +302,6 @@ function confirmToLPTransaction(
             'lp_Transaction with hash ' +
               txID +
               ' has been successfully confirmed'
-          )
-          var timestamp = orbiterCore.transferTimeStampToTime(
-            lpTransaction.timestamp ? lpTransaction.timestamp : '0'
-          )
-          accessLogger.info(
-            'update maker_node =',
-            `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
           )
           try {
             await repositoryMakerNode().update(
@@ -521,42 +496,6 @@ function getZKTokenInfo(tokenAddress) {
 function getTime() {
   const time = dayjs().format('YYYY-MM-DD HH:mm:ss')
   return time
-}
-
-/**
- * Get return amount
- * @param fromChainID
- * @param toChainID
- * @param amountStr
- * @param pool
- * @param nonce
- * @returns
- */
-export function getAmountToSend(
-  fromChainID: number,
-  toChainID: number,
-  amountStr: string,
-  pool: { precision: number; tradingFee: number; gasFee: number },
-  nonce: string | number
-) {
-  const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amountStr)
-  if (!realAmount.state) {
-    errorLogger.error(realAmount.error)
-    return
-  }
-  const rAmount = <any>realAmount.rAmount
-  if (nonce > 8999) {
-    errorLogger.error('nonce too high, not allowed')
-    return
-  }
-  var nonceStr = orbiterCore.pTextFormatZero(nonce)
-  var readyAmount = orbiterCore.getToAmountFromUserAmount(
-    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** pool.precision)),
-    pool,
-    true
-  )
-
-  return orbiterCore.getTAmountFromRAmount(toChainID, readyAmount, nonceStr)
 }
 
 /**
