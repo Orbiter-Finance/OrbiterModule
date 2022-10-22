@@ -23,7 +23,7 @@
     "@supercharge/promise-pool": "^2.1.0",
     "aws-sdk": "^2.1222.0",
     "axios": "^0.21.1",
-    "bignumber.js": "^9.0.1",
+    "bignumber.js": "^9.1.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.13.1",
     "cross-fetch": "^3.1.5",
