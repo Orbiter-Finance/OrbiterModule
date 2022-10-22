@@ -32,7 +32,7 @@ export const $env = {
   },
   supportLocalNetWorksIDs: [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15, 515, 15,
-    515, 16, 516,517
+    515, 16, 516, 517
   ],
   localChainID_netChainID: {
     1: '1', // mainnet

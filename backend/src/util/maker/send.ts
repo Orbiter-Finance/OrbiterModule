@@ -44,9 +44,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       const response = await axios.get(url)
       if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
-          low: Number(response.data.result.SafeGasPrice) + 10,
-          medium: Number(response.data.result.ProposeGasPrice) + 10,
-          high: Number(response.data.result.FastGasPrice) + 10,
+          low: Number(response.data.result.SafeGasPrice) + 5,
+          medium: Number(response.data.result.ProposeGasPrice) + 5,
+          high: Number(response.data.result.FastGasPrice) + 5,
         }
         let gwei = prices['medium']
         // Limit max gwei
@@ -1108,6 +1108,23 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 80
+    }
+  }
+  if (tokenInfo && tokenInfo.symbol === 'DAI') {
+    if (fromChainID === 4 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 2 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 7 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 3 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 6 && chainID === 1) {
+      maxPrice = 85
     }
   }
   const gasPrices = await getCurrentGasPrices(

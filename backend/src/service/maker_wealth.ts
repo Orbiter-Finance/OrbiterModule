@@ -19,6 +19,7 @@ import { equals } from 'orbiter-chaincore/src/utils/core'
 import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance/chainService'
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
+const balanceService: { [key: number]: ChainServiceTokenBalance } = {};
 export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
 
 /**
@@ -140,12 +141,13 @@ async function getTokenBalance(
             ''
             : '0'
         break
-      case 16:
-      case 516:
+
       case 1:
-      case 5:
+      case 2:
+      case 22:
       case 4:
       case 44:
+      case 5:
       case 7:
       case 77:
       case 10:
@@ -160,8 +162,13 @@ async function getTokenBalance(
       case 516:
       case 17:
       case 517:
-        const balanceService = new ChainServiceTokenBalance(String(chainId));
-        value = await balanceService.getBalance(makerAddress, tokenAddress);
+        // const balanceService = 
+        // value = await balanceService.getBalance(makerAddress, tokenAddress);
+        if (!balanceService[chainId]) {
+          balanceService[chainId] = new ChainServiceTokenBalance(String(chainId));
+        }
+        return balanceService[chainId].getBalance(makerAddress, tokenAddress);
+
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
