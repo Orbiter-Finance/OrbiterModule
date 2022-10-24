@@ -127,9 +127,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -175,10 +175,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       `[${transactionID}] Transaction with hash ` +
-        txHash +
-        ' has ' +
-        trxConfirmations.confirmations +
-        ' confirmation(s)'
+      txHash +
+      ' has ' +
+      trxConfirmations.confirmations +
+      ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -204,8 +204,8 @@ function confirmToTransaction(
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
-          txHash +
-          ' has been successfully confirmed'
+        txHash +
+        ' has been successfully confirmed'
       )
       return
     }
@@ -300,8 +300,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-              txID +
-              ' has been successfully confirmed'
+            txID +
+            ' has been successfully confirmed'
           )
           try {
             await repositoryMakerNode().update(
@@ -356,7 +356,7 @@ export async function confirmToSNTransaction(
     ) {
       return true
     }
-    return false
+    throw new Error(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message']);
   } else if (
     transaction.status == 'ACCEPTED_ON_L1' ||
     transaction.status == 'ACCEPTED_ON_L2' ||
@@ -628,8 +628,8 @@ export async function sendTransaction(
             transactionID,
             toChainID,
             makerAddress
-          ).then((success) => {
-            success === false && response.rollback()
+          ).catch(error => {
+            response.rollback(error, response.result_nonce);
           })
         } else if (toChainID === 8 || toChainID === 88) {
           console.warn({ toChainID, toChain, txID, transactionID })
