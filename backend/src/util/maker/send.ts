@@ -385,8 +385,7 @@ async function sendConsumer(value: any) {
         rollback,
       }
     } catch (error) {
-      console.error(error)
-      rollback()
+      await rollback(error, nonce)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
