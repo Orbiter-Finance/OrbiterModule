@@ -28,7 +28,8 @@ import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderByChainId } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
-// import { doSms } from '../../sms/smsSchinese'
+import { doSms } from '../../sms/smsSchinese'
+import { getAmountToSend } from './core'
 
 const zkTokenInfo: any[] = []
 let zksTokenInfo: any[] = []
@@ -126,9 +127,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -174,10 +175,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       `[${transactionID}] Transaction with hash ` +
-        txHash +
-        ' has ' +
-        trxConfirmations.confirmations +
-        ' confirmation(s)'
+      txHash +
+      ' has ' +
+      trxConfirmations.confirmations +
+      ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -200,31 +201,12 @@ function confirmToTransaction(
       } catch (error) {
         errorLogger.error('getBlockError =', error)
       }
-      var timestamp = orbiterCore.transferTimeStampToTime(
-        info.timestamp ? info.timestamp : '0'
-      )
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
-          txHash +
-          ' has been successfully confirmed'
+        txHash +
+        ' has been successfully confirmed'
       )
-      accessLogger.info(
-        'update maker_node =',
-        `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
-      )
-      try {
-        await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          { toTimeStamp: timestamp, state: 3 }
-        )
-        accessLogger.info(
-          `[${transactionID}]  confirmToTransaction->Chain:${Chain} update success`
-        )
-      } catch (error) {
-        errorLogger.error(`[${transactionID}]  updateToSqlError =`, error)
-        return
-      }
       return
     }
     return confirmToTransaction(
@@ -318,15 +300,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-              txID +
-              ' has been successfully confirmed'
-          )
-          var timestamp = orbiterCore.transferTimeStampToTime(
-            lpTransaction.timestamp ? lpTransaction.timestamp : '0'
-          )
-          accessLogger.info(
-            'update maker_node =',
-            `state = 3, toTimeStamp = '${timestamp}' WHERE transactionID = '${transactionID}'`
+            txID +
+            ' has been successfully confirmed'
           )
           try {
             await repositoryMakerNode().update(
@@ -381,7 +356,7 @@ export async function confirmToSNTransaction(
     ) {
       return true
     }
-    return false
+    throw new Error(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message']);
   } else if (
     transaction.status == 'ACCEPTED_ON_L1' ||
     transaction.status == 'ACCEPTED_ON_L2' ||
@@ -524,42 +499,6 @@ function getTime() {
 }
 
 /**
- * Get return amount
- * @param fromChainID
- * @param toChainID
- * @param amountStr
- * @param pool
- * @param nonce
- * @returns
- */
-export function getAmountToSend(
-  fromChainID: number,
-  toChainID: number,
-  amountStr: string,
-  pool: { precision: number; tradingFee: number; gasFee: number },
-  nonce: string | number
-) {
-  const realAmount = orbiterCore.getRAmountFromTAmount(fromChainID, amountStr)
-  if (!realAmount.state) {
-    errorLogger.error(realAmount.error)
-    return
-  }
-  const rAmount = <any>realAmount.rAmount
-  if (nonce > 8999) {
-    errorLogger.error('nonce too high, not allowed')
-    return
-  }
-  var nonceStr = orbiterCore.pTextFormatZero(nonce)
-  var readyAmount = orbiterCore.getToAmountFromUserAmount(
-    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** pool.precision)),
-    pool,
-    true
-  )
-
-  return orbiterCore.getTAmountFromRAmount(toChainID, readyAmount, nonceStr)
-}
-
-/**
  *
  * @param makerAddress
  * @param transactionID
@@ -689,8 +628,8 @@ export async function sendTransaction(
             transactionID,
             toChainID,
             makerAddress
-          ).then((success) => {
-            success === false && response.rollback()
+          ).catch(error => {
+            response.rollback(error, response.result_nonce);
           })
         } else if (toChainID === 8 || toChainID === 88) {
           console.warn({ toChainID, toChain, txID, transactionID })
@@ -763,7 +702,7 @@ export async function sendTransaction(
         }
         let alert = 'Send Transaction Error ' + transactionID
         try {
-          // doSms(alert)
+          doSms(alert)
         } catch (error) {
           errorLogger.error(
             `[${transactionID}] sendTransactionErrorMessage =`,

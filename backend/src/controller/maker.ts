@@ -11,7 +11,7 @@ import { makerConfig } from '../config'
 import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
 import * as serviceMakerWealth from '../service/maker_wealth'
-import { getAmountToSend, getMakerList } from '../util/maker'
+import { getMakerList } from '../util/maker'
 import { CHAIN_INDEX } from '../util/maker/core'
 // extend relativeTime
 dayjs.extend(relativeTime)

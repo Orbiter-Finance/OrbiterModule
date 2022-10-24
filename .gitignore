@@ -27,3 +27,5 @@ runtime/
 backend/yalc.lock
 .yalc
 .env
+testnet.json
+chains.json
