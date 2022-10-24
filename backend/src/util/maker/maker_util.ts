@@ -1,6 +1,7 @@
 import BigNumber from "bignumber.js";
 import { chains } from "orbiter-chaincore";
 import { equals, isEmpty } from "orbiter-chaincore/src/utils/core";
+import { makerConfig } from "../../config";
 import { IMarket } from "./new_maker";
 
 export class MakerUtil {
@@ -23,10 +24,13 @@ export const fecthSubgraphFetchLp = async (endpoint: string) => {
     const headers = {
         "content-type": "application/json",
     };
+    const makers = Object.keys(makerConfig.privateKeys).map(addr => addr.toLowerCase());
     const graphqlQuery = {
         operationName: "fetchLpList",
         query: `query fetchLpList {
-        lpEntities(where: { status: 1 }) {
+            lpEntities(
+                where: {maker_: {owner_in: ${JSON.stringify(makers)}}, status: 1}
+              ) {
           id
           createdAt
           maxPrice
@@ -62,7 +66,6 @@ export const fecthSubgraphFetchLp = async (endpoint: string) => {
 
     const response = await fetch(endpoint, options);
     const data = await response.json();
-    //
     const lpEntities = data.data["lpEntities"];
     if (!(lpEntities && Array.isArray(lpEntities))) {
         throw new Error("Get LP List Fail");
