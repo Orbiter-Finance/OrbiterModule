@@ -746,7 +746,7 @@ export default {
         },
 
         async stopLp(row) {
-            await this.lpChange(2, row)
+            await this.lpChange(2, [row])
         }
     }
 }
