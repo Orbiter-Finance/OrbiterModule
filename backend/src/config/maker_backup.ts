@@ -1,12 +1,9 @@
 export default {
-  starknetL1MapL2: {
-    'mainnet-alpha': {
-      'xxxxx': 'xxxx',
-    },
-    'georli-alpha': {
-      '0x8a3214f28946a797088944396c476f014f88dd37':
-        '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
-    },
+  starknetAddress: {
+    '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+    '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',
+    '0x0043d60e87c5dd08c86c3123340705a1556c4719':
+      '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
   },
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
@@ -26,7 +23,7 @@ export default {
       endPoint: 'https://api-goerli.etherscan.io/api',
       key: '',
     },
-    customChainId:5,
+    customChainId: 5,
     gasPrice: 2,
   },
   arbitrum: {
@@ -242,6 +239,16 @@ export default {
     },
     gasPrice: 2,
     customChainId: 28,
+  },
+  polygon_zkevm_test: {
+    wsEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPoint: 'https://public.zkevm-test.net:2083',
+    httpEndPointInfura: "",
+    api: {
+      endPoint: '',
+      key: '',
+    },
+    customChainId: 1402,
   },
   zksync2_test: {
     wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',

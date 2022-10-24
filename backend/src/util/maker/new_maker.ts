@@ -14,9 +14,8 @@ import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
-import { equals } from 'orbiter-chaincore/src/utils/core';
 import dayjs from 'dayjs';
-import { convertChainLPToOldLP, MakerUtil } from './maker_list';
+import { MakerUtil } from './maker_util';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -33,14 +32,16 @@ export interface IMarket {
     name: string;
     tokenAddress: string;
     symbol: string;
-    decimals:number;
+    decimals: number;
+    maxPrice: number;
+    minPrice: number;
   };
   toChain: {
     id: number;
     name: string;
     tokenAddress: string;
     symbol: string;
-    decimals:number;
+    decimals: number;
   };
   times: Number[];
   pool?: any;
@@ -52,6 +53,7 @@ export function checkAmount(
   amount: string,
   market: IMarket
 ) {
+  amount = new BigNumber(String(amount)).toFixed();
   const ptext = orbiterCore.getPTextFromTAmount(fromChainId, amount)
   if (ptext.state === false) {
     return false
@@ -105,7 +107,7 @@ function getCacheClient(chainId: string) {
   }
   const cache = new Keyv({
     store: new KeyvFile({
-      filename: `logs/transfer/${chainId}`, // the file path to store the data
+      filename: `logs/transfer/${dayjs().format("YYYYMM")}-${chainId}`, // the file path to store the data
       expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
       writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
@@ -130,6 +132,10 @@ export async function startNewMakerTrxPull() {
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
+  // L2 push
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`, tx => {
+    return subscribeNewTransaction([tx])
+  })
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
@@ -284,6 +290,9 @@ export async function confirmTransactionSendMoneyBack(
   tx: ITransaction
 ) {
   const fromChainID = Number(market.fromChain.id)
+  if (Number(fromChainID) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
+    return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+  }
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
   const makerAddress = market.sender
@@ -358,6 +367,7 @@ export async function confirmTransactionSendMoneyBack(
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
       }
+
       await sendTransaction(
         makerAddress,
         transactionID,
@@ -365,7 +375,7 @@ export async function confirmTransactionSendMoneyBack(
         toChainID,
         toChainName,
         toTokenAddress,
-        tx.value.toNumber(),
+        tx.value.toString(),
         userAddress,
         market.pool,
         tx.nonce,
@@ -420,14 +430,16 @@ export function newExpanPool(pool): Array<IMarket> {
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
-        decimals:pool.precision
+        decimals: pool.precision,
+        minPrice: pool.c1MinPrice,
+        maxPrice: pool.c1MaxPrice,
       },
       toChain: {
         id: Number(pool.c2ID),
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
-        decimals:pool.precision
+        decimals: pool.precision
       },
       times: [
         pool["c1AvalibleTimes"][0].startTime,
@@ -470,15 +482,17 @@ export function newExpanPool(pool): Array<IMarket> {
         name: pool.c2Name,
         tokenAddress: pool.t2Address,
         symbol: pool.tName,
-        decimals:pool.precision
-
+        decimals: pool.precision,
+        minPrice: pool.c2MinPrice,
+        maxPrice: pool.c2MaxPrice,
       },
       toChain: {
         id: Number(pool.c1ID),
         name: pool.c1Name,
         tokenAddress: pool.t1Address,
         symbol: pool.tName,
-        decimals:pool.precision
+        decimals: pool.precision,
+
       },
       times: [
         pool["c2AvalibleTimes"][0].startTime,
@@ -511,19 +525,12 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
   ].map((row) => {
+    const L1L2Maping = makerConfig.starknetAddress;
     if ([4, 44].includes(row.toChain.id)) {
-      const L1L2Maping =
-        row.toChain.id === 4
-          ? makerConfig.starknetL1MapL2['mainnet-alpha']
-          : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
       row.sender = L1L2Maping[row.sender.toLowerCase()]
     }
     if ([4, 44].includes(row.fromChain.id)) {
-      const L1L2Maping =
-        row.fromChain.id === 4
-          ? makerConfig.starknetL1MapL2['mainnet-alpha']
-          : makerConfig.starknetL1MapL2['georli-alpha']
       // starknet mapping
       row.recipient = L1L2Maping[row.recipient.toLowerCase()]
     }

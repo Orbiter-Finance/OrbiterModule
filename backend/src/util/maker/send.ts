@@ -26,7 +26,7 @@ import { getTargetMakerPool } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
-import { equals } from 'orbiter-chaincore/src/utils/core'
+import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -44,9 +44,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       const response = await axios.get(url)
       if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
-          low: Number(response.data.result.SafeGasPrice) + 10,
-          medium: Number(response.data.result.ProposeGasPrice) + 10,
-          high: Number(response.data.result.FastGasPrice) + 10,
+          low: Number(response.data.result.SafeGasPrice) + 5,
+          medium: Number(response.data.result.ProposeGasPrice) + 5,
+          high: Number(response.data.result.FastGasPrice) + 5,
         }
         let gwei = prices['medium']
         // Limit max gwei
@@ -86,6 +86,10 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         } else {
           gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 2)
         }
+      }
+      if (toChain == 'rinkeby') {
+        gasPrice = Web3.utils.toHex(20000000000)
+        // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
 
       accessLogger.info('gasPrice =', gasPrice)
@@ -381,8 +385,7 @@ async function sendConsumer(value: any) {
         rollback,
       }
     } catch (error) {
-      console.error(error)
-      rollback()
+      await rollback(error, nonce)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -505,9 +508,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -880,10 +883,17 @@ async function sendConsumer(value: any) {
       }
     }
   }
-
-  let web3Net = makerConfig[toChain].httpEndPointInfura
-  if (!web3Net) {
-    web3Net = makerConfig[toChain].httpEndPoint
+  let web3Net = '';
+  if (makerConfig[toChain]) {
+    web3Net = makerConfig[toChain].httpEndPointInfura || makerConfig[toChain].httpEndPoint
+    accessLogger.info(`RPC from makerConfig ${toChain}`)
+  } else {
+    // 
+    accessLogger.info(`RPC from ChainCore ${toChain}`)
+  }
+  if (isEmpty(web3Net)) {
+    errorLogger.error(`RPC not obtained ToChain ${toChain}`);
+    return;
   }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -1098,6 +1108,23 @@ async function sendConsumer(value: any) {
       (chainID == 1 || chainID == 5)
     ) {
       maxPrice = 80
+    }
+  }
+  if (tokenInfo && tokenInfo.symbol === 'DAI') {
+    if (fromChainID === 4 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 2 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 7 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 3 && chainID === 1) {
+      maxPrice = 85
+    }
+    if (fromChainID === 6 && chainID === 1) {
+      maxPrice = 85
     }
   }
   const gasPrices = await getCurrentGasPrices(

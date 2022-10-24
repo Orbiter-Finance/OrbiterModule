@@ -13,7 +13,7 @@ import { sleep } from './util'
 import { startMasterJobs, startWorkerJobs } from './schedule'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
-import { MakerUtil } from './util/maker/maker_list'
+import { MakerUtil } from './util/maker/maker_util'
 
 const startKoa = () => {
   const koa = new Koa()

@@ -2,7 +2,7 @@ import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { getExchangeRates } from '../service/coinbase'
 import { getMakerAddresses } from '../service/maker'
-import { MakerUtil } from '../util/maker/maker_list'
+import { MakerUtil } from '../util/maker/maker_util'
 
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('global', async ({ restful }) => {

@@ -2,7 +2,6 @@ import dayjs from 'dayjs'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
 import { DydxHelper } from '../service/dydx/dydx_helper'
-import { ServiceMakerPull } from '../service/maker_pull'
 import { uniqBy } from 'lodash'
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.post('notify/dydx', async ({ request, restful }) => {
