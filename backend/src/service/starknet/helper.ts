@@ -31,7 +31,7 @@ export class StarknetHelp {
   ) {
     this.cache = new Keyv({
       store: new KeyvFile({
-        filename: `logs/nonce/starknet`, // the file path to store the data
+        filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
         writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
@@ -57,9 +57,10 @@ export class StarknetHelp {
     await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
-      rollback: async () => {
+      rollback: async (error:any, nonce:number) => {
         const nonces = await this.getAvailableNonce()
-        nonces.push(takeNonce)
+        nonces.push(nonce)
+        accessLogger.info(`starknet ${error.message} error fallback nonces ${takeNonce} available`, JSON.stringify(nonces))
         await this.cache.set(cacheKey, nonces)
       },
     }
@@ -67,7 +68,6 @@ export class StarknetHelp {
   async getAvailableNonce() {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
-    accessLogger.info('starkNet_supportNoce =', JSON.stringify(nonces))
     if (nonces && nonces.length <= 5) {
       // render
       let localLastNonce: number = max(nonces) || 0
@@ -84,6 +84,7 @@ export class StarknetHelp {
       }
     }
     nonces.sort((n1, n2) => n1 - n2)
+    accessLogger.info('starkNet_supportNoce =', JSON.stringify(nonces))
     await this.cache.set(cacheKey, nonces)
     return nonces
   }
@@ -205,8 +206,7 @@ export async function sendEthTransaction(
       const toAmount = number.toBN(params.amount)
       if (toAmount.gt(number.toBN(tokenBalance.toString()))) {
         throw new Error(
-          `Starknet ${
-            userSender.address
+          `Starknet ${userSender.address
           } Insufficient funds ${tokenBalance.toString()}/${toAmount.toString()}`
         )
       }
