@@ -44,6 +44,7 @@ export function checkAmount(
   amount: string,
   market: IMarket
 ) {
+  amount = new BigNumber(String(amount)).toFixed();
   const ptext = orbiterCore.getPTextFromTAmount(fromChainId, amount)
   if (ptext.state === false) {
     return false
@@ -123,7 +124,7 @@ export async function startNewMakerTrxPull() {
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
-  pubSub.subscribe(`ACCEPTED_ON_L2:4`,tx=> {
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`, tx => {
     return subscribeNewTransaction([tx])
   })
 }
