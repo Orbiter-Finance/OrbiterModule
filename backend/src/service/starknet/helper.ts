@@ -23,41 +23,17 @@ import { accessLogger } from '../../util/logger'
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
 export class StarknetHelp {
-  private cache: Keyv;
-
-  public static nonceKey: { [key: string]: Array<number> } = {};
-  public set addNonces(nonce: number) {
-    // const key = `nonces:${this.address.toLowerCase()}`;
-    const makerAddress = this.address.toLowerCase();
-    if (!StarknetHelp.nonceKey[makerAddress].includes(nonce)) {
-      if (StarknetHelp.nonceKey[makerAddress].length > 0) {
-        nonce < StarknetHelp.nonceKey[makerAddress][0] ? StarknetHelp.nonceKey[makerAddress].unshift(nonce) : StarknetHelp.nonceKey[makerAddress].push(nonce);
-      } else {
-        StarknetHelp.nonceKey[makerAddress].push(nonce);
-      }
-      // this.cache.set(key, StarknetHelp.nonceKey[makerAddress])
-    }
-  }
-  public getNonces() {
-    const makerAddress = this.address.toLowerCase();
-    return StarknetHelp.nonceKey[makerAddress] || [];
-  }
-  public async clearNonces() {
-    const makerAddress = this.address.toLowerCase();
-    StarknetHelp.nonceKey[makerAddress] = [];
-    await this.cache.delete(`nonces:${this.address.toLowerCase()}`)
-  }
+  private cache: Keyv
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
     public readonly address: string
   ) {
-    StarknetHelp.nonceKey[address.toLowerCase()] = [];
     this.cache = new Keyv({
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 500, // ms, batch write to disk in a specific duration, enhance write performance.
+        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
         decode: JSON.parse, // deserialize function
       }),
@@ -75,43 +51,42 @@ export class StarknetHelp {
     return Number(await acc.getNonce())
   }
   async takeOutNonce() {
-    // const nonces = await this.getAvailableNonce()
-    const nonces = this.getNonces();
-    const cacheKey = `nonces:${this.address.toLowerCase()}`;
-    if (nonces.length <= 0) {
-      // init
-      const numbers = await this.cache.get(cacheKey);
-      if (numbers) {
-        numbers.forEach(num => {
-          this.addNonces = num;
-        });
-      }
-    }
-    const networkMaxNonce = await this.getNetworkNonce();
-    if (nonces.length < 5) {
-      // get network
-      let localMaxNonce: number = max(nonces) || networkMaxNonce;
-      for (let i = nonces.length; i <= 15; i++) {
-        this.addNonces = localMaxNonce++;
-      }
-      const key = `nonces:${this.address.toLowerCase()}`;
-      this.cache.set(key, StarknetHelp.nonceKey[this.address.toLowerCase()])
-    }
-    const [takeNonce] = nonces.splice(0, 1);
-    accessLogger.info('starknet_getNetwork_nonce =', networkMaxNonce, ',takeNonce = ', takeNonce);
-    if (networkMaxNonce > takeNonce) {
-      await this.clearNonces();
-      accessLogger.info('Reset Srtarknet Nonces networkMaxNonce=', networkMaxNonce, ',takeNonce = ', takeNonce);
-      return await this.takeOutNonce();
-    }
+    const nonces = await this.getAvailableNonce()
+    const takeNonce = nonces.splice(0, 1)[0]
+    const cacheKey = `nonces:${this.address.toLowerCase()}`
+    await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
-      rollback: async (error: any, nonce: number) => {
-        this.addNonces = nonce;
-        const nonces = this.getNonces();
-        accessLogger.info(`Fallback Starknet Nonces ${error.message} value ${takeNonce}:${nonce} available`, JSON.stringify(nonces))
+      rollback: async (error:any, nonce:number) => {
+        const nonces = await this.getAvailableNonce()
+        nonces.push(nonce)
+        accessLogger.info(`starknet ${error.message} error fallback nonces ${takeNonce} available`, JSON.stringify(nonces))
+        await this.cache.set(cacheKey, nonces)
       },
     }
+  }
+  async getAvailableNonce() {
+    const cacheKey = `nonces:${this.address.toLowerCase()}`
+    let nonces: any = (await this.cache.get(cacheKey)) || []
+    if (nonces && nonces.length <= 5) {
+      // render
+      let localLastNonce: number = max(nonces) || 0
+      const networkLastNonce = await this.getNetworkNonce();
+      accessLogger.info('starknet_getNetwork_nonce =', networkLastNonce)
+      if (networkLastNonce > localLastNonce) {
+        nonces = [networkLastNonce]
+        localLastNonce = networkLastNonce
+        // clear
+      }
+      for (let i = nonces.length; i <= 10; i++) {
+        localLastNonce++
+        nonces.push(localLastNonce)
+      }
+    }
+    nonces.sort((n1, n2) => n1 - n2)
+    accessLogger.info('starkNet_supportNoce =', JSON.stringify(nonces))
+    await this.cache.set(cacheKey, nonces)
+    return nonces
   }
   async signTransfer(params: {
     tokenAddress: string
