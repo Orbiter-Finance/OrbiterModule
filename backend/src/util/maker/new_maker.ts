@@ -1,4 +1,4 @@
-import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore';
+import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
@@ -14,7 +14,7 @@ import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
-import dayjs from 'dayjs';
+import dayjs from 'dayjs'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -44,7 +44,7 @@ export function checkAmount(
   amount: string,
   market: IMarket
 ) {
-  amount = new BigNumber(String(amount)).toFixed();
+  amount = new BigNumber(String(amount)).toFixed()
   const ptext = orbiterCore.getPTextFromTAmount(fromChainId, amount)
   if (ptext.state === false) {
     return false
@@ -98,7 +98,7 @@ function getCacheClient(chainId: string) {
   }
   const cache = new Keyv({
     store: new KeyvFile({
-      filename: `logs/transfer/${dayjs().format("YYYYMM")}-${chainId}`, // the file path to store the data
+      filename: `logs/transfer/${dayjs().format('YYYYMM')}-${chainId}`, // the file path to store the data
       expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
       writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
@@ -124,7 +124,7 @@ export async function startNewMakerTrxPull() {
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
-  pubSub.subscribe(`ACCEPTED_ON_L2:4`, tx => {
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`, (tx) => {
     return subscribeNewTransaction([tx])
   })
 }
@@ -132,7 +132,9 @@ async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
   return (
     makerList.findIndex(
-      (row) => chainCoreUtil.equals(row.recipient, address) || chainCoreUtil.equals(row.sender, address)
+      (row) =>
+        chainCoreUtil.equals(row.recipient, address) ||
+        chainCoreUtil.equals(row.sender, address)
     ) != -1
   )
 }
@@ -203,8 +205,10 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (!result.state) {
         accessLogger.error(
-          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${tx.hash
+          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${
+            fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${
+            tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -212,8 +216,10 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.error(
-          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${tx.hash
+          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${
+            fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${
+            tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -227,7 +233,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
           `[${transactionID}] Refund The query currency information does not exist: ` +
-          JSON.stringify(tx)
+            JSON.stringify(tx)
         )
         continue
       }
@@ -281,8 +287,12 @@ export async function confirmTransactionSendMoneyBack(
   tx: ITransaction
 ) {
   const fromChainID = Number(market.fromChain.id)
-  if (Number(fromChainID) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
-    return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+  if (
+    Number(fromChainID) === 4 &&
+    tx.extra['blockStatus'] != 'ACCEPTED_ON_L2'
+  ) {
+    // return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+    return
   }
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
@@ -496,7 +506,7 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
   ].map((row) => {
-    const L1L2Maping = makerConfig.starknetAddress;
+    const L1L2Maping = makerConfig.starknetAddress
     if (['4', '44'].includes(row.toChain.id)) {
       // starknet mapping
       row.sender = L1L2Maping[row.sender.toLowerCase()]
