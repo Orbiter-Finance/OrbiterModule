@@ -19,8 +19,6 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { accessLogger } from '../../util/logger'
-import { min } from 'class-validator'
-import { writeFile, writeFileSync, writeSync } from 'fs'
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
@@ -29,7 +27,7 @@ export class StarknetHelp {
 
   public static nonceKey: { [key: string]: Array<number> } = {};
   public set addNonces(nonce: number) {
-    const key = `nonces:${this.address.toLowerCase()}`;
+    // const key = `nonces:${this.address.toLowerCase()}`;
     const makerAddress = this.address.toLowerCase();
     if (!StarknetHelp.nonceKey[makerAddress].includes(nonce)) {
       if (StarknetHelp.nonceKey[makerAddress].length > 0) {
@@ -37,7 +35,7 @@ export class StarknetHelp {
       } else {
         StarknetHelp.nonceKey[makerAddress].push(nonce);
       }
-      this.cache.set(key, StarknetHelp.nonceKey[makerAddress])
+      // this.cache.set(key, StarknetHelp.nonceKey[makerAddress])
     }
   }
   public getNonces() {
@@ -59,7 +57,7 @@ export class StarknetHelp {
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        writeDelay: 500, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
         decode: JSON.parse, // deserialize function
       }),
@@ -96,6 +94,8 @@ export class StarknetHelp {
       for (let i = nonces.length; i <= 15; i++) {
         this.addNonces = localMaxNonce++;
       }
+      const key = `nonces:${this.address.toLowerCase()}`;
+      this.cache.set(key, StarknetHelp.nonceKey[this.address.toLowerCase()])
     }
     const [takeNonce] = nonces.splice(0, 1);
     accessLogger.info('starknet_getNetwork_nonce =', networkMaxNonce, ',takeNonce = ', takeNonce);
@@ -104,7 +104,6 @@ export class StarknetHelp {
       accessLogger.info('Reset Srtarknet Nonces networkMaxNonce=', networkMaxNonce, ',takeNonce = ', takeNonce);
       return await this.takeOutNonce();
     }
-    await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
