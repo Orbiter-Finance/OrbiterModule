@@ -149,7 +149,7 @@ export class TransactionService {
       row.fee = this.divPrecision(row.feeToken, row.fee);
     }
     const profit: any = {};
-    for (const symbol of ['USD','CNY', 'ETH', 'USDC', 'USDT', 'BTC']) {
+    for (const symbol of ['USD','CNY', 'ETH', 'USDC', 'USDT', 'BTC', 'DAI']) {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
@@ -170,6 +170,10 @@ export class TransactionService {
       fromAmount = sumBy(from, 'USDCValue').toFixed(6);
       toAmount = sumBy(to, 'USDCValue').toFixed(6);
       profitAmount = profit['USDC'];
+    } else if (makerAddress.includes('0x095D2918B03b2e86D68551DCF11302121fb626c9')) {
+      fromAmount = sumBy(from, 'DAIValue').toFixed(6);
+      toAmount = sumBy(to, 'DAIValue').toFixed(6);
+      profitAmount = profit['DAI'];
     }
     return {
       from,
