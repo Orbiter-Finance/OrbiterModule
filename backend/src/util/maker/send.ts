@@ -23,7 +23,7 @@ import { IMXHelper } from '../../service/immutablex/imx_helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
-import { accessLogger, errorLogger } from '../logger'
+// import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
@@ -1290,6 +1290,7 @@ async function send(
       value,
       callback: (error, result) => {
         if (error) {
+          errorLogger.error(`sendQueue exec produce error:${error.message}`);
           reject(error)
         } else {
           resolve(result)

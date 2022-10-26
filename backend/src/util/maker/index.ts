@@ -539,7 +539,7 @@ export async function sendTransaction(
     return
   }
   if (!amountToSend.state) {
-    errorLogger.error(amountToSend.error)
+    errorLogger.error('amountToSend error', amountToSend.error)
     return
   }
   const tAmount = amountToSend.tAmount

@@ -53,14 +53,21 @@ export class StarknetHelp {
   async takeOutNonce() {
     const nonces = await this.getAvailableNonce()
     const takeNonce = nonces.splice(0, 1)[0]
+    const networkLastNonce = await this.getNetworkNonce();
+    if (Number(takeNonce) < Number(networkLastNonce)) {
+      const cacheKey = `nonces:${this.address.toLowerCase()}`
+      await this.cache.set(cacheKey, nonces)
+      accessLogger.info(`The network nonce is inconsistent with the local, and a reset is requested`, networkLastNonce, takeNonce);
+      return await this.takeOutNonce();
+    }
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
-      rollback: async (error:any, nonce:number) => {
+      rollback: async (error: any, nonce: number) => {
         const nonces = await this.getAvailableNonce()
+        accessLogger.info(`Starknet rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
         nonces.push(nonce)
-        accessLogger.info(`starknet ${error.message} error fallback nonces ${takeNonce} available`, JSON.stringify(nonces))
         await this.cache.set(cacheKey, nonces)
       },
     }
@@ -72,27 +79,26 @@ export class StarknetHelp {
       // render
       let localLastNonce: number = max(nonces) || 0
       const networkLastNonce = await this.getNetworkNonce();
-      accessLogger.info('starknet_getNetwork_nonce =', networkLastNonce)
       if (networkLastNonce > localLastNonce) {
         nonces = [networkLastNonce]
         localLastNonce = networkLastNonce
-        // clear
       }
       for (let i = nonces.length; i <= 10; i++) {
         localLastNonce++
         nonces.push(localLastNonce)
       }
+      accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
+      await this.cache.set(cacheKey, nonces)
     }
-    nonces.sort((n1, n2) => n1 - n2)
-    accessLogger.info('starkNet_supportNoce =', JSON.stringify(nonces))
-    await this.cache.set(cacheKey, nonces)
+    nonces.sort();
+    accessLogger.info('getAvailableNonce starkNet_supportNoce =', JSON.stringify(nonces))
     return nonces
   }
   async signTransfer(params: {
     tokenAddress: string
     recipient: string
     amount: string
-    nonce?: number
+    nonce: number
   }) {
     const starkPair = ec.getKeyPair(this.privateKey)
     const signer = new Signer(starkPair)
@@ -108,9 +114,6 @@ export class StarknetHelp {
       amount: getUint256CalldataFromBN(params.amount),
     })
     let nonce = params.nonce
-    if (!nonce) {
-      nonce = (await this.takeOutNonce()).nonce
-    }
     const signedTx = await acc.signTx(
       params.tokenAddress,
       entrypoint,
@@ -118,7 +121,7 @@ export class StarknetHelp {
       Number(nonce)
     )
     const sentTx = await acc.broadcastSignedTransaction(signedTx)
-    const hash = sentTx.transaction_hash
+    const hash = sentTx.transaction_hash;
     // provider.getTransaction(hash).then((result) => {
     //   console.log(JSON.stringify(result), '==before')
     // })
