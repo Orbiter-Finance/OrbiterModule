@@ -18,7 +18,8 @@ import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
-import { accessLogger } from '../../util/logger'
+import { getLoggerService } from '../../util/logger'
+const accessLogger = getLoggerService("4");
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
@@ -56,19 +57,25 @@ export class StarknetHelp {
     const networkLastNonce = await this.getNetworkNonce();
     if (Number(takeNonce) < Number(networkLastNonce)) {
       const cacheKey = `nonces:${this.address.toLowerCase()}`
-      await this.cache.set(cacheKey, nonces)
-      accessLogger.info(`The network nonce is inconsistent with the local, and a reset is requested`, networkLastNonce, takeNonce);
+      accessLogger.info(`The network nonce is inconsistent with the local, and a reset is requested ${takeNonce}<${networkLastNonce}`);
+      await this.cache.set(cacheKey, [])
       return await this.takeOutNonce();
     }
+    accessLogger.info(`getAvailableNonce takeNonce:${takeNonce},networkNonce:${networkLastNonce} starkNet_supportNoce:${JSON.stringify(nonces)}`);
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
-        const nonces = await this.getAvailableNonce()
-        accessLogger.info(`Starknet rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
-        nonces.push(nonce)
-        await this.cache.set(cacheKey, nonces)
+        try {
+          const nonces = await this.getAvailableNonce()
+          accessLogger.info(`Starknet Rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
+          nonces.push(nonce)
+          await this.cache.set(cacheKey, nonces)
+        } catch (error) {
+          accessLogger.error('Starknet Rollback error:' + error.message);
+        }
+
       },
     }
   }
@@ -91,7 +98,6 @@ export class StarknetHelp {
       await this.cache.set(cacheKey, nonces)
     }
     nonces.sort();
-    accessLogger.info('getAvailableNonce starkNet_supportNoce =', JSON.stringify(nonces))
     return nonces
   }
   async signTransfer(params: {

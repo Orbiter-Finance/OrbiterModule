@@ -6,12 +6,21 @@ log4js.configure(logConfig.configure)
 
 const accessLogger = log4js.getLogger('access')
 const errorLogger = log4js.getLogger('error')
-
 export { accessLogger, errorLogger }
 
-export function createLogger(key: string) {
-    const logger = LoggerService.getLogger(key, {
-        key
+export function getLoggerService(key: string) {
+    const logger = LoggerService.getLogger(`chain-${key}`, {
+        dir: 'logs'
     });
-    return logger;
+    // Compatible with previous methods
+    return {
+        error(message:string, ...args:any) {
+            accessLogger.error(message, args);
+            logger.error(`${message} - ${args.join(' ')}`);
+        },
+        info(message:string, ...args:any) {
+            accessLogger.info(message, args);
+            logger.info(`${message} - ${args.join(' ')}`);
+        }
+    };
 }
