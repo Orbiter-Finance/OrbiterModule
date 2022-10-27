@@ -15,7 +15,7 @@ import ZKSpaceHelper from './zkspace/zkspace_help'
 import loopring_help from './loopring/loopring_help'
 import { chains, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
-import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance';
+import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance/chainService';
 
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
