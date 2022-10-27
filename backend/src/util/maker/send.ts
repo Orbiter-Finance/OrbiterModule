@@ -33,7 +33,6 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 const nonceDic = {}
 
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
-
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
@@ -92,6 +91,13 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         gasPrice = Web3.utils.toHex(20000000000)
         // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
+      if (toChain == 'bnbchain') {
+        if (parseInt(response.data.result, 16) <= 5000000000) {
+          gasPrice = Web3.utils.toHex(5500000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.1)
+        }
+      }
 
       getLoggerService(toChain).info('gasPrice =', gasPrice)
       return gasPrice
@@ -120,7 +126,7 @@ async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
   } = value
-  const accessLogger = getLoggerService(chainID);
+  const accessLogger = getLoggerService(chainID)
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -132,7 +138,9 @@ async function sendConsumer(value: any) {
       }
       if (chainID === 33) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
-        syncProvider = await zksync.Provider.newHttpProvider('https://goerli-api.zksync.io/jsrpc')
+        syncProvider = await zksync.Provider.newHttpProvider(
+          'https://goerli-api.zksync.io/jsrpc'
+        )
       }
       const ethWallet = new ethers.Wallet(
         makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -387,8 +395,8 @@ async function sendConsumer(value: any) {
         rollback,
       }
     } catch (error) {
-      await rollback(error, nonce);
-      await sleep(1000 * 2);
+      await rollback(error, nonce)
+      await sleep(1000 * 2)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -510,9 +518,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -885,17 +893,19 @@ async function sendConsumer(value: any) {
       }
     }
   }
-  let web3Net = '';
+  let web3Net = ''
   if (makerConfig[toChain]) {
-    web3Net = makerConfig[toChain].httpEndPointInfura || makerConfig[toChain].httpEndPoint
+    web3Net =
+      makerConfig[toChain].httpEndPointInfura ||
+      makerConfig[toChain].httpEndPoint
     accessLogger.info(`RPC from makerConfig ${toChain}`)
   } else {
-    // 
+    //
     accessLogger.info(`RPC from ChainCore ${toChain}`)
   }
   if (isEmpty(web3Net)) {
-    accessLogger.error(`RPC not obtained ToChain ${toChain}`);
-    return;
+    accessLogger.error(`RPC not obtained ToChain ${toChain}`)
+    return
   }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -1287,12 +1297,12 @@ async function send(
       lpMemo,
       ownerAddress,
     }
-    const accessLogger = getLoggerService(chainID);
+    const accessLogger = getLoggerService(chainID)
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {
         if (error) {
-          accessLogger.error(`sendQueue exec produce error:${error.message}`);
+          accessLogger.error(`sendQueue exec produce error:${error.message}`)
           reject(error)
         } else {
           resolve(result)
