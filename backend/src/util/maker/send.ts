@@ -23,16 +23,17 @@ import { IMXHelper } from '../../service/immutablex/imx_helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { sign_musig } from 'zksync-crypto'
 import { getTargetMakerPool } from '../../service/maker'
-import { accessLogger, errorLogger } from '../logger'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
+import { getLoggerService } from '../logger'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
 
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
+
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
@@ -53,10 +54,10 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         if (gwei > maxGwei) {
           gwei = maxGwei
         }
-        accessLogger.info('main_gasPrice =', gwei)
+        getLoggerService(toChain).info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
-        accessLogger.info('main_gasPriceError =', response)
+        getLoggerService(toChain).info('main_gasPriceError =', response)
         maxGwei = 80
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
@@ -92,7 +93,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
 
-      accessLogger.info('gasPrice =', gasPrice)
+      getLoggerService(toChain).info('gasPrice =', gasPrice)
       return gasPrice
     } catch (error) {
       return Web3.utils.toHex(
@@ -119,6 +120,7 @@ async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
   } = value
+  const accessLogger = getLoggerService(chainID);
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -144,7 +146,7 @@ async function sendConsumer(value: any) {
         'committed'
       )
       if (!tokenBalanceWei) {
-        errorLogger.error('zk Insufficient balance 0')
+        accessLogger.error('zk Insufficient balance 0')
         return {
           code: 1,
           txid: 'ZK Insufficient balance 0',
@@ -152,7 +154,7 @@ async function sendConsumer(value: any) {
       }
       accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
       if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        errorLogger.error('zk Insufficient balance')
+        accessLogger.error('zk Insufficient balance')
         return {
           code: 1,
           txid: 'zk Insufficient balance',
@@ -272,7 +274,7 @@ async function sendConsumer(value: any) {
         'finalized'
       )
       if (!tokenBalanceWei) {
-        errorLogger.error('zk2 Insufficient balance 0')
+        accessLogger.error('zk2 Insufficient balance 0')
         return {
           code: 1,
           txid: 'ZK2 Insufficient balance 0',
@@ -280,7 +282,7 @@ async function sendConsumer(value: any) {
       }
       accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
       if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        errorLogger.error('zk2 Insufficient balance')
+        accessLogger.error('zk2 Insufficient balance')
         return {
           code: 1,
           txid: 'zk2 Insufficient balance',
@@ -723,7 +725,7 @@ async function sendConsumer(value: any) {
         !balanceInfo.length ||
         balanceInfo.findIndex((item) => item.id == tokenInfo.id) == -1
       ) {
-        errorLogger.error('zks Insufficient balance 0')
+        accessLogger.error('zks Insufficient balance 0')
         return {
           code: 1,
           txid: 'ZKS Insufficient balance 0',
@@ -735,7 +737,7 @@ async function sendConsumer(value: any) {
       const tokenBalanceWei =
         balanceInfo[defaultIndex].amount * 10 ** tokenInfo.decimals
       if (!tokenBalanceWei) {
-        errorLogger.error('zks Insufficient balance 00')
+        accessLogger.error('zks Insufficient balance 00')
         return {
           code: 1,
           txid: 'ZKS Insufficient balance 00',
@@ -743,7 +745,7 @@ async function sendConsumer(value: any) {
       }
       accessLogger.info('zks_tokenBalance =', tokenBalanceWei.toString())
       if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        errorLogger.error('zks Insufficient balance')
+        accessLogger.error('zks Insufficient balance')
         return {
           code: 1,
           txid: 'ZKS Insufficient balance',
@@ -892,7 +894,7 @@ async function sendConsumer(value: any) {
     accessLogger.info(`RPC from ChainCore ${toChain}`)
   }
   if (isEmpty(web3Net)) {
-    errorLogger.error(`RPC not obtained ToChain ${toChain}`);
+    accessLogger.error(`RPC not obtained ToChain ${toChain}`);
     return;
   }
   const web3 = new Web3(web3Net)
@@ -914,11 +916,11 @@ async function sendConsumer(value: any) {
         })
     }
   } catch (error) {
-    errorLogger.error('tokenBalanceWeiError =', error)
+    accessLogger.error('tokenBalanceWeiError =', error)
   }
 
   if (!tokenBalanceWei) {
-    errorLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
+    accessLogger.error(`${toChain}->!tokenBalanceWei Insufficient balance`)
     // return {
     //   code: 1,
     //   txid: `${toChain}->!tokenBalanceWei Insufficient balance`,
@@ -926,7 +928,7 @@ async function sendConsumer(value: any) {
   }
   accessLogger.info('tokenBalanceWei =', tokenBalanceWei)
   if (tokenBalanceWei && BigInt(tokenBalanceWei) < BigInt(amountToSend)) {
-    errorLogger.error(
+    accessLogger.error(
       `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`
     )
     return {
@@ -1271,7 +1273,6 @@ async function send(
   ownerAddress = ''
 ): Promise<any> {
   sendQueue.registerConsumer(chainID, sendConsumer)
-
   return new Promise((resolve, reject) => {
     const value = {
       makerAddress,
@@ -1286,10 +1287,12 @@ async function send(
       lpMemo,
       ownerAddress,
     }
+    const accessLogger = getLoggerService(fromChainID);
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {
         if (error) {
+          accessLogger.error(`sendQueue exec produce error:${error.message}`);
           reject(error)
         } else {
           resolve(result)
