@@ -26,7 +26,7 @@ import { getTargetMakerPool } from '../../service/maker'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
-import { getLoggerService } from '../logger'
+import { accessLogger, getLoggerService } from '../logger'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -54,10 +54,10 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         if (gwei > maxGwei) {
           gwei = maxGwei
         }
-        getLoggerService(toChain).info('main_gasPrice =', gwei)
+        accessLogger.info('main_gasPrice =', gwei)
         return Web3.utils.toHex(Web3.utils.toWei(gwei + '', 'gwei'))
       } else {
-        getLoggerService(toChain).info('main_gasPriceError =', response)
+        accessLogger.info('main_gasPriceError =', response)
         maxGwei = 80
         return Web3.utils.toHex(Web3.utils.toWei(maxGwei + '', 'gwei'))
       }
@@ -1287,7 +1287,7 @@ async function send(
       lpMemo,
       ownerAddress,
     }
-    const accessLogger = getLoggerService(fromChainID);
+    const accessLogger = getLoggerService(chainID);
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {
