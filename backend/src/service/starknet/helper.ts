@@ -18,43 +18,18 @@ import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
-import { accessLogger } from '../../util/logger'
-import { min } from 'class-validator'
-import { writeFile, writeFileSync, writeSync } from 'fs'
+import { getLoggerService } from '../../util/logger'
+const accessLogger = getLoggerService("4");
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
 export class StarknetHelp {
-  private cache: Keyv;
-
-  public static nonceKey: { [key: string]: Array<number> } = {};
-  public set addNonces(nonce: number) {
-    const key = `nonces:${this.address.toLowerCase()}`;
-    const makerAddress = this.address.toLowerCase();
-    if (!StarknetHelp.nonceKey[makerAddress].includes(nonce)) {
-      if (StarknetHelp.nonceKey[makerAddress].length > 0) {
-        nonce < StarknetHelp.nonceKey[makerAddress][0] ? StarknetHelp.nonceKey[makerAddress].unshift(nonce) : StarknetHelp.nonceKey[makerAddress].push(nonce);
-      } else {
-        StarknetHelp.nonceKey[makerAddress].push(nonce);
-      }
-      this.cache.set(key, StarknetHelp.nonceKey[makerAddress])
-    }
-  }
-  public getNonces() {
-    const makerAddress = this.address.toLowerCase();
-    return StarknetHelp.nonceKey[makerAddress] || [];
-  }
-  public async clearNonces() {
-    const makerAddress = this.address.toLowerCase();
-    StarknetHelp.nonceKey[makerAddress] = [];
-    await this.cache.delete(`nonces:${this.address.toLowerCase()}`)
-  }
+  private cache: Keyv
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
     public readonly address: string
   ) {
-    StarknetHelp.nonceKey[address.toLowerCase()] = [];
     this.cache = new Keyv({
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
@@ -77,48 +52,59 @@ export class StarknetHelp {
     return Number(await acc.getNonce())
   }
   async takeOutNonce() {
-    // const nonces = await this.getAvailableNonce()
-    const nonces = this.getNonces();
-    const cacheKey = `nonces:${this.address.toLowerCase()}`;
-    if (nonces.length <= 0) {
-      // init
-      const numbers = await this.cache.get(cacheKey);
-      if (numbers) {
-        numbers.forEach(num => {
-          this.addNonces = num;
-        });
-      }
-    }
-    const networkMaxNonce = await this.getNetworkNonce();
-    if (nonces.length < 5) {
-      // get network
-      let localMaxNonce: number = max(nonces) || networkMaxNonce;
-      for (let i = nonces.length; i <= 15; i++) {
-        this.addNonces = localMaxNonce++;
-      }
-    }
-    const [takeNonce] = nonces.splice(0, 1);
-    accessLogger.info('starknet_getNetwork_nonce =', networkMaxNonce, ',takeNonce = ', takeNonce);
-    if (networkMaxNonce > takeNonce) {
-      await this.clearNonces();
-      accessLogger.info('Reset Srtarknet Nonces networkMaxNonce=', networkMaxNonce, ',takeNonce = ', takeNonce);
+    const nonces = await this.getAvailableNonce()
+    const takeNonce = nonces.splice(0, 1)[0]
+    const networkLastNonce = await this.getNetworkNonce();
+    if (Number(takeNonce) < Number(networkLastNonce)) {
+      const cacheKey = `nonces:${this.address.toLowerCase()}`
+      accessLogger.info(`The network nonce is inconsistent with the local, and a reset is requested ${takeNonce}<${networkLastNonce}`);
+      await this.cache.set(cacheKey, [])
       return await this.takeOutNonce();
     }
+    accessLogger.info(`getAvailableNonce takeNonce:${takeNonce},networkNonce:${networkLastNonce} starkNet_supportNoce:${JSON.stringify(nonces)}`);
+    const cacheKey = `nonces:${this.address.toLowerCase()}`
     await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
-        this.addNonces = nonce;
-        const nonces = this.getNonces();
-        accessLogger.info(`Fallback Starknet Nonces ${error.message} value ${takeNonce}:${nonce} available`, JSON.stringify(nonces))
+        try {
+          const nonces = await this.getAvailableNonce()
+          accessLogger.info(`Starknet Rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
+          nonces.push(nonce)
+          await this.cache.set(cacheKey, nonces)
+        } catch (error) {
+          accessLogger.error('Starknet Rollback error:' + error.message);
+        }
+
       },
     }
+  }
+  async getAvailableNonce() {
+    const cacheKey = `nonces:${this.address.toLowerCase()}`
+    let nonces: any = (await this.cache.get(cacheKey)) || []
+    if (nonces && nonces.length <= 5) {
+      // render
+      let localLastNonce: number = max(nonces) || 0
+      const networkLastNonce = await this.getNetworkNonce();
+      if (networkLastNonce > localLastNonce) {
+        nonces = [networkLastNonce]
+        localLastNonce = networkLastNonce
+      }
+      for (let i = nonces.length; i <= 10; i++) {
+        localLastNonce++
+        nonces.push(localLastNonce)
+      }
+      accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
+      await this.cache.set(cacheKey, nonces)
+    }
+    nonces.sort();
+    return nonces
   }
   async signTransfer(params: {
     tokenAddress: string
     recipient: string
     amount: string
-    nonce?: number
+    nonce: number
   }) {
     const starkPair = ec.getKeyPair(this.privateKey)
     const signer = new Signer(starkPair)
@@ -134,9 +120,6 @@ export class StarknetHelp {
       amount: getUint256CalldataFromBN(params.amount),
     })
     let nonce = params.nonce
-    if (!nonce) {
-      nonce = (await this.takeOutNonce()).nonce
-    }
     const signedTx = await acc.signTx(
       params.tokenAddress,
       entrypoint,
@@ -144,7 +127,7 @@ export class StarknetHelp {
       Number(nonce)
     )
     const sentTx = await acc.broadcastSignedTransaction(signedTx)
-    const hash = sentTx.transaction_hash
+    const hash = sentTx.transaction_hash;
     // provider.getTransaction(hash).then((result) => {
     //   console.log(JSON.stringify(result), '==before')
     // })

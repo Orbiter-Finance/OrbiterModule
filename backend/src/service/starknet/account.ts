@@ -4,7 +4,6 @@ import {
   KeyPair,
   ProviderInterface,
   SignerInterface,
-  constants,
   transaction,
   Transaction,
 } from 'starknet'
@@ -29,7 +28,7 @@ export class OfflineAccount extends Account {
     targetContract: string,
     entrypoint: string,
     txCalldata: number.BigNumberish[],
-    nonce:number
+    nonce: number
   ): Promise<Transaction> {
     const invocation = {
       contractAddress: targetContract,
@@ -38,11 +37,11 @@ export class OfflineAccount extends Account {
     }
     // const nonce = await this.getNonce();
     if (!nonce) {
-        throw new Error('Not Find Nonce Params')
+      throw new Error('Not Find Nonce Params')
     }
-    let fee = toBN(0.009 * 10**18);
+    let fee = toBN(0.009 * 10 ** 18);
     const { suggestedMaxFee } = await this.estimateFee(invocation)
-    if(suggestedMaxFee.gt(fee)) {
+    if (suggestedMaxFee.gt(fee)) {
       fee = suggestedMaxFee;
     }
     const transactionDetail = {
