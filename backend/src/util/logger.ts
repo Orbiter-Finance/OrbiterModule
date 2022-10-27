@@ -9,17 +9,17 @@ const errorLogger = log4js.getLogger('error')
 export { accessLogger, errorLogger }
 
 export function getLoggerService(key: string) {
-    const logger = LoggerService.getLogger(`chain-${key}`, {
-        dir: 'logs'
+    const logger = LoggerService.getLogger(`${key}-`, {
+        dir: `logs/${key}`
     });
     // Compatible with previous methods
     return {
         error(message:string, ...args:any) {
-            accessLogger.error(message, args);
+            accessLogger.error(message, ...args);
             logger.error(`${message} - ${args.join(' ')}`);
         },
         info(message:string, ...args:any) {
-            accessLogger.info(message, args);
+            accessLogger.info(message, ...args);
             logger.info(`${message} - ${args.join(' ')}`);
         }
     };
