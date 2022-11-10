@@ -6,7 +6,6 @@ import {
   generateKeyPair,
   GlobalAPI,
   UserAPI,
-  VALID_UNTIL,
 } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
@@ -521,7 +520,7 @@ async function sendConsumer(value: any) {
                 '${exchangeAddress}',
                 exchangeInfo.exchangeAddress
               ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-        walletType: ConnectorNames.WalletLink,
+        walletType: ConnectorNames.Unknown,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
@@ -561,6 +560,7 @@ async function sendConsumer(value: any) {
         accessLogger.info('lp_sql_nonce =', lp_sql_nonce)
         accessLogger.info('result_nonce =', result_nonce)
       }
+      const ts = Math.round(new Date().getTime() / 1000) + 30 * 86400
       // step 4 transfer
       const OriginTransferRequestV3 = {
         exchange: exchangeInfo.exchangeAddress,
@@ -577,14 +577,14 @@ async function sendConsumer(value: any) {
           tokenId: 0,
           volume: '940000000000000',
         },
-        validUntil: VALID_UNTIL,
+        validUntil: ts,
         memo: lpMemo,
       }
       const transactionResult = await userApi.submitInternalTransfer({
         request: <any>OriginTransferRequestV3,
         web3: <any>localWeb3,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-        walletType: ConnectorNames.WalletLink,
+        walletType: ConnectorNames.Unknown,
         eddsaKey: eddsaKey.sk,
         apiKey: apiKey,
         isHWAddr: false,
