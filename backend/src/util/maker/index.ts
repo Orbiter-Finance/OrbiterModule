@@ -127,10 +127,10 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-        walletType: ConnectorNames.WalletLink,
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.Unknown,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
@@ -175,10 +175,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       `[${transactionID}] Transaction with hash ` +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -204,8 +204,8 @@ function confirmToTransaction(
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
-        txHash +
-        ' has been successfully confirmed'
+          txHash +
+          ' has been successfully confirmed'
       )
       return
     }
@@ -300,8 +300,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
+              txID +
+              ' has been successfully confirmed'
           )
           try {
             await repositoryMakerNode().update(
@@ -388,7 +388,10 @@ export async function confirmToSNTransaction(
       rollback
     )
   } catch (error) {
-    getLoggerService(String(chainId)).error('confirmToSNTransaction error', error.message);
+    getLoggerService(String(chainId)).error(
+      'confirmToSNTransaction error',
+      error.message
+    )
   }
 }
 
