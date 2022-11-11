@@ -1193,17 +1193,20 @@ async function sendConsumer(value: any) {
       if (feeData) {
         delete details['gasPrice'];
         delete details['gas'];
-        details['maxPriorityFeePerGas'] = feeData["maxPriorityFeePerGas"];
-        details['maxFeePerGas'] = gasPrices;
-        details['gasLimit'] = web3.utils.toHex(21000);
+        let maxPriorityFeePerGas = 1000000000;
+        if (Number(feeData["maxPriorityFeePerGas"])>maxPriorityFeePerGas) {
+          maxPriorityFeePerGas = Number(feeData["maxPriorityFeePerGas"]);
+        }
+        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
+        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10**9);
+        details['gasLimit'] = web3.utils.toHex(gasLimit);
         details['type'] = 2;
-        console.log(details, '===details')
         const wallet = new ethers.Wallet(Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex'));
         const signedTx = await wallet.signTransaction(details);
         const resp = await httpsProvider.sendTransaction(signedTx);
         return {
           code: 0,
-          hash: resp.hash
+          txid: resp.hash
         };
       }
       } catch (err) {
