@@ -1179,7 +1179,7 @@ async function sendConsumer(value: any) {
    * Build a new transaction object and sign it locally.
    */
 
-  const details = {
+  const details: any = {
     gas: web3.utils.toHex(gasLimit),
     gasPrice: gasPrices, // converts the gwei price to wei
     nonce: result_nonce,
@@ -1195,7 +1195,39 @@ async function sendConsumer(value: any) {
       .transfer(toAddress, web3.utils.toHex(amountToSend))
       .encodeABI()
   }
-
+  if ([1, 5].includes(chainID)) {
+    try {
+      // eip 1559 send
+      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net);
+      let feeData = await httpsProvider.getFeeData();
+      if (feeData) {
+        delete details['gasPrice'];
+        delete details['gas'];
+        let maxPriorityFeePerGas = 1000000000;
+        if (Number(feeData["maxPriorityFeePerGas"])>maxPriorityFeePerGas) {
+          maxPriorityFeePerGas = Number(feeData["maxPriorityFeePerGas"]);
+        }
+        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
+        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10**9);
+        details['gasLimit'] = web3.utils.toHex(gasLimit);
+        details['type'] = 2;
+        const wallet = new ethers.Wallet(Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex'));
+        const signedTx = await wallet.signTransaction(details);
+        const resp = await httpsProvider.sendTransaction(signedTx);
+        return {
+          code: 0,
+          txid: resp.hash
+        };
+      }
+      } catch (err) {
+        nonceDic[makerAddress][chainID] = result_nonce - 1;
+        return {
+          code: 1,
+          txid: err,
+          result_nonce,
+        };
+      }
+  }
   let transaction: EthereumTx
   if (makerConfig[toChain]?.customChainId) {
     const networkId = makerConfig[toChain]?.customChainId
