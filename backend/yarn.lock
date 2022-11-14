@@ -8152,10 +8152,10 @@ optionator@^0.8.1, optionator@^0.8.2:
     type-check "~0.3.2"
     word-wrap "~1.2.3"
 
-orbiter-chaincore@1.3.5-alpha.14:
-  version "1.3.5-alpha.14"
-  resolved "https://registry.yarnpkg.com/orbiter-chaincore/-/orbiter-chaincore-1.3.5-alpha.14.tgz#91337e737068fb1a490ae203a570488bf9720b1e"
-  integrity sha512-BBCwEMtjrO3Cqg8T4tSbJMoF1cE4YsFOpCLkWq+D2PbpDF0SG3ReA1BSPP20fs+8ojbXFvFWff8b+4S3QwW8wg==
+orbiter-chaincore@1.3.5-alpha.20:
+  version "1.3.5-alpha.20"
+  resolved "https://registry.yarnpkg.com/orbiter-chaincore/-/orbiter-chaincore-1.3.5-alpha.20.tgz#7893398886d4dd93067abf69c01220dfa806ab26"
+  integrity sha512-Z4a0OoEDAGawEKsiC72BV7JfdeEwY3BH7DCrvuEA/au8GHZlaP/tka0UHA3CKyiP49e28K8jw8LybPuHs7lvzw==
   dependencies:
     "@alch/alchemy-web3" "^1.4.6"
     "@dydxprotocol/v3-client" "^1.9.1"

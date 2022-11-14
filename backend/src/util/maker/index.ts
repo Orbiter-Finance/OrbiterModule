@@ -359,7 +359,7 @@ export async function confirmToSNTransaction(
       ) {
         return true
       }
-      return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
+      // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
       transaction.status == 'ACCEPTED_ON_L1' ||
       transaction.status == 'ACCEPTED_ON_L2' ||
@@ -378,7 +378,7 @@ export async function confirmToSNTransaction(
       )
       return true
     }
-    await sleep(1000 * 10)
+    await sleep(1000 * 30)
     return await confirmToSNTransaction(
       txID,
       transactionID,
