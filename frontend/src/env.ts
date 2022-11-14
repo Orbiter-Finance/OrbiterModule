@@ -1,8 +1,8 @@
 export const $env = {
   baseUrl: '',
-  apiBaseUrl: 'http://iris_dashboard.orbiter.finance:3002/',
+  apiBaseUrl: 'http://rinkeby_dashboard.orbiter.finance:3002/',
   // apiBaseUrl: '',
-  historyApiUrl: `http://iris_dashboard.orbiter.finance/history/`,
+  historyApiUrl: `http://rinkeby_dashboard.orbiter.finance:3003/`,
   credential: false,
   starknetL1MapL2: {
     'mainnet-alpha': {
