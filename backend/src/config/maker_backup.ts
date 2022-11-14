@@ -299,6 +299,26 @@ export default {
     gasPrice: 2,
     customChainId: 421613,
   },
+  scroll_l1_test: {
+    wsEndPoint: 'https://prealpha.scroll.io/l1',
+    httpEndPoint: 'https://prealpha.scroll.io/l1',
+    api: {
+      endPoint: 'https://l1scan.scroll.io',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 534351,
+  },
+  scroll_l2_test: {
+    wsEndPoint: 'https://prealpha.scroll.io/l2',
+    httpEndPoint: 'https://prealpha.scroll.io/l2',
+    api: {
+      endPoint: 'https://l2scan.scroll.io',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 534354,
+  },
   privateKeys: {}, // ex: {'0x0043d60e87c5dd08C86C3123340705a1556C4719': 'This address's private key'}
   crossAddressContracts: {},
   ABI: [
