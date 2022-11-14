@@ -388,6 +388,7 @@ async function sendConsumer(value: any) {
         amount: String(amountToSend),
         nonce,
       })
+      await sleep(1000 * 10)
       return {
         code: 0,
         txid: hash,
@@ -1198,35 +1199,40 @@ async function sendConsumer(value: any) {
   if ([1, 5].includes(chainID)) {
     try {
       // eip 1559 send
-      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net);
-      let feeData = await httpsProvider.getFeeData();
+      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net)
+      let feeData = await httpsProvider.getFeeData()
       if (feeData) {
-        delete details['gasPrice'];
-        delete details['gas'];
-        let maxPriorityFeePerGas = 1000000000;
-        if (Number(feeData["maxPriorityFeePerGas"])>maxPriorityFeePerGas) {
-          maxPriorityFeePerGas = Number(feeData["maxPriorityFeePerGas"]);
+        delete details['gasPrice']
+        delete details['gas']
+        let maxPriorityFeePerGas = 1000000000
+        if (Number(feeData['maxPriorityFeePerGas']) > maxPriorityFeePerGas) {
+          maxPriorityFeePerGas = Number(feeData['maxPriorityFeePerGas'])
         }
-        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
-        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10**9);
-        details['gasLimit'] = web3.utils.toHex(gasLimit);
-        details['type'] = 2;
-        const wallet = new ethers.Wallet(Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex'));
-        const signedTx = await wallet.signTransaction(details);
-        const resp = await httpsProvider.sendTransaction(signedTx);
+        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
+        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
+        details['gasLimit'] = web3.utils.toHex(gasLimit)
+        details['type'] = 2
+        const wallet = new ethers.Wallet(
+          Buffer.from(
+            makerConfig.privateKeys[makerAddress.toLowerCase()],
+            'hex'
+          )
+        )
+        const signedTx = await wallet.signTransaction(details)
+        const resp = await httpsProvider.sendTransaction(signedTx)
         return {
           code: 0,
-          txid: resp.hash
-        };
+          txid: resp.hash,
+        }
       }
-      } catch (err) {
-        nonceDic[makerAddress][chainID] = result_nonce - 1;
-        return {
-          code: 1,
-          txid: err,
-          result_nonce,
-        };
+    } catch (err) {
+      nonceDic[makerAddress][chainID] = result_nonce - 1
+      return {
+        code: 1,
+        txid: err,
+        result_nonce,
       }
+    }
   }
   let transaction: EthereumTx
   if (makerConfig[toChain]?.customChainId) {
