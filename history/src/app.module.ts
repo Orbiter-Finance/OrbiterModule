@@ -14,11 +14,11 @@ isLocal() && dotenv.config({ path: path.resolve(__dirname, '../../.env') })
   imports: [
     TypeOrmModule.forRoot({
       type: 'mysql',
-      host: getEnv('DB_HOST2'),
-      port: getEnv('DB_PORT2'),
-      username: getEnv('DB_USER2'),
-      password: getEnv('DB_PASS2'),
-      database: getEnv('DB_NAME2'),
+      host: getEnv('DB_HOST'),
+      port: getEnv('DB_PORT'),
+      username: getEnv('DB_USER'),
+      password: getEnv('DB_PASS'),
+      database: getEnv('DB_NAME'),
       entities: [
         './**/**.entity{.ts,.js}',
       ],
