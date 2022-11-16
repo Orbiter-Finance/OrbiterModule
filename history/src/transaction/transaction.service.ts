@@ -118,15 +118,15 @@ export class TransactionService {
     }
   }
   async statistics(query: any): Promise<any> {
-    const startTime = Number(query['startTime']  || dayjs().startOf('d').valueOf());
-    const endTime = Number(query['endTime']  || dayjs().endOf('d').valueOf());
+    const startTime = Number(query['startTime'] || dayjs().startOf('d').valueOf());
+    const endTime = Number(query['endTime'] || dayjs().endOf('d').valueOf());
     const whreeParmas: Array<any> = [
       dayjs(startTime).utc().format('YYYY-MM-DD HH:mm'),
       dayjs(endTime).utc().format('YYYY-MM-DD HH:mm'),
     ];
     let whereSql = ' `timestamp`>=? AND `timestamp`<=? ';
     let makerAddress = (query?.makerAddress || '').split(',');
-    if (makerAddress.length>0) {
+    if (makerAddress.length > 0) {
       whereSql += ' and replySender in(?)';
       whreeParmas.push(makerAddress);
     }
@@ -149,7 +149,7 @@ export class TransactionService {
       row.fee = this.divPrecision(row.feeToken, row.fee);
     }
     const profit: any = {};
-    for (const symbol of ['USD','CNY', 'ETH', 'USDC', 'USDT', 'BTC']) {
+    for (const symbol of ['USD', 'CNY', 'ETH', 'USDC', 'USDT', 'BTC', 'DAI']) {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
@@ -166,10 +166,14 @@ export class TransactionService {
       fromAmount = sumBy(from, 'USDTValue').toFixed(6);
       toAmount = sumBy(to, 'USDTValue').toFixed(6);
       profitAmount = profit['USDT'];
-    }else if (makerAddress.includes('0x41d3D33156aE7c62c094AAe2995003aE63f587B3')) {
+    } else if (makerAddress.includes('0x41d3D33156aE7c62c094AAe2995003aE63f587B3')) {
       fromAmount = sumBy(from, 'USDCValue').toFixed(6);
       toAmount = sumBy(to, 'USDCValue').toFixed(6);
       profitAmount = profit['USDC'];
+    } else if (makerAddress.includes('0x095D2918B03b2e86D68551DCF11302121fb626c9')) {
+      fromAmount = sumBy(from, 'DAIValue').toFixed(6);
+      toAmount = sumBy(to, 'DAIValue').toFixed(6);
+      profitAmount = profit['DAI'];
     }
     return {
       from,
@@ -191,6 +195,7 @@ export class TransactionService {
       case 'MATIC':
       case 'METIS':
       case 'BNB':
+      case 'DAI':
         amount = new BigNumber(value).dividedBy(10 ** 18);
         break;
       case 'USDC':
