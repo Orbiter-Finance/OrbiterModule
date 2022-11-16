@@ -24,7 +24,7 @@
                   class="maker-header--balances__info"
                 >
                   TokenAddress:&nbsp;
-                  <a  
+                  <a
                     :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
                     target="_blank"
                   >
@@ -107,23 +107,12 @@
             ></el-option>
           </el-select>
         </el-col>
-      </el-row>
-      <el-row :gutter="20">
-        <el-col :span="16">
-          <div class="title">state</div>
-          <el-select v-model="state.status" placeholder="Select">
-            <el-option
-              v-for="(item, index) in status"
-              :key="index"
-              :label="item.label"
-              :value="item.value"
-            ></el-option>
-          </el-select>
-        </el-col>
         <el-col :span="4" class="maker-search__item">
           <div class="title">Reset | Apply</div>
           <el-button @click="reset">Reset</el-button>
-          <el-button type="primary" @click="() => getMakerNodes({current:1})">Apply</el-button>
+          <el-button type="primary" @click="() => clickApply()"
+            >Apply</el-button
+          >
         </el-col>
       </el-row>
       <el-row v-if="state.userAddressSelected">
@@ -132,7 +121,10 @@
         </el-tag>
       </el-row>
     </div>
-    <div class="maker-block maker-header maker-header__statistics">
+    <div
+      class="maker-block maker-header maker-header__statistics"
+      v-loading="loadingStatistics"
+    >
       <el-button-group v-if="false">
         <el-button
           :disabled="loadingNodes"
@@ -149,8 +141,7 @@
           Next Page
         </el-button>
       </el-button-group>
-      <div>TransactionTotal: {{ list.length }}</div>
-      
+      <div>TransactionTotal: {{ statistics.total }}</div>
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
@@ -228,19 +219,6 @@
           />
         </div>
 
-        <div v-if="!state.userAddressSelected" style="display:flex;justify-content:center;item-align:center;margin: 10px;">
-          <el-pagination
-            v-model:currentPage="currentPage"
-            v-model:page-size="pageSize"
-            :page-sizes="pagesizes"
-            :background="true"
-            layout="total, sizes, prev, pager, next, jumper"
-            :total="total"
-            @size-change="handleSizeChange"
-            @current-change="handleCurrentChange"
-          />
-        </div>
-        
         <el-table :data="list" stripe style="width: 100%">
           <el-table-column label="TransactionID">
             <template #default="scope">
@@ -402,7 +380,14 @@
 
 <script lang="ts" setup>
 import TextLong from '@/components/TextLong.vue'
-import { makerInfo, MakerNode, makerWealth, requestStatistics, useTransactionHistory } from '@/hooks/maker'
+import {
+  makerInfo,
+  MakerNode,
+  makerWealth,
+  useTransactionHistory,
+  requestStatistics,
+} from '@/hooks/maker'
+// import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
 import { BigNumberish, ethers, providers } from 'ethers'
 import dayjs from 'dayjs'
@@ -414,14 +399,7 @@ import {
   TransactionZksync,
   utils,
 } from 'orbiter-sdk'
-import {
-  ref,
-  computed,
-  inject,
-  reactive,
-  toRef,
-  watch,
-} from 'vue'
+import { ref, computed, inject, reactive, toRef, watch } from 'vue'
 import Web3 from 'web3'
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
@@ -453,7 +431,8 @@ const status = [
 // Default time duration 10800
 const DEFAULT_TIME_DURATION = 1 * 24 * 60 * 60 * 1000
 
-const makerAddressSelected: any = inject('makerAddressSelected')
+const makerAddressSelected: any = inject('makerAddressSelected');
+makerAddressSelected.value = window.ethereum.selectedAddress;
 // const exchangeRates: any = inject('exchangeRates')
 const state = reactive({
   rangeDate: [] as Date[],
@@ -506,7 +485,6 @@ const statistics = reactive({
   profitAmount: 0,
 })
 const makerNodes: any = ref([])
-const loadingStatistics = ref(false);
 // computeds
 const list = computed(() =>
   makerNodes.value.filter(
@@ -539,16 +517,40 @@ const userAddressList = computed(() => {
 
   return userAddressList
 })
+// const diffAmountTotal = computed(() => {
+//   let num = new BigNumber(0)
+//   for (const item of list.value) {
+//     if (!item.profitUSD) {
+//       continue
+//     }
 
-
+//     num = num.plus(item.profitUSD)
+//   }
+//   return num.toNumber().toFixed(2)
+// })
+// const diffAmountTotalETH = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.ETH || 0
+//   )
+//   return num.toFixed(5)
+// })
+// const diffAmountTotalCNY = computed(() => {
+//   const num = new BigNumber(diffAmountTotal.value).multipliedBy(
+//     exchangeRates?.value?.CNY || 0
+//   )
+//   return num.toFixed(2)
+// })
 const chains = toRef(makerInfo.state, 'chains')
 const loadingWealths = toRef(makerWealth.state, 'loading')
 const wealths = toRef(makerWealth.state, 'list')
 const loadingNodes = ref(false)
+const loadingStatistics = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
-const pagesizes = computed(() => Array.from(new Set([100, 200, 300, 400, Math.ceil((total.value / 100))* 100])))
+const pagesizes = computed(() =>
+  Array.from(new Set([100, 200, 300, 400, Math.ceil(total.value / 100) * 100]))
+)
 
 const handleSizeChange = (val: number) => {
   pageSize.value = val
@@ -571,6 +573,10 @@ const reset = () => {
   getStatistics()
 }
 let prevMore = {}
+const clickApply = () => {
+  getMakerNodes({ current: 1 })
+  getStatistics()
+}
 const getMakerNodes = async (more: any = {}) => {
   loadingNodes.value = true
   prevMore = {
@@ -582,8 +588,7 @@ const getMakerNodes = async (more: any = {}) => {
     // loading,
     total: _total,
   } = await useTransactionHistory({
-    // makerAddress: makerAddressSelected?.value,
-    makerAddress: window.ethereum.selectedAddress,
+    makerAddress: makerAddressSelected?.value,
     fromChain: state.fromChainId ? +state.fromChainId : null,
     toChain: state.toChainId ? +state.toChainId : null,
     rangeDate: state.rangeDate,
@@ -825,9 +830,6 @@ watch(() => makerAddressSelected?.value, init)
     font-size: 18px;
     font-weight: bold;
     color: #555555;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
   }
 
   & > * {
