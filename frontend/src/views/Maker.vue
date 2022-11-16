@@ -582,7 +582,8 @@ const getMakerNodes = async (more: any = {}) => {
     // loading,
     total: _total,
   } = await useTransactionHistory({
-    makerAddress: makerAddressSelected?.value,
+    // makerAddress: makerAddressSelected?.value,
+    makerAddress: window.ethereum.selectedAddress,
     fromChain: state.fromChainId ? +state.fromChainId : null,
     toChain: state.toChainId ? +state.toChainId : null,
     rangeDate: state.rangeDate,
