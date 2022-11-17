@@ -53,8 +53,8 @@ export class OfflineAccount extends Account {
     }
     return {
       type: 'INVOKE_FUNCTION',
-      entry_point_selector:
-        '0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad',
+      // entry_point_selector:
+        // '0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad',
       contract_address: this.address,
       calldata: fromCallsToExecuteCalldataWithNonce(
         [invocation],
@@ -64,6 +64,6 @@ export class OfflineAccount extends Account {
         await this.signer.signTransaction([invocation], transactionDetail)
       ),
       max_fee: toHex(fee),
-    }
+    } as any;
   }
 }

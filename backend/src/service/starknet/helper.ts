@@ -23,6 +23,14 @@ const accessLogger = getLoggerService("4");
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
+export function getProviderV4(network: starknetNetwork | string) {
+  // const sequencer = {
+  //   network:<any>network // for testnet you can use defaultProvider
+  // }
+  // return new Provider({ sequencer });
+  return new Provider({network: <any>network});
+  
+}
 export class StarknetHelp {
   private cache: Keyv
   constructor(
@@ -40,10 +48,23 @@ export class StarknetHelp {
       }),
     })
   }
+  async transfer() {
+    // const erc20Contract = new Contract(
+    //   Erc20Abi as any,
+    //   getErc20TokenAddress(network),
+    //   starknet.account as any,
+    // )
+
+    // return erc20Contract.transfer(
+    //   transferTo,
+    //   parseInputAmountToUint256(transferAmount),
+    // )
+  }
+
   async getNetworkNonce() {
     const starkPair = ec.getKeyPair(this.privateKey)
     const signer = new Signer(starkPair)
-    const provider = new Provider({ network: <any>this.network }) // for testnet you can use defaultProvider
+    const provider = getProviderV4(this.network)
     const acc: OfflineAccount = new OfflineAccount(
       provider,
       this.address,
@@ -108,7 +129,7 @@ export class StarknetHelp {
   }) {
     const starkPair = ec.getKeyPair(this.privateKey)
     const signer = new Signer(starkPair)
-    const provider = new Provider({ network: <any>this.network }) // for testnet you can use defaultProvider
+    const provider = getProviderV4(this.network)
     const acc: OfflineAccount = new OfflineAccount(
       provider,
       this.address,
@@ -126,7 +147,7 @@ export class StarknetHelp {
       calldata,
       Number(nonce)
     )
-    const sentTx = await acc.broadcastSignedTransaction(signedTx)
+    const sentTx:any = await acc.broadcastSignedTransaction(signedTx)
     const hash = sentTx.transaction_hash;
     // provider.getTransaction(hash).then((result) => {
     //   console.log(JSON.stringify(result), '==before')
@@ -149,12 +170,12 @@ export class StarknetHelp {
 export async function getErc20Balance(
   starknetAddress: string,
   contractAddress: string,
-  chainId: number
+  network: string
 ) {
   if (!starknetAddress || !contractAddress) {
     return 0
   }
-  const provider = getProviderByChainId(chainId)
+  const provider = getProviderV4(network)
 
   const tokenContract = new Contract(<any>erc20Abi, contractAddress, provider)
   const balanceSender: Uint256 = (
@@ -163,15 +184,7 @@ export async function getErc20Balance(
   return new BigNumber(balanceSender.low.toString() || 0).toNumber()
 }
 
-/**
- *
- * @param chainId
- * @returns
- */
-export function getProviderByChainId(chainId: number) {
-  const network = chainId == 4 ? 'mainnet-alpha' : 'georli-alpha'
-  return new Provider({ network: <any>network })
-}
+
 export function getUint256CalldataFromBN(bn: BigNumberish) {
   return { type: 'struct' as const, ...uint256.bnToUint256(String(bn)) }
 }
@@ -196,7 +209,7 @@ export async function sendEthTransaction(
   }
   return new Promise(async (resolve, reject) => {
     try {
-      const provider = new Provider({ network: <any>network })
+      const provider = getProviderV4(network)
       const userSender = new Account(
         provider,
         fromAddr,
@@ -210,7 +223,7 @@ export async function sendEthTransaction(
       const tokenBalance = await getErc20Balance(
         userSender.address,
         params.tokenAddress,
-        network === 'goerli-alpha' ? 44 : 4
+        network
       )
       const toAmount = number.toBN(params.amount)
       if (toAmount.gt(number.toBN(tokenBalance.toString()))) {
