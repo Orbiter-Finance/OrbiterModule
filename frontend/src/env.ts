@@ -6,8 +6,10 @@ export const $env = {
   credential: false,
   starknetL1MapL2: {
     'mainnet-alpha': {
-      '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
-      '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',
+      '0x80c67432656d59144ceff962e8faf8926599bcf8':
+        '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+      '0x095d2918b03b2e86d68551dcf11302121fb626c9':
+        '0x01998b5f1512f76cfe238c125df6541253c8f07f9d2eb2d50f5222f059165685',
     },
     'georli-alpha': {
       '0x0043d60e87c5dd08c86c3123340705a1556c4719':
@@ -22,7 +24,7 @@ export const $env = {
     15: 'https://bsc-dataseed1.binance.org',
     517: 'https://public.zkevm-test.net:2083',
     518: 'https://prealpha.scroll.io/l1',
-    519: 'https://prealpha.scroll.io/l2'
+    519: 'https://prealpha.scroll.io/l2',
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -33,8 +35,8 @@ export const $env = {
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
   },
   supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15, 515, 15,
-    515, 16, 516, 517, 518, 519
+    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15,
+    515, 15, 515, 16, 516, 517, 518, 519,
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -66,7 +68,7 @@ export const $env = {
     516: '421613',
     517: '1402',
     518: '534351',
-    519: '534354'
+    519: '534354',
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -100,7 +102,7 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/tx/',
     517: 'https://public.zkevm-test.net:8443/tx/',
     518: 'https://l1scan.scroll.io/tx/',
-    519: 'https://l2scan.scroll.io/tx/'
+    519: 'https://l2scan.scroll.io/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -134,7 +136,7 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/address/',
     517: 'https://public.zkevm-test.net:8443/address/',
     518: 'https://l1scan.scroll.io/address/',
-    519: 'https://l2scan.scroll.io/address/'
+    519: 'https://l2scan.scroll.io/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -164,6 +166,6 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/token/',
     517: 'https://public.zkevm-test.net:8443/token/',
     518: 'https://l1scan.scroll.io/token/',
-    519: 'https://l2scan.scroll.io/token/'
+    519: 'https://l2scan.scroll.io/token/',
   },
 }
