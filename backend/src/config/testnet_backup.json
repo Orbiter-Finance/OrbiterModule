@@ -460,5 +460,47 @@
     ],
     "watch": ["rpc"],
     "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://l1scan.scroll.io/api",
+      "key": ""
+    },
+    "chainId": "534351",
+    "networkId": "534351",
+    "internalId": "518",
+    "name": "Scroll L1 Testnet",
+    "debug": false,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://prealpha.scroll.io/l1"],
+    "watch": ["api", "rpc"],
+    "tokens": []
+  },
+  {
+    "api": {
+      "url": "https://l2scan.scroll.io/api",
+      "key": ""
+    },
+    "chainId": "534354",
+    "networkId": "534354",
+    "internalId": "519",
+    "name": "Scroll L2 Testnet",
+    "debug": false,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://prealpha.scroll.io/l2"],
+    "watch": ["api", "rpc"],
+    "tokens": []
   }
 ]

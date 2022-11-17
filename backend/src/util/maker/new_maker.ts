@@ -3,7 +3,7 @@ import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
-import { newMakeTransactionID } from '../../service/maker'
+import { TransactionIDV2 } from '../../service/maker'
 import { accessLogger, errorLogger } from '../logger'
 import { Core } from '../core'
 import { Repository } from 'typeorm'
@@ -175,11 +175,18 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      const transactionID = newMakeTransactionID(
+      let ext = '';
+      if ([8, 88].includes(Number(fromChain.internalId))) {
+        ext = dayjs(tx.timestamp).unix().toString();
+      }else if ([4, 44].includes(Number(fromChain.internalId))) {
+        ext = String(Number(tx.extra['version']));
+      }
+      const transactionID = TransactionIDV2(
         tx.from,
         fromChain.internalId,
         tx.nonce,
-        tx.symbol
+        tx.symbol,
+        ext
       )
       if (
         ['3', '33', '8', '88', '12', '512'].includes(fromChain.internalId) &&
@@ -312,7 +319,7 @@ export async function confirmTransactionSendMoneyBack(
     (await cache?.has(tx.hash.toLowerCase()))
   ) {
     return accessLogger.error(
-      `starknet ${tx.hash}  ${transactionID} transfer exists!`
+      `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
     )
   }
   chainTransferMap?.set(tx.hash.toLowerCase(), 'ok')

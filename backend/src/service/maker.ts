@@ -16,6 +16,7 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
+import dayjs from 'dayjs'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -158,15 +159,30 @@ export function makeTransactionID(
 ) {
   return `${fromAddress.toLowerCase()}${chainId}${nonce}`
 }
-export function newMakeTransactionID(
+// export function newMakeTransactionID(
+//   fromAddress: string,
+//   fromChainId: number | string,
+//   fromTxNonce: string | number,
+//   symbol: string | undefined
+// ) {
+//   return `${fromAddress}${padStart(String(fromChainId), 4, '00')}${symbol || 'NULL'
+//     }${fromTxNonce}`.toLowerCase()
+// }
+
+export function TransactionIDV2(
   fromAddress: string,
   fromChainId: number | string,
   fromTxNonce: string | number,
-  symbol: string | undefined
+  symbol: string | undefined,
+  ext?: string,
 ) {
-  return `${fromAddress}${padStart(String(fromChainId), 4, '00')}${symbol || 'NULL'
-    }${fromTxNonce}`.toLowerCase()
+  let txid = `${fromAddress}${padStart(String(fromChainId), 4, "0")}${symbol || "NULL"
+    }${fromTxNonce}`;
+  if (ext)
+    txid = `${txid}_${ext}`
+  return txid.toLowerCase();
 }
+
 
 /**
  * Get maker nodes
