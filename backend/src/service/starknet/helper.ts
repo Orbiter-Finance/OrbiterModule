@@ -97,7 +97,9 @@ export class StarknetHelp {
         nonces.push(localLastNonce)
       }
       accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
+      nonces = sortBy(nonces)
       await this.cache.set(cacheKey, nonces)
+      return nonces;
     }
     nonces = sortBy(nonces)
     return nonces;
