@@ -381,6 +381,9 @@ async function sendConsumer(value: any) {
         amount: String(amountToSend),
         nonce,
       })
+      if (!hash) {
+        throw new Error('Starknet failed to send transaction');
+      }
       return {
         code: 0,
         txid: hash,

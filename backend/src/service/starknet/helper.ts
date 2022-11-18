@@ -1,26 +1,21 @@
 import ERC20 from './ERC20.json'
-import ERC20Abi from './erc20_abi.json'
 import { utils } from "ethers"
 import {
   Account,
   Contract,
   ec,
-  number,
   Provider,
   uint256,
-  Signer,
 } from 'starknet'
 import { Uint256 } from 'starknet/dist/utils/uint256'
 import BigNumber from 'bignumber.js'
-import { BigNumberish, bigNumberishArrayToDecimalStringArray, toBN, toHex } from 'starknet/dist/utils/number'
+import { BigNumberish, toBN } from 'starknet/dist/utils/number'
 import { OfflineAccount } from './account'
 import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
-import { SessionAccount } from './accountV2'
-import { fromCallsToExecuteCalldataWithNonce } from 'starknet/dist/utils/transaction'
 const accessLogger = getLoggerService("4");
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
@@ -30,8 +25,6 @@ export function getProviderV4(network: starknetNetwork | string) {
     network: <any>network // for testnet you can use defaultProvider
   }
   return new Provider({ sequencer });
-  // return new Provider({network: <any>network});
-
 }
 export function parseInputAmountToUint256(
   input: string,
@@ -63,75 +56,17 @@ export class StarknetHelp {
       ec.getKeyPair(this.privateKey)
     )
   }
-  async transfer(tokenAddress: string, recipient: String, ) {
-    const provider = getProviderV4(this.network);
+  async transfer(tokenAddress: string, recipient: String, amount: string) {
     const abi = ERC20['abi'];
     const erc20Contract = new Contract(abi as any, tokenAddress, this.account);
-    const calldata = compileCalldata({
-      recipient: <any>recipient,
-      amount: parseInputAmountToUint256("1"),
-    })
-    console.log(tokenAddress, '====tokenAddress')
-    console.log(recipient, '====recipient')
-    // const transferRes = await this.account.execute({
-    //   contractAddress: tokenAddress,
-    //   entrypoint: 'transfer',
-    //   calldata: [recipient, "2000000000000000000"],
-    // }, [<any>abi],
-    //   {
-    //     nonce: 9,
-    //     maxFee: "999999995330000"
-    //   });
-    // console.log(transferRes, '==transferRes');
     return erc20Contract.transfer(
       recipient,
-      parseInputAmountToUint256("2"),
+      parseInputAmountToUint256(amount),
     )
   }
-  async signTx(
-    targetContract: string,
-    txCalldata: number.BigNumberish[],
-  ): Promise<any> {
-    const invocation = {
-      contractAddress: targetContract,
-      entrypoint: 'transfer',
-      calldata: txCalldata,
-    }
-    const nonce = await this.getNetworkNonce();
-    console.log(nonce, '=====nonce');
 
-    if (!nonce) {
-      throw new Error('Not Find Nonce Params')
-    }
-    let fee = toBN(0.009 * 10 ** 18);
-    const transactionDetail = {
-      walletAddress: this.address,
-      chainId: '0x534e5f474f45524c49',
-      nonce: nonce,
-      version: 0,
-      maxFee: fee,
-    }
-    return {
-      type: 'INVOKE_FUNCTION',
-      // entry_point_selector:
-      // '0x15d40a3d6ca2ac30f4031e42be28da9b056fef9bb7357ac5e85627ee876e5ad',
-      contract_address: targetContract,
-      calldata: fromCallsToExecuteCalldataWithNonce(
-        [invocation],
-        transactionDetail.nonce
-      ),
-      signature: bigNumberishArrayToDecimalStringArray(
-        await this.account.signer.signTransaction([invocation], <any>transactionDetail)
-      ),
-      max_fee: toHex(fee),
-    } as any;
-  }
   async getNetworkNonce() {
-    console.log(this.network, '====netork')
-    const provider = getProviderV4('mainnet-alpha');
-    const nonce = await provider.getNonce("0x001709ea381e87d4c9ba5e4a67adc9868c05e82556a53fd1b3a8b1f21e098143");
-    return Number(nonce);
-    // return Number(await acc.getNonce())
+    return Number(await this.account.getNonce());
   }
   async takeOutNonce() {
     const nonces = await this.getAvailableNonce()
@@ -153,20 +88,23 @@ export class StarknetHelp {
           const nonces = await this.getAvailableNonce()
           accessLogger.info(`Starknet Rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
           nonces.push(nonce)
+          // 
+          nonces.sort((a, b) => {
+            return a - b;
+          })
           await this.cache.set(cacheKey, nonces)
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message);
         }
-
       },
     }
   }
-  async getAvailableNonce() {
+  async getAvailableNonce(): Promise<Array<number>> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
-    let nonces: any = (await this.cache.get(cacheKey)) || []
+    let nonces: any = (await this.cache.get(cacheKey)) || [];
     if (nonces && nonces.length <= 5) {
       // render
-      let localLastNonce: number = max(nonces) || 0
+      let localLastNonce: number = max(nonces) || -1;
       const networkLastNonce = await this.getNetworkNonce();
       if (networkLastNonce > localLastNonce) {
         nonces = [networkLastNonce]
@@ -176,10 +114,16 @@ export class StarknetHelp {
         localLastNonce++
         nonces.push(localLastNonce)
       }
-      accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
+      accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces, 'networkLastNonce:', networkLastNonce)
       await this.cache.set(cacheKey, nonces)
+      nonces.sort((a, b) => {
+        return a - b;
+      });
+      return nonces;
     }
-    nonces.sort();
+    nonces.sort((a, b) => {
+      return a - b;
+    });
     return nonces
   }
   async signTransfer(params: {
@@ -188,90 +132,31 @@ export class StarknetHelp {
     amount: string
     nonce: number
   }) {
-    const starkPair = ec.getKeyPair(this.privateKey)
-    const signer = new Signer(starkPair)
     const provider = getProviderV4(this.network)
-    const acc: OfflineAccount = new OfflineAccount(
-      provider,
-      this.address,
-      signer
-    )
     const entrypoint = 'transfer'
     const calldata = compileCalldata({
       recipient: params.recipient,
       amount: getUint256CalldataFromBN(params.amount),
     })
-    let nonce = params.nonce
-    const signedTx = await acc.signTx(
-      params.tokenAddress,
-      entrypoint,
-      calldata,
-      Number(nonce)
-    )
-    const sentTx: any = await acc.broadcastSignedTransaction(signedTx)
-    const hash = sentTx.transaction_hash;
-    // provider.getTransaction(hash).then((result) => {
-    //   console.log(JSON.stringify(result), '==before')
-    // })
-    // await provider.waitForTransaction(txid)
-    // console.log(await acc.getNonce(), 'after==nonce')
-    // provider.getTransaction(txid).then((result) => {
-    //   console.log(JSON.stringify(result), '===after')
-    // })
-    return { hash }
-  }
-  async sendEthTransaction(tokenAddress: string, to: string, amount: string
-  ) {
-    if (to.length != 66) {
-      throw new Error(`Starknet To Address ${to} Format Error`)
+    const ofa = new OfflineAccount(provider, this.address, this.account.signer);
+    const trx = await ofa.signTx(params.tokenAddress, entrypoint, calldata, params.nonce);
+    if (!trx || !trx.transaction_hash) {
+      throw new Error(`Starknet Failed to send transaction hash does not exist`);
     }
-    // const abi = ERC20['abi'];
-    const abi = ERC20Abi;
-    return new Promise(async (resolve, reject) => {
-      try {
-        const erc20Contract = new Contract(
-          <any>abi,
-          tokenAddress,
-          this.account
-        )
-        const tokenBalance = await getErc20Balance(
-          this.account.address,
-          tokenAddress,
-          this.network
-        )
-        const toAmount = number.toBN(amount)
-        if (toAmount.gt(number.toBN(tokenBalance.toString()))) {
-          throw new Error(
-            `Starknet ${this.account.address
-            } Insufficient funds ${tokenBalance.toString()}/${toAmount.toString()}`
-          )
-        }
-        console.log('===============transfer----', erc20Contract.transfer)
-        const transferResp = await erc20Contract.transfer(
-          to,
-          parseInputAmountToUint256(toAmount.toString())
-        )
-        console.log(transferResp, '======transferResp');
-
-        if (transferResp.code != 'TRANSACTION_RECEIVED') {
-          return reject(`Starknet transfer failed ${transferResp.code}`)
-        }
-        console.warn(
-          'Waitting transfer transaction:',
-          transferResp.transaction_hash
-        )
-
-        return resolve({
-          hash: transferResp.transaction_hash,
-          // done: () => provider.waitForTransaction(transferResp.transaction_hash),
-        })
-      } catch (error) {
-        console.error(error)
-        reject(error)
+    const hash = trx.transaction_hash;
+    const response = await provider.getTransaction(hash)
+    console.log(trx, '==', response);
+    if (['RECEIVED', 'PENDING', "ACCEPTED_ON_L1",
+      "ACCEPTED_ON_L2"
+    ].includes(response['status'])) {
+      return {
+        hash
       }
-    })
+    }
+    return {
+      hash: trx.transaction_hash
+    }
   }
-
 }
 /**
  *
