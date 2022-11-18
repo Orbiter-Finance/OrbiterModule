@@ -84,7 +84,7 @@ export class StarknetHelp {
   async getAvailableNonce(): Promise<Array<Number>> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
-    if (nonces && nonces.length <= 10) {
+    if (nonces && nonces.length <= 5) {
       // render
       let localLastNonce: number = max(nonces) || 0
       const networkLastNonce = await this.getNetworkNonce();
