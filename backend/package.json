@@ -51,7 +51,7 @@
     "postinstall-postinstall": "^2.1.0",
     "reflect-metadata": "^0.1.13",
     "semver": "^7.3.5",
-    "starknet": "^3.15.4",
+    "starknet": "4",
     "truffle-privatekey-provider": "^1.5.0",
     "tunnel": "0.0.6",
     "typeorm": "^0.2.37",

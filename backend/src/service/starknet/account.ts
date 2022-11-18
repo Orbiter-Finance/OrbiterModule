@@ -5,8 +5,9 @@ import {
   ProviderInterface,
   SignerInterface,
   transaction,
-  Transaction,
+  
 } from 'starknet'
+type Transaction = any;
 const { toHex, bigNumberishArrayToDecimalStringArray, toBN } = number
 const { fromCallsToExecuteCalldataWithNonce } = transaction
 import 'cross-fetch/polyfill';
@@ -19,9 +20,9 @@ export class OfflineAccount extends Account {
   ) {
     super(provider, address, keyPairOrSigner)
   }
-
+  
   public async broadcastSignedTransaction(transaction: Transaction) {
-    return await this.fetchEndpoint('add_transaction', undefined, transaction)
+    // return await this.fetchEndpoint('add_transaction', undefined, transaction)
   }
 
   public async signTx(

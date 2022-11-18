@@ -27,37 +27,13 @@
         "type": "felt"
       },
       {
-        "name": "governance_account_address",
+        "name": "recipient",
         "type": "felt"
       }
     ],
     "name": "constructor",
     "outputs": [],
     "type": "constructor"
-  },
-  {
-    "inputs": [],
-    "name": "governance",
-    "outputs": [
-      {
-        "name": "governance",
-        "type": "felt"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [],
-    "name": "permittedMinter",
-    "outputs": [
-      {
-        "name": "minter",
-        "type": "felt"
-      }
-    ],
-    "stateMutability": "view",
-    "type": "function"
   },
   {
     "inputs": [],
@@ -143,47 +119,6 @@
       }
     ],
     "stateMutability": "view",
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "name": "minter_address",
-        "type": "felt"
-      }
-    ],
-    "name": "setPermittedMinter",
-    "outputs": [],
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "name": "recipient",
-        "type": "felt"
-      },
-      {
-        "name": "amount",
-        "type": "Uint256"
-      }
-    ],
-    "name": "permissionedMint",
-    "outputs": [],
-    "type": "function"
-  },
-  {
-    "inputs": [
-      {
-        "name": "account",
-        "type": "felt"
-      },
-      {
-        "name": "amount",
-        "type": "Uint256"
-      }
-    ],
-    "name": "permissionedBurn",
-    "outputs": [],
     "type": "function"
   },
   {
@@ -288,6 +223,36 @@
         "type": "felt"
       }
     ],
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "recipient",
+        "type": "felt"
+      },
+      {
+        "name": "amount",
+        "type": "Uint256"
+      }
+    ],
+    "name": "mint",
+    "outputs": [],
+    "type": "function"
+  },
+  {
+    "inputs": [
+      {
+        "name": "user",
+        "type": "felt"
+      },
+      {
+        "name": "amount",
+        "type": "Uint256"
+      }
+    ],
+    "name": "burn",
+    "outputs": [],
     "type": "function"
   }
 ]
