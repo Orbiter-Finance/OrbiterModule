@@ -25,7 +25,7 @@ import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
-import { getProviderByChainId } from '../../service/starknet/helper'
+import { getProviderV4 } from '../../service/starknet/helper'
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
@@ -337,23 +337,24 @@ export async function confirmToSNTransaction(
 ) {
   try {
     accessLogger.info('confirmToSNTransaction =', getTime())
-    const provider = getProviderByChainId(chainId)
-    const transaction = await provider.getTransaction(txID)
+    const provider = getProviderV4(Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha');
+    const response = await provider.getTransaction(txID)
+    const txStatus = response['status'];
     accessLogger.info(
       'sn_transaction =',
-      JSON.stringify({ status: transaction.status, txID })
+      JSON.stringify({ status: txStatus, txID })
     )
 
     // When reject
-    if (transaction.status == 'REJECTED') {
+    if (txStatus == 'REJECTED') {
       errorLogger.info(
-        `starknet transfer failed: ${transaction.status}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
-        transaction['transaction_failure_reason']
+        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
+        response['transaction_failure_reason']
       )
       // check nonce
       if (
-        transaction['transaction_failure_reason'] &&
-        transaction['transaction_failure_reason']['error_message'].includes(
+        response['transaction_failure_reason'] &&
+        response['transaction_failure_reason']['error_message'].includes(
           'Error message: nonce invalid'
         )
       ) {
@@ -361,9 +362,7 @@ export async function confirmToSNTransaction(
       }
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
-      transaction.status == 'ACCEPTED_ON_L1' ||
-      transaction.status == 'ACCEPTED_ON_L2' ||
-      transaction.status == 'PENDING'
+      ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING'].includes(txStatus)
     ) {
       accessLogger.info(
         'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
