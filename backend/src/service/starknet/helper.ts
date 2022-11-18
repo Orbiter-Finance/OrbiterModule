@@ -9,6 +9,7 @@ import {
   uint256,
   Signer,
 } from 'starknet'
+import {sortBy} from 'lodash';
 import { Uint256 } from 'starknet/dist/utils/uint256'
 import BigNumber from 'bignumber.js'
 import { BigNumberish } from 'starknet/dist/utils/number'
@@ -52,7 +53,7 @@ export class StarknetHelp {
     return Number(await acc.getNonce())
   }
   async takeOutNonce() {
-    const nonces = await this.getAvailableNonce()
+    let nonces = await this.getAvailableNonce()
     const takeNonce = nonces.splice(0, 1)[0]
     const networkLastNonce = await this.getNetworkNonce();
     if (Number(takeNonce) < Number(networkLastNonce)) {
@@ -68,10 +69,10 @@ export class StarknetHelp {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
         try {
-          const nonces = await this.getAvailableNonce()
+          let nonces = await this.getAvailableNonce()
           accessLogger.info(`Starknet Rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
           nonces.push(nonce)
-          nonces.sort();
+          nonces = sortBy(nonces)
           await this.cache.set(cacheKey, nonces)
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message);
@@ -83,7 +84,7 @@ export class StarknetHelp {
   async getAvailableNonce(): Promise<Array<Number>> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
-    if (nonces && nonces.length <= 5) {
+    if (nonces && nonces.length <= 10) {
       // render
       let localLastNonce: number = max(nonces) || 0
       const networkLastNonce = await this.getNetworkNonce();
@@ -96,11 +97,9 @@ export class StarknetHelp {
         nonces.push(localLastNonce)
       }
       accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
-      nonces.sort();
       await this.cache.set(cacheKey, nonces)
-      return nonces;
     }
-    nonces.sort();
+    nonces = sortBy(nonces)
     return nonces;
   }
   async signTransfer(params: {
