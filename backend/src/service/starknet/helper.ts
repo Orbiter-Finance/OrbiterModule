@@ -71,6 +71,7 @@ export class StarknetHelp {
           const nonces = await this.getAvailableNonce()
           accessLogger.info(`Starknet Rollback ${error.message} error fallback nonces ${nonce} available`, JSON.stringify(nonces))
           nonces.push(nonce)
+          nonces.sort();
           await this.cache.set(cacheKey, nonces)
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message);
@@ -79,7 +80,7 @@ export class StarknetHelp {
       },
     }
   }
-  async getAvailableNonce() {
+  async getAvailableNonce(): Promise<Array<Number>> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
     if (nonces && nonces.length <= 5) {
@@ -95,10 +96,12 @@ export class StarknetHelp {
         nonces.push(localLastNonce)
       }
       accessLogger.info('Generate starknet_getNetwork_nonce =', networkLastNonce, 'nonces:', nonces)
+      nonces.sort();
       await this.cache.set(cacheKey, nonces)
+      return nonces;
     }
     nonces.sort();
-    return nonces
+    return nonces;
   }
   async signTransfer(params: {
     tokenAddress: string
