@@ -1202,12 +1202,17 @@ async function sendConsumer(value: any) {
       delete details['gasPrice'];
       delete details['gas'];
       let maxPriorityFeePerGas = 1000000000;
-      if (config.rpc.length>0 && config.rpc[0].includes('alchemyapi')) {
-        const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
-        if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-          maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas;
+      try {
+        if (config.rpc.length>0 && config.rpc[0].includes('alchemyapi')) {
+          const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
+          if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
+            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas;
+          }
         }
+      } catch (error) {
+        accessLogger.error('eth_maxPriorityFeePerGas error', error.message);
       }
+     
       details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
       details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9);
       details['gasLimit'] = web3.utils.toHex(gasLimit);
