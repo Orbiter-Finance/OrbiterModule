@@ -26,6 +26,7 @@ import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 import { accessLogger, getLoggerService } from '../logger'
+import { chains } from 'orbiter-chaincore'
 
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
@@ -1199,32 +1200,39 @@ async function sendConsumer(value: any) {
   if ([1, 5].includes(chainID)) {
     try {
       // eip 1559 send
-      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net)
-      let feeData = await httpsProvider.getFeeData()
-      if (feeData) {
-        delete details['gasPrice']
-        delete details['gas']
-        let maxPriorityFeePerGas = 1000000000
-        if (Number(feeData['maxPriorityFeePerGas']) > maxPriorityFeePerGas) {
-          maxPriorityFeePerGas = Number(feeData['maxPriorityFeePerGas'])
-        }
-        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
-        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
-        details['gasLimit'] = web3.utils.toHex(gasLimit)
-        details['type'] = 2
-        const wallet = new ethers.Wallet(
-          Buffer.from(
-            makerConfig.privateKeys[makerAddress.toLowerCase()],
-            'hex'
-          )
+      const config = chains.getChainByInternalId(chainID)
+      if (config.rpc.length <= 0) {
+        throw new Error('Missing RPC configuration')
+      }
+      const httpsProvider = new ethers.providers.JsonRpcProvider(config.rpc[0])
+      // let feeData = await httpsProvider.getFeeData();
+      // if (feeData) {
+      delete details['gasPrice']
+      delete details['gas']
+      let maxPriorityFeePerGas = 1000000000
+      if (config.rpc.length > 0 && config.rpc[0].includes('alchemyapi')) {
+        const alchemyMaxPriorityFeePerGas = await httpsProvider.send(
+          'eth_maxPriorityFeePerGas',
+          []
         )
-        const signedTx = await wallet.signTransaction(details)
-        const resp = await httpsProvider.sendTransaction(signedTx)
-        return {
-          code: 0,
-          txid: resp.hash,
+        if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
+          maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas
         }
       }
+      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
+      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
+      details['gasLimit'] = web3.utils.toHex(gasLimit)
+      details['type'] = 2
+      const wallet = new ethers.Wallet(
+        Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+      )
+      const signedTx = await wallet.signTransaction(details)
+      const resp = await httpsProvider.sendTransaction(signedTx)
+      return {
+        code: 0,
+        txid: resp.hash,
+      }
+      // }
     } catch (err) {
       nonceDic[makerAddress][chainID] = result_nonce - 1
       return {
