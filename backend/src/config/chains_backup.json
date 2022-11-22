@@ -443,7 +443,7 @@
   },
   {
     "api": {
-      "url": "https://nova-explorer.arbitrum.io/api",
+      "url": "https://api-nova.arbiscan.io/api",
       "key": ""
     },
     "chainId": "42170",
