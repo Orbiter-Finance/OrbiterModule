@@ -11,6 +11,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
+import { sleep } from '../../util'
 const accessLogger = getLoggerService('4')
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
@@ -156,6 +157,7 @@ export class StarknetHelp {
     if (!trx || !trx.transaction_hash) {
       throw new Error(`Starknet Failed to send transaction hash does not exist`)
     }
+    sleep(1000)
     const hash = trx.transaction_hash
     try {
       const response = await provider.getTransaction(hash)
@@ -164,10 +166,10 @@ export class StarknetHelp {
           response['status']
         )
       ) {
-        throw new Error('Straknet Send After status error:', response);
+        accessLogger.error('Straknet Send After status error:', response)
       }
     } catch (error) {
-      accessLogger.error(`Starknet Send After GetTransaction Erro:`, error);
+      accessLogger.error(`Starknet Send After GetTransaction Erro:`, error)
     }
     return {
       hash,
