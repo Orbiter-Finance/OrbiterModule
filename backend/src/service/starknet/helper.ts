@@ -157,19 +157,20 @@ export class StarknetHelp {
       throw new Error(`Starknet Failed to send transaction hash does not exist`)
     }
     const hash = trx.transaction_hash
-    const response = await provider.getTransaction(hash)
-    console.log(trx, '==', response)
-    if (
-      ['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
-        response['status']
-      )
-    ) {
-      return {
-        hash,
+    try {
+      const response = await provider.getTransaction(hash)
+      if (
+        !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+          response['status']
+        )
+      ) {
+        throw new Error('Straknet Send After status error:', response);
       }
+    } catch (error) {
+      accessLogger.error(`Starknet Send After GetTransaction Erro:`, error);
     }
     return {
-      hash: trx.transaction_hash,
+      hash,
     }
   }
 }
