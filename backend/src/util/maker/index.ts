@@ -127,9 +127,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -175,10 +175,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       `[${transactionID}] Transaction with hash ` +
-      txHash +
-      ' has ' +
-      trxConfirmations.confirmations +
-      ' confirmation(s)'
+        txHash +
+        ' has ' +
+        trxConfirmations.confirmations +
+        ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -204,8 +204,8 @@ function confirmToTransaction(
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
-        txHash +
-        ' has been successfully confirmed'
+          txHash +
+          ' has been successfully confirmed'
       )
       return
     }
@@ -300,8 +300,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-            txID +
-            ' has been successfully confirmed'
+              txID +
+              ' has been successfully confirmed'
           )
           try {
             await repositoryMakerNode().update(
@@ -337,9 +337,11 @@ export async function confirmToSNTransaction(
 ) {
   try {
     accessLogger.info('confirmToSNTransaction =', getTime())
-    const provider = getProviderV4(Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha');
+    const provider = getProviderV4(
+      Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha'
+    )
     const response = await provider.getTransaction(txID)
-    const txStatus = response['status'];
+    const txStatus = response['status']
     accessLogger.info(
       'sn_transaction =',
       JSON.stringify({ status: txStatus, txID })
@@ -352,14 +354,15 @@ export async function confirmToSNTransaction(
         response['transaction_failure_reason']
       )
       // check nonce
-      if (
-        response['transaction_failure_reason'] &&
-        response['transaction_failure_reason']['error_message'].includes(
-          'Error message: nonce invalid'
-        )
-      ) {
-        return true
-      }
+      // if (
+      //   response['transaction_failure_reason'] &&
+      //   response['transaction_failure_reason']['error_message'].includes(
+      //     'Error message: nonce invalid'
+      //   )
+      // ) {
+      //   return true
+      // }
+      return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
       ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING'].includes(txStatus)
@@ -387,7 +390,10 @@ export async function confirmToSNTransaction(
       rollback
     )
   } catch (error) {
-    getLoggerService(String(chainId)).error('confirmToSNTransaction error', error.message);
+    getLoggerService(String(chainId)).error(
+      'confirmToSNTransaction error',
+      error.message
+    )
   }
 }
 
