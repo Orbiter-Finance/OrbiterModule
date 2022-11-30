@@ -108,9 +108,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         }
       }
 
-      getLoggerService(toChain).info('gasPrice =', gasPrice)
       return gasPrice
     } catch (error) {
+      getLoggerService(toChain).info(`gasPrice error ${error.message}`)
       return Web3.utils.toHex(
         Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
@@ -127,9 +127,11 @@ sendQueue.checkHealth(
     ) {
       checkHealthAllChain.lastSendSMSTime = Date.now()
       try {
-        doSms(`Warning: From last consumption ${timeout / 1000}/s`)
+        doSms(
+          `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
+        )
       } catch (error) {
-        errorLogger.error(`Warning: From last consumption doSMS error `, error)
+        errorLogger.error(`Warning:From last consumption doSMS error `, error)
       }
     }
   },
@@ -141,7 +143,9 @@ sendQueue.checkHealth(
     if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
       config.lastSendSMSTime = Date.now()
       doSms(
-        `Warning:chainId ${chainId} From last consumption ${timeout / 1000}/s`
+        `Warning:${chainId} Chain has not been processed for more than ${(
+          timeout / 1000
+        ).toFixed(0)} seconds`
       )
     }
     checkHealthByChain[chainId] = config

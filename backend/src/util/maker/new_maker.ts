@@ -4,7 +4,7 @@ import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
 import { TransactionIDV2 } from '../../service/maker'
-import { accessLogger, errorLogger } from '../logger'
+import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { Core } from '../core'
 import { Repository } from 'typeorm'
 import { MakerNode } from '../../model/maker_node'
@@ -150,6 +150,16 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         // )
         continue
       }
+      const fromChain = await chains.getChainByChainId(tx.chainId)
+       // check send
+       if (!fromChain) {
+        errorLogger.error(
+          `transaction fromChainId ${tx.chainId} does not exist: `,
+          tx.hash
+        )
+        continue
+      }
+      const accessLogger = getLoggerService(fromChain.internalId);
       accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       if (chainCoreUtil.equals(tx.to, tx.from) || tx.value.lte(0)) {
         accessLogger.error(
@@ -157,15 +167,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      const fromChain = await chains.getChainByChainId(tx.chainId)
-      // check send
-      if (!fromChain) {
-        accessLogger.error(
-          `transaction fromChainId ${tx.chainId} does not exist: `,
-          tx.hash
-        )
-        continue
-      }
+     
       const startTimeTimeStamp = LastPullTxMap.get(
         `${fromChain.internalId}:${tx.to.toLowerCase()}`
       )
