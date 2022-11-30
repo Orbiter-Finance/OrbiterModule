@@ -1,12 +1,15 @@
+import { sleep } from "orbiter-chaincore/src/utils/core"
+import { accessLogger } from "../logger"
+
 type SendQueueConsumer = (value: any) => Promise<unknown>
 type SendQueueData = {
   value: any
+  timestamp?: number
   callback?: (error: any, result: any) => void
 }
-
 export class SendQueue {
   static TICKER_DURATION = 100
-
+  static LastConsumeTime = Date.now();
   private queues: {
     [key: string | number]: {
       datas: SendQueueData[]
@@ -18,7 +21,28 @@ export class SendQueue {
     this.queues = {}
     this.start()
   }
-
+  public async checkHealth(cb1: any, cb2: any) {
+    await sleep(1000 * 30);
+    setInterval(() => {
+      try {
+        Object.keys(this.queues).forEach((chainId) => {
+          const request = this.queues[chainId];
+          if (request.datas.length > 0) {
+            const lastMsg = request.datas[request.datas.length - 1];
+            const lastMsgTimestamp = Number(lastMsg.timestamp || 0);
+            if (lastMsg && Date.now() - lastMsgTimestamp > 1000 * 60 * 2) {
+              return cb2(chainId, Date.now() - lastMsgTimestamp);
+            }
+          }
+        })
+        if (Date.now() - SendQueue.LastConsumeTime > 1000 * 60 * 2) {
+          return cb1(Date.now() - SendQueue.LastConsumeTime);
+        }
+      } catch (error) {
+        accessLogger.error('SendQueue checkHealth error', error);
+      }
+    }, 1000 * 10);
+  }
   private async start() {
     while (true) {
       const ps = <Promise<unknown>[]>[]
@@ -39,8 +63,10 @@ export class SendQueue {
               if (item.consumer) {
                 result = await item.consumer(itemData.value)
               }
+              SendQueue.LastConsumeTime = Date.now();
               itemData.callback && itemData.callback(undefined, result)
             } catch (error) {
+              SendQueue.LastConsumeTime = Date.now();
               itemData.callback && itemData.callback(error, undefined)
             }
           }
@@ -68,6 +94,7 @@ export class SendQueue {
 
   produce(key: string | number, data: SendQueueData) {
     this.initQueuesKey(key)
+    data.timestamp = Date.now();
     this.queues[key].datas.unshift(data)
   }
 
