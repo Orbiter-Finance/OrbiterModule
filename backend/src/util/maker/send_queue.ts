@@ -53,20 +53,18 @@ export class SendQueue {
         const item = this.queues[key]
         if (item.consumer) {
           const itemData = item.datas.pop()
-          SendQueue.LastConsumeTime = Date.now();
           if (!itemData) {
             continue
           }
           const promise = async () => {
             try {
+              SendQueue.LastConsumeTime = Date.now();
               let result: any = undefined
               if (item.consumer) {
                 result = await item.consumer(itemData.value)
               }
-              // SendQueue.LastConsumeTime = Date.now();
               itemData.callback && itemData.callback(undefined, result)
             } catch (error) {
-              // SendQueue.LastConsumeTime = Date.now();
               itemData.callback && itemData.callback(error, undefined)
             }
           }
