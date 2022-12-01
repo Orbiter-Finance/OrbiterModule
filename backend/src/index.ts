@@ -89,20 +89,20 @@ const main = async () => {
       startMasterJobs()
 
       // Manage child process
-      let childProcessId: number | undefined
-      cluster.on('exit', (worker, code, signal) => {
-        // Refork
-        if (worker.process.pid == childProcessId) {
-          accessLogger.info(
-            `Child process exited, code: ${code}, signal: ${signal}, refork it!`
-          )
-          cluster.fork()
-        }
-      })
-      cluster.on('fork', (worker) => {
-        childProcessId = worker.process.pid
-      })
-      cluster.fork()
+      // let childProcessId: number | undefined
+      // cluster.on('exit', (worker, code, signal) => {
+      //   // Refork
+      //   if (worker.process.pid == childProcessId) {
+      //     accessLogger.info(
+      //       `Child process exited, code: ${code}, signal: ${signal}, refork it!`
+      //     )
+      //     cluster.fork()
+      //   }
+      // })
+      // cluster.on('fork', (worker) => {
+      //   childProcessId = worker.process.pid
+      // })
+      // cluster.fork()
     } else {
       // Start WorkerJobs in child process
       startWorkerJobs()
