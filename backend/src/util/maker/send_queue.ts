@@ -1,5 +1,8 @@
+import dayjs from "dayjs"
 import { sleep } from "orbiter-chaincore/src/utils/core"
-import { accessLogger } from "../logger"
+import { doSms } from "../../sms/smsSchinese"
+import { Core } from "../core"
+import { accessLogger, errorLogger } from "../logger"
 
 type SendQueueConsumer = (value: any) => Promise<unknown>
 type SendQueueData = {
@@ -7,9 +10,19 @@ type SendQueueData = {
   timestamp?: number
   callback?: (error: any, result: any) => void
 }
+const checkHealthByChain: {
+  [key: string]: {
+    smsInterval: number,
+    lastSendSMSTime: number
+  }
+} = {};
+const checkHealthAllChain = {
+  smsInterval: 1000 * 30,
+  lastSendSMSTime: 0
+};
+const lastConsumeTimeKey ='lastConsumeTime';
 export class SendQueue {
   static TICKER_DURATION = 100
-  static LastConsumeTime = Date.now();
   private queues: {
     [key: string | number]: {
       datas: SendQueueData[]
@@ -20,11 +33,36 @@ export class SendQueue {
   constructor() {
     this.queues = {}
     this.start()
+    this.checkHealth((lastConsumeTime: number, timeout: number) => {
+      if (Date.now() - checkHealthAllChain.lastSendSMSTime >= checkHealthAllChain.smsInterval) {
+        checkHealthAllChain.lastSendSMSTime = Date.now();
+        try {
+          doSms(`Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`)
+        } catch (error) {
+          errorLogger.error(
+            `Warning:From last consumption doSMS error `,
+            error
+          )
+        }
+      }
+    }, (chainId: number, timeout: number) => {
+      const config = checkHealthByChain[chainId] || {
+        smsInterval: 1000 * 30,
+        lastSendSMSTime: 0
+      };
+      if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
+        config.lastSendSMSTime = Date.now();
+        doSms(`Warning:${chainId} Chain has not been processed for more than ${(timeout / 1000).toFixed(0)} seconds`);
+      }
+      checkHealthByChain[chainId] = config;
+    });
   }
   public async checkHealth(cb1: any, cb2: any) {
     await sleep(1000 * 30);
-    setInterval(() => {
+    await Core.memoryCache.set(lastConsumeTimeKey, Date.now());
+    setInterval(async () => {
       try {
+        const lastConsumeTime = Number(await Core.memoryCache.get(lastConsumeTimeKey));
         Object.keys(this.queues).forEach((chainId) => {
           const request = this.queues[chainId];
           if (request.datas.length > 0) {
@@ -35,8 +73,8 @@ export class SendQueue {
             }
           }
         })
-        if (Date.now() - SendQueue.LastConsumeTime > 1000 * 60 * 2) {
-          return cb1(Date.now() - SendQueue.LastConsumeTime);
+        if (Date.now() - lastConsumeTime > 1000 * 60 * 2) {
+          return cb1(lastConsumeTime, Date.now() - lastConsumeTime);
         }
       } catch (error) {
         accessLogger.error('SendQueue checkHealth error', error);
@@ -58,7 +96,7 @@ export class SendQueue {
           }
           const promise = async () => {
             try {
-              SendQueue.LastConsumeTime = Date.now();
+              await Core.memoryCache.set(lastConsumeTimeKey, Date.now());
               let result: any = undefined
               if (item.consumer) {
                 result = await item.consumer(itemData.value)
@@ -66,6 +104,8 @@ export class SendQueue {
               itemData.callback && itemData.callback(undefined, result)
             } catch (error) {
               itemData.callback && itemData.callback(error, undefined)
+            } finally {
+              await Core.memoryCache.set(lastConsumeTimeKey, Date.now());
             }
           }
           ps.push(promise())
