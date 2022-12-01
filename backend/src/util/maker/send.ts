@@ -28,10 +28,20 @@ import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
+import { doSms } from '../../sms/smsSchinese'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
-
+const checkHealthByChain: {
+  [key: string]: {
+    smsInterval: number,
+    lastSendSMSTime: number
+  }
+} = {};
+const checkHealthAllChain = {
+  smsInterval: 1000 * 30,
+  lastSendSMSTime: 0
+};
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
@@ -104,6 +114,30 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 }
 // SendQueue
 const sendQueue = new SendQueue()
+sendQueue.checkHealth((timeout) => {
+  if (Date.now() - checkHealthAllChain.lastSendSMSTime >= checkHealthAllChain.smsInterval) {
+    checkHealthAllChain.lastSendSMSTime = Date.now();
+    try {
+      doSms(`Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`)
+    } catch (error) {
+      errorLogger.error(
+        `Warning:From last consumption doSMS error `,
+        error
+      )
+    }
+  }
+}, (chainId: number, timeout: number) => {
+  const config = checkHealthByChain[chainId] || {
+    smsInterval: 1000 * 30,
+    lastSendSMSTime: 0
+  };
+  if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
+    config.lastSendSMSTime = Date.now();
+    doSms(`Warning:${chainId} Chain has not been processed for more than ${(timeout / 1000).toFixed(0)} seconds`);
+  }
+  checkHealthByChain[chainId] = config;
+});
+
 async function sendConsumer(value: any) {
   let {
     makerAddress,
