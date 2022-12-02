@@ -16,11 +16,9 @@ import { sleep } from '..'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
-import { MakerZkHash } from '../../model/maker_zk_hash'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { Core } from '../core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
-import * as orbiterCore from './core'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
@@ -31,9 +29,6 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
 
-const zkTokenInfo: any[] = []
-let zksTokenInfo: any[] = []
-let lpTokenInfo: any[] = []
 let accountInfo: AccountInfo
 let lpKey: string
 
@@ -42,9 +37,6 @@ const repositoryMakerNode = (): Repository<MakerNode> => {
 }
 const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
   return Core.db.getRepository(MakerNodeTodo)
-}
-const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
-  return Core.db.getRepository(MakerZkHash)
 }
 
 export async function getMakerList() {
@@ -494,18 +486,6 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
   }
 }
 
-function getZKTokenInfo(tokenAddress) {
-  if (!zkTokenInfo.length) {
-    return null
-  } else {
-    for (let index = 0; index < zkTokenInfo.length; index++) {
-      const tokenInfo = zkTokenInfo[index]
-      if (tokenInfo.address === tokenAddress) {
-        return tokenInfo
-      }
-    }
-  }
-}
 function getTime() {
   const time = dayjs().format('YYYY-MM-DD HH:mm:ss')
   return time
@@ -541,6 +521,7 @@ export async function sendTransaction(
   result_nonce = 0,
   ownerAddress = ''
 ) {
+  const accessLogger = getLoggerService(toChainID);
   const amountToSend = getAmountToSend(
     fromChainID,
     toChainID,
@@ -610,6 +591,7 @@ export async function sendTransaction(
     ownerAddress
   )
     .then(async (response) => {
+      const accessLogger = getLoggerService(toChainID);
       accessLogger.info('response =', response)
       if (!response.code) {
         var txID = response.txid

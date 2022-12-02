@@ -66,6 +66,8 @@ export class SendQueue {
               itemData.callback && itemData.callback(undefined, result)
             } catch (error) {
               itemData.callback && itemData.callback(error, undefined)
+            } finally {
+              SendQueue.LastConsumeTime = Date.now();
             }
           }
           ps.push(promise())
