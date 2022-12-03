@@ -1244,14 +1244,14 @@ async function sendConsumer(value: any) {
       if (config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }
-      const httpsProvider = new ethers.providers.JsonRpcProvider(config.rpc[0])
+      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net)
       // let feeData = await httpsProvider.getFeeData();
       // if (feeData) {
       delete details['gasPrice']
       delete details['gas']
       let maxPriorityFeePerGas = 1000000000
       try {
-        if (config.rpc.length > 0 && config.rpc[0].includes('alchemyapi')) {
+        if (config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
           const alchemyMaxPriorityFeePerGas = await httpsProvider.send(
             'eth_maxPriorityFeePerGas',
             []
