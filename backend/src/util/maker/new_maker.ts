@@ -240,6 +240,13 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
+      if  ('5,22,66,77,515'.split(',').includes(String(toChainInternalId))) {
+        accessLogger.error(
+          `[${transactionID}] use new xvm transfer:` +
+          JSON.stringify(tx)
+        )
+        continue
+      }
       const newMakerList = await getNewMarketList()
       const marketItem = newMakerList.find(
         (m) =>
