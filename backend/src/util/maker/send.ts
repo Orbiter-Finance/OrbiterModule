@@ -1224,7 +1224,7 @@ async function sendConsumer(value: any) {
     try {
       // eip 1559 send
       const config = chains.getChainByInternalId(chainID);
-      if (config.rpc.length <= 0) {
+      if (!config || config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }
       const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net);
