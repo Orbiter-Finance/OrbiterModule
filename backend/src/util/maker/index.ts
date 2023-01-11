@@ -545,7 +545,8 @@ export async function sendTransaction(
   // )
   const toChainConfig: IChainConfig = chains.getChainByInternalId(
     String(toChainID)
-  )
+  ) || {} as any
+  
   if (!toChainConfig || !toChainConfig.tokens) {
     accessLogger.error(
       `[${transactionID}] The public chain configuration for the payment does not exist, toChainId ${toChainID} `

@@ -231,6 +231,9 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       const toChainInternalId = Number(result.pText) - 9000
       const toChain = chains.getChainByInternalId(String(toChainInternalId))
+      if (!toChain) {
+        throw new Error('chain config not found');
+      }
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
       )
