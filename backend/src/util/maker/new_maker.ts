@@ -15,6 +15,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs';
+import maker from '../../config/maker';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -149,8 +150,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const fromChain = await chains.getChainByChainId(tx.chainId)
-       // check send
-       if (!fromChain) {
+      // check send
+      if (!fromChain) {
         errorLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
           tx.hash
@@ -165,7 +166,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-     
+
       const startTimeTimeStamp = LastPullTxMap.get(
         `${fromChain.internalId}:${tx.to.toLowerCase()}`
       )
@@ -178,7 +179,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       let ext = '';
       if ([8, 88].includes(Number(fromChain.internalId))) {
         ext = dayjs(tx.timestamp).unix().toString();
-      }else if ([4, 44].includes(Number(fromChain.internalId))) {
+      } else if ([4, 44].includes(Number(fromChain.internalId))) {
         ext = String(Number(tx.extra['version']));
       }
       const transactionID = TransactionIDV2(
@@ -240,7 +241,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      if  ('5,22,66,77,515'.split(',').includes(String(toChainInternalId))) {
+      if (maker.prohibitPaymentChain.split(',').includes(String(toChainInternalId))) {
         accessLogger.error(
           `[${transactionID}] use new xvm transfer:` +
           JSON.stringify(tx)
