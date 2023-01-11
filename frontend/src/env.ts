@@ -22,7 +22,8 @@ export const $env = {
     15: 'https://bsc-dataseed1.binance.org',
     517: 'https://public.zkevm-test.net:2083',
     518: 'https://prealpha.scroll.io/l1',
-    519: 'https://prealpha.scroll.io/l2'
+    519: 'https://prealpha.scroll.io/l2',
+    520: 'https://l2rpc.a1.taiko.xyz'
   },
   localWSProvider: {
     1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
@@ -31,10 +32,11 @@ export const $env = {
     22: 'https://goerli-rollup.arbitrum.io/rpc/',
     6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
     66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
+    520: 'https://l2rpc.a1.taiko.xyz',
   },
   supportLocalNetWorksIDs: [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15, 515, 15,
-    515, 16, 516, 517, 518, 519
+    515, 16, 516, 517, 518, 519, 520
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -66,7 +68,8 @@ export const $env = {
     516: '421613',
     517: '1402',
     518: '534351',
-    519: '534354'
+    519: '534354',
+    520: '167003',
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -100,7 +103,8 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/tx/',
     517: 'https://public.zkevm-test.net:8443/tx/',
     518: 'https://l1scan.scroll.io/tx/',
-    519: 'https://l2scan.scroll.io/tx/'
+    519: 'https://l2scan.scroll.io/tx/',
+    520: 'https://l2explorer.a1.taiko.xyz/tx/',
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -134,7 +138,8 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/address/',
     517: 'https://public.zkevm-test.net:8443/address/',
     518: 'https://l1scan.scroll.io/address/',
-    519: 'https://l2scan.scroll.io/address/'
+    519: 'https://l2scan.scroll.io/address/',
+    520: 'https://l2explorer.a1.taiko.xyz/address/',
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -164,6 +169,7 @@ export const $env = {
     516: 'https://goerli-rollup-explorer.arbitrum.io/token/',
     517: 'https://public.zkevm-test.net:8443/token/',
     518: 'https://l1scan.scroll.io/token/',
-    519: 'https://l2scan.scroll.io/token/'
+    519: 'https://l2scan.scroll.io/token/',
+    520: 'https://l2explorer.a1.taiko.xyz/token/',
   },
 }

@@ -15,6 +15,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs';
+import maker from '../../config/maker';
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -149,8 +150,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const fromChain = await chains.getChainByChainId(tx.chainId)
-       // check send
-       if (!fromChain) {
+      // check send
+      if (!fromChain) {
         errorLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
           tx.hash
@@ -165,7 +166,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-     
+
       const startTimeTimeStamp = LastPullTxMap.get(
         `${fromChain.internalId}:${tx.to.toLowerCase()}`
       )
@@ -178,7 +179,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       let ext = '';
       if ([8, 88].includes(Number(fromChain.internalId))) {
         ext = dayjs(tx.timestamp).unix().toString();
-      }else if ([4, 44].includes(Number(fromChain.internalId))) {
+      } else if ([4, 44].includes(Number(fromChain.internalId))) {
         ext = String(Number(tx.extra['version']));
       }
       const transactionID = TransactionIDV2(
@@ -230,12 +231,22 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       const toChainInternalId = Number(result.pText) - 9000
       const toChain = chains.getChainByInternalId(String(toChainInternalId))
+      if (!toChain) {
+        throw new Error('chain config not found');
+      }
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
       )
       if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
           `[${transactionID}] Refund The query currency information does not exist: ` +
+          JSON.stringify(tx)
+        )
+        continue
+      }
+      if (maker.prohibitPaymentChain.split(',').includes(String(toChainInternalId))) {
+        accessLogger.error(
+          `[${transactionID}] use new xvm transfer:` +
           JSON.stringify(tx)
         )
         continue
