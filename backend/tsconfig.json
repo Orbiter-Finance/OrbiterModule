@@ -8,7 +8,7 @@
     "strictNullChecks": false,
     "strictFunctionTypes": false,
     "noImplicitThis": false,
-    "noImplicitReturns": true,
+    "noImplicitReturns": false,
     "moduleResolution": "node",
     "noUnusedLocals": false,
     "noUnusedParameters": false,
