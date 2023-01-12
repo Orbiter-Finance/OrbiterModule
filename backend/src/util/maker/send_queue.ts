@@ -30,7 +30,7 @@ export class SendQueue {
           if (request.datas.length > 0) {
             const lastMsg = request.datas[request.datas.length - 1]
             const lastMsgTimestamp = Number(lastMsg.timestamp || 0)
-            if (lastMsg && Date.now() - lastMsgTimestamp > 1000 * 60 * 2) {
+            if (lastMsg && Date.now() - lastMsgTimestamp > 1000 * 60 * 5) {
               return cb2(chainId, Date.now() - lastMsgTimestamp)
             }
           }

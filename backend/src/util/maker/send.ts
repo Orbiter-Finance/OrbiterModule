@@ -39,7 +39,7 @@ const checkHealthByChain: {
   }
 } = {};
 const checkHealthAllChain = {
-  smsInterval: 1000 * 30,
+  smsInterval: 1000 * 60 * 5,
   lastSendSMSTime: 0
 };
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
@@ -128,7 +128,7 @@ sendQueue.checkHealth((timeout) => {
   }
 }, (chainId: number, timeout: number) => {
   const config = checkHealthByChain[chainId] || {
-    smsInterval: 1000 * 30,
+    smsInterval: 1000 * 60 * 5,
     lastSendSMSTime: 0
   };
   if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
