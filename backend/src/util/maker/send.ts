@@ -993,6 +993,7 @@ async function sendConsumer(value: any) {
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
     accessLogger.info(`read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`);
+    accessLogger.info('read nonceDic', JSON.stringify(nonceDic));
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
