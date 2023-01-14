@@ -153,6 +153,7 @@ async function sendConsumer(value: any) {
     ownerAddress,
   } = value
   const accessLogger = getLoggerService(chainID);
+  accessLogger.info(`sendConsumer [${process.pid}] =`, JSON.stringify(value));
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -991,6 +992,7 @@ async function sendConsumer(value: any) {
      * you need to increase a nonce which is tied to the sender wallet.
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
+    accessLogger.info(`read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`);
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -1005,7 +1007,6 @@ async function sendConsumer(value: any) {
       nonceDic[makerAddress] = {}
     }
     nonceDic[makerAddress][chainID] = result_nonce
-
     accessLogger.info('nonce =', nonce)
     accessLogger.info('sql_nonce =', sql_nonce)
     accessLogger.info('result_nonde =', result_nonce)
@@ -1282,6 +1283,7 @@ async function sendConsumer(value: any) {
     transaction = new EthereumTx(details, { chain: toChain })
   }
 
+
   /**
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
@@ -1289,7 +1291,7 @@ async function sendConsumer(value: any) {
   transaction.sign(
     Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
   )
-
+  accessLogger.info('send transaction =', JSON.stringify(details));
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
@@ -1303,6 +1305,7 @@ async function sendConsumer(value: any) {
   /**
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
+
   return new Promise((resolve) => {
     web3.eth
       .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
@@ -1311,6 +1314,8 @@ async function sendConsumer(value: any) {
           code: 0,
           txid: hash,
         })
+      }).on("receipt", (tx: any) => {
+        accessLogger.info('send transaction receipt=', JSON.stringify(tx));
       })
       .on('error', (err) => {
         nonceDic[makerAddress][chainID] = result_nonce - 1
