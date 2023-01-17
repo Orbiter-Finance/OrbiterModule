@@ -592,7 +592,7 @@ export async function sendTransaction(
   )
     .then(async (response) => {
       const accessLogger = getLoggerService(toChainID);
-      accessLogger.info('response =', JSON.stringify(response))
+      accessLogger.info('response =', response);
       if (!response.code) {
         var txID = response.txid
         accessLogger.info(
