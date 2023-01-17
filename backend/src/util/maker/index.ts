@@ -562,7 +562,7 @@ export async function sendTransaction(
     return
   }
   accessLogger.info(
-    `${transactionID} Exec Send Transfer`,
+    `${transactionID} [${process.pid}]  Exec Send Transfer`,
     JSON.stringify({
       makerAddress,
       toAddress,
@@ -592,7 +592,7 @@ export async function sendTransaction(
   )
     .then(async (response) => {
       const accessLogger = getLoggerService(toChainID);
-      accessLogger.info('response =', response)
+      accessLogger.info('response =', JSON.stringify(response))
       if (!response.code) {
         var txID = response.txid
         accessLogger.info(
