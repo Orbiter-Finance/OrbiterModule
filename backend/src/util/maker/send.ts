@@ -1226,7 +1226,7 @@ async function sendConsumer(value: any) {
     try {
       // eip 1559 send
       const config = chains.getChainByInternalId(chainID);
-      if (config.rpc.length <= 0) {
+      if (config && config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }
       const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net);
@@ -1236,7 +1236,7 @@ async function sendConsumer(value: any) {
       delete details['gas'];
       let maxPriorityFeePerGas = 1000000000;
       try {
-        if (config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
+        if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
           const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
           if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
             maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas;
@@ -1318,11 +1318,12 @@ async function sendConsumer(value: any) {
       }).on("receipt", (tx: any) => {
         accessLogger.info('send transaction receipt=', JSON.stringify(tx));
       })
-      .on('error', (err) => {
-        nonceDic[makerAddress][chainID] = result_nonce - 1
+      .on('error', (err: any) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1;
         resolve({
           code: 1,
           txid: err,
+          error: err,
           result_nonce,
         })
       })

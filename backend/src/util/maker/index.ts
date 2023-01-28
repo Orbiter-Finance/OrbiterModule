@@ -119,9 +119,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.WalletLink,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -167,10 +167,10 @@ function confirmToTransaction(
     }
     accessLogger.info(
       `[${transactionID}] Transaction with hash ` +
-        txHash +
-        ' has ' +
-        trxConfirmations.confirmations +
-        ' confirmation(s)'
+      txHash +
+      ' has ' +
+      trxConfirmations.confirmations +
+      ' confirmation(s)'
     )
 
     if (trxConfirmations.confirmations >= confirmations) {
@@ -196,8 +196,8 @@ function confirmToTransaction(
 
       accessLogger.info(
         `[${transactionID}] Transaction with hash ` +
-          txHash +
-          ' has been successfully confirmed'
+        txHash +
+        ' has been successfully confirmed'
       )
       return
     }
@@ -292,8 +292,8 @@ function confirmToLPTransaction(
           accessLogger.info({ lpTransaction })
           accessLogger.info(
             'lp_Transaction with hash ' +
-              txID +
-              ' has been successfully confirmed'
+            txID +
+            ' has been successfully confirmed'
           )
           try {
             await repositoryMakerNode().update(
@@ -519,7 +519,8 @@ export async function sendTransaction(
   pool,
   nonce,
   result_nonce = 0,
-  ownerAddress = ''
+  ownerAddress = '',
+  retryCount = 0
 ) {
   const accessLogger = getLoggerService(toChainID);
   const amountToSend = getAmountToSend(
@@ -540,10 +541,11 @@ export async function sendTransaction(
   accessLogger.info('transactionID =', transactionID)
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
+  accessLogger.info('retryCount =', retryCount)
   // accessLogger.info(
   // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   // )
-  const toChainConfig: IChainConfig = chains.getChainByInternalId(
+  const toChainConfig: any = chains.getChainByInternalId(
     String(toChainID)
   )
   if (!toChainConfig || !toChainConfig.tokens) {
@@ -574,6 +576,7 @@ export async function sendTransaction(
       result_nonce,
       nonce,
       tokenInfo,
+      retryCount
     })
   )
   await send(
@@ -582,7 +585,6 @@ export async function sendTransaction(
     toChain,
     toChainID,
     tokenInfo,
-    // getTokenInfo(toChainID, tokenAddress),
     tokenAddress,
     tAmount,
     result_nonce,
@@ -704,6 +706,39 @@ export async function sendTransaction(
             error
           )
         }
+        // if op Optimism sequencer global transaction limit exceeded Retry logic
+        try {
+          const error = response.error;
+          if (toChainID === 7 && error) {
+            accessLogger.info('OP send transaction error  = ', error);
+            accessLogger.info(`code:${error.code}`);
+            accessLogger.info(`message:${error.message}`);
+            if (error.message === 'Optimism sequencer global transaction limit exceeded' && error.code == 429) {
+              await sleep(1000 * 5);
+              accessLogger.info(`Re-join the queue to retry payment collection:${transactionID}`);
+              retryCount++;
+              // Rejoin the collection list
+              // sendTransaction(
+              //   makerAddress,
+              //   transactionID,
+              //   fromChainID,
+              //   toChainID,
+              //   toChain,
+              //   tokenAddress,
+              //   amountStr,
+              //   toAddress,
+              //   pool,
+              //   nonce,
+              //   result_nonce,
+              //   ownerAddress,
+              //   retryCount
+              // );
+            }
+          }
+        } catch (error) {
+          errorLogger.error(`[${transactionID}] Retry payment collection exception`, error)
+        }
+
       }
     })
     .catch((error) => {

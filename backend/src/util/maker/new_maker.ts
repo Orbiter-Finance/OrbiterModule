@@ -229,7 +229,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000
-      const toChain = chains.getChainByInternalId(String(toChainInternalId))
+      const toChain:any = chains.getChainByInternalId(String(toChainInternalId))
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
       )
