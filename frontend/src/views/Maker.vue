@@ -13,11 +13,11 @@
             shadow="hover"
           >
             <el-tabs class="maker-header--balances__names">
+              <template  v-for="(item1, index1) in item.balances">
+
               <el-tab-pane
-                v-for="(item1, index1) in item.balances"
-                :key="index1"
+              :key="index1" v-if="item1 && item1.tokenName"
                 :label="item1.tokenName"
-                :name="index1 + ''"
               >
                 <div
                   v-if="item1.tokenAddress"
@@ -39,6 +39,8 @@
                   </span>
                 </div>
               </el-tab-pane>
+            </template>
+
             </el-tabs>
           </el-card>
         </el-col>
@@ -828,7 +830,11 @@ watch(() => makerAddressSelected?.value, init)
   .el-card__header {
     font-size: 18px;
     font-weight: bold;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
     color: #555555;
+
   }
 
   & > * {
