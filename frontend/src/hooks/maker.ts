@@ -112,18 +112,37 @@ function transforeData(list: any = []) {
       }
     */
 
-    item.state = 20
+    item.state = 20;
     if (item.fromStatus == 0) {
-      item.state = 0
-    } else if (item.fromStatus == 1 || item.fromStatus == 99) {
-      item.state = 1
-    }
-    if (item.status == 0) {
-      if (item.fromStatus == 1 || item.fromStatus == 99) item.state = 2
-    } else if (item.status == 1 || item.status == 99) {
-      item.state = 3
+      // from check
+      item.state = 0;
+    } else if (item.fromStatus == 1 || item.fromStatus == 97) {
+      // from ok
+      item.state = 1;
+    } else if (item.fromStatus == 3) {
+      // from fail
+      item.state = 2;
+    } else if (item.fromStatus == 99) {
+      // to waiting
+      item.state = 3;
     }
 
+
+    if (item.status == 0) {
+      // to check
+      if (item.fromStatus == 1 || item.fromStatus == 97 || item.fromStatus == 99) item.state = 4;
+      // to time out
+      if (new Date(item.toTimeStamp).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
+        item.state = 5;
+      }
+    } else if (item.status == 1 || item.status == 97 || item.status == 99) {
+      // to ok
+      item.state = 6;
+    }
+    if (item.status == 95) {
+      // backtrack
+      item.state = 7;
+    }
   }
 }
 async function getMakerNode(params: any = {}) {

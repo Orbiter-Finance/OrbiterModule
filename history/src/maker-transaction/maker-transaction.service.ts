@@ -4,6 +4,10 @@ import { PaginationResRO, PaginationReqRO } from '../shared/interfaces';
 import { equalsIgnoreCase, logger, formateTimestamp } from '../shared/utils';
 import { transforeData } from '../shared/utils';
 
+const L1L2Mapping = {
+  "0x0043d60e87c5dd08C86C3123340705a1556C4719": "0x050e5ba067562e87b47d87542159e16a627e85b00de331a53b471cee1a4e5a4f"
+};
+
 @Injectable()
 export class MakerTransactionService {
   constructor(
@@ -25,7 +29,10 @@ export class MakerTransactionService {
 
     let more = ``;
     if (query.makerAddress) {
-      more += `and (m.replySender = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
+      const starknetMakerAddress = L1L2Mapping[query.makerAddress];
+      more += `and ((m.replySender = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
+      if(starknetMakerAddress)
+      more += `or (m.replySender = '${starknetMakerAddress}' or t.to = '${starknetMakerAddress}' or t2.from = '${starknetMakerAddress}')) `
     }
     if (query.startTime) {
       more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
@@ -57,6 +64,9 @@ export class MakerTransactionService {
           more += `and t2.status = 2 `
         }
       }
+    }
+    if(query.source){
+      more += `and t.source = ${query.source} `;
     }
     if (query.keyword) {
       more += `
@@ -91,7 +101,7 @@ export class MakerTransactionService {
         m.replySender as makerAddress, m.replyAccount as userAddress, m.inId, m.outId, t.gasPrice, t.gas,
         t.nonce as formNonce, t.tokenAddress as fromTokenAddress, t.tokenAddress as txToken, t2.tokenAddress as toTokenAddress, t.hash as fromTx, t2.hash as toTx, t.nonce as fromNonce, t2.nonce as toNonce, 
         t.value as fromValue, t2.value as toValue, t.timestamp as fromTimeStamp, t2.timestamp as toTimeStamp, t2.fee as gasAmount, t2.feeToken as gasCurrency,
-        t.symbol as tokenName, t2.status as status, t.status as fromStatus 
+        t.symbol as tokenName, t2.status as status, t.status as fromStatus, t.source as source, t.tradeId as tradeId 
       ${commsql} order by t.timestamp DESC LIMIT ${limit} OFFSET ${offset}
     `
 

@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerListHistory, makerList } from '../configs'
+import { makerListHistory, makerList, makerConfigs } from '../configs';
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 const keyv = new Keyv();
@@ -313,72 +313,10 @@ export async function transforeData(list = []) {
         needTo.tokenAddress = market.t1Address;
       }
     }
-   
-    // old:
-    // if (item.state == 1 || item.state == 20) {
-    // new:
-    // compare two transaction to computed the old state & FE's showed state
-    /*
-      0: { label: 'From: check', type: 'info' },
-      1: { label: 'From: okay', type: 'warning' },
-      2: { label: 'To: check', type: 'info' },
-      3: { label: 'To: okay', type: 'success' },
-      20: { label: 'To: failed', type: 'danger' },
-    */
-    let state = 20
-    if (item.fromStatus == 0) {
-      state = 0
-    } else if (item.fromStatus == 1) {
-      state = 1
-    }
-    if (item.status == 0) {
-      if (item.fromStatus == 1) state = 2
-    } else if (item.status == 1) {
-      state = 3
-    }
-    if (state == 1 || state == 20) {
-
-      // const _fromChain = Number(item.fromChain)
-      // needTo.chainId = Number(
-      //   getAmountFlag(_fromChain, item.fromAmount)
-      // )
-
-      // find pool
-      // const pool = await getTargetMakerPool(
-      //   item.makerAddress,
-      //   item.txToken,
-      //   _fromChain,
-      //   needTo.chainId
-      // )
-
-      // // if not find pool, don't do it
-      // if (pool) {
-      //   needTo.tokenAddress =
-      //     needTo.chainId == pool.c1ID ? pool.t1Address : pool.t2Address
-
-      //   needTo.amount =
-      //     Number(getAmountToSend(
-      //       _fromChain,
-      //       needTo.chainId,
-      //       item.fromAmount,
-      //       pool,
-      //       item.formNonce
-      //     )?.tAmount || 0)
-      //   needTo.decimals = pool.precision
-      //   needTo.amountFormat = new BigNumber(needTo.amount)
-      //     .dividedBy(10 ** pool.precision)
-      //     .toString()
-      // }
-    }
     item['needTo'] = needTo
 
     // Parse to dydx txExt
     if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
-      // const dydxHelper = new DydxHelper(Number(item.toChain))
-      // item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
-      //   item.fromExt.value
-      // )
-      const chainId = Number(item.toChain)
       const data = item.fromExt.value
       const starkKey = utils.hexDataSlice(data, 0, 32)
       const positionId = parseInt(utils.hexDataSlice(data, 32), 16)

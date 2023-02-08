@@ -4,5 +4,5 @@ import '../element-variables.scss'
 import { App } from '@vue/runtime-core'
 
 export default (app: App) => {
-  app.use(ElementPlus) //, { locale }
+  app.use(ElementPlus, {} as any) //, { locale }
 }
