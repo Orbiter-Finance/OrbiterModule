@@ -2,6 +2,5 @@
 FROM node:14-alpine
 
 WORKDIR /app
-COPY package.json ./
-RUN npm install
 COPY . .
+RUN yarn install --network-timeout 600000 && yarn run build && rm -fr src
