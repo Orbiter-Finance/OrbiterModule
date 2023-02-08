@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerListHistory, makerList, makerConfigs } from '../configs';
+import { makerListHistory, makerList } from '../configs';
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 const keyv = new Keyv();
