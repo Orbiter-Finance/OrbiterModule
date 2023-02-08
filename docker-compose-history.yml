@@ -3,7 +3,7 @@ version: '3.8'
 services:
   api-history:
     build: ./history
-    command: yarn run start:prod
+    command: npm run start:prod
     environment:
       NODE_ENV: 'production' # production development
       DB_HOST2: '${DB_HOST2}'
