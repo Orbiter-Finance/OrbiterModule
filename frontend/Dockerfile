@@ -1,7 +1,7 @@
 FROM node:14
 COPY ./ /app
 WORKDIR /app
-COPY package.json yarn-lock.json ./
+COPY package.json ./
 RUN yarn
 COPY . .
 RUN npm run build
