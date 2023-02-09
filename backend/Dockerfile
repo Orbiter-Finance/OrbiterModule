@@ -5,9 +5,7 @@ FROM node:14-alpine
 RUN apk add g++ make python3
 
 WORKDIR /app
+COPY . .
 RUN apk update && apk add git
 
-COPY package.json ./
-RUN yarn install --network-timeout 600000
-COPY . .
-RUN yarn run build
+RUN yarn install --network-timeout 600000 && yarn run build
