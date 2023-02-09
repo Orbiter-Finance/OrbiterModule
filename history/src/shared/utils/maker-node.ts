@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerListHistory, makerList } from '../configs';
+import { makerListHistory, makerList, makerConfigs, IMarket } from '../configs';
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 const keyv = new Keyv();
@@ -245,7 +245,6 @@ async function getChainName(chainId: string) {
 }
 export async function transforeData(list = []) {
   // fill data
-  const makerList = await getAllMakerList();
   for (const item of list) {
     // format tokenName and amounts
     const decimals = token2Decimals[item.tokenName]
@@ -293,27 +292,33 @@ export async function transforeData(list = []) {
       item['tradeDuration'] = dayjsTo.unix() - dayjsFrom.unix()
     }
 
-    let needTo = {
-      chainId: item['toChain'],
-      amount: item['toAmount'],
-      decimals: 0,
-      amountFormat: item['toAmountFormat'],
-      tokenAddress: '',
+    let market: IMarket;
+    try {
+      market = makerConfigs.find(cfg =>
+          cfg.fromChain.id == item['fromChain'] &&
+          cfg.fromChain.symbol == item['tokenName'] &&
+          cfg.toChain.id == item['toChain'] &&
+          cfg.toChain.symbol == (JSON.parse(item.extra)).toSymbol);
+    } catch (e) {
+      console.log(e);
     }
-    const market = makerList.find(row => {
-      return (row.c1ID == item['fromChain'] && row.c2ID == item['toChain'] && row['tName'] == item['tokenName'])
-        || (row.c1ID == item['toChain'] && row.c2ID == item['fromChain'] && row['tName'] == item['tokenName'])
-    });
+
     if (market) {
-      if (market.c1ID == item['fromChain']) {
-        needTo.decimals = market.precision;
-        needTo.tokenAddress = market.t2Address;
-      } else if (market.c2ID == item['fromChain']) {
-        needTo.decimals = market.precision;
-        needTo.tokenAddress = market.t1Address;
-      }
+      item.needTo = {
+        chainId: market.toChain.id,
+        decimals: market.toChain.decimals,
+        tokenAddress: market.toChain.tokenAddress,
+        amount: item.toAmount,
+        amountFormat: item['toAmountFormat'],
+      };
+
+      item.needBack = {
+        chainId: market.fromChain.id,
+        decimals: market.fromChain.decimals,
+        tokenAddress: market.fromChain.tokenAddress,
+        amount: item.fromValue,
+      };
     }
-    item['needTo'] = needTo
 
     // Parse to dydx txExt
     if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {

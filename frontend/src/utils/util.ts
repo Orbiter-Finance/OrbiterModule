@@ -581,6 +581,26 @@ export default {
     const chainInfo = this.getChainInfoByChainId(fromChainId);
     return chainInfo?.xvmList && chainInfo.xvmList.length;
   },
+  isEthTokenAddress(chainId, tokenAddress) {
+    const chainInfo = this.getChainInfoByChainId(chainId);
+    if (chainInfo) {
+      // main coin
+      if (this.equalsIgnoreCase(chainInfo.nativeCurrency?.address, tokenAddress)) {
+        return true;
+      }
+      // ERC20
+      if (chainInfo.tokens.find(item => this.equalsIgnoreCase(item.address, tokenAddress))) {
+        return false;
+      }
+    }
+    return /^0x0+$/i.test(tokenAddress);
+  },
+  equalsIgnoreCase(value1: string, value2: string): boolean {
+    if (typeof value1 !== 'string' || typeof value2 !== 'string') {
+      return false;
+    }
+    return value1.toUpperCase() == value2.toUpperCase();
+  },
   chainName(chainId) {
     return this.getChainInfoByChainId(chainId)?.name || 'unknown';
   },

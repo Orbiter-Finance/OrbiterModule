@@ -127,4 +127,48 @@ const XVM_ABI = [
         "type": "function"
     }, { "stateMutability": "payable", "type": "receive" }];
 
-export { XVM_ABI };
+const STARK_NET_ABI = [
+        {
+            "members": [
+                {
+                    "name": "low",
+                    "offset": 0,
+                    "type": "felt"
+                },
+                {
+                    "name": "high",
+                    "offset": 1,
+                    "type": "felt"
+                }
+            ],
+            "name": "Uint256",
+            "size": 2,
+            "type": "struct"
+        },
+        {
+            "inputs": [
+                {
+                    "name": "_token",
+                    "type": "felt"
+                },
+                {
+                    "name": "_to",
+                    "type": "felt"
+                },
+                {
+                    "name": "_amount",
+                    "type": "Uint256"
+                },
+                {
+                    "name": "_ext",
+                    "type": "felt"
+                }
+            ],
+            "name": "transferERC20",
+            "outputs": [],
+            "type": "function"
+        }
+    ]
+;
+
+export { XVM_ABI, STARK_NET_ABI };

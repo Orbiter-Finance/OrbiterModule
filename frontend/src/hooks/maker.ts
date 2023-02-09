@@ -40,7 +40,10 @@ export type MakerNode = {
   toChainName: string
   formTx: string
   fromTxHref: string
+  fromValue: string
   fromAmountFormat: string
+  tokenName:string
+  decimals:number
   fromExt: {
     type: string
     value: string
@@ -60,6 +63,7 @@ export type MakerNode = {
   state: number
   txTokenName: string
   needTo: any
+  needBack: any
   profitUSD: string
 }
 function transforeDate(params: any = {}) {

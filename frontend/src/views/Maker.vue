@@ -388,6 +388,14 @@
                 @click="onClickStateTag(row)"
                 >{{ stateTags[row.state]?.label }}</el-tag
               >
+              <div v-if="selectShow && row.state !== 6 && row.state !== 7 && row.needTo" style="margin-top: 5px">
+                <el-tag
+                        :class="row.state !== 6 && row.state !== 7 && row.needTo ? 'state-tag' : ''"
+                        style="background:#C959F7;border-color: #C959F7"
+                        effect="dark"
+                        @click="onClickBacktrack(row)"
+                >Back Track</el-tag>
+              </div>
             </template>
           </el-table-column>
         </el-table>
@@ -421,6 +429,7 @@ import {
   utils,
 } from 'orbiter-sdk'
 import { getStarknet, connect as getStarknetWallet } from 'orbiter-get-starknet';
+import { stark, uint256 } from 'orbiter-starknet';
 import { ref, computed, inject, reactive, toRef, watch } from 'vue'
 import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
@@ -728,33 +737,17 @@ const mappingChainName = (chainName: string) => {
   return chainName
 }
 
-const swapOkEncodeABI = (
-        tradeId: string,
-        token: string,
-        toAddress: string,
-        toValue: string,
-        op:number
-) => {
-  const ifa = new ethers.utils.Interface(XVM_ABI);
-  return ifa.encodeFunctionData('swapAnswer', [
-    tradeId,
-    toAddress,
-    token,
-    op,
-    toValue,
-  ]);
-};
 const transferNeedTo = async (
         fromAddress: string,
         toAddress: string,
         needTo: {
           chainId: number
-          amount: BigNumberish
+          amount: string | BigNumberish
           decimals: number
           tokenAddress: string
         },
         fromExt: any,
-        item
+        isBackTrack
 ) => {
   let ethereum = (window as any).ethereum;
   if (!ethereum) {
@@ -763,7 +756,8 @@ const transferNeedTo = async (
   let walletAccount = (
           await ethereum.request({ method: 'eth_requestAccounts' })
   )?.[0];
-  const isStarknet = needTo.chainId === 4 || needTo.chainId === 44;
+  const fromChainId:number = needTo.chainId;
+  const isStarknet = fromChainId === 4 || fromChainId === 44;
 
   if (!isStarknet && !utils.equalsIgnoreCase(walletAccount, fromAddress)) {
     selectShow.value = false;
@@ -772,42 +766,53 @@ const transferNeedTo = async (
     );
   }
 
-  const chainInfo = util.getChainInfoByChainId(needTo.chainId);
-  await switchNetwork(chainInfo.chainId);
+  const chainInfo = util.getChainInfoByChainId(fromChainId);
+  if (fromChainId === 3 || fromChainId === 4 || fromChainId === 8 || fromChainId === 9 || fromChainId === 11) {
+    await switchNetwork(1);
+  } else if (fromChainId === 33 || fromChainId === 44 || fromChainId === 88 || fromChainId === 99 || fromChainId === 511) {
+    await switchNetwork(5);
+  } else {
+    await switchNetwork(chainInfo.chainId);
+  }
+
   // // Ensure networkId
   // await utils.ensureMetamaskNetwork(chainInfo.chainId, ethereum)
 
-  if (util.isSupportXVMContract(item.toChain)) {
+  if (util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
       return;
     } else {
       if (selectDataList.length > 1) {
-        console.log('selectDataList',selectDataList);
         const mainTokenAddress = chainInfo.nativeCurrency.address;
         const encodeDataList = [];
         let totalMainValue = new BigNumber(0);
         for (const data of selectDataList) {
-          const tradeId = data.transferId;
+          const dt = isBackTrack ? data.needBack : data.needTo;
+          if (!dt) continue;
+          const tradeId = data.fromTx;
           const to = data.userAddress;
-          const token = data.needTo?.tokenAddress;
-          const op = 3;
-          const value: any = data.needTo?.amount;
+          const token = dt?.tokenAddress;
+          const op = isBackTrack ? 3 : 1;
+          const value: any = dt?.amount;
           encodeDataList.push(swapOkEncodeABI(tradeId, token, to, value, op));
-          if (utils.equalsIgnoreCase(mainTokenAddress, data.needTo?.tokenAddress)) {
-            totalMainValue.plus(new BigNumber(value));
+          if (utils.equalsIgnoreCase(mainTokenAddress, token)) {
+            totalMainValue = totalMainValue.plus(new BigNumber(value));
           }
         }
         const web3 = new Web3(ethereum);
         const contractInstance = new web3.eth.Contract(XVM_ABI, chainInfo.xvmList[0]);
-        const gasLimit = await contractInstance.methods.multicall(encodeDataList).estimateGas({
-          from: walletAccount,
-          gas: 5000000
+        const { transactionHash } = await contractInstance.methods.multicall(encodeDataList).send({
+          from: walletAccount, value: totalMainValue.toString()
         });
-        console.log('gasLimit', gasLimit);
-        return contractInstance.methods.multicall(encodeDataList).send({
-          from: walletAccount, gas: gasLimit
+        console.log(transactionHash);
+        ElNotification({
+          title: 'Transfer Succeed',
+          message:
+                  'The transfer was successful! Dashboard will update data list in 15 minutes!',
+          type: 'success',
         });
+        return;
       }
     }
   }
@@ -845,7 +850,7 @@ const transferNeedTo = async (
 
     case 4:
     case 44: {
-      console.warn('do starknet');
+      txHash = await starknetTransfer(walletAccount, toAddress, needTo.chainId, needTo.tokenAddress, needTo.amount);
       break;
     }
 
@@ -889,7 +894,6 @@ const transferNeedTo = async (
   }
 
   console.log(txHash);
-  item.state = 2;
 
   ElNotification({
     title: 'Transfer Succeed',
@@ -910,9 +914,8 @@ const onClickStateTag = async (item: MakerNode) => {
       item.userAddress,
       item.needTo,
       item.fromExt,
-            item
+            0
     )
-
   } catch (err) {
     ElNotification({
       title: 'Error',
@@ -921,6 +924,83 @@ const onClickStateTag = async (item: MakerNode) => {
     })
   }
 }
+const onClickBacktrack = async (item: MakerNode) => {
+  // try {
+  if (item.state == 95 || item.state == 99 || !item.needTo) {
+    return;
+  }
+
+  await transferNeedTo(
+          item.makerAddress,
+          item.userAddress,
+          item.needBack,
+          item.fromExt,
+          1
+  );
+
+  // } catch (err) {
+  //   ElNotification({
+  //     title: 'Error',
+  //     message: `Fail: ${err.message}`,
+  //     type: 'error',
+  //   })
+  // }
+}
+
+const starknetTransfer = async (fromAddress, toAddress, chainId, tokenAddress, amount) => {
+  amount = new BigNumber(amount);
+  fromAddress = fromAddress.toLowerCase();
+  toAddress = toAddress.toLowerCase();
+  tokenAddress = tokenAddress.toLowerCase();
+  const chanInfo = util.getChainInfoByChainId(chainId);
+  let networkID = chanInfo.chainId;
+  const network = networkID == 1 ? 'mainnet-alpha' : 'georli-alpha';
+  const STARKNET_CROSS_CONTRACT_ADDRESS = {
+    'mainnet-alpha':
+            '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
+    'georli-alpha':
+            '0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3',
+  };
+  const contractAddress = STARKNET_CROSS_CONTRACT_ADDRESS[network];
+
+  const getUint256CalldataFromBN = (bn) => {
+    return { type: 'struct', ...uint256.bnToUint256(bn) };
+  };
+  const isMainToken = util.isEthTokenAddress(chainId, tokenAddress);
+  const transaction = isMainToken ? {
+    contractAddress: tokenAddress,
+    entrypoint: 'transfer',
+    calldata: stark.compileCalldata({
+      recipient: toAddress,
+      amount: getUint256CalldataFromBN(String(amount)),
+    }),
+  } : {
+    contractAddress: contractAddress,
+    entrypoint: 'transferERC20',
+    calldata: stark.compileCalldata({
+      token: tokenAddress,
+      to: toAddress,
+      amount: getUint256CalldataFromBN(String(amount)),
+      ext: fromAddress
+    }),
+  };
+  const txhash: any = await getStarknet().account.execute(transaction);
+  if (txhash?.code == 'TRANSACTION_RECEIVED') {
+    return txhash.transaction_hash;
+  }
+  return 0;
+};
+const swapOkEncodeABI = (tradeId: string, token: string, toAddress: string, toValue: string, op:number) => {
+  const ifa = new ethers.utils.Interface(XVM_ABI);
+  return ifa.encodeFunctionData('swapAnswer', [
+    tradeId,
+    toAddress,
+    token,
+    op,
+    toValue,
+  ]);
+};
+
 const onClickPageButton = (next: boolean) => {
   const startTime: Date = state.rangeDate[0]
   const endTime: Date = state.rangeDate[1]
