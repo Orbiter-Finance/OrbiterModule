@@ -122,26 +122,24 @@ function transforeData(list: any = []) {
     } else if (item.fromStatus == 3) {
       // from fail
       item.state = 2;
-    } else if (item.fromStatus == 99) {
-      // to waiting
-      item.state = 3;
     }
 
 
     if (item.status == 0) {
-      // to check
-      if (item.fromStatus == 1 || item.fromStatus == 97 || item.fromStatus == 99) item.state = 4;
-      // to time out
-      if (new Date(item.toTimeStamp).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
-        item.state = 5;
-      }
-    } else if (item.status == 1 || item.status == 97 || item.status == 99) {
-      // to ok
-      item.state = 6;
-    }
-    if (item.status == 95) {
+      // to waiting
+      item.state = 3;
+    } else if (item.status == 95) {
       // backtrack
       item.state = 7;
+    } else if (item.status == 97) {
+      // to check
+      item.state = 4;
+    } else if (item.status == 98) {
+      // to time out
+      item.state = 5;
+    } else if (item.status == 99) {
+      // to ok
+      item.state = 6;
     }
   }
 }

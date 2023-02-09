@@ -165,7 +165,7 @@ async function getTokenBalance(
       case 518:
       case 519:
       case 520:
-        // const balanceService = 
+        // const balanceService =
         // value = await balanceService.getBalance(makerAddress, tokenAddress);
         if (!balanceService[String(chainId)]) {
           balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
@@ -291,10 +291,11 @@ export async function getWealthsChains(makerAddress: string) {
     if (item.makerAddress != makerAddress) {
       continue
     }
-    // find token 
+    // find token
     const chain1 = chains.getChainByInternalId(String(item.c1ID))
     if (!chain1) {
-      throw new Error('chain config not found')
+      console.error('chain config not found', item.c1ID);
+      continue;
     }
     const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
     pushToChainBalances(
@@ -305,7 +306,8 @@ export async function getWealthsChains(makerAddress: string) {
     )
     const chain2 = chains.getChainByInternalId(String(item.c2ID))
     if (!chain2) {
-      throw new Error('chain config not found')
+      console.error('chain config not found', item.c2ID);
+      continue;
     }
     const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
     pushToChainBalances(

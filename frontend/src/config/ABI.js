@@ -61,7 +61,11 @@ const XVM_ABI = [
         "stateMutability": "view",
         "type": "function"
     }, {
-        "inputs": [{ "internalType": "bytes[]", "name": "data", "type": "bytes[]" }],
+        "inputs": [{
+            "internalType": "bytes[]",
+            "name": "data",
+            "type": "bytes[]"
+        }],
         "name": "multicall",
         "outputs": [{ "internalType": "bytes[]", "name": "results", "type": "bytes[]" }],
         "stateMutability": "payable",

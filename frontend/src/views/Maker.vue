@@ -423,8 +423,9 @@ import {
 import { getStarknet, connect as getStarknetWallet } from 'orbiter-get-starknet';
 import { ref, computed, inject, reactive, toRef, watch } from 'vue'
 import Web3 from 'web3';
-// import { XVM_ABI } from "../config/ABI";
+import { XVM_ABI } from "../config/ABI";
 import util from "../utils/util";
+import BigNumber from "bignumber.js";
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
@@ -536,7 +537,7 @@ const list = computed(() =>
   )
 )
 
-// let selectDataList = [];
+let selectDataList = [];
 const userAddressList = computed(() => {
   const userAddressList: { address: string; count: number }[] = []
   for (const item of makerNodes.value) {
@@ -624,7 +625,7 @@ const handleSelectionChange = (rowList) => {
   } else {
     selectChainId.value = 0;
   }
-  // selectDataList = rowList;
+  selectDataList = rowList;
 };
 const selectable = (row) => {
   if (row.status === 95 || row.status === 99) {
@@ -726,6 +727,23 @@ const mappingChainName = (chainName: string) => {
   }
   return chainName
 }
+
+const swapOkEncodeABI = (
+        tradeId: string,
+        token: string,
+        toAddress: string,
+        toValue: string,
+        op:number
+) => {
+  const ifa = new ethers.utils.Interface(XVM_ABI);
+  return ifa.encodeFunctionData('swapAnswer', [
+    tradeId,
+    toAddress,
+    token,
+    op,
+    toValue,
+  ]);
+};
 const transferNeedTo = async (
         fromAddress: string,
         toAddress: string,
@@ -738,24 +756,16 @@ const transferNeedTo = async (
         fromExt: any,
         item
 ) => {
-  let walletAccount = '';
-  let ethereum;
-  if (needTo.chainId === 4 || needTo.chainId === 44) {
-    if (!getStarknet().account?.address) {
-      await connectStarkNetWallet();
-    }
-    walletAccount = getStarknet().account?.address;
-  } else {
-    ethereum = (window as any).ethereum;
-    if (!ethereum) {
-      throw new Error('Please install metamask wallet first!');
-    }
-    walletAccount = (
-            await ethereum.request({ method: 'eth_requestAccounts' })
-    )?.[0];
+  let ethereum = (window as any).ethereum;
+  if (!ethereum) {
+    throw new Error('Please install metamask wallet first!');
   }
+  let walletAccount = (
+          await ethereum.request({ method: 'eth_requestAccounts' })
+  )?.[0];
+  const isStarknet = needTo.chainId === 4 || needTo.chainId === 44;
 
-  if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+  if (!isStarknet && !utils.equalsIgnoreCase(walletAccount, fromAddress)) {
     selectShow.value = false;
     throw new Error(
             `Please switch the address to ${fromAddress} in the wallet!`
@@ -770,23 +780,48 @@ const transferNeedTo = async (
   if (util.isSupportXVMContract(item.toChain)) {
     if (!selectShow.value) {
       selectShow.value = true;
-      handleSelectionChange([item]);
       return;
     } else {
-      // const tradeId = item.tradeId;
-      // const to = item.to;
-      // const web3 = new Web3(ethereum);
-      // const sourceData = fromCurrency === toCurrency ? [toChainId, t2Address, toWalletAddress] : [toChainId, t2Address, toWalletAddress, web3.utils.toHex(expectValue), slippage];
-      // const data = RLP.encode(sourceData);
-      // const contractInstance = new web3.eth.Contract(XVM_ABI, contractAddress);
-      // const gasLimit = await contractInstance.methods.swap(makerAddress, t1Address, value, data).estimateGas({
-      //   from: account,
-      //   gas: 5000000
-      // });
-      // console.log('gasLimit', gasLimit);
-      // return contractInstance.methods.swap(makerAddress, t1Address, value, data).send({
-      //   from: account, gas: gasLimit
-      // });
+      if (selectDataList.length > 1) {
+        console.log('selectDataList',selectDataList);
+        const mainTokenAddress = chainInfo.nativeCurrency.address;
+        const encodeDataList = [];
+        let totalMainValue = new BigNumber(0);
+        for (const data of selectDataList) {
+          const tradeId = data.transferId;
+          const to = data.userAddress;
+          const token = data.needTo?.tokenAddress;
+          const op = 3;
+          const value: any = data.needTo?.amount;
+          encodeDataList.push(swapOkEncodeABI(tradeId, token, to, value, op));
+          if (utils.equalsIgnoreCase(mainTokenAddress, data.needTo?.tokenAddress)) {
+            totalMainValue.plus(new BigNumber(value));
+          }
+        }
+        const web3 = new Web3(ethereum);
+        const contractInstance = new web3.eth.Contract(XVM_ABI, chainInfo.xvmList[0]);
+        const gasLimit = await contractInstance.methods.multicall(encodeDataList).estimateGas({
+          from: walletAccount,
+          gas: 5000000
+        });
+        console.log('gasLimit', gasLimit);
+        return contractInstance.methods.multicall(encodeDataList).send({
+          from: walletAccount, gas: gasLimit
+        });
+      }
+    }
+  }
+
+  if (isStarknet) {
+    if (!getStarknet().account?.address) {
+      await connectStarkNetWallet();
+    }
+    walletAccount = getStarknet().account?.address;
+    if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+      selectShow.value = false;
+      throw new Error(
+              `Please switch the address to ${fromAddress} in the wallet!`
+      );
     }
   }
 
