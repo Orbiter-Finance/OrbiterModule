@@ -26,15 +26,13 @@ async function bootstrap() {
     SwaggerModule.setup('/docs', app, document);
   }
 
-  if(getEnv('OPEN_API_BASE_URL')){
-    if (process.env.OPEN_API_BASE_URL) {
-      const response: any = await axios.get(
-          `${process.env.OPEN_API_BASE_URL}/routes?apiKey=1`,
-      );
-      if (response?.data?.code === 0) {
-        makerConfigs.push(...response.data.result);
-        console.log("Loading open api config");
-      }
+  if (process.env.OPEN_API_BASE_URL) {
+    const response: any = await axios.get(
+        `${process.env.OPEN_API_BASE_URL}/routes?apiKey=1`,
+    );
+    if (response?.data?.code === 0) {
+      makerConfigs.push(...response.data.result);
+      console.log("Loading open api config");
     }
   }
   
