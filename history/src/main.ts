@@ -32,7 +32,7 @@ async function bootstrap() {
           `${process.env.OPEN_API_BASE_URL}/routes?apiKey=1`,
       );
       if (response?.data?.code === 0) {
-        makerConfigs = response.data.result;
+        makerConfigs.push(...response.data.result);
         console.log("Loading open api config");
       }
     }

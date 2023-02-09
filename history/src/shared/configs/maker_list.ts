@@ -4103,7 +4103,7 @@ export const makerList = [
 
 export const makerListHistory = [];
 
-export let makerConfigs: IMarket[] = [];
+export const makerConfigs: IMarket[] = [];
 
 export interface IMarket {
   id: string;

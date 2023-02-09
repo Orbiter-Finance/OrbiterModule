@@ -1,7 +1,9 @@
 FROM node:14
-COPY ./ /app
 WORKDIR /app
-RUN yarn && npm run build
+COPY package.json ./
+RUN yarn
+COPY ./ /app
+RUN npm run build
 
 FROM nginx:alpine
 RUN mkdir /app
