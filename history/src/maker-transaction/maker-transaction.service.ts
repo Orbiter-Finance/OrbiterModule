@@ -81,7 +81,7 @@ export class MakerTransactionService {
           break;
         }
         case StateEnum.toTimeOut: {
-          more += `and (t.status != 95 and t.status != 95 and m.createdAt < ${formateTimestamp(new Date().valueOf() - 1000 * 60 * 30)}) `;
+          more += `and t2.status != 95 and t2.status != 99 and m.createdAt < '${formateTimestamp(new Date().valueOf() - 1000 * 60 * 30)}' `;
           break;
         }
         case StateEnum.toOk: {
