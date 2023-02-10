@@ -4,16 +4,10 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerListHistory, makerList, makerConfigs, IMarket } from '../configs';
+import { makerConfigs, IMarket } from '../configs';
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 const keyv = new Keyv();
-async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
-}
-async function getMakerList() {
-  return makerList
-}
 
 // ETH:18  USDC:6  USDT:6
 const token2Decimals = {
@@ -146,36 +140,32 @@ export async function statisticsProfit(
 export async function statisticsProfitOld(
   makerNode
 ): Promise<BigNumber> {
-  let fromToCurrency = ''
-  let fromToPrecision = 0
-  let gasPrecision = 18 // gas default is eth, zksync is token
+  let fromToCurrency = '';
+  let fromToPrecision = 0;
+  let gasPrecision = 18; // gas default is eth, zksync is token
 
-  const makerList = await getMakerList()
-  for (const item of makerList) {
-    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
-      continue
+  for (const item of makerConfigs) {
+    if (!equalsIgnoreCase(item.recipient, makerNode.makerAddress)) {
+      continue;
     }
 
-    if (
-      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
-      equalsIgnoreCase(item.t2Address, makerNode.txToken)
-    ) {
-      fromToCurrency = item.tName
-      fromToPrecision = item.precision
+    if (equalsIgnoreCase(item.toChain.tokenAddress, makerNode.txToken)) {
+      fromToCurrency = item.toChain.symbol;
+      fromToPrecision = item.toChain.decimals;
     }
 
-    if (equalsIgnoreCase(item.tName, makerNode.gasCurrency)) {
-      gasPrecision = item.precision
+    if (equalsIgnoreCase(item.toChain.symbol, makerNode.gasCurrency)) {
+      gasPrecision = item.toChain.decimals;
     }
   }
 
   if (fromToCurrency && Number(makerNode.toAmount) > 0) {
     let fromMinusToUsd = await exchangeToUsd(
-      new BigNumber(makerNode.fromAmount)
-        .minus(makerNode.toAmount)
-        .dividedBy(10 ** fromToPrecision),
-      fromToCurrency
-    )
+        new BigNumber(makerNode.fromAmount)
+            .minus(makerNode.toAmount)
+            .dividedBy(10 ** fromToPrecision),
+        fromToCurrency
+    );
 
     let gasPricePaidRate = 1
     if (GAS_PRICE_PAID_RATE[makerNode.toChain]) {
@@ -226,20 +216,13 @@ export async function transforeUnmatchedTradding(list = []) {
  * @returns 
  */
 async function getChainName(chainId: string) {
-  // Temporarily, the public chain name can be obtained from chaincore
-  switch (String(chainId)) {
-    case "16":
-      return 'Nova';
-    // oether
+  let market = makerConfigs.find(item => item.fromChain.id === +chainId);
+  if (market?.fromChain?.name) {
+    return market.fromChain.name;
   }
-  const makerList = await getAllMakerList();
-  const row1 = makerList.find(row => String(row.c1ID) == String(chainId));
-  if (row1) {
-    return row1.c1Name;
-  }
-  const row2 = makerList.find(row => String(row.c2ID) == String(chainId));
-  if (row2) {
-    return row2.c2Name;
+  market = makerConfigs.find(item => item.toChain.id === +chainId);
+  if (market?.toChain?.name) {
+    return market.toChain.name;
   }
   return '';
 }
