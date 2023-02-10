@@ -292,12 +292,11 @@ export async function transforeData(list = []) {
       item['tradeDuration'] = dayjsTo.unix() - dayjsFrom.unix()
     }
 
-    item.toSymbol = (JSON.parse(item.extra)).toSymbol;
-
-    delete item.extra;
 
     let market: IMarket;
     try {
+      item.toSymbol = (JSON.parse(item.extra)).toSymbol;
+      delete item.extra;
       market = makerConfigs.find(cfg =>
           cfg.fromChain.id == item['fromChain'] &&
           cfg.fromChain.symbol == item['tokenName'] &&
