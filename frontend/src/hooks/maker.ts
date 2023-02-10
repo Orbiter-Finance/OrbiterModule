@@ -43,6 +43,7 @@ export type MakerNode = {
   fromValue: string
   fromAmountFormat: string
   tokenName:string
+  toSymbol: string
   decimals:number
   fromExt: {
     type: string
@@ -120,19 +121,21 @@ function transforeData(list: any = []) {
     if (item.fromStatus == 0) {
       // from check
       item.state = 0;
-    } else if (item.fromStatus == 1 || item.fromStatus == 97) {
+    } else if (item.fromStatus == 1) {
       // from ok
       item.state = 1;
     } else if (item.fromStatus == 3) {
       // from fail
       item.state = 2;
-    }
-
-
-    if (item.status == 0) {
+    } else if (item.fromStatus == 97) {
       // to waiting
       item.state = 3;
-    } else if (item.status == 95) {
+    }else if (item.fromStatus == 98) {
+      // to time out
+      item.state = 5;
+    }
+
+    if (item.status == 95) {
       // backtrack
       item.state = 7;
     } else if (item.status == 97) {
@@ -144,6 +147,11 @@ function transforeData(list: any = []) {
     } else if (item.status == 99) {
       // to ok
       item.state = 6;
+    }
+
+    if (item.status != 95 && item.status != 99 && new Date(item.createdAt).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
+      // to time out
+      item.state = 5;
     }
   }
 }

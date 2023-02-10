@@ -218,6 +218,7 @@
             justify-content: center;
             item-align: center;
             margin: 10px;
+            position: relative;
           "
         >
           <el-pagination
@@ -230,6 +231,10 @@
             @size-change="handleSizeChange"
             @current-change="handleCurrentChange"
           />
+          <div v-if="sendTypeShow" style="position: absolute;right:0">
+            <el-radio v-model="sendType" label="1">回款</el-radio>
+            <el-radio v-model="sendType" label="2">退款</el-radio>
+          </div>
         </div>
 
         <el-table :data="list" stripe style="width: 100%" @selection-change="handleSelectionChange">
@@ -388,20 +393,33 @@
                 @click="onClickStateTag(row)"
                 >{{ stateTags[row.state]?.label }}</el-tag
               >
-              <div v-if="selectShow && row.state !== 6 && row.state !== 7 && row.needTo" style="margin-top: 5px">
-                <el-tag
-                        :class="row.state !== 6 && row.state !== 7 && row.needTo ? 'state-tag' : ''"
-                        style="background:#C959F7;border-color: #C959F7"
-                        effect="dark"
-                        @click="onClickBacktrack(row)"
-                >Back Track</el-tag>
-              </div>
+<!--              <div v-if="selectShow && row.state !== 6 && row.state !== 7 && row.needTo" style="margin-top: 5px">-->
+<!--                <el-tag-->
+<!--                        :class="row.state !== 6 && row.state !== 7 && row.needTo ? 'state-tag' : ''"-->
+<!--                        style="background:#C959F7;border-color: #C959F7"-->
+<!--                        effect="dark"-->
+<!--                        @click="onClickBacktrack(row)"-->
+<!--                >Back Track</el-tag>-->
+<!--              </div>-->
             </template>
           </el-table-column>
         </el-table>
       </template>
 
       <el-empty v-else description="Empty"></el-empty>
+      <el-dialog
+              :title="sendType == 1 ? '回款' : '退款'"
+              v-model="confirmSendVisible"
+              width="60%">
+        <div v-for="(item,index) in sendInfo" :key="index">
+          To:{{ item.toAddress }} ===> {{ item.toChainIdName }}:{{ item.toSymbol }} &nbsp; value:{{ item.amount }}
+        </div>
+
+        <template v-slot:footer>
+          <el-button @click="confirmSendVisible = false">Cancel</el-button>
+          <el-button type="primary" @click="confirmSend">Send</el-button>
+        </template>
+      </el-dialog>
     </div>
     <el-backtop :right="100" :bottom="100" />
   </div>
@@ -418,7 +436,7 @@ import {
 } from '@/hooks/maker'
 // import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
-import { BigNumberish, ethers, providers } from 'ethers'
+import { ethers, providers } from 'ethers'
 import dayjs from 'dayjs'
 import {
   TransactionDydx,
@@ -430,12 +448,12 @@ import {
 } from 'orbiter-sdk'
 import { getStarknet, connect as getStarknetWallet } from 'orbiter-get-starknet';
 import { stark, uint256 } from 'orbiter-starknet';
-import { ref, computed, inject, reactive, toRef, watch } from 'vue'
+import { ref, computed, inject, reactive, toRef, watch } from 'vue';
 import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
 import util from "../utils/util";
 import BigNumber from "bignumber.js";
-
+// import * as zksync from 'zksync'
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
   mainnet: 'Mainnet',
@@ -575,8 +593,12 @@ const loadingWealths = toRef(makerWealth.state, 'loading')
 const wealths = toRef(makerWealth.state, 'list')
 const loadingNodes = ref(false)
 const loadingStatistics = ref(false)
+const confirmSendVisible = ref(false)
 const selectShow = ref(false)
+const sendTypeShow = ref(false);
+const sendInfo = ref([])
 const selectChainId = ref(0)
+const sendType = ref('1')
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
@@ -617,20 +639,58 @@ const connectStarkNetWallet = async () => {
     });
   }
 };
-const switchNetwork = async (networkId) => {
-  const chainId = networkId;
-  console.log('switch chainId', chainId);
+const switchNetwork = async (chainId) => {
+  const chain = util.getChainInfoByChainId(chainId)
+  console.log('switch networkId', chain.networkId);
+  if (!+chain.networkId) {
+    return;
+  }
   const switchParams = {
-    chainId: '0x' + Number(chainId).toString(16),
+    chainId: '0x' + Number(chain.networkId).toString(16),
   };
-  await (window as any).ethereum.request({
-    method: 'wallet_switchEthereumChain',
-    params: [switchParams],
-  });
+  try {
+    await (window as any).ethereum.request({
+      method: 'wallet_switchEthereumChain',
+      params: [switchParams],
+    });
+  } catch (error) {
+    if (error.code === 4902) {
+      // need add net
+      const params = {
+        chainId: '0x' + Number(chainId).toString(16), // A 0x-prefixed hexadecimal string
+        chainName: chain.name,
+        nativeCurrency: {
+          name: chain.nativeCurrency.name,
+          symbol: chain.nativeCurrency.symbol, // 2-6 characters long
+          decimals: chain.nativeCurrency.decimals,
+        },
+        rpcUrls: chain.rpc,
+        blockExplorerUrls: [
+          chain.explorers &&
+          chain.explorers.length > 0 &&
+          chain.explorers[0].url
+                  ? chain.explorers[0].url
+                  : chain.infoURL,
+        ],
+      };
+      await (window as any).ethereum.request({
+        method: 'wallet_addEthereumChain',
+        params: [params],
+      });
+    } else {
+      console.log(error)
+    }
+  }
 };
 const handleSelectionChange = (rowList) => {
   if (rowList.length) {
-    selectChainId.value = rowList[0].toChain;
+    if (sendType.value == 1) {
+      console.log('toChain')
+      selectChainId.value = rowList[0].toChain;
+    } else {
+      console.log('fromChain')
+      selectChainId.value = rowList[0].fromChain;
+    }
   } else {
     selectChainId.value = 0;
   }
@@ -643,9 +703,19 @@ const selectable = (row) => {
   if (!util.isSupportXVMContract(row.toChain)) {
     return false;
   }
-  if (!selectChainId.value || selectChainId.value == row.toChain) {
+  if(!selectChainId.value){
     return true;
   }
+  if (sendType.value == 1) {
+    if (selectChainId.value == row.toChain) {
+      return true;
+    }
+  } else {
+    if (selectChainId.value == row.fromChain) {
+      return true;
+    }
+  }
+
   return false;
 };
 
@@ -737,185 +807,220 @@ const mappingChainName = (chainName: string) => {
   return chainName
 }
 
-const transferNeedTo = async (
-        fromAddress: string,
-        toAddress: string,
-        needTo: {
-          chainId: number
-          amount: string | BigNumberish
-          decimals: number
-          tokenAddress: string
-        },
-        fromExt: any,
-        isBackTrack
-) => {
-  let ethereum = (window as any).ethereum;
+const confirmSend = async ()=>{
+  const ethereum = (window as any).ethereum;
   if (!ethereum) {
     throw new Error('Please install metamask wallet first!');
   }
   let walletAccount = (
           await ethereum.request({ method: 'eth_requestAccounts' })
   )?.[0];
-  const fromChainId:number = needTo.chainId;
-  const isStarknet = fromChainId === 4 || fromChainId === 44;
-
-  if (!isStarknet && !utils.equalsIgnoreCase(walletAccount, fromAddress)) {
-    selectShow.value = false;
-    throw new Error(
-            `Please switch the address to ${fromAddress} in the wallet!`
-    );
-  }
-
+  const dataList = sendInfo.value;
+  const sendData = dataList[0];
+  const fromChainId: number = sendData.chainId;
   const chainInfo = util.getChainInfoByChainId(fromChainId);
-  if (fromChainId === 3 || fromChainId === 4 || fromChainId === 8 || fromChainId === 9 || fromChainId === 11) {
-    await switchNetwork(1);
-  } else if (fromChainId === 33 || fromChainId === 44 || fromChainId === 88 || fromChainId === 99 || fromChainId === 511) {
-    await switchNetwork(5);
-  } else {
-    await switchNetwork(chainInfo.chainId);
-  }
 
-  // // Ensure networkId
-  // await utils.ensureMetamaskNetwork(chainInfo.chainId, ethereum)
-
-  if (util.isSupportXVMContract(fromChainId)) {
+  if (util.isSupportXVMContract(fromChainId) && dataList.length > 1) {
     if (!selectShow.value) {
       selectShow.value = true;
       return;
     } else {
-      if (selectDataList.length > 1) {
-        const mainTokenAddress = chainInfo.nativeCurrency.address;
-        const encodeDataList = [];
-        let totalMainValue = new BigNumber(0);
-        for (const data of selectDataList) {
-          const dt = isBackTrack ? data.needBack : data.needTo;
-          if (!dt) continue;
-          const tradeId = data.fromTx;
-          const to = data.userAddress;
-          const token = dt?.tokenAddress;
-          const op = isBackTrack ? 3 : 1;
-          const value: any = dt?.amount;
-          encodeDataList.push(swapOkEncodeABI(tradeId, token, to, value, op));
-          if (utils.equalsIgnoreCase(mainTokenAddress, token)) {
-            totalMainValue = totalMainValue.plus(new BigNumber(value));
-          }
+      const mainTokenAddress = chainInfo.nativeCurrency.address;
+      const encodeDataList = [];
+      let totalMainValue = new BigNumber(0);
+      for (const data of dataList) {
+        const tokenAddress = data?.tokenAddress;
+        const value: any = data?.amount;
+        encodeDataList.push(swapOkEncodeABI(data?.tradeId, tokenAddress, data.toAddress, value, data.op));
+        if (utils.equalsIgnoreCase(mainTokenAddress, tokenAddress)) {
+          totalMainValue = totalMainValue.plus(new BigNumber(value));
         }
-        const web3 = new Web3(ethereum);
-        const contractInstance = new web3.eth.Contract(XVM_ABI, chainInfo.xvmList[0]);
-        const { transactionHash } = await contractInstance.methods.multicall(encodeDataList).send({
-          from: walletAccount, value: totalMainValue.toString()
+      }
+      const web3 = new Web3(ethereum);
+      const contractInstance = new web3.eth.Contract(XVM_ABI, chainInfo.xvmList[0]);
+      const { transactionHash } = await contractInstance.methods.multicall(encodeDataList).send({
+        from: walletAccount, value: totalMainValue.toString()
+      });
+      console.log(transactionHash);
+      ElNotification({
+        title: 'Transfer Succeed',
+        message:
+                'The transfer was successful! Dashboard will update data list in 15 minutes!',
+        type: 'success',
+      });
+      return;
+    }
+  } else {
+    const fromAddress = sendData.fromAddress;
+    const toAddress = sendData.toAddress;
+    const tokenAddress = sendData.tokenAddress;
+    const amount = sendData.amount;
+    const decimals = sendData.decimals;
+    const fromExt = sendData.fromExt;
+
+    // Get signer and make transfer's options
+    const signer = new providers.Web3Provider(ethereum).getSigner();
+    const transferOptions = {
+      amount: ethers.BigNumber.from(amount),
+      toAddress,
+      tokenAddress,
+    };
+
+    // Transfer
+    let txHash = '';
+    switch (fromChainId) {
+      case 3:
+      case 33: {
+        const tZksync = new TransactionZksync(fromChainId, signer);
+        const res = await tZksync.transfer(transferOptions);
+        txHash = res.txHash;
+        break;
+      }
+
+      case 4:
+      case 44: {
+        txHash = await starknetTransfer(walletAccount, toAddress, fromChainId, tokenAddress, amount);
+        break;
+      }
+
+      case 8:
+      case 88: {
+        const tImx = new TransactionImmutablex(fromChainId, signer);
+        await tImx.transfer({
+          ...transferOptions,
+          decimals,
         });
-        console.log(transactionHash);
-        ElNotification({
-          title: 'Transfer Succeed',
-          message:
-                  'The transfer was successful! Dashboard will update data list in 15 minutes!',
-          type: 'success',
+        break;
+      }
+
+      case 9:
+      case 99: {
+        const tLoopring = new TransactionLoopring(
+                fromChainId,
+                new Web3(ethereum)
+        );
+        await tLoopring.transfer({ ...transferOptions, fromAddress });
+        break;
+      }
+
+      case 11:
+      case 511: {
+        const tDydx = new TransactionDydx(fromChainId, new Web3(ethereum));
+        await tDydx.transfer({
+          ...transferOptions,
+          fromAddress,
+          receiverPublicKey: fromExt.dydxInfo?.starkKey,
+          receiverPositionId: fromExt.dydxInfo?.positionId,
         });
-        return;
+        break;
+      }
+
+      default: {
+        const tEvm = new TransactionEvm(fromChainId, signer);
+        await tEvm.transfer(transferOptions);
+        break;
       }
     }
-  }
 
-  if (isStarknet) {
-    if (!getStarknet().account?.address) {
-      await connectStarkNetWallet();
+    console.log(txHash);
+
+    ElNotification({
+      title: 'Transfer Succeed',
+      message:
+              'The transfer was successful! Dashboard will update data list in 15 minutes!',
+      type: 'success',
+    });
+  }
+  confirmSendVisible.value = false;
+}
+// Events
+const onClickStateTag = async (item: MakerNode) => {
+  try {
+    if (item.state == 6 || item.state == 7) {
+      return;
     }
-    walletAccount = getStarknet().account?.address;
-    if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+    const needTo = sendType.value != 1 ? item.needBack : item.needTo;
+    const fromAddress = item.makerAddress;
+    const toAddress = item.userAddress;
+    const fromExt = item.fromExt;
+    const ethereum = (window as any).ethereum;
+    if (!ethereum) {
+      throw new Error('Please install metamask wallet first!');
+    }
+    let walletAccount = (
+            await ethereum.request({ method: 'eth_requestAccounts' })
+    )?.[0];
+    const fromChainId: number = needTo.chainId;
+    const isStarknet = fromChainId === 4 || fromChainId === 44;
+
+    if (!isStarknet && !utils.equalsIgnoreCase(walletAccount, fromAddress)) {
       selectShow.value = false;
+      sendTypeShow.value = false;
       throw new Error(
               `Please switch the address to ${fromAddress} in the wallet!`
       );
     }
-  }
+    sendTypeShow.value = true;
 
-  // Get signer and make transfer's options
-  const signer = new providers.Web3Provider(ethereum).getSigner();
-  const transferOptions = {
-    amount: ethers.BigNumber.from(needTo.amount),
-    toAddress,
-    tokenAddress: needTo.tokenAddress,
-  };
+    await switchNetwork(fromChainId);
 
-  // Transfer
-  let txHash = '';
-  switch (needTo.chainId) {
-    case 3:
-    case 33: {
-      const tZksync = new TransactionZksync(needTo.chainId, signer);
-      await tZksync.transfer(transferOptions);
-      break;
+    if (util.isSupportXVMContract(fromChainId)) {
+      if (!selectShow.value) {
+        selectShow.value = true;
+        return;
+      } else {
+        if (selectDataList.length > 1) {
+          const dataList = [];
+          for (const data of selectDataList) {
+            const dt = sendType.value != 1 ? data.needBack : data.needTo;
+            const toSymbol = sendType.value != 1 ? data.tokenName : data.toSymbol;
+            const toChainIdName = sendType.value != 1 ? data.fromChainName : data.toChainName;
+            if (!dt) continue;
+            dataList.push({
+              tradeId: data.fromTx,
+              fromAddress: walletAccount,
+              toAddress: data.userAddress,
+              fromExt: data.fromExt,
+              toChainIdName,
+              toSymbol,
+              op: sendType.value != 1 ? 3 : 1,
+              ...dt
+            });
+          }
+          sendInfo.value = dataList;
+          console.log('Send info ===> ', dataList);
+          confirmSendVisible.value = true;
+          return;
+        }
+      }
     }
 
-    case 4:
-    case 44: {
-      txHash = await starknetTransfer(walletAccount, toAddress, needTo.chainId, needTo.tokenAddress, needTo.amount);
-      break;
+    if (isStarknet) {
+      if (!getStarknet().account?.address) {
+        await connectStarkNetWallet();
+      }
+      walletAccount = getStarknet().account?.address;
+      if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+        selectShow.value = false;
+        throw new Error(
+                `Please switch the address to ${fromAddress} in the wallet!`
+        );
+      }
     }
 
-    case 8:
-    case 88: {
-      const tImx = new TransactionImmutablex(needTo.chainId, signer);
-      await tImx.transfer({
-        ...transferOptions,
-        decimals: needTo.decimals,
-      });
-      break;
-    }
-
-    case 9:
-    case 99: {
-      const tLoopring = new TransactionLoopring(
-              needTo.chainId,
-              new Web3(ethereum)
-      );
-      await tLoopring.transfer({ ...transferOptions, fromAddress });
-      break;
-    }
-
-    case 11:
-    case 511: {
-      const tDydx = new TransactionDydx(needTo.chainId, new Web3(ethereum));
-      await tDydx.transfer({
-        ...transferOptions,
-        fromAddress,
-        receiverPublicKey: fromExt.dydxInfo?.starkKey,
-        receiverPositionId: fromExt.dydxInfo?.positionId,
-      });
-      break;
-    }
-
-    default: {
-      const tEvm = new TransactionEvm(needTo.chainId, signer);
-      await tEvm.transfer(transferOptions);
-      break;
-    }
-  }
-
-  console.log(txHash);
-
-  ElNotification({
-    title: 'Transfer Succeed',
-    message:
-            'The transfer was successful! Dashboard will update data list in 15 minutes!',
-    type: 'success',
-  });
-};
-// Events
-const onClickStateTag = async (item: MakerNode) => {
-  try {
-    if (item.state == 95 || item.state == 99 || !item.needTo) {
-      return;
-    }
-
-    await transferNeedTo(
-      item.makerAddress,
-      item.userAddress,
-      item.needTo,
-      item.fromExt,
-            0
-    )
+    const toSymbol = sendType.value != 1 ? item.tokenName : item.toSymbol;
+    const toChainIdName = sendType.value != 1 ? item.fromChainName : item.toChainName;
+    const dataList = [{
+      fromAddress: walletAccount,
+      toAddress,
+      fromExt,
+      toChainIdName,
+      toSymbol,
+      op: sendType.value != 1 ? 3 : 1,
+      ...needTo }];
+    console.log('Send info ===> ', dataList);
+    sendInfo.value = dataList;
+    confirmSendVisible.value = true;
   } catch (err) {
     ElNotification({
       title: 'Error',
@@ -923,28 +1028,6 @@ const onClickStateTag = async (item: MakerNode) => {
       type: 'error',
     })
   }
-}
-const onClickBacktrack = async (item: MakerNode) => {
-  // try {
-  if (item.state == 95 || item.state == 99 || !item.needTo) {
-    return;
-  }
-
-  await transferNeedTo(
-          item.makerAddress,
-          item.userAddress,
-          item.needBack,
-          item.fromExt,
-          1
-  );
-
-  // } catch (err) {
-  //   ElNotification({
-  //     title: 'Error',
-  //     message: `Fail: ${err.message}`,
-  //     type: 'error',
-  //   })
-  // }
 }
 
 const starknetTransfer = async (fromAddress, toAddress, chainId, tokenAddress, amount) => {

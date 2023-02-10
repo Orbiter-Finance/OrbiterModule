@@ -8,6 +8,17 @@ const L1L2Mapping = {
   "0x0043d60e87c5dd08C86C3123340705a1556C4719": "0x050e5ba067562e87b47d87542159e16a627e85b00de331a53b471cee1a4e5a4f"
 };
 
+enum StateEnum {
+  fromCheck = 0,
+  fromOk = 1,
+  fromFail = 2,
+  toWaiting = 3,
+  toCheck = 4,
+  toTimeOut = 5,
+  toOk = 6,
+  backtrack = 7
+}
+
 @Injectable()
 export class MakerTransactionService {
   constructor(
@@ -47,21 +58,39 @@ export class MakerTransactionService {
       more += `and m.toChain = ${query.toChain} `;
     }
     if (query.state) {
-      /*
-        0: { label: 'From: check', type: 'info' },
-        1: { label: 'From: okay', type: 'warning' },
-        2: { label: 'To: check', type: 'info' },
-        3: { label: 'To: okay', type: 'success' },
-        20: { label: 'To: failed', type: 'danger' },
-      */
-      const state = +query.state
-      if (!isNaN(state) && state >= 0) {
-        if (state < 2) {
-          more += `and t.status = ${state} `
-        } else if (state === 2 || state === 3) {
-          more += `and t2.status = ${state === 2 ? 0 : 1} `
-        } else {
-          more += `and t2.status = 2 `
+      const state = +query.state;
+      switch (state) {
+        case StateEnum.fromCheck: {
+          more += `and t.status = 0 `;
+          break;
+        }
+        case StateEnum.fromOk: {
+          more += `and t.status = 1 `;
+          break;
+        }
+        case StateEnum.fromFail: {
+          more += `and t.status = 3 `;
+          break;
+        }
+        case StateEnum.toWaiting: {
+          more += `and t.status = 97 `;
+          break;
+        }
+        case StateEnum.toCheck: {
+          more += `and t2.status = 97 `;
+          break;
+        }
+        case StateEnum.toTimeOut: {
+          more += `and (t.status != 95 and t.status != 95 and m.createdAt < ${formateTimestamp(new Date().valueOf() - 1000 * 60 * 30)}) `;
+          break;
+        }
+        case StateEnum.toOk: {
+          more += `and t2.status = 99 `;
+          break;
+        }
+        case StateEnum.backtrack: {
+          more += `and t2.status = 95 `;
+          break;
         }
       }
     }
