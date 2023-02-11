@@ -291,50 +291,74 @@
           </el-table-column>
           <el-table-column style="min-width: 120px">
             <template #header>
-              Maker
-              <br />User
+              User List
             </template>
-            <template #default="scope">
-              <a :href="scope.row.makerAddressHref" target="_blank">
-                <TextLong :content="scope.row.makerAddress">
-                  {{ scope.row.makerAddress }}
+            <template #default="{ row }">
+              <a :href="row.userAddressHref" target="_blank">
+                <TextLong :content="row.userAddress" placement="bottom">
+                  From user:{{ row.userAddress }}
                 </TextLong>
               </a>
-              <a :href="scope.row.userAddressHref" target="_blank">
-                <TextLong :content="scope.row.userAddress" placement="bottom">
-                  {{ scope.row.userAddress }}
+              <a :href="row.makerAddressHref" target="_blank">
+                <TextLong :content="row.makerAddress">
+                  Maker:{{ row.makerAddress }}
+                </TextLong>
+              </a>
+              <a :href="row.replyAccountHref" target="_blank">
+                <TextLong :content="row.replyAccount">
+                  To User:{{ row.replyAccount }}
                 </TextLong>
               </a>
             </template>
           </el-table-column>
-          <el-table-column width="145">
+          <el-table-column width="175">
             <template #header>
-              FromTx
-              <br />FromTime
+              From transaction
             </template>
-            <template #default="scope">
-              <a :href="scope.row.fromTxHref" target="_blank">
-                <TextLong :content="scope.row.formTx">
-                  {{ scope.row.formTx }}
+            <template #default="{ row }">
+              <a :href="row.fromTxHref" target="_blank">
+                <TextLong :content="row.formTx">
+                  {{ row.formTx }}
                 </TextLong>
               </a>
+              <div style="display: flex">
+                <TextLong :content="row.fromAmountFormat">
+                  <span class="amount-operator--plus">+</span>
+                  {{ row.fromAmountFormat }}
+                </TextLong>
+                <span style="padding-left: 5px;white-space:nowrap">{{ row.tokenName }}</span>
+              </div>
               <div class="table-timestamp">
-                <TextLong :content="scope.row.fromTimeStamp" placement="bottom"
-                  >{{ scope.row.fromTimeStampAgo }}
+                <TextLong :content="row.fromTimeStamp" placement="bottom"
+                  >{{ row.fromTimeStampAgo }}
                 </TextLong>
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="145">
+          <el-table-column width="175">
             <template #header>
-              ToTx
-              <br />ToTime
+              To transaction
             </template>
             <template #default="{ row }">
               <a v-if="row.toTxHref" :href="row.toTxHref" target="_blank">
                 <TextLong :content="row.toTx">{{ row.toTx }}</TextLong>
               </a>
               <TextLong v-else :content="row.toTx">{{ row.toTx }}</TextLong>
+              <div style="display: flex">
+                <TextLong
+                        :content="
+                  row.toAmountFormat +
+                  (row.toAmount <= 0
+                    ? ` (NeedTo: ${row.needTo.amountFormat})`
+                    : '')
+                "
+                        placement="bottom"
+                >
+                  <span class="amount-operator--minus">-</span>
+                  {{ row.extValueFormat || row.toAmountFormat }}
+                </TextLong>
+                <div style="padding-left: 5px;white-space:nowrap">{{ row.toSymbol }}</div>
+              </div>
               <div class="table-timestamp">
                 <TextLong
                   v-if="row.toTimeStamp && row.toTimeStamp != '0'"
@@ -348,30 +372,6 @@
                 </TextLong>
                 <span v-else>{{ row.toTimeStampAgo }}</span>
               </div>
-            </template>
-          </el-table-column>
-          <el-table-column width="120">
-            <template #header>
-              FromAmount
-              <br />ToAmount
-            </template>
-            <template #default="{ row }">
-              <TextLong :content="row.fromAmountFormat">
-                <span class="amount-operator--plus">+</span>
-                {{ row.fromAmountFormat }}
-              </TextLong>
-              <TextLong
-                :content="
-                  row.toAmountFormat +
-                  (row.toAmount <= 0
-                    ? ` (NeedTo: ${row.needTo.amountFormat})`
-                    : '')
-                "
-                placement="bottom"
-              >
-                <span class="amount-operator--minus">-</span>
-                {{ row.toAmountFormat }}
-              </TextLong>
             </template>
           </el-table-column>
           <el-table-column label="Profit" width="150">
@@ -412,7 +412,7 @@
               v-model="confirmSendVisible"
               width="60%">
         <div v-for="(item,index) in sendInfo" :key="index">
-          To:{{ item.toAddress }} ===> {{ item.toChainIdName }}:{{ item.toSymbol }} &nbsp; value:{{ item.amount }}
+          To:{{ item.toAddress }} ===> {{ item.toChainIdName }}->value:{{ item.amountFormat }} {{ item.toSymbol }}
         </div>
 
         <template v-slot:footer>
@@ -939,9 +939,10 @@ const onClickStateTag = async (item: MakerNode) => {
     if (item.state == 6 || item.state == 7) {
       return;
     }
-    const needTo = sendType.value != 1 ? item.needBack : item.needTo;
+    const isOriginBack = sendType.value != 1;
+    const needTo = isOriginBack ? item.needBack : item.needTo;
     const fromAddress = item.makerAddress;
-    const toAddress = item.userAddress;
+    const toAddress = isOriginBack ? item.userAddress : item.replyAccount;
     const fromExt = item.fromExt;
     const ethereum = (window as any).ethereum;
     if (!ethereum) {
@@ -972,14 +973,15 @@ const onClickStateTag = async (item: MakerNode) => {
         if (selectDataList.length > 1) {
           const dataList = [];
           for (const data of selectDataList) {
-            const dt = sendType.value != 1 ? data.needBack : data.needTo;
-            const toSymbol = sendType.value != 1 ? data.tokenName : data.toSymbol;
-            const toChainIdName = sendType.value != 1 ? data.fromChainName : data.toChainName;
+            const dt = isOriginBack ? data.needBack : data.needTo;
+            const toSymbol = isOriginBack ? data.tokenName : data.toSymbol;
+            const toChainIdName = isOriginBack ? data.fromChainName : data.toChainName;
+            const toAddress = isOriginBack ? data.userAddress : data.replyAccount;
             if (!dt) continue;
             dataList.push({
               tradeId: data.fromTx,
               fromAddress: walletAccount,
-              toAddress: data.userAddress,
+              toAddress,
               fromExt: data.fromExt,
               toChainIdName,
               toSymbol,

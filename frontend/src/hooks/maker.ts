@@ -34,6 +34,7 @@ export type MakerNode = {
   transactionID: string
   makerAddress: string
   userAddress: string
+  replyAccount: string
   fromChain: string
   fromChainName: string
   toChain: string
@@ -84,7 +85,8 @@ function transforeData(list: any = []) {
   // add hrefs
   for (const item of list) {
     item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
-    item['userAddressHref'] = accountExploreUrl[item.toChain] + item['userAddress']
+    item['userAddressHref'] = accountExploreUrl[item.fromChain] + item['userAddress']
+    item['replyAccountHref'] = accountExploreUrl[item.toChain] + item['replyAccount']
     item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['fromTx']
     item['toTxHref'] = ''
     if (item['toTx'] && item['toTx'] != '0x') {

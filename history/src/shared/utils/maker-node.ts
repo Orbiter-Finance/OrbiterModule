@@ -278,13 +278,20 @@ export async function transforeData(list = []) {
 
     let market: IMarket;
     try {
-      item.toSymbol = (JSON.parse(item.extra)).toSymbol;
-      delete item.extra;
+      const extra: any = JSON.parse(item.extra);
+      item.toSymbol = extra.toSymbol;
       market = makerConfigs.find(cfg =>
           cfg.fromChain.id == item['fromChain'] &&
           cfg.fromChain.symbol == item['tokenName'] &&
           cfg.toChain.id == item['toChain'] &&
           cfg.toChain.symbol == item.toSymbol);
+
+      if (extra?.xvm?.params?.data?.expectValue) {
+        item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
+            10 ** market.toChain.decimals
+        )}`;
+      }
+      delete item.extra;
     } catch (e) {
       console.log(e);
     }
@@ -303,6 +310,9 @@ export async function transforeData(list = []) {
         decimals: market.fromChain.decimals,
         tokenAddress: market.fromChain.tokenAddress,
         amount: item.fromValue,
+        amountFormat: `${new BigNumber(item.fromValue).dividedBy(
+            10 ** market.fromChain.decimals
+        )}`
       };
     }
 
