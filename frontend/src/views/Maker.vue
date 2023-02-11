@@ -894,7 +894,7 @@ const confirmSend = async ()=>{
     };
 
     // Transfer
-    let txHash = '';
+    let txHash;
     switch (fromChainId) {
       case 3:
       case 33: {
@@ -913,7 +913,7 @@ const confirmSend = async ()=>{
       case 8:
       case 88: {
         const tImx = new TransactionImmutablex(fromChainId, signer);
-        await tImx.transfer({
+        txHash = await tImx.transfer({
           ...transferOptions,
           decimals,
         });
@@ -926,14 +926,14 @@ const confirmSend = async ()=>{
                 fromChainId,
                 new Web3(ethereum)
         );
-        await tLoopring.transfer({ ...transferOptions, fromAddress });
+        txHash = await tLoopring.transfer({ ...transferOptions, fromAddress });
         break;
       }
 
       case 11:
       case 511: {
         const tDydx = new TransactionDydx(fromChainId, new Web3(ethereum));
-        await tDydx.transfer({
+          txHash = await tDydx.transfer({
           ...transferOptions,
           fromAddress,
           receiverPublicKey: fromExt.dydxInfo?.starkKey,
@@ -944,7 +944,8 @@ const confirmSend = async ()=>{
 
       default: {
         const tEvm = new TransactionEvm(fromChainId, signer);
-        await tEvm.transfer(transferOptions);
+        const res = await tEvm.transfer(transferOptions);
+        txHash = res.hash;
         break;
       }
     }
