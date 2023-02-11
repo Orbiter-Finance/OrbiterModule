@@ -267,7 +267,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="90">
+          <el-table-column width="120">
             <template #header>
               From
               <br />To
@@ -289,29 +289,50 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column style="min-width: 120px">
+          <el-table-column width="230">
             <template #header>
               User List
             </template>
             <template #default="{ row }">
-              <a :href="row.userAddressHref" target="_blank">
-                <TextLong :content="row.userAddress" placement="bottom">
-                  From user:{{ row.userAddress }}
-                </TextLong>
-              </a>
-              <a :href="row.makerAddressHref" target="_blank">
-                <TextLong :content="row.makerAddress">
-                  Maker:{{ row.makerAddress }}
-                </TextLong>
-              </a>
-              <a :href="row.replyAccountHref" target="_blank">
-                <TextLong :content="row.replyAccount">
-                  To User:{{ row.replyAccount }}
-                </TextLong>
-              </a>
+              <div style="display: flex">
+                <div style="width: 30%">
+                  From user:
+                </div>
+                <div style="width: 70%">
+                  <a :href="row.userAddressHref" target="_blank">
+                    <TextLong :content="row.userAddress" placement="bottom">
+                      {{ shortAddress(row.userAddress) }}
+                    </TextLong>
+                  </a>
+                </div>
+              </div>
+              <div style="display: flex">
+                <div style="width: 30%">
+                  Maker:
+                </div>
+                <div style="width: 70%">
+                  <a :href="row.makerAddressHref" target="_blank">
+                    <TextLong :content="row.makerAddress">
+                      {{ shortAddress(row.makerAddress) }}
+                    </TextLong>
+                  </a>
+                </div>
+              </div>
+              <div style="display: flex">
+                <div style="width: 30%">
+                  To User:
+                </div>
+                <div style="width: 70%">
+                  <a :href="row.replyAccountHref" target="_blank">
+                    <TextLong :content="row.replyAccount">
+                      {{ shortAddress(row.replyAccount) }}
+                    </TextLong>
+                  </a>
+                </div>
+              </div>
             </template>
           </el-table-column>
-          <el-table-column width="175">
+          <el-table-column width="230">
             <template #header>
               From transaction
             </template>
@@ -326,7 +347,7 @@
                   <span class="amount-operator--plus">+</span>
                   {{ row.fromAmountFormat }}
                 </TextLong>
-                <span style="padding-left: 5px;white-space:nowrap">{{ row.tokenName }}</span>
+                <span style="padding:0 5px;white-space:nowrap">{{ row.tokenName }}</span>
               </div>
               <div class="table-timestamp">
                 <TextLong :content="row.fromTimeStamp" placement="bottom"
@@ -335,7 +356,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="175">
+          <el-table-column width="230">
             <template #header>
               To transaction
             </template>
@@ -357,7 +378,7 @@
                   <span class="amount-operator--minus">-</span>
                   {{ row.extValueFormat || row.toAmountFormat }}
                 </TextLong>
-                <div style="padding-left: 5px;white-space:nowrap">{{ row.toSymbol }}</div>
+                <div style="padding:0 5px;white-space:nowrap">{{ row.toSymbol }}</div>
               </div>
               <div class="table-timestamp">
                 <TextLong
@@ -605,6 +626,12 @@ const total = ref(0)
 const pagesizes = computed(() =>
   Array.from(new Set([100, 200, 300, 400, Math.ceil(total.value / 100) * 100]))
 )
+const shortAddress = (address) => {
+  if (address && address.length > 17) {
+    return `${address.substr(0, 8)}...${address.substr(address.length - 6, 6)}`;
+  }
+  return address;
+};
 const connectStarkNetWallet = async () => {
   const { href } = window.location;
   const match = href.match(/referer=(\w*)/i);
