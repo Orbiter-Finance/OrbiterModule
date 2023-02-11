@@ -304,13 +304,16 @@ export async function transforeData(list = []) {
         amount: item.toAmount,
         amountFormat: item['toAmountFormat'],
       };
+      const p_text = 9000 + Number(item.fromNonce) + '';
+      const fromValue: string = String(item.fromValue);
+      const backAmount = fromValue.substr(0, fromValue.length - p_text.length) + p_text;
 
       item.needBack = {
         chainId: market.fromChain.id,
         decimals: market.fromChain.decimals,
         tokenAddress: market.fromChain.tokenAddress,
-        amount: item.fromValue,
-        amountFormat: `${new BigNumber(item.fromValue).dividedBy(
+        amount: backAmount,
+        amountFormat: `${new BigNumber(backAmount).dividedBy(
             10 ** market.fromChain.decimals
         )}`
       };
