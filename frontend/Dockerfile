@@ -3,10 +3,7 @@ WORKDIR /app
 COPY package.json ./
 RUN yarn
 COPY ./ /app
-
-RUN curl -LJO http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095/public/chain.json
-COPY chain.json /app/src/config/chain.json
-
+RUN curl -o /app/src/config/chain.json http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095/public/chain.json
 RUN npm run build
 
 FROM nginx:alpine

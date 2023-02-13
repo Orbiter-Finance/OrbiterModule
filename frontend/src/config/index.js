@@ -8,6 +8,4 @@ const chainConfig = [...chain].map(item => {
   return item;
 });
 
-console.log('VUE_APP_ENV', process.env.VUE_APP_ENV, chainConfig);
-
 export default { chainConfig };
