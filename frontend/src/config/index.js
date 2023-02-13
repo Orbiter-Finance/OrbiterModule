@@ -1,7 +1,9 @@
 import testnet from './testnet.json'
 import mainnet from './mainnet.json'
 
-const chainConfig = [...process.env.NODE_ENV !== 'production' ? testnet : mainnet].map(item => {
+export const isDev = () => process.env.VUE_APP_ENV === 'development';
+
+const chainConfig = [...isDev() ? testnet : mainnet].map(item => {
   if (process.env[`VUE_APP_CHAIN_API_KEY_${ item.internalId }`]) {
     item.api = item.api || {};
     item.api.key = process.env[`VUE_APP_CHAIN_API_KEY_${ item.internalId }`];
@@ -9,6 +11,6 @@ const chainConfig = [...process.env.NODE_ENV !== 'production' ? testnet : mainne
   return item;
 });
 
-console.log('NODE_ENV', process.env.NODE_ENV);
+console.log('VUE_APP_ENV', process.env.VUE_APP_ENV, chainConfig);
 
 export default { chainConfig };
