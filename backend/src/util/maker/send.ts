@@ -1244,7 +1244,10 @@ async function sendConsumer(value: any) {
   if ([1, 5].includes(chainID)) {
     try {
       // eip 1559 send
-      const config = chains.getChainByInternalId(chainID)
+      const config = chains.getChainInfo(Number(chainID))
+      if (!config) {
+        throw new Error('config not found');
+      }
       if (config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }

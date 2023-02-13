@@ -543,8 +543,8 @@ export async function sendTransaction(
   // accessLogger.info(
   // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   // )
-  const toChainConfig: IChainConfig = chains.getChainByInternalId(
-    String(toChainID)
+  const toChainConfig = chains.getChainInfo(
+    Number(toChainID)
   )
   if (!toChainConfig || !toChainConfig.tokens) {
     accessLogger.error(

@@ -40,25 +40,6 @@ async function getTokenBalance(
   let value: string | undefined
   try {
     switch (chainId) {
-      case 3:
-      case 33:
-        {
-          let api = makerConfig.zksync.api
-          if (chainId == 33) {
-            api = makerConfig.zksync_test.api
-          }
-
-          const respData = (
-            await axios.get(
-              `${api.endPoint}/accounts/${makerAddress}/committed`
-            )
-          ).data
-
-          if (respData.status == 'success' && respData?.result?.balances) {
-            value = respData.result.balances[tokenName.toUpperCase()]
-          }
-        }
-        break
       case 9:
       case 99:
         {
@@ -96,108 +77,17 @@ async function getTokenBalance(
           }
         }
         break
-      case 8:
-      case 88:
-        const imxHelper = new IMXHelper(chainId)
-        value = (
-          await imxHelper.getBalanceBySymbol(makerAddress, tokenName)
-        ).toString()
-        break
       case 11:
       case 511:
         const dydxHelper = new DydxHelper(chainId)
         value = (await dydxHelper.getBalanceUsdc(makerAddress)).toString()
         break
-      case 12:
-      case 512:
-        let balanceInfo = await ZKSpaceHelper.getZKSBalance({
-          account: makerAddress,
-          localChainID: chainId,
-        })
-        if (
-          !balanceInfo ||
-          !balanceInfo.length ||
-          balanceInfo.findIndex((item) => item.id == 0) == -1
-        ) {
-          value = '0'
-        }
-        let httpEndPoint = makerConfig.zkspace.httpEndPoint
-        if (chainId === 512) {
-          httpEndPoint = makerConfig.zkspace_test.httpEndPoint
-        }
-        let tokenInfos = await ZKSpaceHelper.getTokenInfos(httpEndPoint)
-        const zksTokenInfo = tokenInfos.find(
-          (item) =>
-            item.address.toLowerCase() ==
-            (tokenAddress ? tokenAddress.toLowerCase() : '0x' + '0'.repeat(40))
-        )
-        let defaultIndex = balanceInfo.findIndex(
-          (item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0)
-        )
-        value =
-          defaultIndex > -1
-            ? balanceInfo[defaultIndex].amount *
-            10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
-            ''
-            : '0'
-        break
-
-      case 1:
-      case 2:
-      case 22:
-      case 4:
-      case 44:
-      case 5:
-      case 7:
-      case 77:
-      case 10:
-      case 510:
-      case 12:
-      case 512:
-      case 14:
-      case 514:
-      case 15:
-      case 515:
-      case 16:
-      case 516:
-      case 17:
-      case 517:
-      case 518:
-      case 519:
-        // const balanceService = 
-        // value = await balanceService.getBalance(makerAddress, tokenAddress);
+      default:
         if (!balanceService[String(chainId)]) {
           balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
         }
         const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
         return result && result.balance;
-        break
-      default:
-        const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
-        if (!alchemyUrl) {
-          break
-        }
-        // when empty tokenAddress or 0x00...000  get eth balances
-        if (!tokenAddress || isEthTokenAddress(tokenAddress) || chainId == 97) {
-          value = await createAlchemyWeb3(alchemyUrl).eth.getBalance(
-            makerAddress
-          )
-        } else {
-          const resp = await createAlchemyWeb3(
-            alchemyUrl
-          ).alchemy.getTokenBalances(makerAddress, [tokenAddress])
-
-          for (const item of resp.tokenBalances) {
-            if (item.error) {
-              continue
-            }
-
-            value = String(item.tokenBalance)
-
-            // Now only one
-            break
-          }
-        }
         break
     }
   } catch (error) {
@@ -209,30 +99,6 @@ async function getTokenBalance(
 
   return value
 }
-
-/**
- * @param web3
- * @param makerAddress
- * @param tokenAddress
- * @returns
- */
-async function getBalanceByCommon(
-  web3: Web3,
-  makerAddress: string,
-  tokenAddress: string
-) {
-  const tokenContract = new web3.eth.Contract(
-    <any>makerConfig.ABI,
-    tokenAddress
-  )
-  const tokenBalanceWei = await tokenContract.methods
-    .balanceOf(makerAddress)
-    .call({
-      from: makerAddress,
-    })
-  return tokenBalanceWei
-}
-
 type WealthsChain = {
   chainId: number
   chainName: string
@@ -291,22 +157,28 @@ export async function getWealthsChains(makerAddress: string) {
       continue
     }
     // find token 
-    const chain1 = chains.getChainByInternalId(String(item.c1ID))
-    const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
-    pushToChainBalances(
-      pushToChains(item.makerAddress, item.c1ID, item.c1Name),
-      item.t1Address,
-      token1?.symbol || "",
-      token1?.decimals || item.precision
-    )
-    const chain2 = chains.getChainByInternalId(String(item.c2ID))
-    const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
-    pushToChainBalances(
-      pushToChains(item.makerAddress, item.c2ID, item.c2Name),
-      item.t2Address,
-      token2?.symbol || "",
-      token2?.decimals || item.precision
-    )
+    const chain1 = chains.getChainInfo(Number(item.c1ID))
+    if (chain1) {
+      const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
+      pushToChainBalances(
+        pushToChains(item.makerAddress, item.c1ID, item.c1Name),
+        item.t1Address,
+        token1?.symbol || "",
+        token1?.decimals || item.precision
+      )
+    }
+
+    const chain2 = chains.getChainInfo(Number(item.c2ID))
+    if (chain2) {
+      const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
+      pushToChainBalances(
+        pushToChains(item.makerAddress, item.c2ID, item.c2Name),
+        item.t2Address,
+        token2?.symbol || "",
+        token2?.decimals || item.precision
+      )
+    }
+
   }
   // get tokan balance
   for (const chain of wealthsChains) {

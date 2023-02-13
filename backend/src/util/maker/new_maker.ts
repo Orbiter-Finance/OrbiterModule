@@ -144,6 +144,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
+
       if (!(await isWatchAddress(tx.to))) {
         // accessLogger.error(
         //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
@@ -151,8 +152,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const fromChain = await chains.getChainByChainId(tx.chainId)
-       // check send
-       if (!fromChain) {
+      // check send
+      if (!fromChain) {
         errorLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
           tx.hash
@@ -167,7 +168,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-     
+
       const startTimeTimeStamp = LastPullTxMap.get(
         `${fromChain.internalId}:${tx.to.toLowerCase()}`
       )
@@ -180,7 +181,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       let ext = '';
       if ([8, 88].includes(Number(fromChain.internalId))) {
         ext = dayjs(tx.timestamp).unix().toString();
-      }else if ([4, 44].includes(Number(fromChain.internalId))) {
+      } else if ([4, 44].includes(Number(fromChain.internalId))) {
         ext = String(Number(tx.extra['version']));
       }
       const transactionID = TransactionIDV2(
@@ -214,10 +215,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (!result.state) {
         accessLogger.error(
-          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -225,24 +224,25 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.error(
-          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000
-      const toChain = chains.getChainByInternalId(String(toChainInternalId))
+      const toChain = chains.getChainInfo(Number(toChainInternalId))
+      if (!toChain) {
+        throw new Error('toChain not found');
+      }
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
       )
       if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
           `[${transactionID}] Refund The query currency information does not exist: ` +
-            JSON.stringify(tx)
+          JSON.stringify(tx)
         )
         continue
       }
@@ -285,6 +285,25 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
       }
+      if (tx.source === 'xvm' || tx.extra['xvm']) {
+        errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 1`)
+        continue;
+      }
+      if (fromChain.xvmList) {
+        const fromChaunXvmList = fromChain.xvmList.map(addr => addr.toLocaleLowerCase());
+        if (fromChaunXvmList.includes(tx.from.toLocaleLowerCase()) || fromChaunXvmList.includes(tx.to.toLocaleLowerCase())) {
+          errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 2`)
+          continue;
+        }
+      }
+      if (toChain.xvmList) {
+        const toChaunXvmList = toChain.xvmList.map(addr => addr.toLocaleLowerCase());
+        if (toChaunXvmList.includes(tx.from.toLocaleLowerCase()) || toChaunXvmList.includes(tx.to.toLocaleLowerCase())) {
+          errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 3`)
+          continue;
+        }
+      }
+
       await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
     }
   }
@@ -295,6 +314,10 @@ export async function confirmTransactionSendMoneyBack(
   market: IMarket,
   tx: ITransaction
 ) {
+  if (tx.source === 'xvm' || tx.extra['xvm']) {
+    errorLogger.error(`[${transactionID}] OrbiterX transaction, interception =`)
+    return;
+  }
   const fromChainID = Number(market.fromChain.id)
   if (
     Number(fromChainID) === 4 &&
@@ -378,6 +401,7 @@ export async function confirmTransactionSendMoneyBack(
           break
       }
 
+      // not xvm break;
       await sendTransaction(
         makerAddress,
         transactionID,
