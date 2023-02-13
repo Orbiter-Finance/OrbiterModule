@@ -289,7 +289,7 @@
               </el-tag>
             </template>
           </el-table-column>
-          <el-table-column width="230">
+          <el-table-column width="250">
             <template #header>
               User List
             </template>
