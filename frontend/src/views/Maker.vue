@@ -368,7 +368,7 @@
               <div style="display: flex">
                 <TextLong
                         :content="
-                  row.toAmountFormat +
+                  (row.extValueFormat || row.toAmountFormat) +
                   (row.toAmount <= 0
                     ? ` (NeedTo: ${row.needTo.amountFormat})`
                     : '')
