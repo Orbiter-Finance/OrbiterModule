@@ -151,6 +151,10 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         // )
         continue
       }
+      if (tx.source === 'xvm' || tx.extra['xvm']) {
+        errorLogger.error(`[${tx.hash}] OrbiterX transaction, interception 1`)
+        continue;
+      }
       const fromChain = await chains.getChainByChainId(tx.chainId)
       // check send
       if (!fromChain) {
@@ -285,10 +289,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
       }
-      if (tx.source === 'xvm' || tx.extra['xvm']) {
-        errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 1`)
-        continue;
-      }
+  
       if (fromChain.xvmList) {
         const fromChaunXvmList = fromChain.xvmList.map(addr => addr.toLocaleLowerCase());
         if (fromChaunXvmList.includes(tx.from.toLocaleLowerCase()) || fromChaunXvmList.includes(tx.to.toLocaleLowerCase())) {
