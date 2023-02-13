@@ -712,10 +712,8 @@ const switchNetwork = async (chainId) => {
 const handleSelectionChange = (rowList) => {
   if (rowList.length) {
     if (sendType.value == 1) {
-      console.log('toChain')
       selectChainId.value = rowList[0].toChain;
     } else {
-      console.log('fromChain')
       selectChainId.value = rowList[0].fromChain;
     }
   } else {

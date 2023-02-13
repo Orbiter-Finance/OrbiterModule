@@ -1,9 +1,6 @@
-import testnet from './testnet.json'
-import mainnet from './mainnet.json'
+import chain from './chain.json'
 
-export const isDev = () => process.env.VUE_APP_ENV === 'development';
-
-const chainConfig = [...isDev() ? testnet : mainnet].map(item => {
+const chainConfig = [...chain].map(item => {
   if (process.env[`VUE_APP_CHAIN_API_KEY_${ item.internalId }`]) {
     item.api = item.api || {};
     item.api.key = process.env[`VUE_APP_CHAIN_API_KEY_${ item.internalId }`];

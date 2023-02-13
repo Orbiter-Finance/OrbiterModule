@@ -64,6 +64,8 @@ services:
       VUE_APP_ENV: 'development' # development production
     # volumes:
     #   - './frontend/docker.nginx.conf:/etc/nginx/nginx.conf'
+    volumes:
+      - 'config/chain.json:/app/src/config/chain.json'
     ports:
       - '80:80'
     restart: always
