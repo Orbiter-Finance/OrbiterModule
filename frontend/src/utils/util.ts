@@ -1,8 +1,8 @@
-import chainConfig from '../config/index'
+import config from '../config/index'
 
 export default {
   getChainInfoByChainId(chainId) {
-    const configChainList: any = chainConfig;
+    const configChainList: any[] = config.chainConfig;
     const info = configChainList.find(item => +item.internalId === +chainId);
     if (!info) return null;
     return JSON.parse(JSON.stringify(info));
