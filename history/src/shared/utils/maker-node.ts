@@ -233,6 +233,7 @@ export async function transforeData(list = []) {
     const decimals = token2Decimals[item.tokenName]
     item['fromChainName'] = await getChainName(item.fromChain)
     item['toChainName'] = await getChainName(item.toChain)
+    item.toAmount = item.toValue || item.toAmount;
     item.decimals = decimals
     item.toTx = item.toTx || '0x'
     if (decimals > -1) {

@@ -84,41 +84,6 @@ function transforeData(list: any = []) {
 
   // add hrefs
   for (const item of list) {
-    item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
-    item['userAddressHref'] = accountExploreUrl[item.fromChain] + item['userAddress']
-    item['replyAccountHref'] = accountExploreUrl[item.toChain] + item['replyAccount']
-    item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['fromTx']
-    item['toTxHref'] = ''
-    if (item['toTx'] && item['toTx'] != '0x') {
-      item['toTxHref'] = $env.txExploreUrl[item.toChain] + item['toTx']
-    }
-    item['txTokenName'] = item.tokenName
-    item.transactionID = item.transcationId
-    item.formTx = item.fromTx
-    // item.fromAmountFormat = +item.fromValue / Math.pow(10, 18)
-    // item.toAmountFormat = +item.toValue / Math.pow(10, 18)
-    
-    /*
-      item.state = 20
-      if (item.status==1 || item.status==99) {
-        item.state = 1
-      } else {
-        item.state = 20
-      }
-      if (item.fromStatus==1 || item.fromStatus==99) {
-        item.state = 3
-      } else {
-        item.state = 2
-      }
-      if (item.state == 1 || item.state == 3) {
-        if (item.toTx && item.fromTx) {
-          item.state = 3
-        } else {
-          item.state = 20
-        }
-      }
-    */
-
     item.state = 20;
     if (item.fromStatus == 0) {
       // from check
@@ -155,6 +120,21 @@ function transforeData(list: any = []) {
       // to time out
       item.state = 5;
     }
+
+    item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
+    item['userAddressHref'] = accountExploreUrl[item.fromChain] + item['userAddress']
+    item['replyAccountHref'] = accountExploreUrl[item.toChain] + item['replyAccount']
+    item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['fromTx']
+    item['toTxHref'] = ''
+    if (item['toTx'] && item['toTx'] != '0x') {
+      item['toTxHref'] = $env.txExploreUrl[item.toChain] + item['toTx']
+      if (item.state === 7) {
+        item['toTxHref'] = $env.txExploreUrl[item.fromChain] + item['toTx'];
+      }
+    }
+    item['txTokenName'] = item.tokenName
+    item.transactionID = item.transcationId
+    item.formTx = item.fromTx
   }
 }
 async function getMakerNode(params: any = {}) {
