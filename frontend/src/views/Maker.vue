@@ -237,7 +237,7 @@
           </div>
         </div>
 
-        <el-table :data="list" stripe style="width: 100%" @selection-change="handleSelectionChange">
+        <el-table ref="dashboardTable" :data="list" stripe style="width: 100%" @selection-change="handleSelectionChange">
           <el-table-column v-if="selectShow"
                   :selectable="selectable"
                   type="selection"
@@ -469,7 +469,7 @@ import {
 } from 'orbiter-sdk'
 import { getStarknet, connect as getStarknetWallet } from 'orbiter-get-starknet';
 import { stark, uint256 } from 'orbiter-starknet';
-import { ref, computed, inject, reactive, toRef, watch } from 'vue';
+import { ref, computed, inject, reactive, toRef, watch, getCurrentInstance,onMounted } from 'vue';
 import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
 import util from "../utils/util";
@@ -584,7 +584,10 @@ const list = computed(() =>
       item.userAddress == state.userAddressSelected
   )
 )
-
+let currentInstance;
+onMounted(() => {
+  currentInstance = getCurrentInstance();
+});
 let selectDataList = [];
 const userAddressList = computed(() => {
   const userAddressList: { address: string; count: number }[] = []
@@ -1132,6 +1135,10 @@ reset()
 init()
 // When makerAddressSelected changed, get maker's data
 watch(() => makerAddressSelected?.value, init)
+watch(() => sendType.value, function () {
+  selectDataList = [];
+  currentInstance.ctx.$refs.dashboardTable.clearSelection();
+});
 </script>
 
 <style lang="scss">
