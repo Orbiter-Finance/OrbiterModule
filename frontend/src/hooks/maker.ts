@@ -121,6 +121,11 @@ function transforeData(list: any = []) {
       item.state = 5;
     }
 
+    if (item.status == 96) {
+      // to fail
+      item.state = 20;
+    }
+
     item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
     item['userAddressHref'] = accountExploreUrl[item.fromChain] + item['userAddress']
     item['replyAccountHref'] = accountExploreUrl[item.toChain] + item['replyAccount']

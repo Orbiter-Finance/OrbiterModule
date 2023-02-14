@@ -29,4 +29,3 @@ backend/yalc.lock
 .env
 testnet.json
 chains.json
-!frontend/src/config/testnet.json

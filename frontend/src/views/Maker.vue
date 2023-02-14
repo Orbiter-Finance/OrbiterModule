@@ -485,12 +485,12 @@ const CHAIN_NAME_MAPPING = {
 }
 const stateTags = {
   0: { label: 'From: check', color: '#EADF6A' },
-  1: { label: 'From: okay', color: '#D89E73' },
+  1: { label: 'From: okay', color: '#E6A23B' },
   2: { label: 'From: failed', color: '#E13428' },
   3: { label: 'To: waiting', color: '#5A7EF7' },
   4: { label: 'To: check', color: '#EADF6A' },
   5: { label: 'To: time out', color: '#627DEF' },
-  6: { label: 'To: okay', color: '#96E967' },
+  6: { label: 'To: okay', color: '#67C23A' },
   7: { label: 'To: backtrack', color: '#C959F7' },
   20: { label: 'To: failed', color: '#E13428' },
 };

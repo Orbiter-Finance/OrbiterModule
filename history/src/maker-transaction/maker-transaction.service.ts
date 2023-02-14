@@ -16,7 +16,8 @@ enum StateEnum {
   toCheck = 4,
   toTimeOut = 5,
   toOk = 6,
-  backtrack = 7
+  backtrack = 7,
+  fail = 20
 }
 
 @Injectable()
@@ -90,6 +91,10 @@ export class MakerTransactionService {
         }
         case StateEnum.backtrack: {
           more += `and t2.status = 95 `;
+          break;
+        }
+        case StateEnum.fail: {
+          more += `and t2.status = 96 `;
           break;
         }
       }

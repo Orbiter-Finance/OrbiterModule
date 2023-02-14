@@ -107,7 +107,7 @@ const GAS_PRICE_PAID_RATE = { 2: 0.8 } // arbitrum Transaction Fee = gasUsed * g
 export async function statisticsProfit(
   makerNode
 ): Promise<BigNumber> {
-  if (makerNode.tokenName === 'USDC' || makerNode.tokenName === 'USDT') {
+  if (makerNode.tokenName === 'USDC' || makerNode.tokenName === 'USDT' || makerNode.tokenName === 'DAI') {
     return statisticsProfitOld(makerNode)
   }
   let fromToPrecision = token2Decimals[makerNode.tokenName] || 18
