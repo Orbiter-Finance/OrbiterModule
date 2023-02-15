@@ -8,7 +8,7 @@ networks:
 services:
   history:
     build: ./history
-    command: yarn run start:prod
+    command: yarn run start
     environment:
       OPEN_API_BASE_URL:  '${OPEN_API_BASE_URL}'
       NODE_ENV: 'production' # production development

@@ -6,9 +6,13 @@ import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
 import { makerConfigs } from '../configs/index';
 import { utils } from 'ethers'
-import * as Keyv from 'keyv';
+import * as Keyvs from 'keyv';
 import { IMarket } from "../interfaces";
-const keyv = new Keyv();
+let keyv: any
+try{
+    const Keyv: any = Keyvs;
+    keyv = new Keyv();
+}catch (e) {}
 
 // ETH:18  USDC:6  USDT:6
 const token2Decimals = {

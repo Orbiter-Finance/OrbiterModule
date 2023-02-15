@@ -5,9 +5,12 @@ import { EntityManager, getRepository } from 'typeorm';
 import { PaginationResRO, CommonResRO, PaginationReqRO } from '../shared/interfaces';
 import { logger, formateTimestamp, transforeUnmatchedTradding } from '../shared/utils';
 import { groupBy, sumBy } from 'lodash';
-import * as dayjs from 'dayjs';
+import * as day from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
-dayjs.extend(utc)
+try {
+  day.extend(<any>utc)
+}catch (e) {}
+const dayjs: any = day;
 import { getRates } from '../shared/utils/maker-node'
 @Injectable()
 export class TransactionService {

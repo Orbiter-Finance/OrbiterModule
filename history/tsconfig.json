@@ -12,6 +12,8 @@
     "sourceMap": true,
     "allowJs": true,
     "outDir": "./dist",
+    "resolveJsonModule": true,
+    "esModuleInterop": true,
     "types": [
       "node"
     ]
