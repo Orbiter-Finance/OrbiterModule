@@ -447,6 +447,7 @@
 </template>
 
 <script lang="ts" setup>
+import RLP from 'rlp'
 import TextLong from '@/components/TextLong.vue'
 import {
   makerInfo,
@@ -1106,12 +1107,13 @@ const starknetTransfer = async (fromAddress, toAddress, chainId, tokenAddress, a
 };
 const swapOkEncodeABI = (tradeId: string, token: string, toAddress: string, toValue: string, op:number) => {
   const ifa = new ethers.utils.Interface(XVM_ABI);
+  const bufferList = [tradeId, op] // 
+  const encoded = RLP.encode(bufferList) // 
   return ifa.encodeFunctionData('swapAnswer', [
-    tradeId,
     toAddress,
     token,
-    op,
     toValue,
+    encoded
   ]);
 };
 
