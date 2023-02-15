@@ -1,5 +1,3 @@
-import * as day from 'dayjs';
-
-const dayjs: any = day;
+import dayjs from 'dayjs';
 
 export default dayjs;

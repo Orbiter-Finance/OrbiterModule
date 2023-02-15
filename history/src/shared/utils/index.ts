@@ -1,6 +1,5 @@
-import * as day from 'dayjs'
+import dayjs from 'dayjs'
 
-const dayjs: any = day;
 export function formateTimestamp(timestamp: number | string) {
   return dayjs(+timestamp).format('YYYY-MM-DD HH:mm:ss')
 }
