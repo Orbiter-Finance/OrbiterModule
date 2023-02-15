@@ -103,34 +103,34 @@ export async function exchangeToUsd(
   return value.dividedBy(rate)
 }
 
-const GAS_PRICE_PAID_RATE = { 2: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
+const GAS_PRICE_PAID_RATE = { 2: 0.8 }; // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
 export async function statisticsProfit(
-  makerNode
+    makerNode,
+    market: IMarket
 ): Promise<BigNumber> {
-  if (makerNode.tokenName === 'USDC' || makerNode.tokenName === 'USDT' || makerNode.tokenName === 'DAI') {
-    return statisticsProfitOld(makerNode)
-  }
-  let fromToPrecision = token2Decimals[makerNode.tokenName] || 18
-  let gasPrecision = token2Decimals[makerNode.tokenName] || 18 // gas default is eth, zksync is token
+  if (market && Number(makerNode.toAmount) > 0) {
+    const fromUSD = await exchangeToUsd(
+        new BigNumber(makerNode.fromAmount)
+            .dividedBy(10 ** market.fromChain.decimals),
+        market.fromChain.symbol
+    );
 
-  if (makerNode.tokenName && Number(makerNode.toAmount) > 0) {
-    const fromMinusToUsd = await exchangeToUsd(
-      new BigNumber(makerNode.fromAmount)
-        .minus(makerNode.toAmount)
-        .dividedBy(10 ** fromToPrecision),
-      makerNode.tokenName
-    )
-    let gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1
-    if (makerNode.gasCurrency) {
-      const gasAmountUsd = await exchangeToUsd(
-        new BigNumber(makerNode.gasAmount)
-          .multipliedBy(gasPricePaidRate)
-          .dividedBy(10 ** gasPrecision),
-        makerNode.gasCurrency || ''
-      )
-      return fromMinusToUsd.minus(gasAmountUsd || 0)
+    const toUSD = await exchangeToUsd(
+        new BigNumber(makerNode.toAmount)
+            .dividedBy(10 ** market.toChain.decimals),
+        market.toChain.symbol
+    );
+    if (makerNode.gasAmount) {
+      const gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1;
+      const gas = await exchangeToUsd(
+          new BigNumber(makerNode.gasAmount)
+              .multipliedBy(gasPricePaidRate)
+              .dividedBy(10 ** 18),
+          'ETH'
+      );
+      return fromUSD.minus(toUSD).minus(gas || 0);
     }
-    return fromMinusToUsd;
+    return fromUSD.minus(toUSD);
   } else {
     return new BigNumber(0)
   }
@@ -329,7 +329,7 @@ export async function transforeData(list = []) {
     }
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
-    item['profitUSD'] = (await statisticsProfit(item)).toFixed(3)
+    item['profitUSD'] = (await statisticsProfit(item, market)).toFixed(3);
 
     // old logic: when not toTx, dashboard Profit shows: 0.000 USD
     if (item.profitUSD === 'NaN' || !item.toTx) {
