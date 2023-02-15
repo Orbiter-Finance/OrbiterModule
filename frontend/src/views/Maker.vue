@@ -295,10 +295,10 @@
             </template>
             <template #default="{ row }">
               <div style="display: flex">
-                <div style="width: 30%">
+                <div style="width: 40%">
                   From user:
                 </div>
-                <div style="width: 70%">
+                <div style="width: 60%">
                   <a :href="row.userAddressHref" target="_blank">
                     <TextLong :content="row.userAddress" placement="bottom">
                       {{ shortAddress(row.userAddress) }}
