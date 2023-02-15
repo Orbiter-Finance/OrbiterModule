@@ -1,9 +1,8 @@
 FROM node:14
 WORKDIR /app
 COPY package.json ./
-RUN mkdir -p /app/src/config
-RUN echo "[]" > /app/src/config/chain.json
 RUN yarn
+
 COPY ./ /app
 RUN curl -o /app/src/config/chain.json http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095/public/chain.json
 RUN npm run build

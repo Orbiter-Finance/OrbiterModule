@@ -37,7 +37,7 @@
 
 #### 2. Set trade maker address and token address at this file
 
-**[./backend/src/util/maker/maker_list.ts](./backend/src/util/maker/maker_list.ts)**
+**[./backend/src/util/maker/index.js](./backend/src/util/maker/maker_list.ts)**
 
 ### Install docker and docker-compose
 

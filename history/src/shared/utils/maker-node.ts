@@ -4,9 +4,10 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerConfigs, IMarket } from '../configs';
+import { makerConfigs } from '../configs/index';
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
+import { IMarket } from "../interfaces";
 const keyv = new Keyv();
 
 // ETH:18  USDC:6  USDT:6
@@ -288,6 +289,7 @@ export async function transforeData(list = []) {
           cfg.toChain.symbol == item.toSymbol);
 
       if (extra?.xvm?.params?.data?.expectValue) {
+        item.toAmount = extra.xvm.params.data.expectValue;
         item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
             10 ** market.toChain.decimals
         )}`;
