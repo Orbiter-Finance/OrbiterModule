@@ -307,10 +307,10 @@
                 </div>
               </div>
               <div style="display: flex">
-                <div style="width: 30%">
+                <div style="width: 40%">
                   Maker:
                 </div>
-                <div style="width: 70%">
+                <div style="width: 60%">
                   <a :href="row.makerAddressHref" target="_blank">
                     <TextLong :content="row.makerAddress">
                       {{ shortAddress(row.makerAddress) }}
@@ -319,10 +319,10 @@
                 </div>
               </div>
               <div style="display: flex">
-                <div style="width: 30%">
+                <div style="width: 40%">
                   To User:
                 </div>
-                <div style="width: 70%">
+                <div style="width: 60%">
                   <a :href="row.replyAccountHref" target="_blank">
                     <TextLong :content="row.replyAccount">
                       {{ shortAddress(row.replyAccount) }}
@@ -332,7 +332,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="230">
+          <el-table-column width="240">
             <template #header>
               From transaction
             </template>
@@ -356,7 +356,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="230">
+          <el-table-column width="240">
             <template #header>
               To transaction
             </template>
