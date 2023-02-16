@@ -4,10 +4,6 @@ import { PaginationResRO, PaginationReqRO } from '../shared/interfaces';
 import { equalsIgnoreCase, logger, formateTimestamp } from '../shared/utils';
 import { transforeData } from '../shared/utils';
 
-const L1L2Mapping = {
-  "0x0043d60e87c5dd08C86C3123340705a1556C4719": "0x050e5ba067562e87b47d87542159e16a627e85b00de331a53b471cee1a4e5a4f"
-};
-
 enum StateEnum {
   fromCheck = 0,
   fromOk = 1,
@@ -41,10 +37,7 @@ export class MakerTransactionService {
 
     let more = ``;
     if (query.makerAddress) {
-      const starknetMakerAddress = L1L2Mapping[query.makerAddress];
-      more += `and ((m.replySender = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
-      if(starknetMakerAddress)
-      more += `or (m.replySender = '${starknetMakerAddress}' or t.to = '${starknetMakerAddress}' or t2.from = '${starknetMakerAddress}')) `
+      more += `and (m.replySender = '${query.makerAddress}' or m.replyAccount = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
     }
     if (query.startTime) {
       more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;
