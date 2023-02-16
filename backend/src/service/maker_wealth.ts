@@ -116,13 +116,7 @@ export async function getWealthsChains(makerAddress: string) {
     )
   }
   const wealthsChains: WealthsChain[] = []
-  const makers = {
-    '0x0043d60e87c5dd08c86c3123340705a1556c4719': ['ETH', 'USDT', 'USDC', "DAI"],
-    '0x80c67432656d59144ceff962e8faf8926599bcf8': ['ETH'],
-    '0x41d3d33156ae7c62c094aae2995003ae63f587b3': ['USDC'],
-    '0x095d2918b03b2e86d68551dcf11302121fb626c9': ['DAI']
-  }
-  const tokens = makers[makerAddress.toLocaleLowerCase()];
+  const tokens = makerConfig.makerBalacnes[makerAddress.toLocaleLowerCase()];
   if (tokens) {
     const chainsList = chains.getAllChains();
     for (const chainConfig of chainsList) {

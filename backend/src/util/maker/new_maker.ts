@@ -244,13 +244,6 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-      if (maker.prohibitPaymentChain.split(',').includes(String(toChainInternalId))) {
-        accessLogger.error(
-          `[${transactionID}] use new xvm transfer:` +
-          JSON.stringify(tx)
-        )
-        continue
-      }
       const newMakerList = await getNewMarketList()
       const marketItem = newMakerList.find(
         (m) =>

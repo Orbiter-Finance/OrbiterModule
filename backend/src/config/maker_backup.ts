@@ -1,5 +1,12 @@
 export default {
-  prohibitPaymentChain: '5,22,66,77,515,516,519',
+  makerBalacnes: {
+    '0x0043d60e87c5dd08c86c3123340705a1556c4719': ['ETH', 'USDT', 'USDC', "DAI"],
+    '0x80c67432656d59144ceff962e8faf8926599bcf8': ['ETH'],
+    '0x41d3d33156ae7c62c094aae2995003ae63f587b3': ['USDC'],
+    '0x095d2918b03b2e86d68551dcf11302121fb626c9': ['DAI'],
+    '0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b': ['USDC', 'USDT', 'DAI', 'ETH'],
+    '0x1c84daa159cf68667a54beb412cdb8b2c193fb32':['USDT', 'USDC', 'DAI', 'ETH'],
+  },
   starknetAddress: {
     '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
     // '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',

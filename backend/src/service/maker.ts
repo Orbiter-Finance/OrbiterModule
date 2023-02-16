@@ -16,7 +16,6 @@ import {
 } from '../util/maker'
 import { CHAIN_INDEX, getPTextFromTAmount } from '../util/maker/core'
 import { exchangeToUsd } from './coinbase'
-import dayjs from 'dayjs'
 
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -30,17 +29,7 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
  * @returns
  */
 export async function getMakerAddresses() {
-  const makerList = await getMakerList()
-
-  const makerAddresses: string[] = []
-  for (const item of makerList) {
-    if (makerAddresses.indexOf(item.makerAddress) > -1) {
-      continue
-    }
-    makerAddresses.push(item.makerAddress)
-  }
-
-  return makerAddresses
+  return Object.keys(makerConfig.makerBalacnes);
 }
 
 const GAS_PRICE_PAID_RATE = { arbitrum: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
