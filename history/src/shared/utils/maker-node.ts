@@ -255,12 +255,6 @@ export async function transforeData(list = []) {
       ).toFixed(6)
     }
 
-    // old logic: when not toTx, dashboard ToAmount shows: 0 (NeedTo: 0.009752000000000003)
-    if (!item.toTx) {
-      item.toAmount = "0"
-      item.toAmountFormat = "0"
-    }
-
     // Trade duration
     item['tradeDuration'] = 0
 
@@ -290,10 +284,12 @@ export async function transforeData(list = []) {
           cfg.toChain.symbol == item.toSymbol);
 
       if (extra?.xvm?.params?.data?.expectValue) {
-        item.toAmount = extra.xvm.params.data.expectValue;
-        item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
-            10 ** market.toChain.decimals
-        )}`;
+        if (!item.toValue) {
+          item.toAmount = extra.xvm.params.data.expectValue;
+          item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
+              10 ** market.toChain.decimals
+          )}`;
+        }
       }
       delete item.extra;
     } catch (e) {
