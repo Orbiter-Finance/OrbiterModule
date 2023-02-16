@@ -8,9 +8,10 @@ export default {
     '0x1c84daa159cf68667a54beb412cdb8b2c193fb32':['USDT', 'USDC', 'DAI', 'ETH'],
   },
   starknetAddress: {
-    '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
-    // '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x001709eA381e87D4c9ba5e4A67Adc9868C05e82556A53FD1b3A8b1F21e098143',
-    // '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x01998b5f1512f76cfe238c125df6541253c8f07f9d2eb2d50f5222f059165685', new 
+    '0x80c67432656d59144ceff962e8faf8926599bcf8':
+      '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
+    '0x095d2918b03b2e86d68551dcf11302121fb626c9':
+      '0x01998b5f1512f76cfe238c125df6541253c8f07f9d2eb2d50f5222f059165685',
     '0x0043d60e87c5dd08c86c3123340705a1556c4719':
       '0x033b88fc03a2ccb1433d6c70b73250d0513c6ee17a7ab61c5af0fbe16bd17a6e',
   },
@@ -247,7 +248,7 @@ export default {
   polygon_zkevm_test: {
     wsEndPoint: 'https://public.zkevm-test.net:2083',
     httpEndPoint: 'https://public.zkevm-test.net:2083',
-    httpEndPointInfura: "",
+    httpEndPointInfura: '',
     api: {
       endPoint: '',
       key: '',
@@ -267,7 +268,7 @@ export default {
   bnbchain: {
     wsEndPoint: 'wss://bsc-ws-node.nariox.org',
     httpEndPoint: 'https://bsc-dataseed1.binance.org',
-    httpEndPointInfura: "",
+    httpEndPointInfura: '',
     api: {
       endPoint: '',
       key: '',
@@ -278,7 +279,7 @@ export default {
   bnbchain_test: {
     wsEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
     httpEndPoint: 'https://data-seed-prebsc-1-s1.binance.org:8545',
-    httpEndPointInfura: "",
+    httpEndPointInfura: '',
     api: {
       endPoint: '',
       key: '',
@@ -289,7 +290,7 @@ export default {
   arbitrum_nova: {
     wsEndPoint: 'https://nova.arbitrum.io/rpc',
     httpEndPoint: 'https://nova.arbitrum.io/rpc',
-    httpEndPointInfura: "",
+    httpEndPointInfura: '',
     api: {
       endPoint: 'https://nova-explorer.arbitrum.io/api',
       key: '',
@@ -300,7 +301,7 @@ export default {
   arbitrum_nova_test: {
     wsEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
     httpEndPoint: 'https://goerli-rollup.arbitrum.io/rpc',
-    httpEndPointInfura: "",
+    httpEndPointInfura: '',
     api: {
       endPoint: 'https://goerli-rollup-explorer.arbitrum.io/api',
       key: '',

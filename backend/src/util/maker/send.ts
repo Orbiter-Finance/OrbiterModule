@@ -6,7 +6,6 @@ import {
   generateKeyPair,
   GlobalAPI,
   UserAPI,
-  VALID_UNTIL,
 } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
@@ -34,16 +33,15 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 const nonceDic = {}
 const checkHealthByChain: {
   [key: string]: {
-    smsInterval: number,
+    smsInterval: number
     lastSendSMSTime: number
   }
-} = {};
+} = {}
 const checkHealthAllChain = {
   smsInterval: 1000 * 60 * 5,
-  lastSendSMSTime: 0
-};
+  lastSendSMSTime: 0,
+}
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
-
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
@@ -102,10 +100,17 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         gasPrice = Web3.utils.toHex(20000000000)
         // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
+      if (toChain == 'bnbchain') {
+        if (parseInt(response.data.result, 16) <= 5000000000) {
+          gasPrice = Web3.utils.toHex(5500000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.1)
+        }
+      }
 
       return gasPrice
     } catch (error) {
-      getLoggerService(toChain).info(`gasPrice error ${error.message}`);
+      getLoggerService(toChain).info(`gasPrice error ${error.message}`)
       return Web3.utils.toHex(
         Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
@@ -114,29 +119,38 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 }
 // SendQueue
 const sendQueue = new SendQueue()
-sendQueue.checkHealth((timeout) => {
-  if (Date.now() - checkHealthAllChain.lastSendSMSTime >= checkHealthAllChain.smsInterval) {
-    checkHealthAllChain.lastSendSMSTime = Date.now();
-    try {
-      doSms(`Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`)
-    } catch (error) {
-      errorLogger.error(
-        `Warning:From last consumption doSMS error `,
-        error
+sendQueue.checkHealth(
+  (timeout) => {
+    if (
+      Date.now() - checkHealthAllChain.lastSendSMSTime >=
+      checkHealthAllChain.smsInterval
+    ) {
+      checkHealthAllChain.lastSendSMSTime = Date.now()
+      try {
+        doSms(
+          `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
+        )
+      } catch (error) {
+        errorLogger.error(`Warning:From last consumption doSMS error `, error)
+      }
+    }
+  },
+  (chainId: number, timeout: number) => {
+    const config = checkHealthByChain[chainId] || {
+      smsInterval: 1000 * 30 * 60,
+      lastSendSMSTime: 0,
+    }
+    if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
+      config.lastSendSMSTime = Date.now()
+      doSms(
+        `Warning:${chainId} Chain has not been processed for more than ${(
+          timeout / 1000
+        ).toFixed(0)} seconds`
       )
     }
+    checkHealthByChain[chainId] = config
   }
-}, (chainId: number, timeout: number) => {
-  const config = checkHealthByChain[chainId] || {
-    smsInterval: 1000 * 60 * 5,
-    lastSendSMSTime: 0
-  };
-  if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
-    config.lastSendSMSTime = Date.now();
-    doSms(`Warning:${chainId} Chain has not been processed for more than ${(timeout / 1000).toFixed(0)} seconds`);
-  }
-  checkHealthByChain[chainId] = config;
-});
+)
 
 async function sendConsumer(value: any) {
   let {
@@ -152,8 +166,8 @@ async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
   } = value
-  const accessLogger = getLoggerService(chainID);
-  accessLogger.info(`sendConsumer [${process.pid}] =`, JSON.stringify(value));
+  const accessLogger = getLoggerService(chainID)
+  accessLogger.info(`sendConsumer [${process.pid}] =`, JSON.stringify(value))
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -165,7 +179,9 @@ async function sendConsumer(value: any) {
       }
       if (chainID === 33) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
-        syncProvider = await zksync.Provider.newHttpProvider('https://goerli-api.zksync.io/jsrpc')
+        syncProvider = await zksync.Provider.newHttpProvider(
+          'https://goerli-api.zksync.io/jsrpc'
+        )
       }
       const ethWallet = new ethers.Wallet(
         makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -414,17 +430,15 @@ async function sendConsumer(value: any) {
         amount: String(amountToSend),
         nonce,
       })
-      if (!hash) {
-        throw new Error('Starknet failed to send transaction');
-      }
+      await sleep(1000 * 10)
       return {
         code: 0,
         txid: hash,
         rollback,
       }
     } catch (error) {
-      await rollback(error, nonce);
-      await sleep(1000 * 2);
+      await rollback(error, nonce)
+      await sleep(1000 * 2)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -546,10 +560,10 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-        walletType: ConnectorNames.WalletLink,
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.Unknown,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
@@ -589,6 +603,7 @@ async function sendConsumer(value: any) {
         accessLogger.info('lp_sql_nonce =', lp_sql_nonce)
         accessLogger.info('result_nonce =', result_nonce)
       }
+      const ts = Math.round(new Date().getTime() / 1000) + 30 * 86400
       // step 4 transfer
       const OriginTransferRequestV3 = {
         exchange: exchangeInfo.exchangeAddress,
@@ -605,14 +620,14 @@ async function sendConsumer(value: any) {
           tokenId: 0,
           volume: '940000000000000',
         },
-        validUntil: VALID_UNTIL,
+        validUntil: ts,
         memo: lpMemo,
       }
       const transactionResult = await userApi.submitInternalTransfer({
         request: <any>OriginTransferRequestV3,
         web3: <any>localWeb3,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-        walletType: ConnectorNames.WalletLink,
+        walletType: ConnectorNames.Unknown,
         eddsaKey: eddsaKey.sk,
         apiKey: apiKey,
         isHWAddr: false,
@@ -921,17 +936,19 @@ async function sendConsumer(value: any) {
       }
     }
   }
-  let web3Net = '';
+  let web3Net = ''
   if (makerConfig[toChain]) {
-    web3Net = makerConfig[toChain].httpEndPointInfura || makerConfig[toChain].httpEndPoint
+    web3Net =
+      makerConfig[toChain].httpEndPointInfura ||
+      makerConfig[toChain].httpEndPoint
     accessLogger.info(`RPC from makerConfig ${toChain}`)
   } else {
-    // 
+    //
     accessLogger.info(`RPC from ChainCore ${toChain}`)
   }
   if (isEmpty(web3Net)) {
-    accessLogger.error(`RPC not obtained ToChain ${toChain}`);
-    return;
+    accessLogger.error(`RPC not obtained ToChain ${toChain}`)
+    return
   }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -992,8 +1009,10 @@ async function sendConsumer(value: any) {
      * you need to increase a nonce which is tied to the sender wallet.
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
-    accessLogger.info(`read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`);
-    accessLogger.info('read nonceDic', JSON.stringify(nonceDic));
+    accessLogger.info(
+      `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
+    )
+    accessLogger.info('read nonceDic', JSON.stringify(nonceDic))
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -1225,46 +1244,54 @@ async function sendConsumer(value: any) {
   if ([1, 5].includes(chainID)) {
     try {
       // eip 1559 send
-      const config = chains.getChainByInternalId(chainID);
-      if (config && config.rpc.length <= 0) {
+      const config = chains.getChainInfo(Number(chainID))
+      if (!config) {
+        throw new Error('config not found');
+      }
+      if (config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }
-      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net);
+      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net)
       // let feeData = await httpsProvider.getFeeData();
       // if (feeData) {
-      delete details['gasPrice'];
-      delete details['gas'];
-      let maxPriorityFeePerGas = 1000000000;
+      delete details['gasPrice']
+      delete details['gas']
+      let maxPriorityFeePerGas = 1000000000
       try {
-        if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
-          const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
+        if (config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
+          const alchemyMaxPriorityFeePerGas = await httpsProvider.send(
+            'eth_maxPriorityFeePerGas',
+            []
+          )
           if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas;
+            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas
           }
         }
       } catch (error) {
-        accessLogger.error('eth_maxPriorityFeePerGas error', error.message);
+        accessLogger.error('eth_maxPriorityFeePerGas error', error.message)
       }
 
-      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
-      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9);
-      details['gasLimit'] = web3.utils.toHex(gasLimit);
-      details['type'] = 2;
-      const wallet = new ethers.Wallet(Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex'));
-      const signedTx = await wallet.signTransaction(details);
-      const resp = await httpsProvider.sendTransaction(signedTx);
+      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
+      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
+      details['gasLimit'] = web3.utils.toHex(gasLimit)
+      details['type'] = 2
+      const wallet = new ethers.Wallet(
+        Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+      )
+      const signedTx = await wallet.signTransaction(details)
+      const resp = await httpsProvider.sendTransaction(signedTx)
       return {
         code: 0,
-        txid: resp.hash
-      };
+        txid: resp.hash,
+      }
       // }
     } catch (err) {
-      nonceDic[makerAddress][chainID] = result_nonce - 1;
+      nonceDic[makerAddress][chainID] = result_nonce - 1
       return {
         code: 1,
         txid: err,
         result_nonce,
-      };
+      }
     }
   }
   let transaction: EthereumTx
@@ -1284,7 +1311,6 @@ async function sendConsumer(value: any) {
     transaction = new EthereumTx(details, { chain: toChain })
   }
 
-
   /**
    * This is where the transaction is authorized on your behalf.
    * The private key is what unlocks your wallet.
@@ -1292,7 +1318,7 @@ async function sendConsumer(value: any) {
   transaction.sign(
     Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
   )
-  accessLogger.info('send transaction =', JSON.stringify(details));
+  accessLogger.info('send transaction =', JSON.stringify(details))
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
@@ -1315,15 +1341,15 @@ async function sendConsumer(value: any) {
           code: 0,
           txid: hash,
         })
-      }).on("receipt", (tx: any) => {
-        accessLogger.info('send transaction receipt=', JSON.stringify(tx));
       })
-      .on('error', (err: any) => {
-        nonceDic[makerAddress][chainID] = result_nonce - 1;
+      .on('receipt', (tx: any) => {
+        accessLogger.info('send transaction receipt=', JSON.stringify(tx))
+      })
+      .on('error', (err) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1
         resolve({
           code: 1,
           txid: err,
-          error: err,
           result_nonce,
         })
       })
@@ -1373,12 +1399,12 @@ async function send(
       lpMemo,
       ownerAddress,
     }
-    const accessLogger = getLoggerService(chainID);
+    const accessLogger = getLoggerService(chainID)
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {
         if (error) {
-          accessLogger.error(`sendQueue exec produce error:${error.message}`);
+          accessLogger.error(`sendQueue exec produce error:${error.message}`)
           reject(error)
         } else {
           resolve(result)

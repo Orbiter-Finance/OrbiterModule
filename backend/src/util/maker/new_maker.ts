@@ -1,4 +1,4 @@
-import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore';
+import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction } from '.'
 import * as orbiterCore from './core'
@@ -14,8 +14,7 @@ import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
-import dayjs from 'dayjs';
-import maker from '../../config/maker';
+import dayjs from 'dayjs'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -45,7 +44,7 @@ export function checkAmount(
   amount: string,
   market: IMarket
 ) {
-  amount = new BigNumber(String(amount)).toFixed();
+  amount = new BigNumber(String(amount)).toFixed()
   const ptext = orbiterCore.getPTextFromTAmount(fromChainId, amount)
   if (ptext.state === false) {
     return false
@@ -99,7 +98,7 @@ function getCacheClient(chainId: string) {
   }
   const cache = new Keyv({
     store: new KeyvFile({
-      filename: `logs/transfer/${dayjs().format("YYYYMM")}-${chainId}`, // the file path to store the data
+      filename: `logs/transfer/${dayjs().format('YYYYMM')}-${chainId}`, // the file path to store the data
       expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
       writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
@@ -125,7 +124,7 @@ export async function startNewMakerTrxPull() {
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
-  pubSub.subscribe(`ACCEPTED_ON_L2:4`, tx => {
+  pubSub.subscribe(`ACCEPTED_ON_L2:4`, (tx) => {
     return subscribeNewTransaction([tx])
   })
 }
@@ -133,7 +132,9 @@ async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
   return (
     makerList.findIndex(
-      (row) => chainCoreUtil.equals(row.recipient, address) || chainCoreUtil.equals(row.sender, address)
+      (row) =>
+        chainCoreUtil.equals(row.recipient, address) ||
+        chainCoreUtil.equals(row.sender, address)
     ) != -1
   )
 }
@@ -143,11 +144,16 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
+
       if (!(await isWatchAddress(tx.to))) {
         // accessLogger.error(
         //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
         // )
         continue
+      }
+      if (tx.source === 'xvm' || tx.extra['xvm']) {
+        errorLogger.error(`[${tx.hash}] OrbiterX transaction, interception 1`)
+        continue;
       }
       const fromChain = await chains.getChainByChainId(tx.chainId)
       // check send
@@ -230,9 +236,9 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000
-      const toChain = chains.getChainByInternalId(String(toChainInternalId))
+      const toChain = chains.getChainInfo(Number(toChainInternalId))
       if (!toChain) {
-        throw new Error('chain config not found');
+        throw new Error('toChain not found');
       }
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
@@ -283,6 +289,22 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
       }
+  
+      if (fromChain.xvmList) {
+        const fromChaunXvmList = fromChain.xvmList.map(addr => addr.toLocaleLowerCase());
+        if (fromChaunXvmList.includes(tx.from.toLocaleLowerCase()) || fromChaunXvmList.includes(tx.to.toLocaleLowerCase())) {
+          errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 2`)
+          continue;
+        }
+      }
+      if (toChain.xvmList) {
+        const toChaunXvmList = toChain.xvmList.map(addr => addr.toLocaleLowerCase());
+        if (toChaunXvmList.includes(tx.from.toLocaleLowerCase()) || toChaunXvmList.includes(tx.to.toLocaleLowerCase())) {
+          errorLogger.error(`[${transactionID}] OrbiterX transaction, interception 3`)
+          continue;
+        }
+      }
+
       await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
     }
   }
@@ -293,9 +315,17 @@ export async function confirmTransactionSendMoneyBack(
   market: IMarket,
   tx: ITransaction
 ) {
+  if (tx.source === 'xvm' || tx.extra['xvm']) {
+    errorLogger.error(`[${transactionID}] OrbiterX transaction, interception =`)
+    return;
+  }
   const fromChainID = Number(market.fromChain.id)
-  if (Number(fromChainID) === 4 && tx.extra['blockStatus'] != 'ACCEPTED_ON_L2') {
-    return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+  if (
+    Number(fromChainID) === 4 &&
+    tx.extra['blockStatus'] != 'ACCEPTED_ON_L2'
+  ) {
+    // return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
+    return
   }
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
@@ -372,6 +402,7 @@ export async function confirmTransactionSendMoneyBack(
           break
       }
 
+      // not xvm break;
       await sendTransaction(
         makerAddress,
         transactionID,
@@ -509,7 +540,7 @@ export function newExpanPool(pool): Array<IMarket> {
       },
     },
   ].map((row) => {
-    const L1L2Maping = makerConfig.starknetAddress;
+    const L1L2Maping = makerConfig.starknetAddress
     if (['4', '44'].includes(row.toChain.id)) {
       // starknet mapping
       row.sender = L1L2Maping[row.sender.toLowerCase()]
