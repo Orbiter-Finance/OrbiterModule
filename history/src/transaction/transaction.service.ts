@@ -157,7 +157,7 @@ export class TransactionService {
       }
     }
 
-    const summary: any = {};
+    let summary: any = {};
     if (profit['ETH']) {
       summary.ETH = {
         fromAmount: sumBy(from, 'ETHValue').toFixed(6),
@@ -184,6 +184,23 @@ export class TransactionService {
         fromAmount: sumBy(from, 'DAIValue').toFixed(6),
         toAmount: sumBy(to, 'DAIValue').toFixed(6),
         profitAmount: profit['DAI']
+      };
+    }
+    if (makerAddress.find(item => item.toLowerCase() === '0x0043d60e87c5dd08C86C3123340705a1556C4719'.toLowerCase())) {
+      summary = { ETH: summary.ETH };
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x80C67432656d59144cEFf962E8fAF8926599bCF8'.toLowerCase())) {
+      summary = { ETH: summary.ETH };
+    } else if (makerAddress.find(item => item.toLowerCase() === '0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC'.toLowerCase())) {
+      summary = { USDT: summary.USDT };
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x41d3D33156aE7c62c094AAe2995003aE63f587B3'.toLowerCase())) {
+      summary = { USDC: summary.USDC };
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x095D2918B03b2e86D68551DCF11302121fb626c9'.toLowerCase())) {
+      summary = { DAI: summary.DAI };
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x1C84DAA159cf68667A54bEb412CDB8B2c193fb32'.toLowerCase())) {
+      summary = {
+        USDC: summary.USDC,
+        USDT: summary.USDT,
+        DAI: summary.DAI
       };
     }
     return {
