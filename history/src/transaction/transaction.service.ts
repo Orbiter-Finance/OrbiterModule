@@ -141,7 +141,7 @@ export class TransactionService {
     }
 
     const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
-    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
+    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " and outSymbol !='' GROUP BY outSymbol,outFeeToken", whreeParmas);
     for (const row of from) {
       row.value = this.divPrecision(row.symbol, row.value);
     }
@@ -156,25 +156,35 @@ export class TransactionService {
       } catch (err) {
       }
     }
-    let fromAmount = 0;
-    let toAmount = 0;
-    let profitAmount = 0;
-    if (makerAddress.includes('0x80C67432656d59144cEFf962E8fAF8926599bCF8')) {
-      fromAmount = sumBy(from, 'ETHValue').toFixed(6);
-      toAmount = sumBy(to, 'ETHValue').toFixed(6);
-      profitAmount = profit['ETH'];
-    } else if (makerAddress.includes('0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC')) {
-      fromAmount = sumBy(from, 'USDTValue').toFixed(6);
-      toAmount = sumBy(to, 'USDTValue').toFixed(6);
-      profitAmount = profit['USDT'];
-    } else if (makerAddress.includes('0x41d3D33156aE7c62c094AAe2995003aE63f587B3')) {
-      fromAmount = sumBy(from, 'USDCValue').toFixed(6);
-      toAmount = sumBy(to, 'USDCValue').toFixed(6);
-      profitAmount = profit['USDC'];
-    } else if (makerAddress.includes('0x095D2918B03b2e86D68551DCF11302121fb626c9')) {
-      fromAmount = sumBy(from, 'DAIValue').toFixed(6);
-      toAmount = sumBy(to, 'DAIValue').toFixed(6);
-      profitAmount = profit['DAI'];
+
+    const summary: any = {};
+    if (profit['ETH']) {
+      summary.ETH = {
+        fromAmount: sumBy(from, 'ETHValue').toFixed(6),
+        toAmount: sumBy(to, 'ETHValue').toFixed(6),
+        profitAmount: profit['ETH']
+      };
+    }
+    if (profit['USDC']) {
+      summary.USDC = {
+        fromAmount: sumBy(from, 'USDCValue').toFixed(6),
+        toAmount: sumBy(to, 'USDCValue').toFixed(6),
+        profitAmount: profit['USDC']
+      };
+    }
+    if (profit['USDT']) {
+      summary.USDT = {
+        fromAmount: sumBy(from, 'USDTValue').toFixed(6),
+        toAmount: sumBy(to, 'USDTValue').toFixed(6),
+        profitAmount: profit['USDT']
+      };
+    }
+    if (profit['DAI']) {
+      summary.DAI = {
+        fromAmount: sumBy(from, 'DAIValue').toFixed(6),
+        toAmount: sumBy(to, 'DAIValue').toFixed(6),
+        profitAmount: profit['DAI']
+      };
     }
     return {
       from,
@@ -183,11 +193,8 @@ export class TransactionService {
         return Number(row.trxCount);
       }),
       profit,
-      profitAmount,
-      fromAmount,
-      toAmount
+      summary
     }
-
   }
   public divPrecision(symbol: string, value: string) {
     let amount = new BigNumber(0);

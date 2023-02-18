@@ -4,7 +4,7 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerConfigs } from '../configs/index';
+import { getChainInfo, makerConfigs } from '../configs/index';
 import { utils } from 'ethers'
 import Keyv from 'keyv';
 import { IMarket } from "../interfaces";
@@ -27,16 +27,16 @@ const token2Decimals = {
  */
 export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   // cache
-  const exchangeRates = await getRates(currency)
+  const exchangeRates = await getRates(currency);
   if (exchangeRates) {
-    let metisExchangeRates = await getRates('metis')
+    let metisExchangeRates = await getRates('metis');
     if (metisExchangeRates && metisExchangeRates["USD"]) {
-      let usdToMetis = 1 / Number(metisExchangeRates["USD"])
-      exchangeRates["METIS"] = String(usdToMetis)
+      let usdToMetis = 1 / Number(metisExchangeRates["USD"]);
+      exchangeRates["METIS"] = String(usdToMetis);
     }
-    return exchangeRates
+    return exchangeRates;
   } else {
-    return undefined
+    return undefined;
   }
 }
 export async function getRates(currency) {
@@ -84,6 +84,30 @@ export async function getExchangeToUsdRate(
   return new BigNumber(rate)
 }
 
+export async function getExchangeToSymbol(
+    value,
+    fromCurrency,
+    toCurrency
+): Promise<BigNumber> {
+  fromCurrency = fromCurrency.toUpperCase();
+  toCurrency = toCurrency.toUpperCase();
+  let rate = new BigNumber(0);
+  try {
+    const exchangeRates = await cacheExchangeRates(toCurrency);
+    if (exchangeRates?.[fromCurrency]) {
+      rate = new BigNumber(Number(exchangeRates[fromCurrency]));
+    }
+  } catch (error) {
+    logger.error('get rate error', error);
+  }
+
+  if (!(value instanceof BigNumber)) {
+    value = new BigNumber(value);
+  }
+
+  return value.dividedBy(rate);
+}
+
 /**
  * @param value
  * @param sourceCurrency
@@ -109,32 +133,49 @@ const GAS_PRICE_PAID_RATE = { 2: 0.8 }; // arbitrum Transaction Fee = gasUsed * 
 export async function statisticsProfit(
     makerNode,
     market: IMarket
-): Promise<BigNumber> {
+): Promise<string> {
+  const toSymbol = market?.toChain?.symbol;
   if (market && Number(makerNode.toAmount) > 0) {
-    const fromUSD = await exchangeToUsd(
+    const fromSymbol = market.fromChain.symbol;
+    const fromValue = await getExchangeToSymbol(
         new BigNumber(makerNode.fromAmount)
             .dividedBy(10 ** market.fromChain.decimals),
-        market.fromChain.symbol
-    );
+        fromSymbol, toSymbol);
 
-    const toUSD = await exchangeToUsd(
-        new BigNumber(makerNode.toAmount)
-            .dividedBy(10 ** market.toChain.decimals),
-        market.toChain.symbol
-    );
+    const toValue = new BigNumber(makerNode.toAmount)
+        .dividedBy(10 ** market.toChain.decimals);
+
+    let profit = fromValue.minus(toValue);
+
     if (makerNode.gasAmount) {
       const gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1;
-      const gas = await exchangeToUsd(
+      const toChainInfo = getChainInfo(market.toChain.id);
+      let mainSymbol = toChainInfo.nativeCurrency?.symbol || 'ETH';
+      let mainDecimals: number = toChainInfo.nativeCurrency.decimals || 18;
+      if (market.toChain.id === 6 || market.toChain.id === 66) {
+        mainSymbol = 'MATIC';
+        mainDecimals = 18;
+      }
+      if (market.toChain.id === 3 || market.toChain.id === 33) {
+        mainSymbol = toSymbol;
+        mainDecimals = market.toChain.decimals;
+      }
+      const gas = await getExchangeToSymbol(
           new BigNumber(makerNode.gasAmount)
               .multipliedBy(gasPricePaidRate)
-              .dividedBy(10 ** 18),
-          'ETH'
-      );
-      return fromUSD.minus(toUSD).minus(gas || 0);
+              .dividedBy(10 ** mainDecimals),
+          mainSymbol, toSymbol);
+      profit = profit.minus(gas || 0);
     }
-    return fromUSD.minus(toUSD);
+
+    const profitToUsd = await exchangeToUsd(
+        profit,
+        toSymbol
+    );
+
+    return profitToUsd.toFixed(3);
   } else {
-    return new BigNumber(0)
+    return '0.000';
   }
 }
 
@@ -235,7 +276,7 @@ export async function transforeData(list = []) {
     const decimals = token2Decimals[item.tokenName]
     item['fromChainName'] = await getChainName(item.fromChain)
     item['toChainName'] = await getChainName(item.toChain)
-    item.toAmount = item.toValue || item.toAmount;
+    item.toAmount = item.toValue || 0;
     item.decimals = decimals
     item.toTx = item.toTx || '0x'
     if (decimals > -1) {
@@ -283,14 +324,14 @@ export async function transforeData(list = []) {
           cfg.toChain.id == item['toChain'] &&
           cfg.toChain.symbol == item.toSymbol);
 
-      if (extra?.xvm?.params?.data?.expectValue) {
-        if (!item.toValue) {
-          item.toAmount = extra.xvm.params.data.expectValue;
-          item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
-              10 ** market.toChain.decimals
-          )}`;
-        }
-      }
+      // if (extra?.xvm?.params?.data?.expectValue) {
+      //   if (!item.toValue) {
+      //     item.toAmount = extra.xvm.params.data.expectValue;
+      //     item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
+      //         10 ** market.toChain.decimals
+      //     )}`;
+      //   }
+      // }
       delete item.extra;
     } catch (e) {
       console.log(e);
@@ -328,12 +369,7 @@ export async function transforeData(list = []) {
     }
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
-    item['profitUSD'] = (await statisticsProfit(item, market)).toFixed(3);
-
-    // old logic: when not toTx, dashboard Profit shows: 0.000 USD
-    if (item.profitUSD === 'NaN' || !item.toTx) {
-      item.profitUSD = "0.000"
-    }
+    item['profit'] = await statisticsProfit(item, market);
   }
   return list
 }

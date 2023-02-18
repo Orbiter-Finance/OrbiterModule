@@ -1,6 +1,6 @@
 import chain from "./chain.json";
 import maker from "./maker.json";
-import { IMarket } from "../interfaces";
+import { IChainCfg, IMarket } from "../interfaces";
 
 export const makerConfigs: IMarket[] = convertMakerConfig();
 
@@ -69,4 +69,10 @@ function convertMakerConfig() {
         }
     }
     return configs;
+}
+
+export function getChainInfo(chainId): IChainCfg {
+    const info = chain.find(item => +item.internalId === +chainId);
+    if (!info) return null;
+    return JSON.parse(JSON.stringify(info));
 }
