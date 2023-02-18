@@ -141,7 +141,7 @@ export class TransactionService {
     }
 
     const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
-    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
+    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " and outSymbol !='' GROUP BY outSymbol,outFeeToken", whreeParmas);
     for (const row of from) {
       row.value = this.divPrecision(row.symbol, row.value);
     }
