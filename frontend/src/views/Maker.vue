@@ -170,12 +170,33 @@
             </div>
           </template>
           <template #reference>
-            <span>UserAddressTotal:{{ userAddressList.length }}</span>
+            <span>UserAddressTotal: {{ userAddressList.length }}</span>
           </template>
         </el-popover>
       </div>
-      <div>FromAmountTotal: {{ statistics.fromAmount }}</div>
-      <div>ToAmountTotal: {{ statistics.toAmount }}</div>
+      <div>
+        <el-popover placement="bottom" width="max-content" trigger="hover">
+          <template #default>
+            <div class="user-addresses">
+              <div
+                      v-for="(val, key) in statistics.summary"
+                      :key="key"
+                      @click="state.symbolSelected = val"
+              >
+                {{ key }}
+                <span style="margin:0 10px">FromAmountTotal: {{ val.fromAmount }}</span>
+                <span>ToAmountTotal: {{ val.toAmount }}</span>
+              </div>
+            </div>
+          </template>
+          <template #reference>
+            <div>
+              <span style="margin-right: 10px">FromAmountTotal: {{ state.symbolSelected.fromAmount }}</span>
+              <span>ToAmountTotal: {{ state.symbolSelected.toAmount }}</span>
+            </div>
+          </template>
+        </el-popover>
+      </div>
       <div style="color: #67c23a; font-weight: 600">
         +{{ statistics.profit['USD'] }} USD
       </div>
@@ -533,6 +554,10 @@ const state = reactive({
   fromChainId: '',
   toChainId: '',
   userAddressSelected: '',
+  symbolSelected: {
+    fromAmount:'0.000',
+    toAmount:'0.000',
+  },
   keyword: '',
   status: -1,
   source: ''
@@ -578,7 +603,8 @@ const statistics = reactive({
   toAmount: 0,
   profit: {},
   profitAmount: 0,
-})
+  summary: {}
+});
 const makerNodes: any = ref([])
 // computeds
 const list = computed(() =>
@@ -819,11 +845,21 @@ const getStatistics = async (more: any = {}) => {
       ...prevMore,
     })
     if (result) {
-      statistics.total = result.trxCount
-      statistics.fromAmount = result.fromAmount
-      statistics.toAmount = result.toAmount
-      statistics.profitAmount = result.profitAmount
-      statistics.profit = result.profit
+      statistics.total = result.trxCount;
+      statistics.fromAmount = result.fromAmount;
+      statistics.toAmount = result.toAmount;
+      statistics.profitAmount = result.profitAmount;
+      statistics.profit = result.profit;
+      statistics.summary = result.summary;
+      const summary = statistics.summary;
+      if (summary) {
+        for (const key in summary) {
+          const dt = summary[key];
+          if (+dt.toAmount > +state.symbolSelected?.toAmount) {
+            state.symbolSelected = dt;
+          }
+        }
+      }
     }
   } catch (error) {
     throw new Error(error)
