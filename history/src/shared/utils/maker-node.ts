@@ -155,7 +155,7 @@ export async function statisticsProfit(
     if (makerNode.gasAmount) {
       const gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1;
       const toChainInfo = getChainInfo(market.toChain.id);
-      let mainSymbol = toChainInfo.nativeCurrency?.symbol || 'ETH';
+      // let mainSymbol = toChainInfo.nativeCurrency?.symbol || 'ETH';
       let mainDecimals: number = toChainInfo.nativeCurrency.decimals || 18;
       if (market.toChain.id === 6 || market.toChain.id === 66) {
         // mainSymbol = 'MATIC';
