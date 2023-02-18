@@ -397,11 +397,14 @@
           </el-table-column>
           <el-table-column label="Profit" width="150">
             <template #default="{ row }">
-              <div v-if="row.profitUSD > 0" class="amount-operator--plus">
-                +{{ row.profitUSD }} USD
+              <div v-if="row.profit > 0" class="amount-operator--plus">
+                +{{ row.profit }} USD
               </div>
-              <div v-else class="amount-operator--minus">
-                {{ row.profitUSD }} USD
+              <div v-if="row.profit == 0" style="color: #888888">
+                {{ row.profit }} USD
+              </div>
+              <div  v-if="row.profit < 0" class="amount-operator--minus">
+                {{ row.profit }} USD
               </div>
             </template>
           </el-table-column>

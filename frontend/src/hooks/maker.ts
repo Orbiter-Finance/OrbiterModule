@@ -66,7 +66,7 @@ export type MakerNode = {
   txTokenName: string
   needTo: any
   needBack: any
-  profitUSD: string
+  profit: any
 }
 function transforeDate(params: any = {}) {
   const { rangeDate = [], keyword = '' } = params

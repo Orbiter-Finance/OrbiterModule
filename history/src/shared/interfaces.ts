@@ -50,3 +50,41 @@ export interface IMarket {
     gasFee: number;
   };
 }
+
+export interface IChainCfg {
+  name: string;
+  chainId: string;
+  internalId: string;
+  networkId?: string;
+  rpc: string[];
+  api?: {
+    url: string;
+    key?: string;
+    intervalTime?: number;
+  };
+  debug?: boolean;
+  nativeCurrency: IToken;
+  watch?: string[];
+  explorers?: IExplorerConfig[];
+  tokens: IToken[];
+  contracts?: string[];
+  xvmList?: string[];
+  workingStatus?: IChainConfigWorkingStatus;
+}
+
+export interface IToken {
+  id?: number;
+  name: string;
+  symbol: string;
+  decimals: 18;
+  address: string;
+  mainCoin?: boolean;
+}
+
+export interface IExplorerConfig {
+  name: string;
+  url: string;
+  standard: string;
+}
+
+export type IChainConfigWorkingStatus = "running" | "pause" | "stop";
