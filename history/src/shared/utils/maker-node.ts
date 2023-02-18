@@ -93,9 +93,14 @@ export async function getExchangeToSymbol(
   toCurrency = toCurrency.toUpperCase();
   let rate = new BigNumber(0);
   try {
-    const exchangeRates = await cacheExchangeRates(toCurrency);
-    if (exchangeRates?.[fromCurrency]) {
-      rate = new BigNumber(Number(exchangeRates[fromCurrency]));
+    if (fromCurrency === 'BNB') {
+      const exchangeRates = await cacheExchangeRates(fromCurrency);
+      rate = new BigNumber(1 / Number(exchangeRates[toCurrency]));
+    } else {
+      const exchangeRates = await cacheExchangeRates(toCurrency);
+      if (exchangeRates?.[fromCurrency]) {
+        rate = new BigNumber(Number(exchangeRates[fromCurrency]));
+      }
     }
   } catch (error) {
     logger.error('get rate error', error);
@@ -150,21 +155,21 @@ export async function statisticsProfit(
     if (makerNode.gasAmount) {
       const gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain] || 1;
       const toChainInfo = getChainInfo(market.toChain.id);
-      let mainSymbol = toChainInfo.nativeCurrency?.symbol || 'ETH';
+      // let mainSymbol = toChainInfo.nativeCurrency?.symbol || 'ETH';
       let mainDecimals: number = toChainInfo.nativeCurrency.decimals || 18;
       if (market.toChain.id === 6 || market.toChain.id === 66) {
-        mainSymbol = 'MATIC';
+        // mainSymbol = 'MATIC';
         mainDecimals = 18;
       }
       if (market.toChain.id === 3 || market.toChain.id === 33) {
-        mainSymbol = toSymbol;
+        // mainSymbol = toSymbol;
         mainDecimals = market.toChain.decimals;
       }
       const gas = await getExchangeToSymbol(
           new BigNumber(makerNode.gasAmount)
               .multipliedBy(gasPricePaidRate)
               .dividedBy(10 ** mainDecimals),
-          mainSymbol, toSymbol);
+          makerNode.gasCurrency, toSymbol);
       profit = profit.minus(gas || 0);
     }
 
