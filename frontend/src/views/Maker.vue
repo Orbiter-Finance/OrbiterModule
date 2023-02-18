@@ -555,8 +555,8 @@ const state = reactive({
   toChainId: '',
   userAddressSelected: '',
   symbolSelected: {
-    fromAmount:'0.000',
-    toAmount:'0.000',
+    fromAmount:'0.000000',
+    toAmount:'0.000000',
   },
   keyword: '',
   status: -1,
@@ -851,6 +851,10 @@ const getStatistics = async (more: any = {}) => {
       statistics.profitAmount = result.profitAmount;
       statistics.profit = result.profit;
       statistics.summary = result.summary;
+      state.symbolSelected = {
+        fromAmount: '0.000000',
+        toAmount: '0.000000',
+      };
       const summary = statistics.summary;
       if (summary) {
         for (const key in summary) {
