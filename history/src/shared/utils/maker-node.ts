@@ -30,9 +30,14 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   const exchangeRates = await getRates(currency);
   if (exchangeRates) {
     let metisExchangeRates = await getRates('metis');
-    if (metisExchangeRates && metisExchangeRates["USD"]) {
-      let usdToMetis = 1 / Number(metisExchangeRates["USD"]);
-      exchangeRates["METIS"] = String(usdToMetis);
+    if (metisExchangeRates && metisExchangeRates[currency]) {
+      let toMetis = 1 / Number(metisExchangeRates[currency]);
+      exchangeRates["METIS"] = String(toMetis);
+    }
+    let bnbExchangeRates = await getRates('bnb');
+    if (bnbExchangeRates && bnbExchangeRates[currency]) {
+      let toBNB = 1 / Number(bnbExchangeRates[currency]);
+      exchangeRates["BNB"] = String(toBNB);
     }
     return exchangeRates;
   } else {
@@ -93,14 +98,9 @@ export async function getExchangeToSymbol(
   toCurrency = toCurrency.toUpperCase();
   let rate = new BigNumber(0);
   try {
-    if (fromCurrency === 'BNB') {
-      const exchangeRates = await cacheExchangeRates(fromCurrency);
-      rate = new BigNumber(1 / Number(exchangeRates[toCurrency]));
-    } else {
-      const exchangeRates = await cacheExchangeRates(toCurrency);
-      if (exchangeRates?.[fromCurrency]) {
-        rate = new BigNumber(Number(exchangeRates[fromCurrency]));
-      }
+    const exchangeRates = await cacheExchangeRates(toCurrency);
+    if (exchangeRates?.[fromCurrency]) {
+      rate = new BigNumber(Number(exchangeRates[fromCurrency]));
     }
   } catch (error) {
     logger.error('get rate error', error);
