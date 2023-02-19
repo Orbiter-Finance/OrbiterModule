@@ -30,9 +30,14 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   const exchangeRates = await getRates(currency);
   if (exchangeRates) {
     let metisExchangeRates = await getRates('metis');
-    if (metisExchangeRates && metisExchangeRates["USD"]) {
-      let usdToMetis = 1 / Number(metisExchangeRates["USD"]);
-      exchangeRates["METIS"] = String(usdToMetis);
+    if (metisExchangeRates && metisExchangeRates[currency]) {
+      let toMetis = 1 / Number(metisExchangeRates[currency]);
+      exchangeRates["METIS"] = String(toMetis);
+    }
+    let bnbExchangeRates = await getRates('bnb');
+    if (bnbExchangeRates && bnbExchangeRates[currency]) {
+      let toBNB = 1 / Number(bnbExchangeRates[currency]);
+      exchangeRates["BNB"] = String(toBNB);
     }
     return exchangeRates;
   } else {
@@ -93,14 +98,9 @@ export async function getExchangeToSymbol(
   toCurrency = toCurrency.toUpperCase();
   let rate = new BigNumber(0);
   try {
-    if (fromCurrency === 'BNB') {
-      const exchangeRates = await cacheExchangeRates(fromCurrency);
-      rate = new BigNumber(1 / Number(exchangeRates[toCurrency]));
-    } else {
-      const exchangeRates = await cacheExchangeRates(toCurrency);
-      if (exchangeRates?.[fromCurrency]) {
-        rate = new BigNumber(Number(exchangeRates[fromCurrency]));
-      }
+    const exchangeRates = await cacheExchangeRates(toCurrency);
+    if (exchangeRates?.[fromCurrency]) {
+      rate = new BigNumber(Number(exchangeRates[fromCurrency]));
     }
   } catch (error) {
     logger.error('get rate error', error);
@@ -281,7 +281,7 @@ export async function transforeData(list = []) {
     const decimals = token2Decimals[item.tokenName]
     item['fromChainName'] = await getChainName(item.fromChain)
     item['toChainName'] = await getChainName(item.toChain)
-    item.toAmount = item.toValue || 0;
+    item.toAmount = item.toValue || item.toAmount;
     item.decimals = decimals
     item.toTx = item.toTx || '0x'
     if (decimals > -1) {
@@ -329,14 +329,14 @@ export async function transforeData(list = []) {
           cfg.toChain.id == item['toChain'] &&
           cfg.toChain.symbol == item.toSymbol);
 
-      // if (extra?.xvm?.params?.data?.expectValue) {
-      //   if (!item.toValue) {
-      //     item.toAmount = extra.xvm.params.data.expectValue;
-      //     item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
-      //         10 ** market.toChain.decimals
-      //     )}`;
-      //   }
-      // }
+      if (extra?.xvm?.params?.data?.expectValue) {
+        if (!item.toValue) {
+          item.toAmount = extra.xvm.params.data.expectValue;
+          item.extValueFormat =`${new BigNumber(extra.xvm.params.data.expectValue).dividedBy(
+              10 ** market.toChain.decimals
+          )}`;
+        }
+      }
       delete item.extra;
     } catch (e) {
       console.log(e);
@@ -374,7 +374,10 @@ export async function transforeData(list = []) {
     }
     // Profit statistics
     // (fromAmount - toAmount) / token's rate - gasAmount/gasCurrency's rate
-    item['profit'] = await statisticsProfit(item, market);
+    if (!item.toValue)
+      item['profit'] = '0.000';
+    else
+      item['profit'] = await statisticsProfit(item, market);
   }
   return list
 }
