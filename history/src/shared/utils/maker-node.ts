@@ -290,9 +290,6 @@ export async function transforeData(list = []) {
       )}`
       item.fromValueFormat = (+item.fromAmountFormat).toFixed(6)
       item.fromAmount = item.fromValue
-      item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
-        10 ** decimals
-      )}`
     } else {
       logger.log(`[shared/utils/maker-node.ts transforeData] maker-node.ts should Synchronize！Error decimals!`)
       // tmp for show
@@ -348,18 +345,18 @@ export async function transforeData(list = []) {
         decimals: market.toChain.decimals,
         tokenAddress: market.toChain.tokenAddress,
         amount: item.toAmount,
-        amountFormat: item['toAmountFormat'],
+        amountFormat: `${new BigNumber(item.toAmount).dividedBy(
+            10 ** market.toChain.decimals
+        )}`,
       };
 
-      const p_text = 9000 + Number(item.fromNonce) + '';
       const fromValue: string = String(item.fromValue);
-      const backAmount = fromValue.substr(0, fromValue.length - p_text.length) + p_text;
       item.needBack = {
         chainId: market.fromChain.id,
         decimals: market.fromChain.decimals,
         tokenAddress: market.fromChain.tokenAddress,
-        amount: backAmount,
-        amountFormat: `${new BigNumber(backAmount).dividedBy(
+        amount: fromValue,
+        amountFormat: `${new BigNumber(fromValue).dividedBy(
             10 ** market.fromChain.decimals
         )}`
       };
