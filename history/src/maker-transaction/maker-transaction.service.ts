@@ -79,7 +79,7 @@ export class MakerTransactionService {
           break;
         }
         case StateEnum.toOk: {
-          more += `and t2.status = 99 `;
+          more += `and (t2.status = 99 or t2.status = 1)`;
           break;
         }
         case StateEnum.backtrack: {

@@ -97,7 +97,7 @@ function transforeData(list: any = []) {
     } else if (item.fromStatus == 97) {
       // to waiting
       item.state = 3;
-    }else if (item.fromStatus == 98) {
+    } else if (item.fromStatus == 98) {
       // to time out
       item.state = 5;
     }
@@ -111,12 +111,12 @@ function transforeData(list: any = []) {
     } else if (item.status == 98) {
       // to time out
       item.state = 5;
-    } else if (item.status == 99) {
+    } else if (item.status == 1 || item.status == 99) {
       // to ok
       item.state = 6;
     }
 
-    if (item.status != 95 && item.status != 99 && new Date(item.createdAt).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
+    if (item.status != 95 && item.status != 99 && item.status != 1 && new Date(item.createdAt).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
       // to time out
       item.state = 5;
     }
