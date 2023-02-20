@@ -322,7 +322,7 @@ export async function transforeData(list = []) {
     let market: IMarket;
     try {
       const extra: any = JSON.parse(item.extra);
-      item.toSymbol = extra.toSymbol;
+      item.toSymbol = extra?.toSymbol || item.tokenName;
       market = makerConfigs.find(cfg =>
           cfg.fromChain.id == item['fromChain'] &&
           cfg.fromChain.symbol == item['tokenName'] &&
