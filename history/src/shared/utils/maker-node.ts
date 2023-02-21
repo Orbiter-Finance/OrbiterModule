@@ -360,12 +360,11 @@ export async function transforeData(list = []) {
             10 ** market.fromChain.decimals
         )}`
       };
+
+      item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
+          10 ** market.toChain.decimals
+      )}`;
     }
-     if (decimals) {
-          item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
-              10 ** decimals
-          )}`;
-     }
 
 
     // Parse to dydx txExt
