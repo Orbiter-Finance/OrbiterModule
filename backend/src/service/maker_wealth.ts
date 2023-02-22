@@ -7,9 +7,11 @@ import { Core } from '../util/core'
 import { errorLogger } from '../util/logger'
 import { DydxHelper } from './dydx/dydx_helper'
 import loopring_help from './loopring/loopring_help'
+import ZKSpaceHelper from './zkspace/zkspace_help'
 import { chains, utils } from 'orbiter-chaincore'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { ChainServiceTokenBalance } from 'orbiter-chaincore/src/packages/token-balance';
+import { getMakerList } from '../util/maker'
 
 const repositoryMakerWealth = () => Core.db.getRepository(MakerWealth)
 
@@ -33,6 +35,39 @@ async function getTokenBalance(
   let value: string | undefined
   try {
     switch (chainId) {
+            case 12:
+      case 512:
+        let balanceInfo = await ZKSpaceHelper.getZKSBalance({
+          account: makerAddress,
+          localChainID: chainId,
+        })
+        if (
+          !balanceInfo ||
+          !balanceInfo.length ||
+          balanceInfo.findIndex((item) => item.id == 0) == -1
+        ) {
+          value = '0'
+        }
+        let httpEndPoint = makerConfig.zkspace.httpEndPoint
+        if (chainId === 512) {
+          httpEndPoint = makerConfig.zkspace_test.httpEndPoint
+        }
+        let tokenInfos = await ZKSpaceHelper.getTokenInfos(httpEndPoint)
+        const zksTokenInfo = tokenInfos.find(
+          (item) =>
+            item.address.toLowerCase() ==
+            (tokenAddress ? tokenAddress.toLowerCase() : '0x' + '0'.repeat(40))
+        )
+        let defaultIndex = balanceInfo.findIndex(
+          (item) => item.id == (zksTokenInfo ? zksTokenInfo.id : 0)
+        )
+        value =
+          defaultIndex > -1
+            ? balanceInfo[defaultIndex].amount *
+            10 ** (zksTokenInfo ? zksTokenInfo.decimals : 18) +
+            ''
+            : '0'
+        break
       case 9:
       case 99:
         {
@@ -116,10 +151,22 @@ export async function getWealthsChains(makerAddress: string) {
     )
   }
   const wealthsChains: WealthsChain[] = []
+  const makerList = await getMakerList()
   const tokens = makerConfig.makerBalacnes[makerAddress.toLocaleLowerCase()];
   if (tokens) {
     const chainsList = chains.getAllChains();
     for (const chainConfig of chainsList) {
+      const chainId = Number(chainConfig.internalId);
+      if (equals('0x1c84daa159cf68667a54beb412cdb8b2c193fb32', makerAddress)) {
+        if (![1,2,6,7].includes(chainId)) {
+          continue;
+        }
+      } else {
+        const item = makerList.find((row)=> (row.c1ID == chainId || row.c2ID === chainId) && equals(row.makerAddress, makerAddress));
+        if (!item) {
+          continue;
+        }
+      }
       const balances = [];
       if (!tokens.includes(chainConfig.nativeCurrency.symbol)) {
         tokens.push(chainConfig.nativeCurrency.symbol);
