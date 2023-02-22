@@ -117,7 +117,7 @@ function transforeData(list: any = []) {
       item.state = 6;
     }
 
-    if (item.status != 95 && item.status != 99 && item.status != 1 && new Date(item.createdAt).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
+    if (item.status != 95 && item.status != 99 && item.status != 1 && item.source == 'xvm' && new Date(item.createdAt).valueOf() < new Date().valueOf() - 1000 * 60 * 30) {
       // to time out
       item.state = 5;
     }
