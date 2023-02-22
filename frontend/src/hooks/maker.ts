@@ -55,6 +55,7 @@ export type MakerNode = {
     }
   } | null
   toAmountFormat: string
+  fromTx: string,
   toTx: string
   toTxHref: string
   fromTimeStamp: string

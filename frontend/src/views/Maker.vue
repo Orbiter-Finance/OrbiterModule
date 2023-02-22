@@ -471,7 +471,7 @@
 </template>
 
 <script lang="ts" setup>
-import RLP from 'rlp'
+import * as RLP from 'rlp'
 import TextLong from '@/components/TextLong.vue'
 import {
   makerInfo,
@@ -482,6 +482,7 @@ import {
 } from '@/hooks/maker'
 // import { BigNumber } from 'bignumber.js'
 import { ElNotification } from 'element-plus'
+// import { bufArrToArr } from 'ethereumjs-util'
 import { ethers, providers } from 'ethers'
 import dayjs from 'dayjs'
 import {
@@ -499,6 +500,7 @@ import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
 import util from "../utils/util";
 import BigNumber from "bignumber.js";
+import Buffer from "vue-buffer";
 // import * as zksync from 'zksync'
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
@@ -892,11 +894,39 @@ const confirmSend = async ()=>{
   const fromChainId: number = sendData.chainId;
   const chainInfo = util.getChainInfoByChainId(fromChainId);
 
-  if (util.isSupportXVMContract(fromChainId) && dataList.length > 1) {
+  if (util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
       return;
     } else {
+      if (dataList.length <= 1) {
+        const mainTokenAddress = chainInfo.nativeCurrency.address;
+        const toAddress = sendData.toAddress;
+        const tokenAddress = sendData?.tokenAddress;
+        const tradeId = sendData?.tradeId;
+        const op = sendData.op;
+        const toValue = sendData?.amount;
+        const value = utils.equalsIgnoreCase(mainTokenAddress, tokenAddress) ? toValue : '0';
+        const bufferList = [Buffer.from(tradeId), op + ''];
+        const encoded = RLP.encode(bufferList);
+        const web3 = new Web3(ethereum);
+        const contractInstance = new web3.eth.Contract(XVM_ABI, chainInfo.xvmList[0]);
+        const { transactionHash } = await contractInstance.methods.swapAnswer(
+                toAddress,
+                tokenAddress,
+                toValue,
+                encoded).send({
+          from: walletAccount, value: value
+        });
+        console.log(transactionHash);
+        ElNotification({
+          title: 'Transfer Succeed',
+          message:
+                  'The transfer was successful! Dashboard will update data list in 15 minutes!',
+          type: 'success',
+        });
+        return;
+      }
       const mainTokenAddress = chainInfo.nativeCurrency.address;
       const encodeDataList = [];
       let totalMainValue = new BigNumber(0);
@@ -1066,6 +1096,27 @@ const onClickStateTag = async (item: MakerNode) => {
           console.log('Send info ===> ', dataList);
           confirmSendVisible.value = true;
           return;
+        } else {
+          const dt = isOriginBack ? item.needBack : item.needTo;
+          const toSymbol = isOriginBack ? item.tokenName : item.toSymbol;
+          const toChainIdName = isOriginBack ? item.fromChainName : item.toChainName;
+          const toAddress = isOriginBack ? item.userAddress : item.replyAccount;
+          if (!dt) return;
+          const dataList = [];
+          dataList.push({
+            tradeId: item.fromTx,
+            fromAddress: walletAccount,
+            toAddress,
+            fromExt: item.fromExt,
+            toChainIdName,
+            toSymbol,
+            op: sendType.value != 1 ? 3 : 1,
+            ...dt
+          });
+          sendInfo.value = dataList;
+          console.log('Send info ===> ', dataList);
+          confirmSendVisible.value = true;
+          return;
         }
       }
     }
@@ -1150,8 +1201,8 @@ const starknetTransfer = async (fromAddress, toAddress, chainId, tokenAddress, a
 };
 const swapOkEncodeABI = (tradeId: string, token: string, toAddress: string, toValue: string, op:number) => {
   const ifa = new ethers.utils.Interface(XVM_ABI);
-  const bufferList = [tradeId, op] // 
-  const encoded = RLP.encode(bufferList) // 
+  const bufferList = [Buffer.from(tradeId), op + ''];
+  const encoded = RLP.encode(bufferList);
   return ifa.encodeFunctionData('swapAnswer', [
     toAddress,
     token,
