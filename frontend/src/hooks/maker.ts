@@ -62,6 +62,7 @@ export type MakerNode = {
   fromTimeStampAgo: string
   toTimeStamp: string
   toTimeStampAgo: string
+  source: string
   tradeDuration: number
   state: number
   txTokenName: string
