@@ -59,7 +59,7 @@ export class MakerTransactionService {
           break;
         }
         case StateEnum.fromOk: {
-          more += `and t.status = 1 `;
+          more += `and (t.status = 1 or t.status = 97) `;
           break;
         }
         case StateEnum.fromFail: {
@@ -75,7 +75,7 @@ export class MakerTransactionService {
           break;
         }
         case StateEnum.toTimeOut: {
-          more += `and (t2.status != 95 and t2.status != 99 or t2.status is NULL) and m.createdAt < '${formateTimestamp(new Date().valueOf() - 1000 * 60 * 30)}' `;
+          more += `and (t.source = 'xvm' and (t.status != 97 and t2.status != 95 and t2.status != 99 or t2.status is NULL)) and m.createdAt < '${formateTimestamp(new Date().valueOf() - 1000 * 60 * 30)}' `;
           break;
         }
         case StateEnum.toOk: {

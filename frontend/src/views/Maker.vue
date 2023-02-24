@@ -514,12 +514,13 @@ const stateTags = {
   0: { label: 'From: check', color: '#EADF6A' },
   1: { label: 'From: okay', color: '#E6A23B' },
   2: { label: 'From: failed', color: '#E13428' },
-  3: { label: 'To: waiting', color: '#5A7EF7' },
+  3: { label: 'To: waiting', color: '#27D4DE' },
   4: { label: 'To: check', color: '#EADF6A' },
   5: { label: 'To: time out', color: '#627DEF' },
   6: { label: 'To: okay', color: '#67C23A' },
   7: { label: 'To: backtrack', color: '#C959F7' },
   20: { label: 'To: failed', color: '#E13428' },
+  21: { label: 'Processed', color: '#888888' },
 };
 const status = [
   {
@@ -893,7 +894,7 @@ const confirmSend = async ()=>{
   const sendData = dataList[0];
   const fromChainId: number = sendData.chainId;
   const chainInfo = util.getChainInfoByChainId(fromChainId);
-
+  confirmSendVisible.value = false;
   if (util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
@@ -925,6 +926,8 @@ const confirmSend = async ()=>{
                   'The transfer was successful! Dashboard will update data list in 15 minutes!',
           type: 'success',
         });
+        const node = makerNodes.value.find(item => item.id == sendData.id);
+        node.state = 21;
         return;
       }
       const mainTokenAddress = chainInfo.nativeCurrency.address;
@@ -950,6 +953,10 @@ const confirmSend = async ()=>{
                 'The transfer was successful! Dashboard will update data list in 15 minutes!',
         type: 'success',
       });
+      for (const dt of dataList) {
+        const node = makerNodes.value.find(item => item.id == dt.id);
+        node.state = 21;
+      }
       return;
     }
   } else {
@@ -1033,8 +1040,9 @@ const confirmSend = async ()=>{
               'The transfer was successful! Dashboard will update data list in 15 minutes!',
       type: 'success',
     });
+    const node = makerNodes.value.find(item => item.id == sendData.id);
+    node.state = 21;
   }
-  confirmSendVisible.value = false;
 }
 // Events
 const onClickStateTag = async (item: MakerNode) => {
@@ -1082,6 +1090,7 @@ const onClickStateTag = async (item: MakerNode) => {
             const toAddress = isOriginBack ? data.userAddress : data.replyAccount;
             if (!dt) continue;
             dataList.push({
+              id: data.id,
               tradeId: data.fromTx,
               fromAddress: walletAccount,
               toAddress,
@@ -1104,6 +1113,7 @@ const onClickStateTag = async (item: MakerNode) => {
           if (!dt) return;
           const dataList = [];
           dataList.push({
+            id:item.id,
             tradeId: item.fromTx,
             fromAddress: walletAccount,
             toAddress,
@@ -1137,6 +1147,7 @@ const onClickStateTag = async (item: MakerNode) => {
     const toSymbol = sendType.value != 1 ? item.tokenName : item.toSymbol;
     const toChainIdName = sendType.value != 1 ? item.fromChainName : item.toChainName;
     const dataList = [{
+      id: item.id,
       fromAddress: walletAccount,
       toAddress,
       fromExt,
