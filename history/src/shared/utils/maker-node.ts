@@ -366,6 +366,13 @@ export async function transforeData(list = []) {
       )}`;
     }
 
+    if (item.status === 95) {
+      item.toSymbol = item.tokenName;
+      item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
+          10 ** decimals
+      )}`;
+    }
+
 
     // Parse to dydx txExt
     if (item.fromExt && (item.toChain == '11' || item.toChain == '511')) {
