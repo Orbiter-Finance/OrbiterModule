@@ -1,0 +1,27 @@
+diff --git a/node_modules/orbiter-chaincore/src/chain/evm-chain.service.js b/node_modules/orbiter-chaincore/src/chain/evm-chain.service.js
+index 5bb1ad1..e35f8d2 100644
+--- a/node_modules/orbiter-chaincore/src/chain/evm-chain.service.js
++++ b/node_modules/orbiter-chaincore/src/chain/evm-chain.service.js
+@@ -272,14 +272,14 @@ class EVMChain {
+             if (token) {
+                 return token.symbol;
+             }
+-            try {
+-                const tokenContract = new this.web3.eth.Contract(utils_1.abi.IERC20_ABI_JSON, tokenAddress);
+-                const symbol = yield tokenContract.methods.symbol().call();
+-                return symbol;
+-            }
+-            catch (error) {
+-                logger_1.default.error(`${this.chainConfig.name} getTokenSymbol Error:${tokenAddress}`, error);
+-            }
++            // try {
++            //     const tokenContract = new this.web3.eth.Contract(utils_1.abi.IERC20_ABI_JSON, tokenAddress);
++            //     const symbol = yield tokenContract.methods.symbol().call();
++            //     return symbol;
++            // }
++            // catch (error) {
++            //     logger_1.default.error(`${this.chainConfig.name} getTokenSymbol Error:${tokenAddress}`, error);
++            // }
+             return "";
+         });
+     }
