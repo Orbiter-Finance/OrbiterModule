@@ -895,7 +895,7 @@ const confirmSend = async ()=>{
   const fromChainId: number = sendData.chainId;
   const chainInfo = util.getChainInfoByChainId(fromChainId);
   confirmSendVisible.value = false;
-  if (util.isSupportXVMContract(fromChainId)) {
+  if (sendData.source === 'xvm' && util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
       return;
@@ -1091,6 +1091,7 @@ const onClickStateTag = async (item: MakerNode) => {
             if (!dt) continue;
             dataList.push({
               id: data.id,
+              source: data.source,
               tradeId: data.fromTx,
               fromAddress: walletAccount,
               toAddress,
@@ -1114,6 +1115,7 @@ const onClickStateTag = async (item: MakerNode) => {
           const dataList = [];
           dataList.push({
             id:item.id,
+            source: item.source,
             tradeId: item.fromTx,
             fromAddress: walletAccount,
             toAddress,
@@ -1148,6 +1150,7 @@ const onClickStateTag = async (item: MakerNode) => {
     const toChainIdName = sendType.value != 1 ? item.fromChainName : item.toChainName;
     const dataList = [{
       id: item.id,
+      source: item.source,
       fromAddress: walletAccount,
       toAddress,
       fromExt,
