@@ -149,8 +149,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const fromChain = await chains.getChainByChainId(tx.chainId)
-       // check send
-       if (!fromChain) {
+      // check send
+      if (!fromChain) {
         errorLogger.error(
           `transaction fromChainId ${tx.chainId} does not exist: `,
           tx.hash
@@ -165,7 +165,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         continue
       }
-     
+
       const startTimeTimeStamp = LastPullTxMap.get(
         `${fromChain.internalId}:${tx.to.toLowerCase()}`
       )
@@ -173,12 +173,13 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         accessLogger.error(
           `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
         )
+        // TAG:  rinkeby close
         continue
       }
       let ext = '';
       if ([8, 88].includes(Number(fromChain.internalId))) {
         ext = dayjs(tx.timestamp).unix().toString();
-      }else if ([4, 44].includes(Number(fromChain.internalId))) {
+      } else if ([4, 44].includes(Number(fromChain.internalId))) {
         ext = String(Number(tx.extra['version']));
       }
       const transactionID = TransactionIDV2(
@@ -205,10 +206,12 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         tx.value.toString()
       )
       if (['9', '99'].includes(fromChain.internalId)) {
+        const memoArr = tx.extra['memo'].split('_');
         result = {
           state: true,
-          pText: tx.extra['memo'],
+          pText: memoArr[0],
         }
+
       }
       if (!result.state) {
         accessLogger.error(
@@ -229,7 +232,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000
-      const toChain:any = chains.getChainByInternalId(String(toChainInternalId))
+      const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
       )
@@ -356,6 +359,13 @@ export async function confirmTransactionSendMoneyBack(
         case '44':
           userAddress = tx.extra['ext']
           break
+        case '9':
+        case '99':
+          const memoArr = tx.extra['memo'].split('_');
+          if (memoArr.length == 2 && memoArr[1]) {
+            userAddress = memoArr[1];
+          }
+          break;
       }
       switch (String(toChainID)) {
         case '11':
