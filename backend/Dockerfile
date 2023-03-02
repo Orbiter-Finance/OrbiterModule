@@ -9,3 +9,4 @@ COPY . .
 RUN apk update && apk add git
 
 RUN yarn install --network-timeout 600000 && yarn run build
+RUN yarn run postinstall
