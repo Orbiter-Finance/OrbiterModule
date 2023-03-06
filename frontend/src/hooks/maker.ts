@@ -165,7 +165,7 @@ export const requestStatistics = async (params: any = {}) => {
     }
     loading.value = true
     try {
-      const res: any = await http.get(`/api/transaction/statistics`, {
+      const res: any = await http.get(`/v1/dashboard/statistics`, {
         params: params
       })
       if (res.code === 0) {
@@ -216,7 +216,7 @@ export const useTransactionHistory = async (params: any = {}) => {
     transforeDate(params)
     loading.value = true
     try {
-      const res: any = await http.get(`/api/transactions`, {
+      const res: any = await http.get(`/v1/dashboard/transaction`, {
         params: {
           ...params,
           rangeDate: null,
@@ -225,7 +225,7 @@ export const useTransactionHistory = async (params: any = {}) => {
         }
       })
       if (res.code === 0) {
-        const data = res.data
+        const data = res.data;
         transforeData(data)
         list.value = data
         total.value = res.total
