@@ -59,7 +59,7 @@
               v-for="(item, index) in chains"
               :key="index"
               :label="item.name"
-              :value="item.chainId"
+              :value="item.internalId"
             ></el-option>
           </el-select>
         </el-col>
@@ -70,7 +70,7 @@
               v-for="(item, index) in chains"
               :key="index"
               :label="item.name"
-              :value="item.chainId"
+              :value="item.internalId"
             ></el-option>
           </el-select>
         </el-col>
