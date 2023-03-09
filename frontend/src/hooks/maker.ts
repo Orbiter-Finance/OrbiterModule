@@ -1,7 +1,7 @@
 import { $env } from '@/env'
-import { $axios } from '@/plugins/axios'
 import { reactive, ref } from 'vue'
 import http from '@/plugins/axios2'
+import config from '../config/index'
 
 type MakerInfoChains = {
   chainId: string
@@ -18,14 +18,13 @@ export const makerInfo = {
   }),
 
   async get() {
-    const resp = await $axios.get<MakerInfo>('maker')
-    const data = resp.data
+    const chains: any[] = config.chainConfig;
 
     // unshift All item
-    data.chains.unshift({ chainId: '', chainName: 'All' })
+    chains.unshift({ chainId: '', name: 'All' });
 
-    makerInfo.state.chains = data.chains
-    makerInfo.state.earliestTime = data.earliestTime
+    makerInfo.state.chains = chains;
+    makerInfo.state.earliestTime = new Date().valueOf();
   },
 }
 
@@ -144,18 +143,6 @@ function transforeData(list: any = []) {
     item.formTx = item.fromTx
   }
 }
-async function getMakerNode(params: any = {}) {
-  const { rangeDate = [], makerAddress, fromChain, toChain, userAddress, keyword } = params
-  transforeDate(params)
-
-  const resp = await $axios.get<MakerNode[]>('maker/nodes', {
-    params,
-  })
-
-  const list = resp.data
-  transforeData(list)
-  return list
-}
 export const requestStatistics = async (params: any = {}) => {
   const loading = ref(false)
   if (params.makerAddress) {
@@ -179,33 +166,6 @@ export const requestStatistics = async (params: any = {}) => {
   }
 }
 
-
-export const useMakerNodes = async (
-  makerAddress: string,
-  fromChain: number = 0,
-  toChain: number = 0,
-  rangeDate: Date[] = [],
-  keyword = '',
-  userAddress = ''
-) => {
-  const loading = ref(false)
-  const list: any = ref([])
-
-  if (makerAddress) {
-    loading.value = true
-    try {
-      list.value = await getMakerNode({rangeDate, makerAddress, fromChain, toChain, userAddress, keyword})
-    } catch (error) {
-      console.error(error)
-    }
-    loading.value = false
-  }
-
-  return {
-    list,
-    loading,
-  }
-}
 export const useTransactionHistory = async (params: any = {}) => {
   const loading = ref(false)
   const list: any = ref([])
@@ -246,11 +206,12 @@ type MakerWealths = {
   chainId: number
   chainName: string
   tokenExploreUrl: string
+  makerAddress:string
   balances: {
-    makerAddress: string
-    tokenAddress: string
-    tokenName: string
-    value: string
+    address: string;
+    symbol: string;
+    balance: string;
+    decimals: number;
   }[]
 }[]
 export const makerWealth = {
@@ -266,10 +227,11 @@ export const makerWealth = {
 
     makerWealth.state.loading = true
     try {
-      const resp = await $axios.get<MakerWealths>('maker/wealths', {
+      const resp: any = await http.get('/v1/dashboard/wealth', {
         params: { makerAddress },
-      })
-      const wealths = resp.data
+      });
+      console.log('resp', resp);
+      const wealths: any[] = resp;
 
       // fill chain's accountExploreUrl
       for (const item of wealths) {

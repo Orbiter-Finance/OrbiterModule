@@ -2,6 +2,9 @@
 node_modules
 /dist
 /src/config/chain.json
+/src/config/maker.json
+/src/config/chainTest.json
+/src/config/makerTest.json
 
 # local env files
 .env.local

@@ -101,10 +101,12 @@ export const $env = {
     515: 'https://testnet.bscscan.com/tx/',
     16: 'https://nova-explorer.arbitrum.io/tx/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/tx/',
-    517: 'https://public.zkevm-test.net:8443/tx/',
+    517: 'https://explorer.public.zkevm-test.net/tx/',
     518: 'https://l1scan.scroll.io/tx/',
     519: 'https://l2scan.scroll.io/tx/',
     520: 'https://l2explorer.a1.taiko.xyz/tx/',
+    521: 'https://goerli.basescan.org/tx/',
+    522: 'https://explorer.goerli.zkevm.consensys.net/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -136,10 +138,12 @@ export const $env = {
     515: 'https://testnet.bscscan.com/address/',
     16: 'https://nova-explorer.arbitrum.io/address/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/address/',
-    517: 'https://public.zkevm-test.net:8443/address/',
+    517: 'https://explorer.public.zkevm-test.net/address/',
     518: 'https://l1scan.scroll.io/address/',
     519: 'https://l2scan.scroll.io/address/',
     520: 'https://l2explorer.a1.taiko.xyz/address/',
+    521: 'https://goerli.basescan.org/address/',
+    522: 'https://explorer.goerli.zkevm.consensys.net/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -167,9 +171,11 @@ export const $env = {
     515: 'https://testnet.bscscan.com/tokens',
     16: 'https://nova-explorer.arbitrum.io/token/',
     516: 'https://goerli-rollup-explorer.arbitrum.io/token/',
-    517: 'https://public.zkevm-test.net:8443/token/',
+    517: 'https://explorer.public.zkevm-test.net/token/',
     518: 'https://l1scan.scroll.io/token/',
     519: 'https://l2scan.scroll.io/token/',
     520: 'https://l2explorer.a1.taiko.xyz/token/',
+    521: 'https://goerli.basescan.org/token/',
+    522: 'https://explorer.goerli.zkevm.consensys.net/token/'
   },
 }

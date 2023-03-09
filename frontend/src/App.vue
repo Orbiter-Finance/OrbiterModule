@@ -57,7 +57,8 @@
 import { ArrowDown } from '@element-plus/icons'
 import { provide, reactive, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
-import { $axios } from './plugins/axios'
+import config from './config/index'
+import http from "@/plugins/axios2";
 
 const route = useRoute()
 const router = useRouter()
@@ -76,9 +77,9 @@ provide('makerAddressSelected', makerAddressSelected)
 provide('exchangeRates', exchangeRates)
 
 const getGlobalInfo = async () => {
-  const resp = await $axios.get('global')
-  state.makerAddresses = resp.data.makerAddresses
-  state.exchangeRates = resp.data.exchangeRates
+  const resp = await http.get('/v1/dashboard/rates');
+  state.makerAddresses = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
+  state.exchangeRates = resp;
 
   state.makerAddressSelected = state.makerAddresses?.[0] || ''
 

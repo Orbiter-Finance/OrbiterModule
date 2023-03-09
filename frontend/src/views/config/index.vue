@@ -587,7 +587,7 @@
 import { defineComponent, reactive, onMounted, computed, ref } from 'vue'
 import dayjs from 'dayjs'
 import axios from 'axios'
-import { $axios } from '@/plugins/axios'
+import http from '@/plugins/axios2'
 import { useStore } from 'vuex'
 // import { AES } from "crypto-js"
 import {
@@ -964,7 +964,7 @@ export default defineComponent({
     }
     //edit tradeIfno
     async function updateData(oldData, newData) {
-      await $axios({
+      await http({
         url: `maker/config`,
         method: 'post',
         headers: {

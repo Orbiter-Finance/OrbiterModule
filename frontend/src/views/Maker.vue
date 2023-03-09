@@ -9,33 +9,33 @@
         <el-col v-for="(item, index) in wealths" :key="index" :span="4">
           <el-card
             class="chain_info"
-            :header="mappingChainName(item.chainName)"
+            :header="item.chainName"
             shadow="hover"
           >
             <el-tabs class="maker-header--balances__names">
               <template  v-for="(item1, index1) in item.balances">
 
               <el-tab-pane
-              :key="index1" v-if="item1 && item1.tokenName"
-                :label="item1.tokenName"
+              :key="index1" v-if="item1 && item1.symbol"
+                :label="item1.symbol"
               >
                 <div
-                  v-if="item1.tokenAddress"
+                  v-if="item1.address"
                   class="maker-header--balances__info"
                 >
                   TokenAddress:&nbsp;
                   <a
-                    :href="`${item.tokenExploreUrl}${item1.tokenAddress}`"
+                    :href="`${item.tokenExploreUrl}${item1.address}`"
                     target="_blank"
                   >
-                    <TextLong :content="item1.tokenAddress">
-                      {{ item1.tokenAddress }}
+                    <TextLong :content="item1.address">
+                      {{ item1.address }}
                     </TextLong>
                   </a>
                 </div>
                 <div class="maker-header--balances__info">
                   <span class="maker-header--balances__value">
-                    {{ item1.value || 'Faild Get' }}
+                    {{ item1.balance || 'Faild Get' }}
                   </span>
                 </div>
               </el-tab-pane>
@@ -58,7 +58,7 @@
             <el-option
               v-for="(item, index) in chains"
               :key="index"
-              :label="mappingChainName(item.chainName)"
+              :label="item.name"
               :value="item.chainId"
             ></el-option>
           </el-select>
@@ -69,7 +69,7 @@
             <el-option
               v-for="(item, index) in chains"
               :key="index"
-              :label="mappingChainName(item.chainName)"
+              :label="item.name"
               :value="item.chainId"
             ></el-option>
           </el-select>

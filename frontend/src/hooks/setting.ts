@@ -1,6 +1,6 @@
-import { $axios } from '@/plugins/axios'
 import { ElNotification } from 'element-plus'
 import { reactive } from 'vue'
+import http from "@/plugins/axios2";
 
 type BalanceAlarms = {
   chainId: number
@@ -28,7 +28,7 @@ export const balanceAlarms = {
     balanceAlarms.state.loading = true
     try {
       const params = { makerAddress }
-      const resp = await $axios.get<{
+      const resp = await http.get<{
         list: BalanceAlarms
         defaultBaseline: number
       }>('setting/balance_alarms', {
@@ -52,7 +52,7 @@ export const balanceAlarms = {
     balanceAlarms.state.loading = true
     try {
       const data = { makerAddress, value: balanceAlarms.state.list }
-      await $axios.post<BalanceAlarms>('setting/balance_alarms/save', data)
+      await http.post<BalanceAlarms>('setting/balance_alarms/save', data)
       ElNotification({
         title: 'Success',
         message: 'Setting - BalanceAlarms saved.',
@@ -83,7 +83,7 @@ export const dydxApiKeyCredentials = {
     try {
       const data = dydxApiKeyCredentials.state.apiKeyCredentials
       
-      await $axios.post('setting/dydx_api_key_credentials', data)
+      await http.post('setting/dydx_api_key_credentials', data)
 
       ElNotification({
         title: 'Success',

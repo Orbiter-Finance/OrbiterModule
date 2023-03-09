@@ -5,7 +5,7 @@ const config = {
     baseURL: process.env.VUE_APP_ENV == 'production' ?
         'http://openapi.orbiter.finance/mainnet' :
         'http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095',
-    // baseURL: process.env.OPEN_API_URL || 'http://localhost:9095',
+    // baseURL: 'http://localhost:9095',
 };
 
 const http = axios.create(config);
