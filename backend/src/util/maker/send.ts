@@ -560,9 +560,9 @@ async function sendConsumer(value: any) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.Unknown,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -1037,152 +1037,23 @@ async function sendConsumer(value: any) {
    */
   let maxPrice = 230
   if (isEthTokenAddress(tokenAddress)) {
-    if (
-      (fromChainID == 3 || fromChainID == 33) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 300;
     }
-    if (
-      (fromChainID == 2 || fromChainID == 22) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 6 || fromChainID == 66) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 7 || fromChainID == 77) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 8 || fromChainID == 88) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 130
-    }
-    if (
-      (fromChainID == 9 || fromChainID == 99) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 160
-    }
-    if (
-      (fromChainID == 10 || fromChainID == 510) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 130
-    }
-    if (
-      (fromChainID == 12 || fromChainID == 512) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 100
-    }
-    if (
-      (fromChainID == 13 || fromChainID == 513) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 100
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-  } else {
-    // USDC
-    if (
-      (fromChainID == 2 || fromChainID == 22) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 3 || fromChainID == 33) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 6 || fromChainID == 66) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 7 || fromChainID == 77) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
+  }
+  if (tokenInfo && tokenInfo.symbol === 'USDC') {
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 250;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
-    if (fromChainID === 3 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 2 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 7 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 6 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 250;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'DAI') {
-    if (fromChainID === 4 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 2 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 7 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 3 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 6 && chainID === 1) {
-      maxPrice = 85
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 250;
     }
   }
   const gasPrices = await getCurrentGasPrices(
@@ -1198,6 +1069,9 @@ async function sendConsumer(value: any) {
     toChain === 'boba'
   ) {
     gasLimit = 1000000
+  }
+  if (chainID == 16 || chainID == 516) {
+    gasLimit = 250000;
   }
   if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
     try {
