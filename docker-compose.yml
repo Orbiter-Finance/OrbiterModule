@@ -19,5 +19,5 @@ services:
     networks:
       - app-network
     volumes:
-      - './bootTime.txt:/app/bootTime.txt'
-    command: RUN curl -o /app/bootTime.txt http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp
+      - './boot-time.txt:/app/boot-time.txt'
+    command: curl -o /app/boot-time.txt http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp
