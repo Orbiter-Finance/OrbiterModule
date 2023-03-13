@@ -19,5 +19,5 @@ services:
     networks:
       - app-network
     volumes:
-      - './boot-time.txt:/app/boot-time.txt'
-    command: curl -o /app/boot-time.txt http://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp
+      - './boot-block-number.txt:/app/boot-block-number.txt'
+    command: curl -o /app/boot-block-number.txt https://api.etherscan.io/api?module=proxy&action=eth_blockNumber
