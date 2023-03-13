@@ -58,7 +58,7 @@ import { ArrowDown } from '@element-plus/icons'
 import { provide, reactive, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import config from './config/index'
-import http from "@/plugins/axios2";
+import http from "@/plugins/axios";
 
 const route = useRoute()
 const router = useRouter()

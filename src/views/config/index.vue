@@ -587,7 +587,7 @@
 import { defineComponent, reactive, onMounted, computed, ref } from 'vue'
 import dayjs from 'dayjs'
 import axios from 'axios'
-import http from '@/plugins/axios2'
+import http from '@/plugins/axios'
 import { useStore } from 'vuex'
 // import { AES } from "crypto-js"
 import {

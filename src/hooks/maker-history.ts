@@ -1,6 +1,6 @@
 import { $env } from '@/env'
 import { reactive, toRefs, ref } from 'vue'
-import http from '@/plugins/axios2'
+import http from '@/plugins/axios'
 
 
 export async function useUnmatchedTradding(params: any) {

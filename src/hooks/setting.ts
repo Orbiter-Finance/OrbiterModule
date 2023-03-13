@@ -1,6 +1,6 @@
 import { ElNotification } from 'element-plus'
 import { reactive } from 'vue'
-import http from "@/plugins/axios2";
+import http from "@/plugins/axios";
 
 type BalanceAlarms = {
   chainId: number

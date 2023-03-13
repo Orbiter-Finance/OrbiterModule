@@ -1,6 +1,6 @@
 import { $env } from '@/env'
 import { reactive, ref } from 'vue'
-import http from '@/plugins/axios2'
+import http from '@/plugins/axios'
 import config from '../config/index'
 
 type MakerInfoChains = {
