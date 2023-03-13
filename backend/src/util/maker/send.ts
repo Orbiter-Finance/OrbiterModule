@@ -1043,17 +1043,17 @@ async function sendConsumer(value: any) {
   }
   if (tokenInfo && tokenInfo.symbol === 'USDC') {
     if (chainID == 1 || chainID == 5) {
-      maxPrice = 250;
+      maxPrice = 170;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
     if (chainID == 1 || chainID == 5) {
-      maxPrice = 250;
+      maxPrice = 170;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'DAI') {
     if (chainID == 1 || chainID == 5) {
-      maxPrice = 250;
+      maxPrice = 170;
     }
   }
   const gasPrices = await getCurrentGasPrices(
