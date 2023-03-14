@@ -748,9 +748,9 @@ const switchNetwork = async (chainId) => {
 const handleSelectionChange = (rowList) => {
   if (rowList.length) {
     if (sendType.value == 1) {
-      selectChainId.value = rowList[0].toChain;
+      selectChainId.value = rowList[0].toChainId;
     } else {
-      selectChainId.value = rowList[0].fromChain;
+      selectChainId.value = rowList[0].fromChainId;
     }
   } else {
     selectChainId.value = 0;
@@ -761,18 +761,18 @@ const selectable = (row) => {
   if (row.status === 95 || row.status === 99) {
     return false;
   }
-  if (!util.isSupportXVMContract(row.toChain)) {
+  if (!util.isSupportXVMContract(row.toChainId)) {
     return false;
   }
   if(!selectChainId.value){
     return true;
   }
   if (sendType.value == 1) {
-    if (selectChainId.value == row.toChain) {
+    if (selectChainId.value == row.toChainId) {
       return true;
     }
   } else {
-    if (selectChainId.value == row.fromChain) {
+    if (selectChainId.value == row.fromChainId) {
       return true;
     }
   }

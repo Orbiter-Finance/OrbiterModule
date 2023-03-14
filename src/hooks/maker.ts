@@ -36,7 +36,7 @@ export type MakerNode = {
   replyAccount: string
   fromChain: string
   fromChainName: string
-  toChain: string
+  toChainId: string
   toChainName: string
   formTx: string
   fromTxHref: string
@@ -127,15 +127,15 @@ function transforeData(list: any = []) {
       item.state = 20;
     }
 
-    item['makerAddressHref'] = accountExploreUrl[item.fromChain] + item['makerAddress']
-    item['userAddressHref'] = accountExploreUrl[item.fromChain] + item['userAddress']
-    item['replyAccountHref'] = accountExploreUrl[item.toChain] + item['replyAccount']
-    item['fromTxHref'] = $env.txExploreUrl[item.fromChain] + item['fromTx']
+    item['makerAddressHref'] = accountExploreUrl[item.fromChainId] + item['makerAddress']
+    item['userAddressHref'] = accountExploreUrl[item.fromChainId] + item['userAddress']
+    item['replyAccountHref'] = accountExploreUrl[item.toChainId] + item['replyAccount']
+    item['fromTxHref'] = $env.txExploreUrl[item.fromChainId] + item['fromTx']
     item['toTxHref'] = ''
     if (item['toTx'] && item['toTx'] != '0x') {
-      item['toTxHref'] = $env.txExploreUrl[item.toChain] + item['toTx']
+      item['toTxHref'] = $env.txExploreUrl[item.toChainId] + item['toTx']
       if (item.state === 7) {
-        item['toTxHref'] = $env.txExploreUrl[item.fromChain] + item['toTx'];
+        item['toTxHref'] = $env.txExploreUrl[item.fromChainId] + item['toTx'];
       }
     }
     item['txTokenName'] = item.tokenName
