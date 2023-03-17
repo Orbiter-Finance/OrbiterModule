@@ -299,122 +299,122 @@ async function sendConsumer(value: any) {
     }
     return
   }
-  // zk2 || zk2_test
-  if (chainID === 14 || chainID === 514) {
-    try {
-      let ethProvider
-      let syncProvider
-      if (chainID === 514) {
-        const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
-        ethProvider = ethers.getDefaultProvider('goerli')
-        syncProvider = new zksync2.Provider(httpEndPoint)
-      } else {
-        const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
-        ethProvider = ethers.getDefaultProvider('homestead')
-        syncProvider = new zksync2.Provider(httpEndPoint)
-      }
-      const syncWallet = new zksync2.Wallet(
-        makerConfig.privateKeys[makerAddress.toLowerCase()],
-        syncProvider,
-        ethProvider
-      )
-      let tokenBalanceWei = await syncWallet.getBalance(
-        tokenAddress,
-        'finalized'
-      )
-      if (!tokenBalanceWei) {
-        accessLogger.error('zk2 Insufficient balance 0')
-        return {
-          code: 1,
-          txid: 'ZK2 Insufficient balance 0',
-        }
-      }
-      accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
-      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        accessLogger.error('zk2 Insufficient balance')
-        return {
-          code: 1,
-          txid: 'zk2 Insufficient balance',
-        }
-      }
-      const has_result_nonce = result_nonce > 0
-      if (!has_result_nonce) {
-        let zk_nonce = await syncWallet.getNonce('committed')
-        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
-        if (!zk_sql_nonce) {
-          result_nonce = zk_nonce
-        } else {
-          if (zk_nonce > zk_sql_nonce) {
-            result_nonce = zk_nonce
-          } else {
-            result_nonce = zk_sql_nonce + 1
-          }
-        }
-        accessLogger.info('zk2_nonce =', zk_nonce)
-        accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
-        accessLogger.info('zk2 result_nonde =', result_nonce)
-      }
-      const params = {
-        from: makerAddress,
-        customData: {
-          feeToken: '',
-        },
-        to: '',
-        nonce: result_nonce,
-        value: ethers.BigNumber.from(0),
-        data: '0x',
-      }
-      const isMainCoin =
-        tokenAddress.toLowerCase() ===
-        '0x000000000000000000000000000000000000800a'
-      if (isMainCoin) {
-        params.value = ethers.BigNumber.from(amountToSend)
-        params.to = toAddress
-        params.customData.feeToken =
-          '0x0000000000000000000000000000000000000000'
-      } else {
-        const web3 = new Web3()
-        const tokenContract = new web3.eth.Contract(
-          <any>makerConfig.ABI,
-          tokenAddress
-        )
-        params.data = tokenContract.methods
-          .transfer(toAddress, web3.utils.toHex(amountToSend))
-          .encodeABI()
-        params.to = tokenAddress
-        params.customData.feeToken = tokenAddress
-      }
-      const transfer = await syncWallet.sendTransaction(params)
-      if (!has_result_nonce) {
-        if (!nonceDic[makerAddress]) {
-          nonceDic[makerAddress] = {}
-        }
-        nonceDic[makerAddress][chainID] = result_nonce
-      }
-      return new Promise((resolve, reject) => {
-        if (transfer.hash) {
-          resolve({
-            code: 0,
-            txid: transfer.hash,
-            chainID: chainID,
-            zk2Nonce: result_nonce,
-          })
-        } else {
-          resolve({
-            code: 1,
-            error: 'zk2 transfer error',
-            result_nonce,
-          })
-        }
-      })
-    } catch (error) {
-      return {
-        code: 1,
-        txid: error,
-        result_nonce,
-      }
-    }
-  }
+  // // zk2 || zk2_test
+  // if (chainID === 14 || chainID === 514) {
+  //   try {
+  //     let ethProvider
+  //     let syncProvider
+  //     if (chainID === 514) {
+  //       const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
+  //       ethProvider = ethers.getDefaultProvider('goerli')
+  //       syncProvider = new zksync2.Provider(httpEndPoint)
+  //     } else {
+  //       const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
+  //       ethProvider = ethers.getDefaultProvider('homestead')
+  //       syncProvider = new zksync2.Provider(httpEndPoint)
+  //     }
+  //     const syncWallet = new zksync2.Wallet(
+  //       makerConfig.privateKeys[makerAddress.toLowerCase()],
+  //       syncProvider,
+  //       ethProvider
+  //     )
+  //     let tokenBalanceWei = await syncWallet.getBalance(
+  //       tokenAddress,
+  //       'finalized'
+  //     )
+  //     if (!tokenBalanceWei) {
+  //       accessLogger.error('zk2 Insufficient balance 0')
+  //       return {
+  //         code: 1,
+  //         txid: 'ZK2 Insufficient balance 0',
+  //       }
+  //     }
+  //     accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
+  //     if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+  //       accessLogger.error('zk2 Insufficient balance')
+  //       return {
+  //         code: 1,
+  //         txid: 'zk2 Insufficient balance',
+  //       }
+  //     }
+  //     const has_result_nonce = result_nonce > 0
+  //     if (!has_result_nonce) {
+  //       let zk_nonce = await syncWallet.getNonce('committed')
+  //       let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
+  //       if (!zk_sql_nonce) {
+  //         result_nonce = zk_nonce
+  //       } else {
+  //         if (zk_nonce > zk_sql_nonce) {
+  //           result_nonce = zk_nonce
+  //         } else {
+  //           result_nonce = zk_sql_nonce + 1
+  //         }
+  //       }
+  //       accessLogger.info('zk2_nonce =', zk_nonce)
+  //       accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
+  //       accessLogger.info('zk2 result_nonde =', result_nonce)
+  //     }
+  //     const params = {
+  //       from: makerAddress,
+  //       customData: {
+  //         feeToken: '',
+  //       },
+  //       to: '',
+  //       nonce: result_nonce,
+  //       value: ethers.BigNumber.from(0),
+  //       data: '0x',
+  //     }
+  //     const isMainCoin =
+  //       tokenAddress.toLowerCase() ===
+  //       '0x000000000000000000000000000000000000800a'
+  //     if (isMainCoin) {
+  //       params.value = ethers.BigNumber.from(amountToSend)
+  //       params.to = toAddress
+  //       params.customData.feeToken =
+  //         '0x0000000000000000000000000000000000000000'
+  //     } else {
+  //       const web3 = new Web3()
+  //       const tokenContract = new web3.eth.Contract(
+  //         <any>makerConfig.ABI,
+  //         tokenAddress
+  //       )
+  //       params.data = tokenContract.methods
+  //         .transfer(toAddress, web3.utils.toHex(amountToSend))
+  //         .encodeABI()
+  //       params.to = tokenAddress
+  //       params.customData.feeToken = tokenAddress
+  //     }
+  //     const transfer = await syncWallet.sendTransaction(params)
+  //     if (!has_result_nonce) {
+  //       if (!nonceDic[makerAddress]) {
+  //         nonceDic[makerAddress] = {}
+  //       }
+  //       nonceDic[makerAddress][chainID] = result_nonce
+  //     }
+  //     return new Promise((resolve, reject) => {
+  //       if (transfer.hash) {
+  //         resolve({
+  //           code: 0,
+  //           txid: transfer.hash,
+  //           chainID: chainID,
+  //           zk2Nonce: result_nonce,
+  //         })
+  //       } else {
+  //         resolve({
+  //           code: 1,
+  //           error: 'zk2 transfer error',
+  //           result_nonce,
+  //         })
+  //       }
+  //     })
+  //   } catch (error) {
+  //     return {
+  //       code: 1,
+  //       txid: error,
+  //       result_nonce,
+  //     }
+  //   }
+  // }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -1073,7 +1073,7 @@ async function sendConsumer(value: any) {
   if (chainID == 16 || chainID == 516) {
     gasLimit = 250000;
   }
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
+  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'zksync2_test' || toChain === 'zksync2') {
     try {
       if (isEthTokenAddress(tokenAddress)) {
         gasLimit = await web3.eth.estimateGas({
