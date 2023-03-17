@@ -468,5 +468,27 @@
         "address": "0x750ba8b76187092b0d1e87e28daaf484d1b5273b"
       }
     ]
+  },
+  {
+    "api": {
+      "url": "https://zksync2-mainnet.zkscan.io/api",
+      "key": ""
+    },
+    "chainId": "324",
+    "networkId": "324",
+    "l1NetworkId": "324",
+    "internalId": "14",
+    "name": "zksync2",
+    "nativeCurrency": {
+      "name": "Ether",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://zksync2-mainnet.zksync.io"],
+    "watch": ["rpc"],
+    "contracts": [],
+    "tokens": [],
+    "infoURL": "https://explorer.zksync.io"
   }
 ]
