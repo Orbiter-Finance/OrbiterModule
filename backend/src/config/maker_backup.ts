@@ -246,6 +246,16 @@ export default {
     },
     customChainId: 1402,
   },
+  zksync2: {
+    wsEndPoint: 'wss://zksync2-mainnet.zksync.io',
+    httpEndPoint: 'https://zksync2-mainnet.zksync.io',
+    api: {
+      endPoint: 'https://zksync2-mainnet.zkscan.io/api',
+      key: '',
+    },
+    gasPrice: 2,
+    customChainId: 324,
+  },
   zksync2_test: {
     wsEndPoint: 'wss://zksync2-testnet.zksync.dev/ws',
     httpEndPoint: 'https://zksync2-testnet.zksync.dev',
