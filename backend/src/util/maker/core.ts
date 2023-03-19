@@ -367,10 +367,14 @@ export function getAmountToSend(
     return;
   }
   
-  const rAmount = <any>realAmount.rAmount;
+  let rAmount = <any>realAmount.rAmount;
   if (nonce > 8999) {
     console.error("nonce too high, not allowed");
     return;
+  }
+  if (toChainID === 3) {
+    var prefix = rAmount.substr(0, 11);
+    rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
   const readyAmount = getToAmountFromUserAmount(
