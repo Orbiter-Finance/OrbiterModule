@@ -18,10 +18,3 @@ services:
     restart: always
     networks:
       - app-network
-    volumes:
-      - './boot-time.txt:/app/boot-time.txt'
-    command:
-      - sh
-      - -c
-      - |
-        curl -o /app/boot-time.txt https://api.m.taobao.com/rest/api3.do?api=mtop.common.getTimestamp
