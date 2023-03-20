@@ -140,6 +140,7 @@ async function isWatchAddress(address: string) {
 }
 async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
+  accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx=> tx.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
