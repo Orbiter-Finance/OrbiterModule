@@ -39,7 +39,7 @@ async function getTokenBalance(
 ): Promise<string | undefined> {
   try {
     if (!balanceService[String(chainId)]) {
-      balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
+      balanceService[String(chainId)] = new ChainServiceTokenBalance(<any>+chainId);
     }
     const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
     return result?.balance;
