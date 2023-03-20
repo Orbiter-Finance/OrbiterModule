@@ -1,4 +1,5 @@
 import config from '../config/index'
+import { $env } from "@/env";
 
 export default {
   getChainInfoByChainId(chainId) {
@@ -30,6 +31,14 @@ export default {
       return false;
     }
     return value1.toUpperCase() == value2.toUpperCase();
+  },
+  equalsMakerAddress(value1: string, value2: string) {
+    if (typeof value1 !== 'string' || typeof value2 !== 'string') {
+      return false;
+    }
+    return value1.toLocaleLowerCase() == value2.toLocaleLowerCase() ||
+        $env.crossAddressTransferMap[value1.toLocaleLowerCase()] == value2.toLocaleLowerCase() ||
+        $env.crossAddressTransferMap[value2.toLocaleLowerCase()] == value1.toLocaleLowerCase();
   },
   chainName(chainId) {
     return this.getChainInfoByChainId(chainId)?.name || 'unknown';

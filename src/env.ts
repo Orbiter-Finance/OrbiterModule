@@ -2,6 +2,9 @@ export const $env = {
   baseUrl: '',
   apiBaseUrl: 'http://rinkeby_dashboard.orbiter.finance:3002/',
   credential: false,
+  crossAddressTransferMap: {
+    "0x0043d60e87c5dd08c86c3123340705a1556c4719": "0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b"
+  },
   starknetL1MapL2: {
     'mainnet-alpha': {
       // '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',

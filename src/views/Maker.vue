@@ -1065,7 +1065,7 @@ const onClickStateTag = async (item: MakerNode) => {
     const fromChainId: number = needTo.chainId;
     const isStarknet = fromChainId === 4 || fromChainId === 44;
 
-    if (!isStarknet && !utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+    if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
       selectShow.value = false;
       sendTypeShow.value = false;
       throw new Error(
@@ -1138,7 +1138,7 @@ const onClickStateTag = async (item: MakerNode) => {
         await connectStarkNetWallet();
       }
       walletAccount = getStarknet().account?.address;
-      if (!utils.equalsIgnoreCase(walletAccount, fromAddress)) {
+      if (!util.equalsMakerAddress(walletAccount, fromAddress)) {
         selectShow.value = false;
         throw new Error(
                 `Please switch the address to ${fromAddress} in the wallet!`
