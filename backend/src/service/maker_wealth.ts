@@ -164,7 +164,15 @@ export async function getWealthsChains(makerAddress: string) {
       } else {
         const item = makerList.find((row)=> (row.c1ID == chainId || row.c2ID === chainId) && equals(row.makerAddress, makerAddress));
         if (!item) {
-          continue;
+          // not 0xe4edb277e41dc89ab076a1f049f4a3efa700bce8
+          if (equals(makerAddress, '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8')) {
+            const item2 = makerList.find((row)=> (row.c1ID == chainId || row.c2ID === chainId) && equals(row.makerAddress, '0x80c67432656d59144ceff962e8faf8926599bcf8'));
+            if (!item2) {
+              continue;
+            }
+          } else {
+            continue;
+          }
         }
       }
       const balances = [];
