@@ -6,6 +6,7 @@ export const $env = {
   credential: false,
   starknetL1MapL2: {
     'mainnet-alpha': {
+      '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8': '0x064A24243F2Aabae8D2148FA878276e6E6E452E3941b417f3c33b1649EA83e11',
       '0x80c67432656d59144ceff962e8faf8926599bcf8': '0x07c57808b9cea7130c44aab2f8ca6147b04408943b48c6d8c3c83eb8cfdd8c0b',
       '0x095d2918b03b2e86d68551dcf11302121fb626c9': '0x01998b5f1512f76cfe238c125df6541253c8f07f9d2eb2d50f5222f059165685',
     },
