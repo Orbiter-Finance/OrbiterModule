@@ -153,6 +153,7 @@ export class TransactionService {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
+        console.error(err);
       }
     }
     let fromAmount = 0;
