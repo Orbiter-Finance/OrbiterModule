@@ -23,28 +23,27 @@ const token2Decimals = {
   'DAI': 18
 }
 
-
-/**
- *
- * @param currency
- * @returns
- */
 export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
-  // cache
-  const exchangeRates = await getRates(currency)
+  const exchangeRates = await getRates(currency);
   if (exchangeRates) {
-    let metisExchangeRates = await getRates('metis')
-    if (metisExchangeRates && metisExchangeRates["USD"]) {
-      let usdToMetis = 1 / Number(metisExchangeRates["USD"])
-      exchangeRates["METIS"] = String(usdToMetis)
+    let metisExchangeRates = await getRates("metis");
+    if (metisExchangeRates?.[currency]) {
+      let toMetis = 1 / Number(metisExchangeRates[currency]);
+      exchangeRates["METIS"] = String(toMetis);
     }
-    return exchangeRates
+    let bnbExchangeRates = await getRates("bnb");
+    if (bnbExchangeRates?.[currency]) {
+      let toBNB = 1 / Number(bnbExchangeRates[currency]);
+      exchangeRates["BNB"] = String(toBNB);
+    }
+    return exchangeRates;
   } else {
-    return undefined
+    return null;
   }
 }
+
 export async function getRates(currency) {
-    const cacheData = await keyv.get(`rates:${currency}`);
+    const cacheData = await keyv.get(`rate:${currency}`);
   if (cacheData) {
     return cacheData;
   }
@@ -56,7 +55,7 @@ export async function getRates(currency) {
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
-  await keyv.set(`rates:${currency}`, data.rates, 1000 * 60 * 5); // true
+  await keyv.set(`rate:${currency}`, data.rates, 1000 * 60 * 5); // true
   return data.rates
 }
 
