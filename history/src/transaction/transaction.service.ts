@@ -153,12 +153,13 @@ export class TransactionService {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
+        console.error(err);
       }
     }
     let fromAmount = 0;
     let toAmount = 0;
     let profitAmount = 0;
-    if (makerAddress.includes('0x80C67432656d59144cEFf962E8fAF8926599bCF8')) {
+    if (makerAddress.includes('0x80C67432656d59144cEFf962E8fAF8926599bCF8') || makerAddress.includes('0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8')) {
       fromAmount = sumBy(from, 'ETHValue').toFixed(6);
       toAmount = sumBy(to, 'ETHValue').toFixed(6);
       profitAmount = profit['ETH'];
