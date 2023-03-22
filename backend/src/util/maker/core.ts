@@ -47,6 +47,7 @@ export const CHAIN_INDEX: any = {
   512: "zkspace",
   13: "boba",
   513: "boba",
+  14: "zksync2",
   514: "zksync2",
   15: "bnbchain",
   515: "bnbchain",
