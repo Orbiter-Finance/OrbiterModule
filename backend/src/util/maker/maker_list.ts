@@ -4376,12 +4376,12 @@ export const makerList = [
     "c1MinPrice": 0.005,
     "c1MaxPrice": 10,
     "c2MinPrice": 0.005,
-    "c2MaxPrice": 0.02,
+    "c2MaxPrice": 10,
     "precision": 18,
     "c1TradingFee": 0.0012,
     "c2TradingFee": 0.0012,
     "c1GasFee": 0.2,
-    "c2GasFee": 0,
+    "c2GasFee": 0.2,
     "c1AvalibleTimes": [
       {
         "startTime": 0,
