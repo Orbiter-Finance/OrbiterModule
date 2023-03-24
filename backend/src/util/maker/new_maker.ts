@@ -140,7 +140,7 @@ async function isWatchAddress(address: string) {
 }
 async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
-  accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx=> tx.hash))}`);
+  accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx => tx.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
@@ -218,10 +218,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (!result.state) {
         accessLogger.error(
-          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
@@ -229,16 +227,20 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
         accessLogger.error(
-          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${
-            fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${
-            tx.hash
+          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
+          },fromChainId=${fromChain.internalId},hash=${tx.hash
           },value=${tx.value.toString()}`,
           JSON.stringify(result)
         )
         continue
       }
-      const toChainInternalId = Number(result.pText) - 9000
+      const toChainInternalId = Number(result.pText) - 9000;
+      if (toChainInternalId == 4 || toChainInternalId == 3) {
+        accessLogger.error(
+          `[${transactionID}] Blocking starknit and zksync transactions`
+        )
+        continue
+      }
       const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
@@ -246,7 +248,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
         accessLogger.error(
           `[${transactionID}] Refund The query currency information does not exist: ` +
-            JSON.stringify(tx)
+          JSON.stringify(tx)
         )
         continue
       }
