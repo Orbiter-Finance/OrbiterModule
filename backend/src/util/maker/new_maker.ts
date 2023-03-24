@@ -237,13 +237,13 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const toChainInternalId = Number(result.pText) - 9000;
-      if (toChainInternalId == 4 || toChainInternalId == 3) {
-        const logger = LoggerService.getLogger("tx", {
-            dir: `logs/UncollectedPayment/`
-        });
-        logger.info(`${transactionID}`);
-        continue
-      }
+      // if (toChainInternalId == 4 || toChainInternalId == 3) {
+      //   const logger = LoggerService.getLogger("tx", {
+      //       dir: `logs/UncollectedPayment/`
+      //   });
+      //   logger.info(`${transactionID}`);
+      //   continue
+      // }
       const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
       const fromTokenInfo = fromChain.tokens.find((row) =>
         chainCoreUtil.equals(row.address, String(tx.tokenAddress))
