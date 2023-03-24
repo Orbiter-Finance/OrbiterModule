@@ -12,6 +12,7 @@ import { makerConfig } from '../../config'
 import mainnetChains from '../../config/chains.json'
 import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
+import { LoggerService } from 'orbiter-chaincore/src/utils'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
@@ -108,6 +109,7 @@ function getCacheClient(chainId: string) {
   caches.set(chainId, cache)
   return cache
 }
+
 export async function startNewMakerTrxPull() {
   const makerList = await getNewMarketList()
   const convertMakerList = groupWatchAddressByChain(makerList)
@@ -161,7 +163,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         continue
       }
       const accessLogger = getLoggerService(fromChain.internalId);
-      accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
+      // accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
       if (chainCoreUtil.equals(tx.to, tx.from) || tx.value.lte(0)) {
         accessLogger.error(
           `subscribeNewTransaction to equals from | value <= 0 hash:${tx.hash}`
@@ -236,9 +238,10 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       }
       const toChainInternalId = Number(result.pText) - 9000;
       if (toChainInternalId == 4 || toChainInternalId == 3) {
-        accessLogger.error(
-          `[${transactionID}] Blocking starknit and zksync transactions`
-        )
+        const logger = LoggerService.getLogger("tx", {
+            dir: `logs/UncollectedPayment/`
+        });
+        logger.info(`${transactionID}`);
         continue
       }
       const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
