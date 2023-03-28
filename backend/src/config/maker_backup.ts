@@ -56,6 +56,15 @@ export default {
     },
     gasPrice: 2,
   },
+  polygon_evm: {
+    wsEndPoint: null,
+    httpEndPoint: 'https://api-zkevm.polygonscan.com',
+    api: {
+      endPoint: 'https://api-zkevm.polygonscan.com',
+      key: '',
+    },
+    gasPrice: 2,
+  },
   zksync_test: {
     wsEndPoint: null,
     httpEndPoint: 'https://rinkeby-api.zksync.io/api/v0.2',
