@@ -490,5 +490,28 @@
     "contracts": [],
     "tokens": [],
     "infoURL": "https://explorer.zksync.io"
+  },
+  {
+    "api": {
+      "url": "https://api-zkevm.polygonscan.com",
+      "key": ""
+    },
+    "chainId": "1101",
+    "networkId": "1101",
+    "internalId": "17",
+    "name": "polygon_evm",
+    "debug": false,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://zkevm-rpc.com"],
+    "xvmList": [],
+    "watch": ["rpc"],
+    "tokens": [],
+    "infoURL": "https://zkevm.polygonscan.com/"
   }
 ]
