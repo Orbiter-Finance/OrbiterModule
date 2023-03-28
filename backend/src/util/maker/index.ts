@@ -16,11 +16,9 @@ import { sleep } from '..'
 import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
-import { MakerZkHash } from '../../model/maker_zk_hash'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { Core } from '../core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
-import * as orbiterCore from './core'
 import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
@@ -31,9 +29,6 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
 
-const zkTokenInfo: any[] = []
-let zksTokenInfo: any[] = []
-let lpTokenInfo: any[] = []
 let accountInfo: AccountInfo
 let lpKey: string
 
@@ -42,9 +37,6 @@ const repositoryMakerNode = (): Repository<MakerNode> => {
 }
 const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
   return Core.db.getRepository(MakerNodeTodo)
-}
-const repositoryMakerZkHash = (): Repository<MakerZkHash> => {
-  return Core.db.getRepository(MakerZkHash)
 }
 
 export async function getMakerList() {
@@ -127,10 +119,10 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-              '${exchangeAddress}',
-              exchangeInfo.exchangeAddress
-            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-        walletType: ConnectorNames.WalletLink,
+                '${exchangeAddress}',
+                exchangeInfo.exchangeAddress
+              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+        walletType: ConnectorNames.Unknown,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
@@ -337,9 +329,11 @@ export async function confirmToSNTransaction(
 ) {
   try {
     accessLogger.info('confirmToSNTransaction =', getTime())
-    const provider = getProviderV4(Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha');
+    const provider = getProviderV4(
+      Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha'
+    )
     const response = await provider.getTransaction(txID)
-    const txStatus = response['status'];
+    const txStatus = response['status']
     accessLogger.info(
       'sn_transaction =',
       JSON.stringify({ status: txStatus, txID })
@@ -352,14 +346,15 @@ export async function confirmToSNTransaction(
         response['transaction_failure_reason']
       )
       // check nonce
-      if (
-        response['transaction_failure_reason'] &&
-        response['transaction_failure_reason']['error_message'].includes(
-          'Error message: nonce invalid'
-        )
-      ) {
-        return true
-      }
+      // if (
+      //   response['transaction_failure_reason'] &&
+      //   response['transaction_failure_reason']['error_message'].includes(
+      //     'Error message: nonce invalid'
+      //   )
+      // ) {
+      //   return true
+      // }
+      return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
       ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING'].includes(txStatus)
@@ -387,7 +382,10 @@ export async function confirmToSNTransaction(
       rollback
     )
   } catch (error) {
-    getLoggerService(String(chainId)).error('confirmToSNTransaction error', error.message);
+    getLoggerService(String(chainId)).error(
+      'confirmToSNTransaction error',
+      error.message
+    )
   }
 }
 
@@ -488,18 +486,6 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
   }
 }
 
-function getZKTokenInfo(tokenAddress) {
-  if (!zkTokenInfo.length) {
-    return null
-  } else {
-    for (let index = 0; index < zkTokenInfo.length; index++) {
-      const tokenInfo = zkTokenInfo[index]
-      if (tokenInfo.address === tokenAddress) {
-        return tokenInfo
-      }
-    }
-  }
-}
 function getTime() {
   const time = dayjs().format('YYYY-MM-DD HH:mm:ss')
   return time
@@ -533,8 +519,10 @@ export async function sendTransaction(
   pool,
   nonce,
   result_nonce = 0,
-  ownerAddress = ''
+  ownerAddress = '',
+  retryCount = 0
 ) {
+  const accessLogger = getLoggerService(toChainID);
   const amountToSend = getAmountToSend(
     fromChainID,
     toChainID,
@@ -553,10 +541,11 @@ export async function sendTransaction(
   accessLogger.info('transactionID =', transactionID)
   accessLogger.info('amountToSend =', tAmount)
   accessLogger.info('toChain =', toChain)
+  accessLogger.info('retryCount =', retryCount)
   // accessLogger.info(
   // `transactionID=${transactionID}&makerAddress=${makerAddress}&fromChainID=${fromChainID}&toAddress=${toAddress}&toChain=${toChain}&toChainID=${toChainID}`
   // )
-  const toChainConfig: IChainConfig = chains.getChainByInternalId(
+  const toChainConfig: any = chains.getChainByInternalId(
     String(toChainID)
   )
   if (!toChainConfig || !toChainConfig.tokens) {
@@ -575,7 +564,7 @@ export async function sendTransaction(
     return
   }
   accessLogger.info(
-    `${transactionID} Exec Send Transfer`,
+    `${transactionID} [${process.pid}]  Exec Send Transfer`,
     JSON.stringify({
       makerAddress,
       toAddress,
@@ -587,6 +576,7 @@ export async function sendTransaction(
       result_nonce,
       nonce,
       tokenInfo,
+      retryCount
     })
   )
   await send(
@@ -595,7 +585,6 @@ export async function sendTransaction(
     toChain,
     toChainID,
     tokenInfo,
-    // getTokenInfo(toChainID, tokenAddress),
     tokenAddress,
     tAmount,
     result_nonce,
@@ -604,7 +593,8 @@ export async function sendTransaction(
     ownerAddress
   )
     .then(async (response) => {
-      accessLogger.info('response =', response)
+      const accessLogger = getLoggerService(toChainID);
+      accessLogger.info('response =', response);
       if (!response.code) {
         var txID = response.txid
         accessLogger.info(
@@ -628,7 +618,7 @@ export async function sendTransaction(
         }
         if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
           let syncProvider = response.zkProvider
-          confirmToZKTransaction(syncProvider, txID, transactionID)
+          // confirmToZKTransaction(syncProvider, txID, transactionID)
         } else if (toChainID === 4 || toChainID === 44) {
           confirmToSNTransaction(
             txID,
@@ -716,6 +706,39 @@ export async function sendTransaction(
             error
           )
         }
+        // if op Optimism sequencer global transaction limit exceeded Retry logic
+        try {
+          const error = response.error;
+          if (toChainID === 7 && error) {
+            accessLogger.info('OP send transaction error  = ', error);
+            accessLogger.info(`code:${error.code}`);
+            accessLogger.info(`message:${error.message}`);
+            if (error.message === 'Optimism sequencer global transaction limit exceeded' && error.code == 429) {
+              await sleep(1000 * 5);
+              accessLogger.info(`Re-join the queue to retry payment collection:${transactionID}`);
+              retryCount++;
+              // Rejoin the collection list
+              // sendTransaction(
+              //   makerAddress,
+              //   transactionID,
+              //   fromChainID,
+              //   toChainID,
+              //   toChain,
+              //   tokenAddress,
+              //   amountStr,
+              //   toAddress,
+              //   pool,
+              //   nonce,
+              //   result_nonce,
+              //   ownerAddress,
+              //   retryCount
+              // );
+            }
+          }
+        } catch (error) {
+          errorLogger.error(`[${transactionID}] Retry payment collection exception`, error)
+        }
+
       }
     })
     .catch((error) => {

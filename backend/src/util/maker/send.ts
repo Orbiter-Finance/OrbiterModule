@@ -6,7 +6,6 @@ import {
   generateKeyPair,
   GlobalAPI,
   UserAPI,
-  VALID_UNTIL,
 } from '@loopring-web/loopring-sdk'
 import axios from 'axios'
 import BigNumber from 'bignumber.js'
@@ -26,15 +25,23 @@ import { getTargetMakerPool } from '../../service/maker'
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
-import { accessLogger, getLoggerService } from '../logger'
+import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
-
+import { doSms } from '../../sms/smsSchinese'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
-
+const checkHealthByChain: {
+  [key: string]: {
+    smsInterval: number
+    lastSendSMSTime: number
+  }
+} = {}
+const checkHealthAllChain = {
+  smsInterval: 1000 * 60 * 5,
+  lastSendSMSTime: 0,
+}
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
-
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
       const httpEndPoint = makerConfig[toChain].api.endPoint
@@ -93,19 +100,57 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         gasPrice = Web3.utils.toHex(20000000000)
         // gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
       }
+      if (toChain == 'bnbchain') {
+        if (parseInt(response.data.result, 16) <= 5000000000) {
+          gasPrice = Web3.utils.toHex(5500000000)
+        } else {
+          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.1)
+        }
+      }
 
-      getLoggerService(toChain).info('gasPrice =', gasPrice)
       return gasPrice
     } catch (error) {
+      getLoggerService(toChain).info(`gasPrice error ${error.message}`)
       return Web3.utils.toHex(
         Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
     }
   }
 }
-
 // SendQueue
 const sendQueue = new SendQueue()
+sendQueue.checkHealth(
+  (timeout) => {
+    if (
+      Date.now() - checkHealthAllChain.lastSendSMSTime >=
+      checkHealthAllChain.smsInterval
+    ) {
+      checkHealthAllChain.lastSendSMSTime = Date.now()
+      try {
+        doSms(
+          `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
+        )
+      } catch (error) {
+        errorLogger.error(`Warning:From last consumption doSMS error `, error)
+      }
+    }
+  },
+  (chainId: number, timeout: number) => {
+    const config = checkHealthByChain[chainId] || {
+      smsInterval: 1000 * 30 * 60,
+      lastSendSMSTime: 0,
+    }
+    if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
+      config.lastSendSMSTime = Date.now()
+      doSms(
+        `Warning:${chainId} Chain has not been processed for more than ${(
+          timeout / 1000
+        ).toFixed(0)} seconds`
+      )
+    }
+    checkHealthByChain[chainId] = config
+  }
+)
 
 async function sendConsumer(value: any) {
   let {
@@ -121,7 +166,8 @@ async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
   } = value
-  const accessLogger = getLoggerService(chainID);
+  const accessLogger = getLoggerService(chainID)
+  accessLogger.info(`sendConsumer [${process.pid}] =`, JSON.stringify(value))
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -133,7 +179,9 @@ async function sendConsumer(value: any) {
       }
       if (chainID === 33) {
         ethProvider = ethers.providers.getDefaultProvider('rinkeby')
-        syncProvider = await zksync.Provider.newHttpProvider('https://goerli-api.zksync.io/jsrpc')
+        syncProvider = await zksync.Provider.newHttpProvider(
+          'https://goerli-api.zksync.io/jsrpc'
+        )
       }
       const ethWallet = new ethers.Wallet(
         makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -251,122 +299,122 @@ async function sendConsumer(value: any) {
     }
     return
   }
-  // zk2 || zk2_test
-  if (chainID === 14 || chainID === 514) {
-    try {
-      let ethProvider
-      let syncProvider
-      if (chainID === 514) {
-        const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
-        ethProvider = ethers.getDefaultProvider('goerli')
-        syncProvider = new zksync2.Provider(httpEndPoint)
-      } else {
-        const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
-        ethProvider = ethers.getDefaultProvider('homestead')
-        syncProvider = new zksync2.Provider(httpEndPoint)
-      }
-      const syncWallet = new zksync2.Wallet(
-        makerConfig.privateKeys[makerAddress.toLowerCase()],
-        syncProvider,
-        ethProvider
-      )
-      let tokenBalanceWei = await syncWallet.getBalance(
-        tokenAddress,
-        'finalized'
-      )
-      if (!tokenBalanceWei) {
-        accessLogger.error('zk2 Insufficient balance 0')
-        return {
-          code: 1,
-          txid: 'ZK2 Insufficient balance 0',
-        }
-      }
-      accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
-      if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-        accessLogger.error('zk2 Insufficient balance')
-        return {
-          code: 1,
-          txid: 'zk2 Insufficient balance',
-        }
-      }
-      const has_result_nonce = result_nonce > 0
-      if (!has_result_nonce) {
-        let zk_nonce = await syncWallet.getNonce('committed')
-        let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
-        if (!zk_sql_nonce) {
-          result_nonce = zk_nonce
-        } else {
-          if (zk_nonce > zk_sql_nonce) {
-            result_nonce = zk_nonce
-          } else {
-            result_nonce = zk_sql_nonce + 1
-          }
-        }
-        accessLogger.info('zk2_nonce =', zk_nonce)
-        accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
-        accessLogger.info('zk2 result_nonde =', result_nonce)
-      }
-      const params = {
-        from: makerAddress,
-        customData: {
-          feeToken: '',
-        },
-        to: '',
-        nonce: result_nonce,
-        value: ethers.BigNumber.from(0),
-        data: '0x',
-      }
-      const isMainCoin =
-        tokenAddress.toLowerCase() ===
-        '0x000000000000000000000000000000000000800a'
-      if (isMainCoin) {
-        params.value = ethers.BigNumber.from(amountToSend)
-        params.to = toAddress
-        params.customData.feeToken =
-          '0x0000000000000000000000000000000000000000'
-      } else {
-        const web3 = new Web3()
-        const tokenContract = new web3.eth.Contract(
-          <any>makerConfig.ABI,
-          tokenAddress
-        )
-        params.data = tokenContract.methods
-          .transfer(toAddress, web3.utils.toHex(amountToSend))
-          .encodeABI()
-        params.to = tokenAddress
-        params.customData.feeToken = tokenAddress
-      }
-      const transfer = await syncWallet.sendTransaction(params)
-      if (!has_result_nonce) {
-        if (!nonceDic[makerAddress]) {
-          nonceDic[makerAddress] = {}
-        }
-        nonceDic[makerAddress][chainID] = result_nonce
-      }
-      return new Promise((resolve, reject) => {
-        if (transfer.hash) {
-          resolve({
-            code: 0,
-            txid: transfer.hash,
-            chainID: chainID,
-            zk2Nonce: result_nonce,
-          })
-        } else {
-          resolve({
-            code: 1,
-            error: 'zk2 transfer error',
-            result_nonce,
-          })
-        }
-      })
-    } catch (error) {
-      return {
-        code: 1,
-        txid: error,
-        result_nonce,
-      }
-    }
-  }
+  // // zk2 || zk2_test
+  // if (chainID === 14 || chainID === 514) {
+  //   try {
+  //     let ethProvider
+  //     let syncProvider
+  //     if (chainID === 514) {
+  //       const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
+  //       ethProvider = ethers.getDefaultProvider('goerli')
+  //       syncProvider = new zksync2.Provider(httpEndPoint)
+  //     } else {
+  //       const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
+  //       ethProvider = ethers.getDefaultProvider('homestead')
+  //       syncProvider = new zksync2.Provider(httpEndPoint)
+  //     }
+  //     const syncWallet = new zksync2.Wallet(
+  //       makerConfig.privateKeys[makerAddress.toLowerCase()],
+  //       syncProvider,
+  //       ethProvider
+  //     )
+  //     let tokenBalanceWei = await syncWallet.getBalance(
+  //       tokenAddress,
+  //       'finalized'
+  //     )
+  //     if (!tokenBalanceWei) {
+  //       accessLogger.error('zk2 Insufficient balance 0')
+  //       return {
+  //         code: 1,
+  //         txid: 'ZK2 Insufficient balance 0',
+  //       }
+  //     }
+  //     accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
+  //     if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
+  //       accessLogger.error('zk2 Insufficient balance')
+  //       return {
+  //         code: 1,
+  //         txid: 'zk2 Insufficient balance',
+  //       }
+  //     }
+  //     const has_result_nonce = result_nonce > 0
+  //     if (!has_result_nonce) {
+  //       let zk_nonce = await syncWallet.getNonce('committed')
+  //       let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
+  //       if (!zk_sql_nonce) {
+  //         result_nonce = zk_nonce
+  //       } else {
+  //         if (zk_nonce > zk_sql_nonce) {
+  //           result_nonce = zk_nonce
+  //         } else {
+  //           result_nonce = zk_sql_nonce + 1
+  //         }
+  //       }
+  //       accessLogger.info('zk2_nonce =', zk_nonce)
+  //       accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
+  //       accessLogger.info('zk2 result_nonde =', result_nonce)
+  //     }
+  //     const params = {
+  //       from: makerAddress,
+  //       customData: {
+  //         feeToken: '',
+  //       },
+  //       to: '',
+  //       nonce: result_nonce,
+  //       value: ethers.BigNumber.from(0),
+  //       data: '0x',
+  //     }
+  //     const isMainCoin =
+  //       tokenAddress.toLowerCase() ===
+  //       '0x000000000000000000000000000000000000800a'
+  //     if (isMainCoin) {
+  //       params.value = ethers.BigNumber.from(amountToSend)
+  //       params.to = toAddress
+  //       params.customData.feeToken =
+  //         '0x0000000000000000000000000000000000000000'
+  //     } else {
+  //       const web3 = new Web3()
+  //       const tokenContract = new web3.eth.Contract(
+  //         <any>makerConfig.ABI,
+  //         tokenAddress
+  //       )
+  //       params.data = tokenContract.methods
+  //         .transfer(toAddress, web3.utils.toHex(amountToSend))
+  //         .encodeABI()
+  //       params.to = tokenAddress
+  //       params.customData.feeToken = tokenAddress
+  //     }
+  //     const transfer = await syncWallet.sendTransaction(params)
+  //     if (!has_result_nonce) {
+  //       if (!nonceDic[makerAddress]) {
+  //         nonceDic[makerAddress] = {}
+  //       }
+  //       nonceDic[makerAddress][chainID] = result_nonce
+  //     }
+  //     return new Promise((resolve, reject) => {
+  //       if (transfer.hash) {
+  //         resolve({
+  //           code: 0,
+  //           txid: transfer.hash,
+  //           chainID: chainID,
+  //           zk2Nonce: result_nonce,
+  //         })
+  //       } else {
+  //         resolve({
+  //           code: 1,
+  //           error: 'zk2 transfer error',
+  //           result_nonce,
+  //         })
+  //       }
+  //     })
+  //   } catch (error) {
+  //     return {
+  //       code: 1,
+  //       txid: error,
+  //       result_nonce,
+  //     }
+  //   }
+  // }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -382,17 +430,15 @@ async function sendConsumer(value: any) {
         amount: String(amountToSend),
         nonce,
       })
-      if (!hash) {
-        throw new Error('Starknet failed to send transaction');
-      }
+      await sleep(1000 * 10)
       return {
         code: 0,
         txid: hash,
         rollback,
       }
     } catch (error) {
-      await rollback(error, nonce);
-      await sleep(1000 * 2);
+      await rollback(error, nonce)
+      await sleep(1000 * 2)
       return {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
@@ -517,7 +563,7 @@ async function sendConsumer(value: any) {
               '${exchangeAddress}',
               exchangeInfo.exchangeAddress
             ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
-        walletType: ConnectorNames.WalletLink,
+        walletType: ConnectorNames.Unknown,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
       const eddsaKey = await generateKeyPair(options)
@@ -557,6 +603,7 @@ async function sendConsumer(value: any) {
         accessLogger.info('lp_sql_nonce =', lp_sql_nonce)
         accessLogger.info('result_nonce =', result_nonce)
       }
+      const ts = Math.round(new Date().getTime() / 1000) + 30 * 86400
       // step 4 transfer
       const OriginTransferRequestV3 = {
         exchange: exchangeInfo.exchangeAddress,
@@ -573,14 +620,14 @@ async function sendConsumer(value: any) {
           tokenId: 0,
           volume: '940000000000000',
         },
-        validUntil: VALID_UNTIL,
+        validUntil: ts,
         memo: lpMemo,
       }
       const transactionResult = await userApi.submitInternalTransfer({
         request: <any>OriginTransferRequestV3,
         web3: <any>localWeb3,
         chainId: chainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
-        walletType: ConnectorNames.WalletLink,
+        walletType: ConnectorNames.Unknown,
         eddsaKey: eddsaKey.sk,
         apiKey: apiKey,
         isHWAddr: false,
@@ -889,17 +936,19 @@ async function sendConsumer(value: any) {
       }
     }
   }
-  let web3Net = '';
+  let web3Net = ''
   if (makerConfig[toChain]) {
-    web3Net = makerConfig[toChain].httpEndPointInfura || makerConfig[toChain].httpEndPoint
+    web3Net =
+      makerConfig[toChain].httpEndPointInfura ||
+      makerConfig[toChain].httpEndPoint
     accessLogger.info(`RPC from makerConfig ${toChain}`)
   } else {
-    // 
+    //
     accessLogger.info(`RPC from ChainCore ${toChain}`)
   }
   if (isEmpty(web3Net)) {
-    accessLogger.error(`RPC not obtained ToChain ${toChain}`);
-    return;
+    accessLogger.error(`RPC not obtained ToChain ${toChain}`)
+    return
   }
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
@@ -960,6 +1009,10 @@ async function sendConsumer(value: any) {
      * you need to increase a nonce which is tied to the sender wallet.
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
+    accessLogger.info(
+      `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
+    )
+    accessLogger.info('read nonceDic', JSON.stringify(nonceDic))
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -974,7 +1027,6 @@ async function sendConsumer(value: any) {
       nonceDic[makerAddress] = {}
     }
     nonceDic[makerAddress][chainID] = result_nonce
-
     accessLogger.info('nonce =', nonce)
     accessLogger.info('sql_nonce =', sql_nonce)
     accessLogger.info('result_nonde =', result_nonce)
@@ -985,152 +1037,23 @@ async function sendConsumer(value: any) {
    */
   let maxPrice = 230
   if (isEthTokenAddress(tokenAddress)) {
-    if (
-      (fromChainID == 3 || fromChainID == 33) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 300;
     }
-    if (
-      (fromChainID == 2 || fromChainID == 22) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 6 || fromChainID == 66) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 7 || fromChainID == 77) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 180
-    }
-    if (
-      (fromChainID == 8 || fromChainID == 88) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 130
-    }
-    if (
-      (fromChainID == 9 || fromChainID == 99) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 160
-    }
-    if (
-      (fromChainID == 10 || fromChainID == 510) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 130
-    }
-    if (
-      (fromChainID == 12 || fromChainID == 512) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 100
-    }
-    if (
-      (fromChainID == 13 || fromChainID == 513) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 100
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-  } else {
-    // USDC
-    if (
-      (fromChainID == 2 || fromChainID == 22) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 3 || fromChainID == 33) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 6 || fromChainID == 66) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 90
-    }
-    if (
-      (fromChainID == 7 || fromChainID == 77) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
+  }
+  if (tokenInfo && tokenInfo.symbol === 'USDC') {
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 170;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDT') {
-    if (fromChainID === 3 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 2 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 7 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (fromChainID === 6 && chainID === 1) {
-      maxPrice = 95
-    }
-    if (
-      (fromChainID == 15 || fromChainID == 515) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 85
-    }
-    if (
-      (fromChainID == 16 || fromChainID == 516) &&
-      (chainID == 1 || chainID == 5)
-    ) {
-      maxPrice = 80
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 170;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'DAI') {
-    if (fromChainID === 4 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 2 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 7 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 3 && chainID === 1) {
-      maxPrice = 85
-    }
-    if (fromChainID === 6 && chainID === 1) {
-      maxPrice = 85
+    if (chainID == 1 || chainID == 5) {
+      maxPrice = 170;
     }
   }
   const gasPrices = await getCurrentGasPrices(
@@ -1147,7 +1070,10 @@ async function sendConsumer(value: any) {
   ) {
     gasLimit = 1000000
   }
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
+  if (chainID == 16 || chainID == 516) {
+    gasLimit = 250000;
+  }
+  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'zksync2_test' || toChain === 'zksync2') {
     try {
       if (isEthTokenAddress(tokenAddress)) {
         gasLimit = await web3.eth.estimateGas({
@@ -1193,45 +1119,47 @@ async function sendConsumer(value: any) {
     try {
       // eip 1559 send
       const config = chains.getChainByInternalId(chainID);
-      if (config.rpc.length<=0) {
+      if (config && config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }
-      const httpsProvider = new ethers.providers.JsonRpcProvider(config.rpc[0]);
+      const httpsProvider = new ethers.providers.JsonRpcProvider(web3Net)
       // let feeData = await httpsProvider.getFeeData();
       // if (feeData) {
-      delete details['gasPrice'];
-      delete details['gas'];
-      let maxPriorityFeePerGas = 1000000000;
+      delete details['gasPrice']
+      delete details['gas']
+      let maxPriorityFeePerGas = 1000000000
       try {
-        if (config.rpc.length>0 && config.rpc[0].includes('alchemyapi')) {
+        if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
           const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
           if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas;
+            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas
           }
         }
       } catch (error) {
-        accessLogger.error('eth_maxPriorityFeePerGas error', error.message);
+        accessLogger.error('eth_maxPriorityFeePerGas error', error.message)
       }
-     
-      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas);
-      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9);
-      details['gasLimit'] = web3.utils.toHex(gasLimit);
-      details['type'] = 2;
-      const wallet = new ethers.Wallet(Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex'));
-      const signedTx = await wallet.signTransaction(details);
-      const resp = await httpsProvider.sendTransaction(signedTx);
+
+      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
+      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
+      details['gasLimit'] = web3.utils.toHex(gasLimit)
+      details['type'] = 2
+      const wallet = new ethers.Wallet(
+        Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+      )
+      const signedTx = await wallet.signTransaction(details)
+      const resp = await httpsProvider.sendTransaction(signedTx)
       return {
         code: 0,
-        txid: resp.hash
-      };
+        txid: resp.hash,
+      }
       // }
     } catch (err) {
-      nonceDic[makerAddress][chainID] = result_nonce - 1;
+      nonceDic[makerAddress][chainID] = result_nonce - 1
       return {
         code: 1,
         txid: err,
         result_nonce,
-      };
+      }
     }
   }
   let transaction: EthereumTx
@@ -1258,7 +1186,7 @@ async function sendConsumer(value: any) {
   transaction.sign(
     Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
   )
-
+  accessLogger.info('send transaction =', JSON.stringify(details))
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
@@ -1272,6 +1200,7 @@ async function sendConsumer(value: any) {
   /**
    * We're ready! Submit the raw transaction details to the provider configured above.
    */
+
   return new Promise((resolve) => {
     web3.eth
       .sendSignedTransaction('0x' + serializedTransaction.toString('hex'))
@@ -1281,11 +1210,15 @@ async function sendConsumer(value: any) {
           txid: hash,
         })
       })
-      .on('error', (err) => {
-        nonceDic[makerAddress][chainID] = result_nonce - 1
+      .on('receipt', (tx: any) => {
+        accessLogger.info('send transaction receipt=', JSON.stringify(tx))
+      })
+      .on('error', (err: any) => {
+        nonceDic[makerAddress][chainID] = result_nonce - 1;
         resolve({
           code: 1,
           txid: err,
+          error: err,
           result_nonce,
         })
       })
@@ -1335,12 +1268,12 @@ async function send(
       lpMemo,
       ownerAddress,
     }
-    const accessLogger = getLoggerService(chainID);
+    const accessLogger = getLoggerService(chainID)
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {
         if (error) {
-          accessLogger.error(`sendQueue exec produce error:${error.message}`);
+          accessLogger.error(`sendQueue exec produce error:${error.message}`)
           reject(error)
         } else {
           resolve(result)

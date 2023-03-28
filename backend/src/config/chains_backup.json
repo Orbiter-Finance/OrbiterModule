@@ -448,7 +448,7 @@
     },
     "chainId": "42170",
     "networkId": "42170",
-    "internalId": "516",
+    "internalId": "16",
     "name": "Arbitrum Nova",
     "debug": false,
     "contracts": [],
@@ -479,7 +479,6 @@
     "l1NetworkId": "324",
     "internalId": "14",
     "name": "zksync2",
-    "isSupportOpenApi": true,
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -491,5 +490,28 @@
     "contracts": [],
     "tokens": [],
     "infoURL": "https://explorer.zksync.io"
+  },
+  {
+    "api": {
+      "url": "https://api-zkevm.polygonscan.com",
+      "key": ""
+    },
+    "chainId": "1101",
+    "networkId": "1101",
+    "internalId": "17",
+    "name": "polygon_evm",
+    "debug": false,
+    "contracts": [],
+    "nativeCurrency": {
+      "name": "ETH",
+      "symbol": "ETH",
+      "decimals": 18,
+      "address": "0x0000000000000000000000000000000000000000"
+    },
+    "rpc": ["https://zkevm-rpc.com"],
+    "xvmList": [],
+    "watch": ["rpc"],
+    "tokens": [],
+    "infoURL": "https://zkevm.polygonscan.com/"
   }
 ]
