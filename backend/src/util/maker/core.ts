@@ -53,6 +53,7 @@ export const CHAIN_INDEX: any = {
   515: "bnbchain",
   16: "arbitrum_nova",
   516: "arbitrum_nova",
+  17: "polygon_zkevm",
   517: "polygon_zkevm",
   518: "scroll_l1_test",
   519: "scroll_l2_test",
