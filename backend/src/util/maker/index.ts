@@ -618,7 +618,7 @@ export async function sendTransaction(
         }
         if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
           let syncProvider = response.zkProvider
-          confirmToZKTransaction(syncProvider, txID, transactionID)
+          // confirmToZKTransaction(syncProvider, txID, transactionID)
         } else if (toChainID === 4 || toChainID === 44) {
           confirmToSNTransaction(
             txID,

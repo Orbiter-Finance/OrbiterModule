@@ -15,12 +15,12 @@ export function getLoggerService(key: string) {
     // Compatible with previous methods
     return {
         error(message: string, ...args: any) {
-            accessLogger.error(message, ...args);
             logger.error(`${message} - ${args.join(' ')}`);
+            accessLogger.error(message, ...args);
         },
         info(message: string, ...args: any) {
-            accessLogger.info(message, ...args);
             logger.info(`${message} - ${args.join(' ')}`);
+            accessLogger.info(message, ...args);
         }
     };
 }
