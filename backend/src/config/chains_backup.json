@@ -501,7 +501,7 @@
     "chainId": "1101",
     "networkId": "1101",
     "internalId": "17",
-    "name": "Polygon EVM",
+    "name": "polygon_evm",
     "debug": false,
     "contracts": [],
     "nativeCurrency": {

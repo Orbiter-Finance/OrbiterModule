@@ -58,12 +58,13 @@ export default {
   },
   polygon_evm: {
     wsEndPoint: null,
-    httpEndPoint: 'https://api-zkevm.polygonscan.com',
+    httpEndPoint: 'https://zkevm-rpc.com',
     api: {
       endPoint: 'https://api-zkevm.polygonscan.com',
       key: '',
     },
     gasPrice: 2,
+    customChainId: 1101,
   },
   zksync_test: {
     wsEndPoint: null,
