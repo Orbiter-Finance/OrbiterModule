@@ -77,7 +77,14 @@ provide('exchangeRates', exchangeRates)
 
 const getGlobalInfo = async () => {
   const resp = await $axios.get('global')
-  state.makerAddresses = resp.data.makerAddresses
+  const list = resp.data.makerAddresses;
+  const newList = [];
+  for (const data of list) {
+    if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
+      newList.push(data);
+    }
+  }
+  state.makerAddresses = newList
   state.exchangeRates = resp.data.exchangeRates
 
   const mk = router?.currentRoute?._value?.query?.makerAddress;
