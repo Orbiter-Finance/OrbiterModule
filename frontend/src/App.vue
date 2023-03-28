@@ -80,11 +80,18 @@ const getGlobalInfo = async () => {
   state.makerAddresses = resp.data.makerAddresses
   state.exchangeRates = resp.data.exchangeRates
 
+  const mk = router?.currentRoute?._value?.query?.makerAddress;
+  const reg = new RegExp(/^0x[a-fA-F0-9]{40}$/);
+  const isAddress = reg.test(mk);
+  if (isAddress) {
+    state.makerAddresses.push(mk);
+  }
+
   state.makerAddressSelected = state.makerAddresses?.[0] || ''
 
   // Set makerAddressSelected from route.query.makerAddress
   setTimeout(() => {
-    const makerAddress = String(route.query.makerAddress)
+    const makerAddress = String(mk)
     if (state.makerAddresses.indexOf(makerAddress) > -1) {
       state.makerAddressSelected = makerAddress
     }

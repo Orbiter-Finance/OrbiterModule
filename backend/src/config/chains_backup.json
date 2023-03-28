@@ -448,7 +448,7 @@
     },
     "chainId": "42170",
     "networkId": "42170",
-    "internalId": "16",
+    "internalId": "516",
     "name": "Arbitrum Nova",
     "debug": false,
     "contracts": [],
@@ -479,6 +479,7 @@
     "l1NetworkId": "324",
     "internalId": "14",
     "name": "zksync2",
+    "isSupportOpenApi": true,
     "nativeCurrency": {
       "name": "Ether",
       "symbol": "ETH",
@@ -494,7 +495,8 @@
   {
     "api": {
       "url": "https://api-zkevm.polygonscan.com",
-      "key": ""
+      "key": "",
+      "intervalTime": 10000
     },
     "chainId": "1101",
     "networkId": "1101",
