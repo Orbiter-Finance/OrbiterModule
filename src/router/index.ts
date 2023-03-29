@@ -23,6 +23,11 @@ const routes: Array<RouteRecordRaw> = [
     component: () => import('../views/Maker.vue'),
   },
   {
+    path: '/oldmaker',
+    name: 'OldMaker',
+    component: () => import('../views/OldMaker.vue'),
+  },
+  {
     path: '/setting',
     name: 'Setting',
     component: Setting,

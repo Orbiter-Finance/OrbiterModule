@@ -77,15 +77,29 @@ provide('makerAddressSelected', makerAddressSelected)
 provide('exchangeRates', exchangeRates)
 
 const getGlobalInfo = async () => {
-  const resp = await http.get('/v1/dashboard/rates');
-  state.makerAddresses = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
-  state.exchangeRates = resp;
+  state.exchangeRates = await http.get('/v1/dashboard/rates');
+
+  const list = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
+  const newList = [];
+  for (const data of list) {
+    if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
+      newList.push(data);
+    }
+  }
+  state.makerAddresses = newList
+
+  const mk: string = router?.currentRoute?._value?.query?.makerAddress;
+  const reg = new RegExp(/^0x[a-fA-F0-9]{40}$/);
+  const isAddress = reg.test(mk);
+  if (isAddress) {
+    state.makerAddresses.push(mk);
+  }
 
   state.makerAddressSelected = state.makerAddresses?.[0] || ''
 
   // Set makerAddressSelected from route.query.makerAddress
   setTimeout(() => {
-    const makerAddress = String(route.query.makerAddress)
+    const makerAddress = String(mk)
     if (state.makerAddresses.indexOf(makerAddress) > -1) {
       state.makerAddressSelected = makerAddress
     }

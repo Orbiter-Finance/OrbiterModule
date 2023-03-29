@@ -1127,7 +1127,8 @@ const onClickStateTag = async (item: MakerNode) => {
           });
           sendInfo.value = dataList;
           console.log('Send info ===> ', dataList);
-          confirmSendVisible.value = true;
+          // confirmSendVisible.value = true;
+          confirmSend()
           return;
         }
       }
@@ -1160,7 +1161,8 @@ const onClickStateTag = async (item: MakerNode) => {
       ...needTo }];
     console.log('Send info ===> ', dataList);
     sendInfo.value = dataList;
-    confirmSendVisible.value = true;
+    // confirmSendVisible.value = true;
+    confirmSend();
   } catch (err) {
     ElNotification({
       title: 'Error',
