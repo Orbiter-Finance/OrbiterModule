@@ -147,154 +147,158 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
-      if (!(await isWatchAddress(tx.to))) {
-        // accessLogger.error(
-        //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
-        // )
-        continue
-      }
-      const fromChain = await chains.getChainByChainId(tx.chainId)
-      // check send
-      if (!fromChain) {
-        errorLogger.error(
-          `transaction fromChainId ${tx.chainId} does not exist: `,
-          tx.hash
-        )
-        continue
-      }
-      const accessLogger = getLoggerService(fromChain.internalId);
-      // accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
-      if (chainCoreUtil.equals(tx.to, tx.from) || tx.value.lte(0)) {
-        accessLogger.error(
-          `subscribeNewTransaction to equals from | value <= 0 hash:${tx.hash}`
-        )
-        continue
-      }
-
-      const startTimeTimeStamp = LastPullTxMap.get(
-        `${fromChain.internalId}:${tx.to.toLowerCase()}`
-      )
-      if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
-        accessLogger.error(
-          `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
-        )
-        // TAG:  rinkeby close
-        continue
-      }
-      let ext = '';
-      if ([8, 88].includes(Number(fromChain.internalId))) {
-        ext = dayjs(tx.timestamp).unix().toString();
-      } else if ([4, 44].includes(Number(fromChain.internalId))) {
-        ext = String(Number(tx.extra['version']));
-      }
-      const transactionID = TransactionIDV2(
-        tx.from,
-        fromChain.internalId,
-        tx.nonce,
-        tx.symbol,
-        ext
-      )
-      if (
-        ['3', '33', '8', '88', '12', '512'].includes(fromChain.internalId) &&
-        tx.status === TransactionStatus.PENDING
-      ) {
-        tx.status = TransactionStatus.COMPLETE
-      }
-      if (tx.status != TransactionStatus.COMPLETE) {
-        accessLogger.error(
-          `[${transactionID}] Incorrect transaction status: fromChain=${fromChain.name},fromChainId=${fromChain.internalId},hash=${tx.hash},value=${tx.status}`
-        )
-        continue
-      }
-      let result = orbiterCore.getPTextFromTAmount(
-        Number(fromChain.internalId),
-        tx.value.toString()
-      )
-      if (['9', '99'].includes(fromChain.internalId)) {
-        const memoArr = tx.extra['memo'].split('_');
-        result = {
-          state: true,
-          pText: memoArr[0],
+      try {
+        if (!(await isWatchAddress(tx.to))) {
+          // accessLogger.error(
+          //   `The receiving address is not a Maker address=${tx.to}, hash=${tx.hash}`
+          // )
+          continue
+        }
+        const fromChain = await chains.getChainByChainId(tx.chainId)
+        // check send
+        if (!fromChain) {
+          errorLogger.error(
+            `transaction fromChainId ${tx.chainId} does not exist: `,
+            tx.hash
+          )
+          continue
+        }
+        const accessLogger = getLoggerService(fromChain.internalId);
+        // accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
+        if (chainCoreUtil.equals(tx.to, tx.from) || tx.value.lte(0)) {
+          accessLogger.error(
+            `subscribeNewTransaction to equals from | value <= 0 hash:${tx.hash}`
+          )
+          continue
         }
 
-      }
-      if (!result.state) {
-        accessLogger.error(
-          `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${tx.hash
-          },value=${tx.value.toString()}`,
-          JSON.stringify(result)
+        const startTimeTimeStamp = LastPullTxMap.get(
+          `${fromChain.internalId}:${tx.to.toLowerCase()}`
         )
-        continue
-      }
-      if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
-        accessLogger.error(
-          `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
-          },fromChainId=${fromChain.internalId},hash=${tx.hash
-          },value=${tx.value.toString()}`,
-          JSON.stringify(result)
-        )
-        continue
-      }
-      const toChainInternalId = Number(result.pText) - 9000;
-      // if (toChainInternalId == 4 || toChainInternalId == 3) {
-      //   const logger = LoggerService.getLogger("tx", {
-      //       dir: `logs/UncollectedPayment/`
-      //   });
-      //   logger.info(`${transactionID}`);
-      //   continue
-      // }
-      const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
-      const fromTokenInfo = fromChain.tokens.find((row) =>
-        chainCoreUtil.equals(row.address, String(tx.tokenAddress))
-      )
-      if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
-        accessLogger.error(
-          `[${transactionID}] Refund The query currency information does not exist: ` +
-          JSON.stringify(tx)
-        )
-        continue
-      }
-      const newMakerList = await getNewMarketList()
-      const marketItem = newMakerList.find(
-        (m) =>
-          chainCoreUtil.equals(String(m.fromChain.id), fromChain.internalId) &&
-          chainCoreUtil.equals(String(m.toChain.id), toChain.internalId) &&
-          chainCoreUtil.equals(
-            m.fromChain.tokenAddress,
-            String(tx.tokenAddress)
-          ) &&
-          chainCoreUtil.equals(m.toChain.symbol, tx.symbol)
-      )
-      if (!marketItem) {
-        accessLogger.error(
-          `Transaction pair not found ${fromChain.name} ${tx.hash} market:${fromChain.internalId} - ${toChain.internalId}`
-        )
-        continue
-      }
-      if (!chainCoreUtil.equals(tx.to, marketItem.recipient)) {
-        accessLogger.error(
-          `The recipient of the transaction is not a maker address ${tx.hash}`
-        )
-        continue
-      }
-
-      if (!['9', '99'].includes(fromChain.internalId)) {
-        const checkAmountResult = checkAmount(
-          Number(fromChain.internalId),
-          Number(toChain.internalId),
-          tx.value.toString(),
-          marketItem
-        )
-        if (!checkAmountResult) {
+        if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
           accessLogger.error(
-            `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash}`,
+            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
+          )
+          // TAG:  rinkeby close
+          continue
+        }
+        let ext = '';
+        if ([8, 88].includes(Number(fromChain.internalId))) {
+          ext = dayjs(tx.timestamp).unix().toString();
+        } else if ([4, 44].includes(Number(fromChain.internalId))) {
+          ext = String(Number(tx.extra['version']));
+        }
+        const transactionID = TransactionIDV2(
+          tx.from,
+          fromChain.internalId,
+          tx.nonce,
+          tx.symbol,
+          ext
+        )
+        if (
+          ['3', '33', '8', '88', '12', '512'].includes(fromChain.internalId) &&
+          tx.status === TransactionStatus.PENDING
+        ) {
+          tx.status = TransactionStatus.COMPLETE
+        }
+        if (tx.status != TransactionStatus.COMPLETE) {
+          accessLogger.error(
+            `[${transactionID}] Incorrect transaction status: fromChain=${fromChain.name},fromChainId=${fromChain.internalId},hash=${tx.hash},value=${tx.status}`
+          )
+          continue
+        }
+        let result = orbiterCore.getPTextFromTAmount(
+          Number(fromChain.internalId),
+          tx.value.toString()
+        )
+        if (['9', '99'].includes(fromChain.internalId)) {
+          const memoArr = tx.extra['memo'].split('_');
+          result = {
+            state: true,
+            pText: memoArr[0],
+          }
+
+        }
+        if (!result.state) {
+          accessLogger.error(
+            `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
+            },fromChainId=${fromChain.internalId},hash=${tx.hash
+            },value=${tx.value.toString()}`,
+            JSON.stringify(result)
+          )
+          continue
+        }
+        if (Number(result.pText) < 9000 || Number(result.pText) > 9999) {
+          accessLogger.error(
+            `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
+            },fromChainId=${fromChain.internalId},hash=${tx.hash
+            },value=${tx.value.toString()}`,
+            JSON.stringify(result)
+          )
+          continue
+        }
+        const toChainInternalId = Number(result.pText) - 9000;
+        // if (toChainInternalId == 4 || toChainInternalId == 3) {
+        //   const logger = LoggerService.getLogger("tx", {
+        //       dir: `logs/UncollectedPayment/`
+        //   });
+        //   logger.info(`${transactionID}`);
+        //   continue
+        // }
+        const toChain: any = chains.getChainByInternalId(String(toChainInternalId))
+        const fromTokenInfo = fromChain.tokens.find((row) =>
+          chainCoreUtil.equals(row.address, String(tx.tokenAddress))
+        )
+        if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
+          accessLogger.error(
+            `[${transactionID}] Refund The query currency information does not exist: ` +
             JSON.stringify(tx)
           )
           continue
         }
+        const newMakerList = await getNewMarketList()
+        const marketItem = newMakerList.find(
+          (m) =>
+            chainCoreUtil.equals(String(m.fromChain.id), fromChain.internalId) &&
+            chainCoreUtil.equals(String(m.toChain.id), toChain.internalId) &&
+            chainCoreUtil.equals(
+              m.fromChain.tokenAddress,
+              String(tx.tokenAddress)
+            ) &&
+            chainCoreUtil.equals(m.toChain.symbol, tx.symbol)
+        )
+        if (!marketItem) {
+          accessLogger.error(
+            `Transaction pair not found ${fromChain.name} ${tx.hash} market:${fromChain.internalId} - ${toChain.internalId}`
+          )
+          continue
+        }
+        if (!chainCoreUtil.equals(tx.to, marketItem.recipient)) {
+          accessLogger.error(
+            `The recipient of the transaction is not a maker address ${tx.hash}`
+          )
+          continue
+        }
+
+        if (!['9', '99'].includes(fromChain.internalId)) {
+          const checkAmountResult = checkAmount(
+            Number(fromChain.internalId),
+            Number(toChain.internalId),
+            tx.value.toString(),
+            marketItem
+          )
+          if (!checkAmountResult) {
+            accessLogger.error(
+              `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash}`,
+              JSON.stringify(tx)
+            )
+            continue
+          }
+        }
+        await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
+      } catch (error) {
+        errorLogger.error(`${tx.hash} startNewMakerTrxPull error:`, error)
       }
-      await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
     }
   }
   return newTxList.map((tx) => tx.hash)
@@ -413,6 +417,7 @@ export async function confirmTransactionSendMoneyBack(
       errorLogger.error(`[${transactionID}] newTransactionSqlError =`, error)
       return
     })
+
 }
 
 export async function getNewMarketList(): Promise<Array<IMarket>> {
