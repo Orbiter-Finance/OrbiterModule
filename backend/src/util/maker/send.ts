@@ -98,7 +98,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       }
       // polygon zk_evm  gasPrice * 1.5
       if (toChain == 'polygon_evm') {
-        gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.5)
+        gasPrice = Web3.utils.toHex((parseInt(gasPrice, 16) * 1.2).toFixed())
       }
 
       if (toChain == 'rinkeby') {
@@ -109,13 +109,19 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         if (parseInt(response.data.result, 16) <= 5000000000) {
           gasPrice = Web3.utils.toHex(5500000000)
         } else {
-          gasPrice = Web3.utils.toHex(parseInt(gasPrice, 16) * 1.1)
+          gasPrice = Web3.utils.toHex((parseInt(gasPrice, 16) * 1.1).toFixed())
         }
       }
-
+      if (toChain == 'arbitrum') {
+        gasPrice = Web3.utils.toHex((parseInt(gasPrice,16) * 1.1).toFixed());
+        accessLogger.info(toChain,'= ArbGasPrice =', parseInt(gasPrice,16))
+      }
       return gasPrice
     } catch (error) {
       getLoggerService(toChain).info(`gasPrice error ${error.message}`)
+      if (toChain == "polygon" || toChain == "polygon_test") {
+        return Web3.utils.toHex(200000000000);
+      }
       return Web3.utils.toHex(
         Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
       )
