@@ -579,7 +579,7 @@ export async function sendTransaction(
       retryCount
     })
   )
-  await send(
+  send(
     makerAddress,
     toAddress,
     toChain,
