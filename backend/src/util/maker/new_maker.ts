@@ -16,10 +16,13 @@ import { LoggerService } from 'orbiter-chaincore/src/utils'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
+import { MessageQueue } from '../MessageQueue'
+import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
+export const chainQueue:{[key:number]: MessageQueue} = {};
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
   recipient: string
@@ -121,6 +124,11 @@ export async function startNewMakerTrxPull() {
         transfers.set(intranetId, new Map())
         LastPullTxMap.set(pullKey, Date.now())
       }
+      // 
+      if (!chainQueue[Number(intranetId)]) {
+        chainQueue[Number(intranetId)] = new MessageQueue(sendConsumer);
+      }
+     
     })
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])

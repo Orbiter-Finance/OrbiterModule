@@ -21,6 +21,7 @@
     "@loopring-web/loopring-sdk": "2.1.14",
     "@metamask/eth-sig-util": "^4.0.0",
     "@supercharge/promise-pool": "^2.1.0",
+    "async-mutex": "^0.4.0",
     "aws-sdk": "^2.1222.0",
     "axios": "^0.21.1",
     "bignumber.js": "^9.1.0",

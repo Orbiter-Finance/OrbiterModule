@@ -28,6 +28,7 @@ import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
+import { chainQueue } from './new_maker'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -130,40 +131,40 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 }
 // SendQueue
 const sendQueue = new SendQueue()
-sendQueue.checkHealth(
-  (timeout) => {
-    if (
-      Date.now() - checkHealthAllChain.lastSendSMSTime >=
-      checkHealthAllChain.smsInterval
-    ) {
-      checkHealthAllChain.lastSendSMSTime = Date.now()
-      try {
-        doSms(
-          `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
-        )
-      } catch (error) {
-        errorLogger.error(`Warning:From last consumption doSMS error `, error)
-      }
-    }
-  },
-  (chainId: number, timeout: number) => {
-    const config = checkHealthByChain[chainId] || {
-      smsInterval: 1000 * 30 * 60,
-      lastSendSMSTime: 0,
-    }
-    if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
-      config.lastSendSMSTime = Date.now()
-      doSms(
-        `Warning:${chainId} Chain has not been processed for more than ${(
-          timeout / 1000
-        ).toFixed(0)} seconds`
-      )
-    }
-    checkHealthByChain[chainId] = config
-  }
-)
+// sendQueue.checkHealth(
+//   (timeout) => {
+//     if (
+//       Date.now() - checkHealthAllChain.lastSendSMSTime >=
+//       checkHealthAllChain.smsInterval
+//     ) {
+//       checkHealthAllChain.lastSendSMSTime = Date.now()
+//       try {
+//         doSms(
+//           `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
+//         )
+//       } catch (error) {
+//         errorLogger.error(`Warning:From last consumption doSMS error `, error)
+//       }
+//     }
+//   },
+//   (chainId: number, timeout: number) => {
+//     const config = checkHealthByChain[chainId] || {
+//       smsInterval: 1000 * 30 * 60,
+//       lastSendSMSTime: 0,
+//     }
+//     if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
+//       config.lastSendSMSTime = Date.now()
+//       doSms(
+//         `Warning:${chainId} Chain has not been processed for more than ${(
+//           timeout / 1000
+//         ).toFixed(0)} seconds`
+//       )
+//     }
+//     checkHealthByChain[chainId] = config
+//   }
+// )
 
-async function sendConsumer(value: any) {
+export async function sendConsumer(value: any) {
   let {
     makerAddress,
     toAddress,
@@ -210,6 +211,7 @@ async function sendConsumer(value: any) {
         return {
           code: 1,
           txid: 'ZK Insufficient balance 0',
+          params: value
         }
       }
       accessLogger.info('zk_tokenBalance =', tokenBalanceWei.toString())
@@ -218,6 +220,7 @@ async function sendConsumer(value: any) {
         return {
           code: 1,
           txid: 'zk Insufficient balance',
+          params: value
         }
       }
 
@@ -292,12 +295,14 @@ async function sendConsumer(value: any) {
             zkProvider: syncProvider,
             chainID: chainID,
             zkNonce: result_nonce,
+            params: value
           })
         } else {
           resolve({
             code: 1,
             error: 'zk transfer error',
             result_nonce,
+            params: value
           })
         }
       })
@@ -306,126 +311,11 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: error,
         result_nonce,
+        params: value
       }
     }
     return
   }
-  // // zk2 || zk2_test
-  // if (chainID === 14 || chainID === 514) {
-  //   try {
-  //     let ethProvider
-  //     let syncProvider
-  //     if (chainID === 514) {
-  //       const httpEndPoint = makerConfig['zksync2_test'].httpEndPoint
-  //       ethProvider = ethers.getDefaultProvider('goerli')
-  //       syncProvider = new zksync2.Provider(httpEndPoint)
-  //     } else {
-  //       const httpEndPoint = makerConfig['zksync2'].httpEndPoint //official httpEndpoint is not exists now
-  //       ethProvider = ethers.getDefaultProvider('homestead')
-  //       syncProvider = new zksync2.Provider(httpEndPoint)
-  //     }
-  //     const syncWallet = new zksync2.Wallet(
-  //       makerConfig.privateKeys[makerAddress.toLowerCase()],
-  //       syncProvider,
-  //       ethProvider
-  //     )
-  //     let tokenBalanceWei = await syncWallet.getBalance(
-  //       tokenAddress,
-  //       'finalized'
-  //     )
-  //     if (!tokenBalanceWei) {
-  //       accessLogger.error('zk2 Insufficient balance 0')
-  //       return {
-  //         code: 1,
-  //         txid: 'ZK2 Insufficient balance 0',
-  //       }
-  //     }
-  //     accessLogger.info('zk2_tokenBalance =', tokenBalanceWei.toString())
-  //     if (BigInt(tokenBalanceWei.toString()) < BigInt(amountToSend)) {
-  //       accessLogger.error('zk2 Insufficient balance')
-  //       return {
-  //         code: 1,
-  //         txid: 'zk2 Insufficient balance',
-  //       }
-  //     }
-  //     const has_result_nonce = result_nonce > 0
-  //     if (!has_result_nonce) {
-  //       let zk_nonce = await syncWallet.getNonce('committed')
-  //       let zk_sql_nonce = nonceDic[makerAddress]?.[chainID]
-  //       if (!zk_sql_nonce) {
-  //         result_nonce = zk_nonce
-  //       } else {
-  //         if (zk_nonce > zk_sql_nonce) {
-  //           result_nonce = zk_nonce
-  //         } else {
-  //           result_nonce = zk_sql_nonce + 1
-  //         }
-  //       }
-  //       accessLogger.info('zk2_nonce =', zk_nonce)
-  //       accessLogger.info('zk2_sql_nonce =', zk_sql_nonce)
-  //       accessLogger.info('zk2 result_nonde =', result_nonce)
-  //     }
-  //     const params = {
-  //       from: makerAddress,
-  //       customData: {
-  //         feeToken: '',
-  //       },
-  //       to: '',
-  //       nonce: result_nonce,
-  //       value: ethers.BigNumber.from(0),
-  //       data: '0x',
-  //     }
-  //     const isMainCoin =
-  //       tokenAddress.toLowerCase() ===
-  //       '0x000000000000000000000000000000000000800a'
-  //     if (isMainCoin) {
-  //       params.value = ethers.BigNumber.from(amountToSend)
-  //       params.to = toAddress
-  //       params.customData.feeToken =
-  //         '0x0000000000000000000000000000000000000000'
-  //     } else {
-  //       const web3 = new Web3()
-  //       const tokenContract = new web3.eth.Contract(
-  //         <any>makerConfig.ABI,
-  //         tokenAddress
-  //       )
-  //       params.data = tokenContract.methods
-  //         .transfer(toAddress, web3.utils.toHex(amountToSend))
-  //         .encodeABI()
-  //       params.to = tokenAddress
-  //       params.customData.feeToken = tokenAddress
-  //     }
-  //     const transfer = await syncWallet.sendTransaction(params)
-  //     if (!has_result_nonce) {
-  //       if (!nonceDic[makerAddress]) {
-  //         nonceDic[makerAddress] = {}
-  //       }
-  //       nonceDic[makerAddress][chainID] = result_nonce
-  //     }
-  //     return new Promise((resolve, reject) => {
-  //       if (transfer.hash) {
-  //         resolve({
-  //           code: 0,
-  //           txid: transfer.hash,
-  //           chainID: chainID,
-  //           zk2Nonce: result_nonce,
-  //         })
-  //       } else {
-  //         resolve({
-  //           code: 1,
-  //           error: 'zk2 transfer error',
-  //           result_nonce,
-  //         })
-  //       }
-  //     })
-  //   } catch (error) {
-  //     return {
-  //       code: 1,
-  //       txid: error,
-  //       result_nonce,
-  //     }
-  //   }
-  // }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
@@ -446,6 +336,7 @@ async function sendConsumer(value: any) {
         code: 0,
         txid: hash,
         rollback,
+        params: value
       }
     } catch (error) {
       await rollback(error, nonce)
@@ -454,6 +345,7 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: 'starknet transfer error: ' + error.message,
         result_nonce: nonce,
+        params: value
       }
     }
   }
@@ -524,12 +416,14 @@ async function sendConsumer(value: any) {
           txid: imxHash,
           chainID: chainID,
           imxNonce: result_nonce,
+          params: value
         }
       } else {
         return {
           code: 1,
           error: 'immutablex transfer error',
           result_nonce,
+          params: value
         }
       }
     } catch (error) {
@@ -537,6 +431,7 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: 'immutablex transfer error: ' + error.message,
         result_nonce,
+        params: value
       }
     }
   }
@@ -656,12 +551,14 @@ async function sendConsumer(value: any) {
             txid: transactionResult['hash'],
             makerAddress: makerAddress,
             lpNonce: result_nonce,
+            params: value
           })
         } else {
           resolve({
             code: 1,
             error: 'loopring transfer error',
             result_nonce,
+            params: value
           })
         }
       })
@@ -670,6 +567,7 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: 'loopring transfer error: ' + error.message,
         result_nonce,
+        params: value
       }
     } finally {
       // Stop web3-provider-engine. Prevent data from being pulled all the time
@@ -749,12 +647,14 @@ async function sendConsumer(value: any) {
           txid: dydxHash,
           chainID: chainID,
           dydxNonce: result_nonce,
+          params: value
         }
       } else {
         return {
           code: 1,
           error: 'dYdX transfer error',
           result_nonce,
+          params: value
         }
       }
       return
@@ -763,6 +663,7 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: 'dYdX transfer error: ' + error.message,
         result_nonce,
+        params: value
       }
     }
   }
@@ -791,6 +692,7 @@ async function sendConsumer(value: any) {
         return {
           code: 1,
           txid: 'ZKS Insufficient balance 0',
+          params: value
         }
       }
       let defaultIndex = balanceInfo.findIndex(
@@ -803,6 +705,7 @@ async function sendConsumer(value: any) {
         return {
           code: 1,
           txid: 'ZKS Insufficient balance 00',
+          params: value
         }
       }
       accessLogger.info('zks_tokenBalance =', tokenBalanceWei.toString())
@@ -811,6 +714,7 @@ async function sendConsumer(value: any) {
         return {
           code: 1,
           txid: 'ZKS Insufficient balance',
+          params: value
         }
       }
 
@@ -938,12 +842,14 @@ async function sendConsumer(value: any) {
         txid: transferResult?.data?.data,
         chainID: chainID,
         zksNonce: result_nonce,
+        params: value
       }
     } catch (error) {
       return {
         code: 1,
         txid: 'zkspace transfer error: ' + error.message,
         result_nonce,
+        params: value
       }
     }
   }
@@ -998,6 +904,7 @@ async function sendConsumer(value: any) {
     return {
       code: 1,
       txid: `${toChain}->tokenBalanceWei<amountToSend Insufficient balance`,
+      params: value
     }
   }
 
@@ -1012,6 +919,7 @@ async function sendConsumer(value: any) {
       return {
         code: 1,
         txid: 'GetTransactionCount failed: ' + err.message,
+        params: value
       }
     }
 
@@ -1162,6 +1070,7 @@ async function sendConsumer(value: any) {
       return {
         code: 0,
         txid: resp.hash,
+        params: value
       }
       // }
     } catch (err) {
@@ -1170,6 +1079,7 @@ async function sendConsumer(value: any) {
         code: 1,
         txid: err,
         result_nonce,
+        params: value
       }
     }
   }
@@ -1219,6 +1129,7 @@ async function sendConsumer(value: any) {
         resolve({
           code: 0,
           txid: hash,
+          params: value
         })
       })
       .on('receipt', (tx: any) => {
@@ -1231,6 +1142,7 @@ async function sendConsumer(value: any) {
           txid: err,
           error: err,
           result_nonce,
+          params: value
         })
       })
   })

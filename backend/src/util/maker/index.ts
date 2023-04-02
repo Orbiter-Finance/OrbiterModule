@@ -28,6 +28,7 @@ import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
+import { chainQueue } from './new_maker'
 
 let accountInfo: AccountInfo
 let lpKey: string
@@ -119,9 +120,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
           accountInfo.keySeed && accountInfo.keySeed !== ''
             ? accountInfo.keySeed
             : GlobalAPI.KEY_MESSAGE.replace(
-                '${exchangeAddress}',
-                exchangeInfo.exchangeAddress
-              ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
+              '${exchangeAddress}',
+              exchangeInfo.exchangeAddress
+            ).replace('${nonce}', (accountInfo.nonce - 1).toString()),
         walletType: ConnectorNames.Unknown,
         chainId: fromChainID == 99 ? ChainId.GOERLI : ChainId.MAINNET,
       }
@@ -579,169 +580,275 @@ export async function sendTransaction(
       retryCount
     })
   )
-  await send(
+  chainQueue[toChain].enqueue(transactionID, {
+    transactionID,
     makerAddress,
     toAddress,
     toChain,
-    toChainID,
+    chainID: toChainID,
     tokenInfo,
     tokenAddress,
-    tAmount,
+    amountToSend: tAmount,
     result_nonce,
     fromChainID,
-    nonce,
+    lpMemo: nonce,
     ownerAddress
-  )
-    .then(async (response) => {
-      const accessLogger = getLoggerService(toChainID);
-      accessLogger.info('response =', response);
-      if (!response.code) {
-        var txID = response.txid
-        accessLogger.info(
-          `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
-        )
-        try {
-          await repositoryMakerNode().update(
-            { transactionID: transactionID },
-            {
-              toTx: txID,
-              toAmount: tAmount,
-              state: 2,
-            }
-          )
-          accessLogger.info(
-            `[${transactionID}] sendTransaction toChain ${toChain} update success`
-          )
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
-          return
-        }
-        if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
-          let syncProvider = response.zkProvider
-          // confirmToZKTransaction(syncProvider, txID, transactionID)
-        } else if (toChainID === 4 || toChainID === 44) {
-          confirmToSNTransaction(
-            txID,
-            transactionID,
-            toChainID,
-            makerAddress,
-            nonce,
-            response.rollback
-          )
-        } else if (toChainID === 8 || toChainID === 88) {
-          console.warn({ toChainID, toChain, txID, transactionID })
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 9 || toChainID === 99) {
-          confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
-        } else if (toChainID === 11 || toChainID === 511) {
-          accessLogger.info(
-            `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
-          )
-          // confirmToSNTransaction(txID, transactionID, toChainID)
-        } else if (toChainID === 12 || toChainID === 512) {
-          if (txID.indexOf('sync-tx:') != -1) {
-            txID = txID.replace('sync-tx:', '0x')
-          }
-          confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
-        } else {
-          confirmToTransaction(toChainID, toChain, txID, transactionID)
-        }
-        await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
-        // update todo
-      } else {
-        errorLogger.error(
-          'updateError maker_node =',
-          `state = 20 WHERE transactionID = '${transactionID}'`
-        )
-        try {
-          await repositoryMakerNode().update(
-            { transactionID: transactionID },
-            { state: 20 }
-          )
-          accessLogger.info(
-            `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
-          )
-          // todo need result_nonce
-          // if (response.result_nonce > 0) {
-          //   // insert or update todo
-          //   const todo = await repositoryMakerNodeTodo().findOne({
-          //     transactionID,
-          //   })
-          //   if (todo) {
-          //     await repositoryMakerNodeTodo().increment(
-          //       { transactionID },
-          //       'do_current',
-          //       1
-          //     )
-          //   } else {
-          //     await repositoryMakerNodeTodo().insert({
-          //       transactionID,
-          //       makerAddress,
-          //       data: JSON.stringify({
-          //         transactionID,
-          //         fromChainID,
-          //         toChainID,
-          //         toChain,
-          //         tokenAddress,
-          //         amountStr,
-          //         fromAddress,
-          //         pool,
-          //         nonce,
-          //         result_nonce: response.result_nonce,
-          //       }),
-          //       do_state: 20,
-          //     })
-          //   }
-          // }
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
-          return
-        }
-        let alert = 'Send Transaction Error ' + transactionID
-        try {
-          doSms(alert)
-        } catch (error) {
-          errorLogger.error(
-            `[${transactionID}] sendTransactionErrorMessage =`,
-            error
-          )
-        }
-        // if op Optimism sequencer global transaction limit exceeded Retry logic
-        try {
-          const error = response.error;
-          if (toChainID === 7 && error) {
-            accessLogger.info('OP send transaction error  = ', error);
-            accessLogger.info(`code:${error.code}`);
-            accessLogger.info(`message:${error.message}`);
-            if (error.message === 'Optimism sequencer global transaction limit exceeded' && error.code == 429) {
-              await sleep(1000 * 5);
-              accessLogger.info(`Re-join the queue to retry payment collection:${transactionID}`);
-              retryCount++;
-              // Rejoin the collection list
-              // sendTransaction(
-              //   makerAddress,
-              //   transactionID,
-              //   fromChainID,
-              //   toChainID,
-              //   toChain,
-              //   tokenAddress,
-              //   amountStr,
-              //   toAddress,
-              //   pool,
-              //   nonce,
-              //   result_nonce,
-              //   ownerAddress,
-              //   retryCount
-              // );
-            }
-          }
-        } catch (error) {
-          errorLogger.error(`[${transactionID}] Retry payment collection exception`, error)
-        }
+  }).catch(error => {
+    errorLogger.warn(`enqueue error:`, error);
+  });
+  // await send(
+  //   makerAddress,
+  //   toAddress,
+  //   toChain,
+  //   toChainID,
+  //   tokenInfo,
+  //   tokenAddress,
+  //   tAmount,
+  //   result_nonce,
+  //   fromChainID,
+  //   nonce,
+  //   ownerAddress
+  // )
+  //   .then(async (response) => {
+  //     const accessLogger = getLoggerService(toChainID);
+  //     accessLogger.info('response =', response);
+  //     if (!response.code) {
+  //       var txID = response.txid
+  //       accessLogger.info(
+  //         `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
+  //       )
+  //       try {
+  //         await repositoryMakerNode().update(
+  //           { transactionID: transactionID },
+  //           {
+  //             toTx: txID,
+  //             toAmount: tAmount,
+  //             state: 2,
+  //           }
+  //         )
+  //         accessLogger.info(
+  //           `[${transactionID}] sendTransaction toChain ${toChain} update success`
+  //         )
+  //       } catch (error) {
+  //         errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
+  //         return
+  //       }
+  //       if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
+  //         let syncProvider = response.zkProvider
+  //         // confirmToZKTransaction(syncProvider, txID, transactionID)
+  //       } else if (toChainID === 4 || toChainID === 44) {
+  //         confirmToSNTransaction(
+  //           txID,
+  //           transactionID,
+  //           toChainID,
+  //           makerAddress,
+  //           nonce,
+  //           response.rollback
+  //         )
+  //       } else if (toChainID === 8 || toChainID === 88) {
+  //         console.warn({ toChainID, toChain, txID, transactionID })
+  //         // confirmToSNTransaction(txID, transactionID, toChainID)
+  //       } else if (toChainID === 9 || toChainID === 99) {
+  //         confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+  //       } else if (toChainID === 11 || toChainID === 511) {
+  //         accessLogger.info(
+  //           `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
+  //         )
+  //         // confirmToSNTransaction(txID, transactionID, toChainID)
+  //       } else if (toChainID === 12 || toChainID === 512) {
+  //         if (txID.indexOf('sync-tx:') != -1) {
+  //           txID = txID.replace('sync-tx:', '0x')
+  //         }
+  //         confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
+  //       } else {
+  //         confirmToTransaction(toChainID, toChain, txID, transactionID)
+  //       }
+  //       await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
+  //       // update todo
+  //     } else {
+  //       errorLogger.error(
+  //         'updateError maker_node =',
+  //         `state = 20 WHERE transactionID = '${transactionID}'`
+  //       )
+  //       try {
+  //         await repositoryMakerNode().update(
+  //           { transactionID: transactionID },
+  //           { state: 20 }
+  //         )
+  //         accessLogger.info(
+  //           `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
+  //         )
+  //         // todo need result_nonce
+  //         // if (response.result_nonce > 0) {
+  //         //   // insert or update todo
+  //         //   const todo = await repositoryMakerNodeTodo().findOne({
+  //         //     transactionID,
+  //         //   })
+  //         //   if (todo) {
+  //         //     await repositoryMakerNodeTodo().increment(
+  //         //       { transactionID },
+  //         //       'do_current',
+  //         //       1
+  //         //     )
+  //         //   } else {
+  //         //     await repositoryMakerNodeTodo().insert({
+  //         //       transactionID,
+  //         //       makerAddress,
+  //         //       data: JSON.stringify({
+  //         //         transactionID,
+  //         //         fromChainID,
+  //         //         toChainID,
+  //         //         toChain,
+  //         //         tokenAddress,
+  //         //         amountStr,
+  //         //         fromAddress,
+  //         //         pool,
+  //         //         nonce,
+  //         //         result_nonce: response.result_nonce,
+  //         //       }),
+  //         //       do_state: 20,
+  //         //     })
+  //         //   }
+  //         // }
+  //       } catch (error) {
+  //         errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
+  //         return
+  //       }
+  //       let alert = 'Send Transaction Error ' + transactionID
+  //       try {
+  //         doSms(alert)
+  //       } catch (error) {
+  //         errorLogger.error(
+  //           `[${transactionID}] sendTransactionErrorMessage =`,
+  //           error
+  //         )
+  //       }
+  //       // if op Optimism sequencer global transaction limit exceeded Retry logic
+  //       try {
+  //         const error = response.error;
+  //         if (toChainID === 7 && error) {
+  //           accessLogger.info('OP send transaction error  = ', error);
+  //           accessLogger.info(`code:${error.code}`);
+  //           accessLogger.info(`message:${error.message}`);
+  //           if (error.message === 'Optimism sequencer global transaction limit exceeded' && error.code == 429) {
+  //             await sleep(1000 * 5);
+  //             accessLogger.info(`Re-join the queue to retry payment collection:${transactionID}`);
+  //             retryCount++;
+  //             // Rejoin the collection list
+  //             // sendTransaction(
+  //             //   makerAddress,
+  //             //   transactionID,
+  //             //   fromChainID,
+  //             //   toChainID,
+  //             //   toChain,
+  //             //   tokenAddress,
+  //             //   amountStr,
+  //             //   toAddress,
+  //             //   pool,
+  //             //   nonce,
+  //             //   result_nonce,
+  //             //   ownerAddress,
+  //             //   retryCount
+  //             // );
+  //           }
+  //         }
+  //       } catch (error) {
+  //         errorLogger.error(`[${transactionID}] Retry payment collection exception`, error)
+  //       }
 
+  //     }
+  //   })
+  //   .catch((error) => {
+  //     errorLogger.warn(error)
+  //   })
+}
+export async function sendTxConsumeHandle(result: any) {
+  const { params, ...response } = result;
+  const { transactionID, makerAddress,
+    toChain,
+    chainID: toChainID,
+    amountToSend: tAmount,
+    lpMemo: nonce } = params;
+  const accessLogger = getLoggerService(toChainID);
+  accessLogger.info('sendTxConsumeHandle response =', response);
+  if (!response.code) {
+    var txID = response.txid
+    accessLogger.info(
+      `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
+    )
+    try {
+      await repositoryMakerNode().update(
+        { transactionID: transactionID },
+        {
+          toTx: txID,
+          toAmount: tAmount,
+          state: 2,
+        }
+      )
+      accessLogger.info(
+        `[${transactionID}] sendTransaction toChain ${toChain} update success`
+      )
+    } catch (error) {
+      errorLogger.error(`[${transactionID}] updateToSqlError =`, error)
+      return
+    }
+    if (response.zkProvider && (toChainID === 3 || toChainID === 33)) {
+      let syncProvider = response.zkProvider
+      // confirmToZKTransaction(syncProvider, txID, transactionID)
+    } else if (toChainID === 4 || toChainID === 44) {
+      confirmToSNTransaction(
+        txID,
+        transactionID,
+        toChainID,
+        makerAddress,
+        nonce,
+        response.rollback
+      )
+    } else if (toChainID === 8 || toChainID === 88) {
+      console.warn({ toChainID, toChain, txID, transactionID })
+      // confirmToSNTransaction(txID, transactionID, toChainID)
+    } else if (toChainID === 9 || toChainID === 99) {
+      confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
+    } else if (toChainID === 11 || toChainID === 511) {
+      accessLogger.info(
+        `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
+      )
+      // confirmToSNTransaction(txID, transactionID, toChainID)
+    } else if (toChainID === 12 || toChainID === 512) {
+      if (txID.indexOf('sync-tx:') != -1) {
+        txID = txID.replace('sync-tx:', '0x')
       }
-    })
-    .catch((error) => {
-      errorLogger.warn(error)
-    })
+      confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
+    } else {
+      confirmToTransaction(toChainID, toChain, txID, transactionID)
+    }
+    await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
+    // update todo
+  } else {
+    errorLogger.error(
+      'updateError maker_node =',
+      `state = 20 WHERE transactionID = '${transactionID}'`
+    )
+    try {
+      await repositoryMakerNode().update(
+        { transactionID: transactionID },
+        { state: 20 }
+      )
+      accessLogger.info(
+        `[${transactionID}] sendTransaction toChain ${toChain} state = 20  update success`
+      )
+    } catch (error) {
+      errorLogger.error(`[${transactionID}] updateErrorSqlError =`, error)
+      return
+    }
+    let alert = 'Send Transaction Error ' + transactionID
+    try {
+      doSms(alert)
+    } catch (error) {
+      errorLogger.error(
+        `[${transactionID}] sendTransactionErrorMessage =`,
+        error
+      )
+    }
+  }
 }
