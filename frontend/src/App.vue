@@ -84,15 +84,15 @@ const getGlobalInfo = async () => {
       newList.push(data);
     }
   }
-  state.makerAddresses = newList
-  state.exchangeRates = resp.data.exchangeRates
 
   const mk = router?.currentRoute?._value?.query?.makerAddress;
   const reg = new RegExp(/^0x[a-fA-F0-9]{40}$/);
   const isAddress = reg.test(mk);
   if (isAddress) {
-    state.makerAddresses.push(mk);
+    newList.push(mk);
   }
+  state.makerAddresses = newList
+  state.exchangeRates = resp.data.exchangeRates
 
   state.makerAddressSelected = state.makerAddresses?.[0] || ''
 

@@ -159,7 +159,8 @@ export class TransactionService {
     let fromAmount = 0;
     let toAmount = 0;
     let profitAmount = 0;
-    if (makerAddress.includes('0x80C67432656d59144cEFf962E8fAF8926599bCF8') || makerAddress.includes('0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8')) {
+    if (makerAddress.find(item=>item.toLowerCase() === '0x80C67432656d59144cEFf962E8fAF8926599bCF8'.toLowerCase()) ||
+        makerAddress.find(item=>item.toLowerCase() === '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase())) {
       fromAmount = sumBy(from, 'ETHValue').toFixed(6);
       toAmount = sumBy(to, 'ETHValue').toFixed(6);
       profitAmount = profit['ETH'];
