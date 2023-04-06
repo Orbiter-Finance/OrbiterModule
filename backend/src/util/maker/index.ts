@@ -565,21 +565,7 @@ export async function sendTransaction(
     return
   }
   accessLogger.info(
-    `${transactionID} [${process.pid}]  Exec Send Transfer`,
-    JSON.stringify({
-      makerAddress,
-      toAddress,
-      toChain,
-      fromChainID,
-      toChainID,
-      tokenAddress,
-      tAmount,
-      result_nonce,
-      nonce,
-      tokenInfo,
-      retryCount
-    })
-  )
+    `${transactionID} [${process.pid}] Send Queue ${transactionID}`)
   if (!chainQueue[Number(toChainID)]) {
     throw new Error(`No queue created ${toChainID}`);
   }
@@ -773,7 +759,7 @@ export async function sendTxConsumeHandle(result: any) {
     amountToSend: tAmount,
     lpMemo: nonce } = params;
   const accessLogger = getLoggerService(toChainID);
-  accessLogger.info('sendTxConsumeHandle response =', response);
+  accessLogger.info(`${transactionID} sendTxConsumeHandle response =`, response);
   if (!response.code) {
     var txID = response.txid
     accessLogger.info(

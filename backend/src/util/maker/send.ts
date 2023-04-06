@@ -28,20 +28,10 @@ import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
-import { chainQueue } from './new_maker'
+import { chainQueue, transfers } from './new_maker'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
-const checkHealthByChain: {
-  [key: string]: {
-    smsInterval: number
-    lastSendSMSTime: number
-  }
-} = {}
-const checkHealthAllChain = {
-  smsInterval: 1000 * 60 * 5,
-  lastSendSMSTime: 0,
-}
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
@@ -131,39 +121,6 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
 }
 // SendQueue
 const sendQueue = new SendQueue()
-// sendQueue.checkHealth(
-//   (timeout) => {
-//     if (
-//       Date.now() - checkHealthAllChain.lastSendSMSTime >=
-//       checkHealthAllChain.smsInterval
-//     ) {
-//       checkHealthAllChain.lastSendSMSTime = Date.now()
-//       try {
-//         doSms(
-//           `Warning:From last consumption ${(timeout / 1000).toFixed(0)} seconds`
-//         )
-//       } catch (error) {
-//         errorLogger.error(`Warning:From last consumption doSMS error `, error)
-//       }
-//     }
-//   },
-//   (chainId: number, timeout: number) => {
-//     const config = checkHealthByChain[chainId] || {
-//       smsInterval: 1000 * 30 * 60,
-//       lastSendSMSTime: 0,
-//     }
-//     if (Date.now() - config.lastSendSMSTime >= config.smsInterval) {
-//       config.lastSendSMSTime = Date.now()
-//       doSms(
-//         `Warning:${chainId} Chain has not been processed for more than ${(
-//           timeout / 1000
-//         ).toFixed(0)} seconds`
-//       )
-//     }
-//     checkHealthByChain[chainId] = config
-//   }
-// )
-
 export async function sendConsumer(value: any) {
   let {
     makerAddress,
@@ -178,10 +135,24 @@ export async function sendConsumer(value: any) {
     lpMemo,
     ownerAddress,
     transactionID
-  } = value
+  } = value;
   const accessLogger = getLoggerService(chainID)
-  accessLogger.info(`${transactionID} sendConsumer [${process.pid}] =`, JSON.stringify(value))
-
+  const chainTransferMap = transfers.get(String(fromChainID))
+  if (
+    chainTransferMap?.has(transactionID)
+  ) {
+     accessLogger.error(
+      `sendConsumer ${transactionID} transfer exists!`
+    )
+    return {
+      code: 1,
+      error:`sendConsumer ${transactionID} transfer exists!`,
+      result_nonce,
+      params: value
+    }
+  }
+  chainTransferMap?.set(transactionID, 'ok');
+  accessLogger.info(`[${transactionID}] consume tx `, JSON.stringify(value))
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {

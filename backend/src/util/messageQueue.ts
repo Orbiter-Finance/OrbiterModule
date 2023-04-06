@@ -1,6 +1,6 @@
-import { sleep } from 'orbiter-chaincore/src/utils/core';
 import { Mutex } from "async-mutex";
 import { accessLogger } from './logger';
+import dayjs from 'dayjs';
 
 type Message = {
     id: string;
@@ -57,13 +57,17 @@ export class MessageQueue {
 
     }
     public async consumeQueue(callback: Function) {
+        let isProcessing = false;
         setInterval(async () => {
+            if (this.size() < 50 && Date.now() % 1200 === 0) {
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+            } else if (this.size() > 50 && Date.now() % 600 === 0) {
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+            }
+            if (isProcessing)
+                return
             try {
-                if (this.size() < 50 && Date.now() % 120 === 0) {
-                    accessLogger.info(`check queue:${this.name}, size:${this.size()}, lastConsumeTime:${this.lastConsumeTime}`);
-                } else if (this.size() > 50 && Date.now() % 60 === 0) {
-                    accessLogger.info(`check queue:${this.name}, size:${this.size()}, lastConsumeTime:${this.lastConsumeTime}`);
-                }
+                isProcessing = true;
                 if (this.size() > 0) {
                     const response = await this.dequeue();
                     accessLogger.info(`queue:${this.name}, Consumption results::${JSON.stringify(response || {})}`);
@@ -74,8 +78,10 @@ export class MessageQueue {
             } catch (error) {
                 callback(error);
                 accessLogger.error(`queue:${this.name}, Consumption error`, error);
+            } finally {
+                isProcessing = false;
             }
-        }, 1000);
+        }, 100);
     }
 
     private clearConsumedIds() {

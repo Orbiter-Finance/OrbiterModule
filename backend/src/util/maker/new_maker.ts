@@ -95,7 +95,7 @@ export function checkAmount(
   return true
 }
 const caches: Map<string, Keyv> = new Map()
-const transfers: Map<string, Map<string, string>> = new Map()
+export const transfers: Map<string, Map<string, string>> = new Map()
 function getCacheClient(chainId: string) {
   if (caches.has(chainId)) {
     return caches.get(chainId)
@@ -346,14 +346,17 @@ export async function confirmTransactionSendMoneyBack(
   const cache = getCacheClient(String(fromChainID))
   const chainTransferMap = transfers.get(String(fromChainID))
   if (
-    chainTransferMap?.has(tx.hash.toLowerCase()) ||
+    chainTransferMap?.has(transactionID) ||
     (await cache?.has(tx.hash.toLowerCase()))
   ) {
-    return accessLogger.error(
+    accessLogger.error(
       `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
     )
+    return;
   }
-  chainTransferMap?.set(tx.hash.toLowerCase(), 'ok')
+  if  (Number(chainTransferMap?.size)>=5000) {
+    chainTransferMap?.clear()
+  }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
   LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
   // check send
