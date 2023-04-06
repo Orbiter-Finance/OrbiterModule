@@ -114,8 +114,8 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         }
       }
       if (toChain == 'arbitrum') {
-        gasPrice = Web3.utils.toHex((parseInt(gasPrice,16) * 1.1).toFixed());
-        accessLogger.info(toChain,'= ArbGasPrice =', parseInt(gasPrice,16))
+        gasPrice = Web3.utils.toHex((parseInt(gasPrice, 16) * 1.1).toFixed());
+        accessLogger.info(toChain, '= ArbGasPrice =', parseInt(gasPrice, 16))
       }
       return gasPrice
     } catch (error) {
@@ -177,9 +177,11 @@ export async function sendConsumer(value: any) {
     fromChainID,
     lpMemo,
     ownerAddress,
+    transactionID
   } = value
   const accessLogger = getLoggerService(chainID)
-  accessLogger.info(`sendConsumer [${process.pid}] =`, JSON.stringify(value))
+  accessLogger.info(`${transactionID} sendConsumer [${process.pid}] =`, JSON.stringify(value))
+
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
     try {
@@ -1007,7 +1009,7 @@ export async function sendConsumer(value: any) {
             from: makerAddress,
           })
       }
-      gasLimit = Math.ceil(web3.utils.hexToNumber(gasLimit) * 1.5)
+      gasLimit = Math.ceil(Number(gasLimit) * 1.5)
     } catch (error) {
       gasLimit = 1000000
     }
@@ -1037,7 +1039,7 @@ export async function sendConsumer(value: any) {
   if ([1, 5].includes(chainID)) {
     try {
       // eip 1559 send
-      const config = chains.getChainByInternalId(chainID);
+      const config = chains.getChainInfo(Number(chainID));
       if (config && config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
       }

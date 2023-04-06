@@ -1,6 +1,7 @@
+import { sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
-import { getMakerList, sendTransaction } from '.'
+import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
 import { TransactionIDV2 } from '../../service/maker'
@@ -12,7 +13,6 @@ import { makerConfig } from '../../config'
 import mainnetChains from '../../config/chains.json'
 import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
-import { LoggerService } from 'orbiter-chaincore/src/utils'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
@@ -22,7 +22,7 @@ const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
-export const chainQueue:{[key:number]: MessageQueue} = {};
+export const chainQueue: { [key: number]: MessageQueue } = {};
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
   recipient: string
@@ -124,12 +124,20 @@ export async function startNewMakerTrxPull() {
         transfers.set(intranetId, new Map())
         LastPullTxMap.set(pullKey, Date.now())
       }
-      // 
-      if (!chainQueue[Number(intranetId)]) {
-        chainQueue[Number(intranetId)] = new MessageQueue(sendConsumer);
-      }
-     
     })
+    // 
+    const insideChainId = Number(intranetId);
+    if (!chainQueue[insideChainId]) {
+      chainQueue[insideChainId] = new MessageQueue(`chain:${insideChainId}`, sendConsumer);
+      chainQueue[insideChainId].consumeQueue(async (error, result) => {
+        if (error) {
+          accessLogger.error(`An error occurred while consuming messages`, error);
+          return;
+        }
+        await sendTxConsumeHandle(result);
+        return true;
+      })
+    }
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }

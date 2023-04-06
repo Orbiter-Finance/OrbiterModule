@@ -580,7 +580,10 @@ export async function sendTransaction(
       retryCount
     })
   )
-  chainQueue[toChain].enqueue(transactionID, {
+  if (!chainQueue[Number(toChainID)]) {
+    throw new Error(`No queue created ${toChainID}`);
+  }
+  chainQueue[Number(toChainID)].enqueue(transactionID, {
     transactionID,
     makerAddress,
     toAddress,

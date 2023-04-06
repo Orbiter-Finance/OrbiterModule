@@ -1,4 +1,3 @@
-import { LoggerService } from 'orbiter-chaincore/src/utils';
 import cluster from 'cluster'
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
