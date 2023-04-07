@@ -1,4 +1,3 @@
-import { LoggerService } from 'orbiter-chaincore/src/utils';
 import cluster from 'cluster'
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
@@ -13,6 +12,7 @@ import { clusterIsPrimary, sleep } from './util'
 import { startMasterJobs, startWorkerJobs } from './schedule'
 import { Core } from './util/core'
 import { accessLogger, errorLogger } from './util/logger'
+import { MessageQueue } from './util/MessageQueue';
 
 export const startKoa = () => {
   const koa = new Koa()

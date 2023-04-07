@@ -1,6 +1,7 @@
+import { sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
-import { getMakerList, sendTransaction } from '.'
+import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
 import { TransactionIDV2 } from '../../service/maker'
@@ -12,14 +13,16 @@ import { makerConfig } from '../../config'
 import mainnetChains from '../../config/chains.json'
 import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
-import { LoggerService } from 'orbiter-chaincore/src/utils'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
+import { MessageQueue } from '../MessageQueue'
+import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
+export const chainQueue: { [key: number]: MessageQueue } = {};
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
   recipient: string
@@ -92,7 +95,7 @@ export function checkAmount(
   return true
 }
 const caches: Map<string, Keyv> = new Map()
-const transfers: Map<string, Map<string, string>> = new Map()
+export const transfers: Map<string, Map<string, string>> = new Map()
 function getCacheClient(chainId: string) {
   if (caches.has(chainId)) {
     return caches.get(chainId)
@@ -122,6 +125,19 @@ export async function startNewMakerTrxPull() {
         LastPullTxMap.set(pullKey, Date.now())
       }
     })
+    // 
+    const insideChainId = Number(intranetId);
+    if (!chainQueue[insideChainId]) {
+      chainQueue[insideChainId] = new MessageQueue(`chain:${insideChainId}`, sendConsumer);
+      chainQueue[insideChainId].consumeQueue(async (error, result) => {
+        if (error) {
+          accessLogger.error(`An error occurred while consuming messages`, error);
+          return;
+        }
+        await sendTxConsumeHandle(result);
+        return true;
+      })
+    }
     pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
@@ -330,14 +346,17 @@ export async function confirmTransactionSendMoneyBack(
   const cache = getCacheClient(String(fromChainID))
   const chainTransferMap = transfers.get(String(fromChainID))
   if (
-    chainTransferMap?.has(tx.hash.toLowerCase()) ||
+    chainTransferMap?.has(transactionID) ||
     (await cache?.has(tx.hash.toLowerCase()))
   ) {
-    return accessLogger.error(
+    accessLogger.error(
       `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
     )
+    return;
   }
-  chainTransferMap?.set(tx.hash.toLowerCase(), 'ok')
+  if  (Number(chainTransferMap?.size)>=5000) {
+    chainTransferMap?.clear()
+  }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
   LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
   // check send
