@@ -145,6 +145,7 @@ export async function startNewMakerTrxPull() {
   pubSub.subscribe(`ACCEPTED_ON_L2:4`, (tx) => {
     return subscribeNewTransaction([tx])
   })
+
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
@@ -158,7 +159,7 @@ async function isWatchAddress(address: string) {
 }
 async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
-  // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx => tx.hash))}`);
+  // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(row=> row.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
@@ -179,7 +180,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           )
           continue
         }
-        const accessLogger = getLoggerService(fromChain.internalId);
+        // const accessLogger = getLoggerService(fromChain.internalId);
         // accessLogger.info(`subscribeNewTransaction：`, JSON.stringify(tx))
         if (chainCoreUtil.equals(tx.to, tx.from) || tx.value.lte(0)) {
           accessLogger.error(
@@ -193,7 +194,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
           accessLogger.error(
-            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}`
+            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
           )
           // TAG:  rinkeby close
           continue
@@ -326,11 +327,9 @@ export async function confirmTransactionSendMoneyBack(
 ) {
   const fromChainID = Number(market.fromChain.id)
   if (
-    Number(fromChainID) === 4 &&
-    tx.extra['blockStatus'] != 'ACCEPTED_ON_L2'
+    Number(fromChainID) === 4 && tx.status != 1
   ) {
-    // return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
-    return
+    return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
   }
   const toChainID = Number(market.toChain.id)
   const toChainName = market.toChain.name
@@ -354,7 +353,7 @@ export async function confirmTransactionSendMoneyBack(
     // )
     return;
   }
-  if  (Number(chainTransferMap?.size)>=5000) {
+  if (Number(chainTransferMap?.size) >= 5000) {
     chainTransferMap?.clear()
   }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
