@@ -158,7 +158,7 @@ async function isWatchAddress(address: string) {
 }
 async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
-  accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx => tx.hash))}`);
+  // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(tx => tx.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
@@ -349,9 +349,9 @@ export async function confirmTransactionSendMoneyBack(
     chainTransferMap?.has(transactionID) ||
     (await cache?.has(tx.hash.toLowerCase()))
   ) {
-    accessLogger.error(
-      `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
-    )
+    // accessLogger.error(
+    //   `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
+    // )
     return;
   }
   if  (Number(chainTransferMap?.size)>=5000) {
@@ -416,7 +416,7 @@ export async function confirmTransactionSendMoneyBack(
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
       }
-
+      accessLogger.info(`sendTransaction from hash: ${fromChainID}->${toChainID} ${tx.hash}`);
       await sendTransaction(
         makerAddress,
         transactionID,
