@@ -16,7 +16,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
-import { MessageQueue } from '../MessageQueue'
+import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 const repositoryMakerNode = (): Repository<MakerNode> => {
