@@ -1,7 +1,7 @@
 /* eslint-disable */
 
 import { BigNumber } from "bignumber.js";
-
+import * as zksync from "zksync";
 const MAX_BITS: any = {
   eth: 256,
   arbitrum: 256,
@@ -374,9 +374,12 @@ export function getAmountToSend(
     console.error("nonce too high, not allowed");
     return;
   }
-  if (toChainID === 3) {
-    var prefix = rAmount.substr(0, 11);
-    rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
+  if (toChainID === 3 || toChainID === 33) {
+    const amount = zksync.utils
+      .closestPackableTransactionAmount(rAmount)
+      .toString();
+    var prefix = amount.substr(0, 11);
+    rAmount = `${prefix}${"0".repeat(amount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
   const readyAmount = getToAmountFromUserAmount(
