@@ -904,7 +904,7 @@ export async function sendConsumer(value: any) {
     accessLogger.info(
       `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
     )
-    accessLogger.info('read nonceDic', JSON.stringify(nonceDic))
+    accessLogger.info(`read nonceDic:${JSON.stringify(nonceDic)}`)
     if (!sql_nonce) {
       result_nonce = nonce
     } else {

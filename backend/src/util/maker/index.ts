@@ -459,7 +459,7 @@ function confirmToZKSTransaction(
 }
 
 async function getConfirmations(fromChain, txHash): Promise<any> {
-  accessLogger.info('getConfirmations =', getTime())
+  accessLogger.info(`${fromChain} ${txHash} getConfirmations =`, getTime())
   try {
     let web3
     if (

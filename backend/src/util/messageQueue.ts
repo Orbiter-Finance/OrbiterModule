@@ -1,12 +1,13 @@
 import { Mutex } from "async-mutex";
 import { accessLogger } from './logger';
 import dayjs from 'dayjs';
+import { doSms } from "../sms/smsSchinese";
 
 type Message = {
     id: string;
     data: any;
 };
-
+let lastDoSMS = 0;
 export class MessageQueue {
     private messages: Message[] = [];
     private consumedIds: Set<string> = new Set();
@@ -54,16 +55,26 @@ export class MessageQueue {
             });
             // return result;
         })
-
     }
     public async consumeQueue(callback: Function) {
         let isProcessing = false;
+
         setInterval(async () => {
+            if (Date.now() - this.lastConsumeTime > 1000 * 60 * 3 && this.size() > 0) {
+                const timeout = Date.now() - this.lastConsumeTime;
+                if (Date.now() - lastDoSMS >= 1000 * 60 * 3) {
+                    doSms(
+                        `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`
+                    )
+                    lastDoSMS = Date.now();
+                }
+            }
             if (this.size() < 50 && Date.now() % 1200 === 0) {
                 accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
             } else if (this.size() > 50 && Date.now() % 600 === 0) {
                 accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
             }
+
             if (isProcessing)
                 return
             try {
