@@ -7,8 +7,9 @@ type Message = {
     id: string;
     data: any;
 };
-let lastDoSMS = 0;
+// let lastDoSMS = 0;
 export class MessageQueue {
+    private lastDoSMS:number =  0;
     private messages: Message[] = [];
     private consumedIds: Set<string> = new Set();
     public lastConsumeTime: number = Date.now();
@@ -62,11 +63,11 @@ export class MessageQueue {
         setInterval(async () => {
             if (Date.now() - this.lastConsumeTime > 1000 * 60 * 3 && this.size() > 0) {
                 const timeout = Date.now() - this.lastConsumeTime;
-                if (Date.now() - lastDoSMS >= 1000 * 60 * 3) {
+                if (Date.now() - this.lastDoSMS >= 1000 * 60 * 3) {
                     doSms(
                         `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`
                     )
-                    lastDoSMS = Date.now();
+                    this.lastDoSMS = Date.now();
                 }
             }
             if (this.size() < 50 && Date.now() % 1200 === 0) {
