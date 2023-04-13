@@ -19,7 +19,7 @@ export const doSms = async function (alert) {
     smsMob: options.smsMob,
     smsText,
   }
-  const rst = await axios.get(options.Endpoint, { params })
+  const rst = await axios.get(options.Endpoint, { params, timeout: 30000 })
   accessLogger.info({ params: JSON.stringify(params), result: rst.data })
 
   return true
