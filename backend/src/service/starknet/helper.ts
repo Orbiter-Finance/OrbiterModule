@@ -175,6 +175,50 @@ export class StarknetHelp {
       hash,
     }
   }
+
+    async signMutiTransfer(paramsList: {
+        tokenAddress: string
+        recipient: string
+        amount: string
+    }[], nonce: number) {
+        const provider = getProviderV4(this.network);
+        const entrypoint = 'transfer';
+        const invocationList: { contractAddress: string, entrypoint: string, calldata: any }[] = [];
+
+        for (const params of paramsList) {
+            const calldata = compileCalldata({
+                recipient: params.recipient,
+                amount: getUint256CalldataFromBN(params.amount),
+            });
+
+            invocationList.push({ contractAddress: params.tokenAddress, entrypoint, calldata });
+        }
+        const ofa = new OfflineAccount(provider, this.address, this.account.signer);
+        const trx = await ofa.signMutiTx(
+            invocationList,
+            nonce
+        );
+        if (!trx || !trx.transaction_hash) {
+            throw new Error(`Starknet Failed to send transaction hash does not exist`);
+        }
+        await sleep(1000);
+        const hash = trx.transaction_hash;
+        try {
+            const response = await provider.getTransaction(hash);
+            if (
+                !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+                    response['status']
+                )
+            ) {
+                accessLogger.error('Straknet Send After status error:', response);
+            }
+        } catch (error) {
+            accessLogger.error(`Starknet Send After GetTransaction Erro:`, error);
+        }
+        return {
+            hash,
+        };
+    }
 }
 /**
  *

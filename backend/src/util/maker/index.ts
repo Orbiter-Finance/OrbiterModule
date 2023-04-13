@@ -322,10 +322,8 @@ function confirmToLPTransaction(
 
 export async function confirmToSNTransaction(
   txID: string,
-  transactionID: string,
   chainId: number,
-  makerAddress: string,
-  nonce: string,
+  paramsList: { transactionID: string }[],
   rollback: any
 ) {
   try {
@@ -343,7 +341,7 @@ export async function confirmToSNTransaction(
     // When reject
     if (txStatus == 'REJECTED') {
       errorLogger.info(
-        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
+        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))} transaction_failure_reason,`,
         response['transaction_failure_reason']
       )
       // check nonce
@@ -363,23 +361,23 @@ export async function confirmToSNTransaction(
       accessLogger.info(
         'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
       )
-      accessLogger.info(
-        'update maker_node =',
-        `state = 3 WHERE transactionID = '${transactionID}'`
-      )
-      await repositoryMakerNode().update(
-        { transactionID: transactionID },
-        { state: 3 }
-      )
+      for (const params of paramsList) {
+        accessLogger.info(
+            'update maker_node =',
+            `state = 3 WHERE transactionID = '${params.transactionID}'`
+        );
+        await repositoryMakerNode().update(
+            { transactionID: params.transactionID },
+            { state: 3 }
+        );
+      }
       return true
     }
     await sleep(1000 * 30)
     return await confirmToSNTransaction(
       txID,
-      transactionID,
       chainId,
-      makerAddress,
-      nonce,
+      paramsList,
       rollback
     )
   } catch (error) {
@@ -759,7 +757,8 @@ export async function sendTxConsumeHandle(result: any) {
     amountToSend: tAmount,
     lpMemo: nonce } = params;
   const accessLogger = getLoggerService(toChainID);
-  accessLogger.info(`${transactionID} sendTxConsumeHandle response =`, response);
+  if (response.code !== 2 && response.code !== 3) accessLogger.info(`${transactionID} sendTxConsumeHandle response =`, response);
+  // code 0:handle single payment 1:fail 2:store multiple transactions 3:handle multiple payments
   if (!response.code) {
     var txID = response.txid
     accessLogger.info(
@@ -787,22 +786,18 @@ export async function sendTxConsumeHandle(result: any) {
     } else if (toChainID === 4 || toChainID === 44) {
       confirmToSNTransaction(
         txID,
-        transactionID,
         toChainID,
-        makerAddress,
-        nonce,
+        [{ transactionID }],
         response.rollback
       )
     } else if (toChainID === 8 || toChainID === 88) {
       console.warn({ toChainID, toChain, txID, transactionID })
-      // confirmToSNTransaction(txID, transactionID, toChainID)
     } else if (toChainID === 9 || toChainID === 99) {
       confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
     } else if (toChainID === 11 || toChainID === 511) {
       accessLogger.info(
         `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
       )
-      // confirmToSNTransaction(txID, transactionID, toChainID)
     } else if (toChainID === 12 || toChainID === 512) {
       if (txID.indexOf('sync-tx:') != -1) {
         txID = txID.replace('sync-tx:', '0x')
@@ -813,6 +808,13 @@ export async function sendTxConsumeHandle(result: any) {
     }
     await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
     // update todo
+  } else if (response.code === 2) {
+    // Store multiple transactions
+    console.log(`Store success toChainID: ${toChainID} tAmount: ${tAmount}`)
+    accessLogger.info(`Store success toChainID: ${toChainID} tAmount: ${tAmount}`);
+  } else if (response.code === 3) {
+    // handle multiple transactions
+    handleParamsList(result);
   } else {
     errorLogger.error(
       'updateError maker_node =',
@@ -839,5 +841,25 @@ export async function sendTxConsumeHandle(result: any) {
         error
       )
     }
+  }
+}
+
+function handleParamsList(result) {
+  let { params, paramsList, ...response } = result;
+  const { chainID: toChainID } = params;
+  paramsList = paramsList || [params];
+  const accessLogger = getLoggerService(toChainID);
+  for(const arg of paramsList){
+    accessLogger.info(`${arg.transactionID} sendTxConsumeHandle response =`, response);
+  }
+
+  if (toChainID === 4 || toChainID === 44) {
+    const txID = response.txid;
+    confirmToSNTransaction(
+        txID,
+        toChainID,
+        paramsList,
+        response.rollback
+    );
   }
 }

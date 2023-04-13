@@ -32,6 +32,7 @@ import { chainQueue, transfers } from './new_maker'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
+let starknetQueueList: { params: any, signParam: any }[] = [];
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
@@ -298,19 +299,51 @@ export async function sendConsumer(value: any) {
     accessLogger.info('starknet_sql_nonce =', nonce)
     accessLogger.info('result_nonde =', result_nonce)
     try {
-      const { hash }: any = await starknet.signTransfer({
-        recipient: toAddress,
-        tokenAddress,
-        amount: String(amountToSend),
-        nonce,
-      })
-      await sleep(1000 * 10)
-      return {
-        code: 0,
-        txid: hash,
-        rollback,
-        params: value
+      if (starknetQueueList.find(item => item.params?.transactionID === transactionID)) {
+        accessLogger.info('TransactionID was exist: ' + transactionID);
+      } else {
+        starknetQueueList.push({
+          params: value,
+          signParam: {
+            recipient: toAddress,
+            tokenAddress,
+            amount: String(amountToSend)
+          }
+        });
       }
+      if (starknetQueueList.length > 2) {
+        const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
+        const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
+        starknetQueueList = [];
+        const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
+        await sleep(1000 * 10);
+        return {
+          code: 3,
+          txid: hash,
+          rollback,
+          params: value,
+          paramsList
+        };
+      } else {
+        return {
+          code: 2,
+          params: value
+        }
+      }
+
+      // const { hash }: any = await starknet.signTransfer({
+      //   recipient: toAddress,
+      //   tokenAddress,
+      //   amount: String(amountToSend),
+      //   nonce,
+      // })
+      // await sleep(1000 * 10)
+      // return {
+      //   code: 0,
+      //   txid: hash,
+      //   rollback,
+      //   params: value
+      // }
     } catch (error) {
       await rollback(error, nonce)
       await sleep(1000 * 2)

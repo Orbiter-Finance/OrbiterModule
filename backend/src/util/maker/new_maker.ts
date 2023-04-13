@@ -157,13 +157,29 @@ async function isWatchAddress(address: string) {
     ) != -1
   )
 }
-async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
+export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
   // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(row=> row.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
   for (const chainId in groupData) {
     const txList: Array<ITransaction> = groupData[chainId]
     for (const tx of txList) {
+      if (tx.extra?.txList && tx.extra.txList.length) {
+        const extTxList: any[] = tx.extra.txList;
+        const internalTxList: any[] = [];
+        let idx: number = 1;
+        for (const extTx of extTxList) {
+          const internalTx: any = JSON.parse(JSON.stringify(tx));
+          internalTx.hash = `${tx.hash}#${idx++}`;
+          internalTx.fee = new BigNumber(tx.fee).dividedBy(extTxList.length).toFixed();
+          delete internalTx.extra.txList;
+          Object.assign(internalTx, extTx);
+          internalTxList.push(internalTx);
+        }
+
+        txList.push(...internalTxList);
+        continue;
+      }
       try {
         if (!(await isWatchAddress(tx.to))) {
           // accessLogger.error(
