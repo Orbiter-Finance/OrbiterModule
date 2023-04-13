@@ -292,68 +292,54 @@ export async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
-    const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
-    const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
-    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
-    try {
+      const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+      const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
+      const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
       if (starknetQueueList.find(item => item.params?.transactionID === transactionID)) {
-        accessLogger.info('TransactionID was exist: ' + transactionID);
+          accessLogger.info('TransactionID was exist: ' + transactionID);
       } else {
-        starknetQueueList.push({
-          params: value,
-          signParam: {
-            recipient: toAddress,
-            tokenAddress,
-            amount: String(amountToSend)
-          }
-        });
+          starknetQueueList.push({
+              params: value,
+              signParam: {
+                  recipient: toAddress,
+                  tokenAddress,
+                  amount: String(amountToSend)
+              }
+          });
       }
       if (starknetQueueList.length > 2) {
-        const { nonce, rollback } = await starknet.takeOutNonce()
-        accessLogger.info('starknet_sql_nonce =', nonce)
-        accessLogger.info('result_nonde =', result_nonce)
-        const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
-        const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
-        starknetQueueList = [];
-        const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
-        await sleep(1000 * 10);
-        return {
-          code: 3,
-          txid: hash,
-          rollback,
-          params: value,
-          paramsList
-        };
+          try {
+              const { nonce, rollback } = await starknet.takeOutNonce();
+              accessLogger.info('starknet_sql_nonce =', nonce);
+              accessLogger.info('result_nonde =', result_nonce);
+              const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
+              const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
+              starknetQueueList = [];
+              const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
+              await sleep(1000 * 10);
+              return {
+                  code: 3,
+                  txid: hash,
+                  rollback,
+                  params: value,
+                  paramsList
+              };
+          } catch (error) {
+              await rollback(error, nonce);
+              await sleep(1000 * 2);
+              return {
+                  code: 1,
+                  txid: 'starknet transfer error: ' + error.message,
+                  result_nonce: nonce,
+                  params: value
+              };
+          }
       } else {
-        return {
-          code: 2,
-          params: value
-        }
+          return {
+              code: 2,
+              params: value
+          };
       }
-
-      // const { hash }: any = await starknet.signTransfer({
-      //   recipient: toAddress,
-      //   tokenAddress,
-      //   amount: String(amountToSend),
-      //   nonce,
-      // })
-      // await sleep(1000 * 10)
-      // return {
-      //   code: 0,
-      //   txid: hash,
-      //   rollback,
-      //   params: value
-      // }
-    } catch (error) {
-      await rollback(error, nonce)
-      await sleep(1000 * 2)
-      return {
-        code: 1,
-        txid: 'starknet transfer error: ' + error.message,
-        result_nonce: nonce,
-        params: value
-      }
-    }
   }
 
   // immutablex || immutablex_test
