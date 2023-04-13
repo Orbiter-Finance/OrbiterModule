@@ -295,9 +295,6 @@ export async function sendConsumer(value: any) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
     const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
-    const { nonce, rollback } = await starknet.takeOutNonce()
-    accessLogger.info('starknet_sql_nonce =', nonce)
-    accessLogger.info('result_nonde =', result_nonce)
     try {
       if (starknetQueueList.find(item => item.params?.transactionID === transactionID)) {
         accessLogger.info('TransactionID was exist: ' + transactionID);
@@ -312,6 +309,9 @@ export async function sendConsumer(value: any) {
         });
       }
       if (starknetQueueList.length > 2) {
+        const { nonce, rollback } = await starknet.takeOutNonce()
+        accessLogger.info('starknet_sql_nonce =', nonce)
+        accessLogger.info('result_nonde =', result_nonce)
         const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
         const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
         starknetQueueList = [];
