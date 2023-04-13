@@ -32,7 +32,7 @@ import { chainQueue, transfers } from './new_maker'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
-let starknetQueueList: { params: any, signParam: any }[] = [];
+let starknetQueueList: { params: any, signParam: any, pushTime: number }[] = [];
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
@@ -299,6 +299,7 @@ export async function sendConsumer(value: any) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
       } else {
           starknetQueueList.push({
+              pushTime: new Date().valueOf(),
               params: value,
               signParam: {
                   recipient: toAddress,
@@ -307,7 +308,10 @@ export async function sendConsumer(value: any) {
               }
           });
       }
-      if (starknetQueueList.length > 2) {
+      const isOverTime: boolean = starknetQueueList.length && new Date().valueOf() - starknetQueueList[0]?.pushTime > 5 * 60 * 1000;
+      accessLogger.info(`starknet_queue_count = ${starknetQueueList.length}`);
+      if (starknetQueueList.length) accessLogger.info(`push_left_time = ${(new Date().valueOf() - starknetQueueList[0]?.pushTime) / 1000}s`);
+      if (starknetQueueList.length > 2 || isOverTime) {
         const { nonce, rollback } = await starknet.takeOutNonce();
         accessLogger.info('starknet_sql_nonce =', nonce);
         accessLogger.info('result_nonde =', result_nonce);
