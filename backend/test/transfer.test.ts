@@ -51,9 +51,18 @@ describe('transfer', () => {
     // const tx2: any = await watchGorli.chain.convertTxToEntity(
     //     "0xd5aa1bbe4a8a1ffc0dbddc6e5e4f7ce04a2951542ed07e8fba39e983dcab8e14",
     // );
-    const tx: any = await watchStarknet.chain.convertTxToEntity(
-        "0x057b4ac868bfc8bf2f4e1a5683eff4f6cd3b25a9c46c952812ed4dfbfafc7099",
-    );
+    const hashList = [
+      "0x5c5fd1bc7d91a1853fcc3bd5057fde0b3ac8116ce6884fb88c80411bfa756ba9",
+      "0x223b1b8ac29a2a74a4328d157b736ca13339e6ba7e868865a5e21506c52e2e7e",
+      "0x3ac8a7a3e962b399c2b341b245332067c90446b7940774d5ddc1ea8a554b060d"];
+    const txList: any[] = [];
+    for (const hash of hashList) {
+      const tx: any = await watchGorli.chain.convertTxToEntity(
+          hash,
+      );
+      txList.push(tx);
+    }
+
 
     // const list: any[] = [
     //   {
@@ -225,7 +234,7 @@ describe('transfer', () => {
     // for (const data of list) {
     //   data.value = new BigNumber(data.value);
     // }
-    await subscribeNewTransaction([tx]);
+    await subscribeNewTransaction(txList);
   }, 180000)
   it('starknet transfer', async () => {
     // const tokenAddress = "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7";
