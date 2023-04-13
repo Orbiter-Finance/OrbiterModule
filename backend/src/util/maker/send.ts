@@ -308,10 +308,10 @@ export async function sendConsumer(value: any) {
           });
       }
       if (starknetQueueList.length > 2) {
-          try {
-              const { nonce, rollback } = await starknet.takeOutNonce();
-              accessLogger.info('starknet_sql_nonce =', nonce);
-              accessLogger.info('result_nonde =', result_nonce);
+        const { nonce, rollback } = await starknet.takeOutNonce();
+        accessLogger.info('starknet_sql_nonce =', nonce);
+        accessLogger.info('result_nonde =', result_nonce);
+        try {
               const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
               const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
               starknetQueueList = [];
