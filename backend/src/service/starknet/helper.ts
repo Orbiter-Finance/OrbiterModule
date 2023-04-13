@@ -61,6 +61,16 @@ export class StarknetHelp {
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
   }
+  async setTask(queueList) {
+    const cacheKey = `queue:${this.address.toLowerCase()}`;
+    await this.cache.set(cacheKey, queueList);
+  }
+  async getTask() {
+    const cacheKey = `queue:${this.address.toLowerCase()}`;
+    const queueList: any[] = (await this.cache.get(cacheKey)) || [];
+    const isOverTime: boolean = !!queueList.length && new Date().valueOf() - queueList[0]?.pushTime > 5 * 60 * 1000;
+    return { queueList, isOk: queueList.length > 2 || isOverTime };
+  }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
     const takeNonce = nonces.splice(0, 1)[0]

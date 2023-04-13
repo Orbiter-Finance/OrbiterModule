@@ -32,7 +32,6 @@ import { chainQueue, transfers } from './new_maker'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
-let starknetQueueList: { params: any, signParam: any, pushTime: number }[] = [];
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
   if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
     try {
@@ -295,10 +294,16 @@ export async function sendConsumer(value: any) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
       const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-      if (starknetQueueList.find(item => item.params?.transactionID === transactionID)) {
+      const { queueList, isOk } = await starknet.getTask();
+      if (queueList.find(item => item.params?.transactionID === transactionID)) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
+          return {
+              code: 1,
+              error: 'starknet transfer error',
+              params: value
+          };
       } else {
-          starknetQueueList.push({
+          queueList.push({
               pushTime: new Date().valueOf(),
               params: value,
               signParam: {
@@ -307,18 +312,18 @@ export async function sendConsumer(value: any) {
                   amount: String(amountToSend)
               }
           });
+          await starknet.setTask(queueList);
       }
-      const isOverTime: boolean = starknetQueueList.length && new Date().valueOf() - starknetQueueList[0]?.pushTime > 5 * 60 * 1000;
-      accessLogger.info(`starknet_queue_count = ${starknetQueueList.length}`);
-      if (starknetQueueList.length) accessLogger.info(`push_left_time = ${(new Date().valueOf() - starknetQueueList[0]?.pushTime) / 1000}s`);
-      if (starknetQueueList.length > 2 || isOverTime) {
+
+      accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+      if (isOk) {
         const { nonce, rollback } = await starknet.takeOutNonce();
         accessLogger.info('starknet_sql_nonce =', nonce);
         accessLogger.info('result_nonde =', result_nonce);
         try {
-              const signParamList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.signParam);
-              const paramsList = (JSON.parse(JSON.stringify(starknetQueueList))).map(item => item.params);
-              starknetQueueList = [];
+              const signParamList = (JSON.parse(JSON.stringify(queueList))).map(item => item.signParam);
+              const paramsList = (JSON.parse(JSON.stringify(queueList))).map(item => item.params);
+              await starknet.setTask([]);
               const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
               await sleep(1000 * 10);
               return {
