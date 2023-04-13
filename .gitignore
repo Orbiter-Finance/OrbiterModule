@@ -19,6 +19,7 @@ backend/src/chainCore/chains.json
 backend/src/chainCore/testnet.json
 backend/src/config/chains.json
 backend/src/config/testnet.json
+backend/src/util/maker/maker_list_test.ts
 chainlogs/
 .env
 .env*
