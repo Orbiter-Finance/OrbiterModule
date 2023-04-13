@@ -147,6 +147,9 @@ export const requestStatistics = async (params: any = {}) => {
   const loading = ref(false)
   if (params.makerAddress) {
     transforeDate(params)
+    if ($env.starknetL1MapL2['goerli-alpha'][params.makerAddress.toLowerCase()]) {
+      params.makerAddress = `${params.makerAddress},${$env.starknetL1MapL2['goerli-alpha'][params.makerAddress.toLowerCase()]}`;
+    }
     if ($env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]) {
       params.makerAddress = `${params.makerAddress},${$env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]}`;
     }

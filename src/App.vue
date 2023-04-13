@@ -93,17 +93,10 @@ const getGlobalInfo = async () => {
   const isAddress = reg.test(mk);
   if (isAddress) {
     state.makerAddresses.push(mk);
+    state.makerAddressSelected = String(mk) || state.makerAddresses?.[0];
+  } else {
+    state.makerAddressSelected = state.makerAddresses?.[0] || '';
   }
-
-  state.makerAddressSelected = state.makerAddresses?.[0] || ''
-
-  // Set makerAddressSelected from route.query.makerAddress
-  setTimeout(() => {
-    const makerAddress = String(mk)
-    if (state.makerAddresses.indexOf(makerAddress) > -1) {
-      state.makerAddressSelected = makerAddress
-    }
-  }, 1)
 }
 const onClickMakerAddressItem = (makerAddress: string) => {
   state.makerAddressSelected = makerAddress
