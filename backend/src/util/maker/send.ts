@@ -294,7 +294,7 @@ export async function sendConsumer(value: any) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
       const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-      const { queueList, isOk } = await starknet.getTask();
+      const queueList = await starknet.getTask();
       if (queueList.find(item => item.params?.transactionID === transactionID)) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
           return {
@@ -314,9 +314,11 @@ export async function sendConsumer(value: any) {
           });
           await starknet.setTask(queueList);
       }
-
+      const expireTime = 5 * 60 * 1000;
+      const isOverTime: boolean = !!queueList.length && new Date().valueOf() - queueList[0]?.pushTime > expireTime;
       accessLogger.info(`starknet_queue_count = ${queueList.length}`);
-      if (isOk) {
+      accessLogger.info(`starknet_left_time = ${(queueList[0]?.pushTime + expireTime - new Date().valueOf()) / 1000}s`);
+      if (isOverTime || queueList.length > 2) {
         const { nonce, rollback } = await starknet.takeOutNonce();
         accessLogger.info('starknet_sql_nonce =', nonce);
         accessLogger.info('result_nonde =', result_nonce);
