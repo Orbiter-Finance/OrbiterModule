@@ -167,11 +167,12 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
       if (tx.extra?.txList && tx.extra.txList.length) {
         const extTxList: any[] = tx.extra.txList;
         const internalTxList: any[] = [];
-        let idx: number = 1;
+        let idx: number = 0;
         for (const extTx of extTxList) {
           const internalTx: any = JSON.parse(JSON.stringify(tx));
-          internalTx.hash = `${tx.hash}#${idx++}`;
+          internalTx.hash = `${tx.hash}${idx ? `#${idx}` : ""}`;
           internalTx.fee = new BigNumber(tx.fee).dividedBy(extTxList.length).toFixed();
+          idx++;
           delete internalTx.extra.txList;
           Object.assign(internalTx, extTx);
           internalTxList.push(internalTx);
