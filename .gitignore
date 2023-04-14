@@ -21,6 +21,11 @@ backend/src/config/chains.json
 backend/src/config/testnet.json
 backend/src/util/maker/maker_list_test.ts
 backend/test/chain.json
+backend/test/transfer.test.ts
+backend/package-lock.json
+history/package-lock.json
+package-lock.json
+yarn.lock
 chainlogs/
 .env
 .env*
