@@ -25,7 +25,6 @@ backend/test/transfer.test.ts
 backend/package-lock.json
 history/package-lock.json
 package-lock.json
-yarn.lock
 chainlogs/
 .env
 .env*
