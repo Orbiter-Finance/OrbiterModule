@@ -15,14 +15,14 @@ services:
       ORBITER_MAKER_PRIVATE_KEYS: '' # {"makerAddress":"private_key"}
       PROMETHEUS_ALERTMANAGER: '{"api":"http://alertmanager:9093"}' # {"api":"http://alertmanager:9093"}
       DB_HOST: db
+      TELEGRAM_TOKEN: '${TELEGRAM_TOKEN}'
+      CHAT_ID: '${CHAT_ID}'
       DB_PORT: '${DB_PORT}'
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
     volumes:
-      - './backend/chainlogs:/app/chainlogs'
       - './backend/logs:/app/logs'
-      - './backend/cache:/app/cache'
       - './backend/runtime:/app/runtime'
 
     #   - './backend:/app'

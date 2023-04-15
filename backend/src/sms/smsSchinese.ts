@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { accessLogger } from '../util/logger'
+import { telegramBot } from './telegram'
 const { schinese } = require('./config')
 
 /**
@@ -12,7 +13,11 @@ const { schinese } = require('./config')
 export const doSms = async function (alert) {
   const { options } = schinese
   let smsText = alert
-
+  if (process.env["TELEGRAM_TOKEN"]) {
+    telegramBot.sendMessage(smsText).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    })
+  }
   const params = {
     Uid: options.Uid,
     Key: options.Key,
