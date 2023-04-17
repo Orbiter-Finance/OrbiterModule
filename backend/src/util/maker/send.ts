@@ -336,17 +336,16 @@ export async function sendConsumer(value: any) {
                   paramsList
               };
           } catch (error) {
-              accessLogger.error(`starknet transfer error: ${error.message}, result_nonce=${nonce}, transactionID=${transactionID}`);
+              accessLogger.info(`starknet transfer restore: ${queueList.length}`);
+              await starknet.setTask(queueList);
               await rollback(error, nonce);
-              await sleep(1000 * 30);
-              accessLogger.info(`starknet transfer retry, result_nonce=${nonce}, transactionID=${transactionID}`);
-              return await sendConsumer(value);
-              // return {
-              //     code: 1,
-              //     txid: 'starknet transfer error: ' + error.message,
-              //     result_nonce: nonce,
-              //     params: value
-              // };
+              await sleep(1000 * 2);
+              return {
+                  code: 1,
+                  txid: 'starknet transfer error: ' + error.message,
+                  result_nonce: nonce,
+                  params: value
+              };
           }
       } else {
           return {
