@@ -303,7 +303,7 @@ export async function sendConsumer(value: any) {
               params: value
           };
       } else {
-          queueList.push({
+          const queue = {
               pushTime: new Date().valueOf(),
               params: value,
               signParam: {
@@ -311,8 +311,9 @@ export async function sendConsumer(value: any) {
                   tokenAddress,
                   amount: String(amountToSend)
               }
-          });
-          await starknet.setTask(queueList);
+          };
+          queueList.push(queue);
+          await starknet.pushTask([queue]);
       }
       const expireTime = 5 * 60 * 1000;
       const isOverTime: boolean = !!queueList.length && new Date().valueOf() - queueList[0]?.pushTime > expireTime;
@@ -322,10 +323,10 @@ export async function sendConsumer(value: any) {
         const { nonce, rollback } = await starknet.takeOutNonce();
         accessLogger.info('starknet_sql_nonce =', nonce);
         accessLogger.info('result_nonde =', result_nonce);
+        const signParamList = (JSON.parse(JSON.stringify(queueList))).map(item => item.signParam);
+        const paramsList = (JSON.parse(JSON.stringify(queueList))).map(item => item.params);
+        await starknet.clearTask();
         try {
-              const signParamList = (JSON.parse(JSON.stringify(queueList))).map(item => item.signParam);
-              const paramsList = (JSON.parse(JSON.stringify(queueList))).map(item => item.params);
-              await starknet.setTask([]);
               const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
               await sleep(1000 * 10);
               return {
@@ -337,7 +338,7 @@ export async function sendConsumer(value: any) {
               };
           } catch (error) {
               accessLogger.info(`starknet transfer restore: ${queueList.length}`);
-              await starknet.setTask(queueList);
+              await starknet.pushTask(queueList);
               await rollback(error, nonce);
               await sleep(1000 * 2);
               return {

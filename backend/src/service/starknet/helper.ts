@@ -61,9 +61,46 @@ export class StarknetHelp {
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
   }
-  async setTask(queueList) {
+  async getCacheLock() {
+    const cacheKey = `cacheLock:${this.address.toLowerCase()}`;
+    return (await this.cache.get(cacheKey)) || false;
+  }
+  async setCacheLock(status: boolean) {
+    const cacheKey = `cacheLock:${this.address.toLowerCase()}`;
+    await this.cache.set(cacheKey, status);
+  }
+  async clearTask() {
+    if (await this.getCacheLock()) {
+      accessLogger.info(`Cache is lock ,wait for one second`);
+      await sleep(1000);
+      await this.clearTask();
+      return;
+    }
+    await this.setCacheLock(true);
     const cacheKey = `queue:${this.address.toLowerCase()}`;
-    await this.cache.set(cacheKey, queueList);
+    await this.cache.set(cacheKey, []);
+    await this.setCacheLock(false);
+  }
+  async pushTask(taskList) {
+    if (await this.getCacheLock()) {
+      accessLogger.info(`Cache is lock ,wait for one second`);
+      await sleep(1000);
+      await this.pushTask(taskList);
+      return;
+    }
+    await this.setCacheLock(true);
+    const cacheKey = `queue:${this.address.toLowerCase()}`;
+    const cacheList = await this.cache.get(cacheKey) || [];
+    const newList = [];
+    for (const task of taskList) {
+      if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+        accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+      } else {
+        newList.push(task);
+      }
+    }
+    await this.cache.set(cacheKey, [...cacheList, ...newList]);
+    await this.setCacheLock(false);
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
