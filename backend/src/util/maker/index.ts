@@ -815,7 +815,7 @@ export async function sendTxConsumeHandle(result: any) {
     await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
     // update todo
   } else {
-    telegramBot.sendMessage(`Send Transaction Error toChain: ${toChainID}, transactionID: ${transactionID}, errmsg: ${response.txid}`).catch(error => {
+    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionID}, errmsg: ${response.txid}`).catch(error => {
       accessLogger.error('send telegram message error', error);
     })
     errorLogger.error(
