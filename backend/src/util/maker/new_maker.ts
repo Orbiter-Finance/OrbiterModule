@@ -138,12 +138,16 @@ export async function startNewMakerTrxPull() {
         return true;
       })
     }
-    pubSub.subscribe(`${intranetId}:txlist`, subscribeNewTransaction)
+    pubSub.subscribe(`${intranetId}:txlist`, (result)=> {
+      subscribeNewTransaction(result);
+      return true;
+    })
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
   pubSub.subscribe(`ACCEPTED_ON_L2:4`, (tx) => {
-    return subscribeNewTransaction([tx])
+    subscribeNewTransaction([tx]);
+    return true;
   })
 
 }
