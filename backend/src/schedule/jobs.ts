@@ -167,7 +167,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             transactionID: task.params?.transactionID, state: [1, 20]
           });
           if (!makerNodeCount) {
-            accessLogger.error(`Transaction cannot be sent, transactionID ${JSON.stringify(task)}`);
+            accessLogger.error(`Transaction cannot be sent ${JSON.stringify(task)}`);
             await starknet.clearTask([task]);
             continue;
           }
