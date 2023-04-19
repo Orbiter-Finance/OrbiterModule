@@ -69,19 +69,23 @@ export class StarknetHelp {
     const cacheKey = `cacheLock:${this.address.toLowerCase()}`;
     await this.cache.set(cacheKey, status);
   }
-  async clearTask() {
+  async clearTask(taskList: any[]) {
     if (await this.getCacheLock()) {
       accessLogger.info(`Cache is lock ,wait for one second`);
       await sleep(1000);
-      await this.clearTask();
+      await this.clearTask(taskList);
       return;
     }
     await this.setCacheLock(true);
     const cacheKey = `queue:${this.address.toLowerCase()}`;
-    await this.cache.set(cacheKey, []);
+    const allTaskList: any[] = await this.cache.get(cacheKey) || [];
+    const leftTaskList = allTaskList.filter(task => {
+      return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+    });
+    await this.cache.set(cacheKey, leftTaskList);
     await this.setCacheLock(false);
   }
-  async pushTask(taskList) {
+  async pushTask(taskList: any[]) {
     if (await this.getCacheLock()) {
       accessLogger.info(`Cache is lock ,wait for one second`);
       await sleep(1000);
@@ -91,7 +95,7 @@ export class StarknetHelp {
     await this.setCacheLock(true);
     const cacheKey = `queue:${this.address.toLowerCase()}`;
     const cacheList = await this.cache.get(cacheKey) || [];
-    const newList = [];
+    const newList: any[] = [];
     for (const task of taskList) {
       if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
         accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);

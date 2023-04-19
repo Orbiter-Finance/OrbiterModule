@@ -315,45 +315,12 @@ export async function sendConsumer(value: any) {
           queueList.push(queue);
           await starknet.pushTask([queue]);
       }
-      const expireTime = 5 * 60 * 1000;
-      const isOverTime: boolean = !!queueList.length && new Date().valueOf() - queueList[0]?.pushTime > expireTime;
+      accessLogger.info('result_nonde =', result_nonce);
       accessLogger.info(`starknet_queue_count = ${queueList.length}`);
-      accessLogger.info(`starknet_left_time = ${(queueList[0]?.pushTime + expireTime - new Date().valueOf()) / 1000}s`);
-      if (isOverTime || queueList.length > 2) {
-        const { nonce, rollback } = await starknet.takeOutNonce();
-        accessLogger.info('starknet_sql_nonce =', nonce);
-        accessLogger.info('result_nonde =', result_nonce);
-        const signParamList = (JSON.parse(JSON.stringify(queueList))).map(item => item.signParam);
-        const paramsList = (JSON.parse(JSON.stringify(queueList))).map(item => item.params);
-        await starknet.clearTask();
-        try {
-              const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
-              await sleep(1000 * 10);
-              return {
-                  code: 3,
-                  txid: hash,
-                  rollback,
-                  params: value,
-                  paramsList
-              };
-          } catch (error) {
-              accessLogger.info(`starknet transfer restore: ${queueList.length}`);
-              await starknet.pushTask(queueList);
-              await rollback(error, nonce);
-              await sleep(1000 * 2);
-              return {
-                  code: 1,
-                  txid: 'starknet transfer error: ' + error.message,
-                  result_nonce: nonce,
-                  params: value
-              };
-          }
-      } else {
-          return {
-              code: 2,
-              params: value
-          };
-      }
+      return {
+        code: 2,
+        params: value
+      };
   }
 
   // immutablex || immutablex_test

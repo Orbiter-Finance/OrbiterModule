@@ -4,9 +4,10 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
+  batchTxSend,
   jobBalanceAlarm,
   jobGetWealths,
-} from './jobs'
+} from './jobs';
 import { doSms } from '../sms/smsSchinese'
 
 let smsTimeStamp = 0
@@ -111,6 +112,7 @@ export const startMasterJobs = async () => {
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
     startNewMakerTrxPull()
+    batchTxSend()
   }
 }
 

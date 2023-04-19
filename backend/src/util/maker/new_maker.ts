@@ -19,7 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
-const repositoryMakerNode = (): Repository<MakerNode> => {
+export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 export const chainQueue: { [key: number]: MessageQueue } = {};

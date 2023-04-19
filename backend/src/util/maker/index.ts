@@ -814,7 +814,7 @@ export async function sendTxConsumeHandle(result: any) {
     accessLogger.info(`Store success toChainID: ${toChainID} tAmount: ${tAmount}`);
   } else if (response.code === 3) {
     // handle multiple transactions
-    handleParamsList(result);
+    await handleParamsList(result);
   } else {
     errorLogger.error(
       'updateError maker_node =',
@@ -844,13 +844,34 @@ export async function sendTxConsumeHandle(result: any) {
   }
 }
 
-function handleParamsList(result) {
+async function handleParamsList(result) {
   let { params, paramsList, ...response } = result;
+  const txID = response.txid;
   const { chainID: toChainID } = params;
   paramsList = paramsList || [params];
   const accessLogger = getLoggerService(toChainID);
-  for(const arg of paramsList){
+  for (const arg of paramsList) {
+    const { transactionID, toChain, amountToSend: tAmount } = arg;
     accessLogger.info(`${arg.transactionID} sendTxConsumeHandle response =`, response);
+    accessLogger.info(
+        `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
+    );
+    try {
+      await repositoryMakerNode().update(
+          { transactionID: transactionID },
+          {
+            toTx: txID,
+            toAmount: tAmount,
+            state: 2,
+          }
+      );
+      accessLogger.info(
+          `[${transactionID}] sendTransaction toChain ${toChain} update success`
+      );
+    } catch (error) {
+      errorLogger.error(`[${transactionID}] updateToSqlError =`, error);
+      return;
+    }
   }
 
   if (toChainID === 4 || toChainID === 44) {
