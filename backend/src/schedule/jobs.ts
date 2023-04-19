@@ -14,6 +14,7 @@ import { StarknetHelp } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
 import { sleep } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
+import { In } from "typeorm";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -161,10 +162,11 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           return;
         }
         const queueList: any[] = [];
+        // TODO
         for (let i = 0; i < Math.min(taskList.length, 3); i++) {
           const task = taskList[i];
           const makerNodeCount: number = await repositoryMakerNode().count(<any>{
-            transactionID: task.params?.transactionID, state: [1, 20]
+            transactionID: task.params?.transactionID, state: In([1, 20])
           });
           if (!makerNodeCount) {
             accessLogger.error(`Transaction cannot be sent ${JSON.stringify(task)}`);
@@ -204,7 +206,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
       }
     };
 
-    new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
+    // TODO
+    // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
+    new MJobPessimism('0 */5 * * * *', callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
