@@ -1,5 +1,6 @@
 import axios from 'axios'
 import { accessLogger } from '../util/logger'
+import { telegramBot } from './telegram'
 const { schinese } = require('./config')
 
 /**
@@ -19,8 +20,11 @@ export const doSms = async function (alert) {
     smsMob: options.smsMob,
     smsText,
   }
-  const rst = await axios.get(options.Endpoint, { params })
-  accessLogger.info({ params: JSON.stringify(params), result: rst.data })
-
+  try {
+    const rst = await axios.get(options.Endpoint, { params, timeout: 30000 })
+    accessLogger.info({ params: JSON.stringify(params), result: rst.data })
+  } catch (error) {
+    accessLogger.error('send sms error', error);
+  }
   return true
 }

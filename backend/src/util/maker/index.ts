@@ -29,6 +29,7 @@ const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
 import { chainQueue } from './new_maker'
+import { telegramBot } from '../../sms/telegram'
 
 let accountInfo: AccountInfo
 let lpKey: string
@@ -818,6 +819,9 @@ export async function sendTxConsumeHandle(result: any) {
     // handle multiple transactions
     await handleParamsList(result);
   } else {
+    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionID}, errmsg: ${response.txid}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    })
     errorLogger.error(
       'updateError maker_node =',
       `state = 20 WHERE transactionID = '${transactionID}'`

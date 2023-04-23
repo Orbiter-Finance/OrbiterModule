@@ -9,6 +9,7 @@ import {
   jobGetWealths,
 } from './jobs';
 import { doSms } from '../sms/smsSchinese'
+import { telegramBot } from '../sms/telegram'
 
 let smsTimeStamp = 0
 
@@ -56,6 +57,9 @@ export async function waittingStartMaker() {
       if (nowTime > smsTimeStamp && nowTime - smsTimeStamp > 30000) {
         try {
           doSms(alert)
+          telegramBot.sendMessage(alert).catch(error => {
+            accessLogger.error('send telegram message error', error);
+          })
           accessLogger.info(
             'sendNeedPrivateKeyMessage,   smsTimeStamp =',
             nowTime
@@ -81,8 +85,7 @@ export async function waittingStartMaker() {
         `Miss private keys!`,
         `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
-        )}' http://${appConfig.options.host}:${
-          appConfig.options.port
+        )}' http://${appConfig.options.host}:${appConfig.options.port
         }/maker/privatekeys] set it`
       )
 

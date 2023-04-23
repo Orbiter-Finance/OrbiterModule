@@ -363,6 +363,7 @@ export function getAmountToSend(
   pool: { precision: number; tradingFee: number; gasFee: number },
   nonce: string | number,
 ) {
+  amountStr = new BigNumber(amountStr).toFixed();
   const realAmount = getRAmountFromTAmount(fromChainID, amountStr);
   if (!realAmount.state) {
     console.error(realAmount.error);
@@ -386,7 +387,7 @@ export function getAmountToSend(
   );
   const result = getTAmountFromRAmount(
     toChainID,
-    readyAmount.toString(),
+    readyAmount.toFixed(),
     nonceStr,
   );
   if (toChainID === 3 || toChainID === 3) {

@@ -2,6 +2,7 @@ import { Mutex } from "async-mutex";
 import { accessLogger } from './logger';
 import dayjs from 'dayjs';
 import { doSms } from "../sms/smsSchinese";
+import { telegramBot } from "../sms/telegram";
 
 type Message = {
     id: string;
@@ -9,7 +10,7 @@ type Message = {
 };
 // let lastDoSMS = 0;
 export class MessageQueue {
-    private lastDoSMS:number =  0;
+    private lastDoSMS: number = 0;
     private messages: Message[] = [];
     private consumedIds: Set<string> = new Set();
     public lastConsumeTime: number = Date.now();
@@ -34,6 +35,7 @@ export class MessageQueue {
             // let result: any = null;
             await this.mutex.runExclusive(async () => {
                 try {
+                    this.lastConsumeTime = Date.now();
                     while (this.messages.length > 0 && this.consumedIds.has(this.messages[0].id)) {
                         console.warn(`${this.name} Message has been consumed ${this.messages[0].id}`)
                         this.messages.shift();
@@ -44,14 +46,12 @@ export class MessageQueue {
                         this.consumedIds.add(message.id);
                         this.messages.shift();
                         console.log(`Message ${message.id} has been consumed.`);
-                        return resolve(result)
+                        resolve(result)
                     }
                     this.clearConsumedIds();
                 } catch (error) {
                     console.error(`Consumption error`, error);
                     reject(error);
-                } finally {
-                    this.lastConsumeTime = Date.now();
                 }
             });
             // return result;
@@ -59,30 +59,17 @@ export class MessageQueue {
     }
     public async consumeQueue(callback: Function) {
         let isProcessing = false;
-
-        setInterval(async () => {
-            if (Date.now() - this.lastConsumeTime > 1000 * 60 * 3 && this.size() > 0) {
-                const timeout = Date.now() - this.lastConsumeTime;
-                if (Date.now() - this.lastDoSMS >= 1000 * 60 * 3) {
-                    doSms(
-                        `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`
-                    )
-                    this.lastDoSMS = Date.now();
-                }
+        const process = async () => {
+            if (isProcessing) {
+                return;
             }
-            if (this.size() < 50 && Date.now() % 1200 === 0) {
-                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
-            } else if (this.size() > 50 && Date.now() % 600 === 0) {
-                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
-            }
-
-            if (isProcessing)
-                return
             try {
                 isProcessing = true;
                 if (this.size() > 0) {
+                    this.lastConsumeTime = Date.now();
                     const response = await this.dequeue();
                     accessLogger.info(`queue:${this.name}, Consumption results::${JSON.stringify(response || {})}`);
+                    isProcessing = false;
                     if (response) {
                         await callback(null, response)
                     }
@@ -92,6 +79,26 @@ export class MessageQueue {
                 accessLogger.error(`queue:${this.name}, Consumption error`, error);
             } finally {
                 isProcessing = false;
+                this.lastConsumeTime = Date.now();
+            }
+        }
+        setInterval(async () => {
+            process();
+            if (this.size() < 50 && Date.now() % 1200 === 0) {
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+            } else if (this.size() > 50 && Date.now() % 600 === 0) {
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+            }
+            const timeout = Date.now() - this.lastConsumeTime;
+            if (timeout > 1000 * 60 * 5 && this.size() > 0) {
+                if (Date.now() - this.lastDoSMS >= 1000 * 60 * 3) {
+                    const alert = `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`;
+                    doSms(alert)
+                    telegramBot.sendMessage(alert).catch(error => {
+                        accessLogger.error('send telegram message error', error);
+                    })
+                    this.lastDoSMS = Date.now();
+                }
             }
         }, 100);
     }
