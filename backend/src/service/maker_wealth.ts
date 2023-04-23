@@ -30,7 +30,7 @@ export const CACHE_KEY_GET_WEALTHS = 'GET_WEALTHS'
  * @param tokenAddress
  * @param tokenName for match zksync result
  */
-async function getTokenBalance(
+export async function getTokenBalance(
   makerAddress: string,
   chainId: number,
   chainName: string,

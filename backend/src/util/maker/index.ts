@@ -23,7 +23,7 @@ import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
-import { getProviderV4 } from '../../service/starknet/helper'
+import { getProviderV4, starknetLock } from '../../service/starknet/helper';
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
@@ -353,6 +353,7 @@ export async function confirmToSNTransaction(
       // ) {
       //   return true
       // }
+      starknetLock = false;
       return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
@@ -371,6 +372,7 @@ export async function confirmToSNTransaction(
             { state: 3 }
         );
       }
+      starknetLock = false;
       return true
     }
     await sleep(1000 * 30)

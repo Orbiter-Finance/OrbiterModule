@@ -12,7 +12,11 @@ import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
+import { Mutex } from "async-mutex";
+
 const accessLogger = getLoggerService('4')
+
+export let starknetLock = false;
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
@@ -30,7 +34,9 @@ export function parseInputAmountToUint256(
 }
 export class StarknetHelp {
   private cache: Keyv
+  private cacheTx: Keyv
   public account: Account
+  private mutex = new Mutex();
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -39,6 +45,15 @@ export class StarknetHelp {
     this.cache = new Keyv({
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
+        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        encode: JSON.stringify, // serialize function
+        decode: JSON.parse, // deserialize function
+      }),
+    })
+    this.cacheTx = new Keyv({
+      store: new KeyvFile({
+        filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
         writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
@@ -61,50 +76,31 @@ export class StarknetHelp {
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
   }
-  async getCacheLock() {
-    const cacheKey = `cacheLock:${this.address.toLowerCase()}`;
-    return (await this.cache.get(cacheKey)) || false;
-  }
-  async setCacheLock(status: boolean) {
-    const cacheKey = `cacheLock:${this.address.toLowerCase()}`;
-    await this.cache.set(cacheKey, status);
-  }
   async clearTask(taskList: any[]) {
-    if (await this.getCacheLock()) {
-      accessLogger.info(`Cache is lock ,wait for one second`);
-      await sleep(1000);
-      await this.clearTask(taskList);
-      return;
-    }
-    await this.setCacheLock(true);
-    const cacheKey = `queue:${this.address.toLowerCase()}`;
-    const allTaskList: any[] = await this.cache.get(cacheKey) || [];
-    const leftTaskList = allTaskList.filter(task => {
-      return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+    await this.mutex.runExclusive(async () => {
+      const cacheKey = `queue:${this.address.toLowerCase()}`;
+      const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
+      const leftTaskList = allTaskList.filter(task => {
+        return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+      });
+      await this.cacheTx.set(cacheKey, leftTaskList);
     });
-    await this.cache.set(cacheKey, leftTaskList);
-    await this.setCacheLock(false);
   }
   async pushTask(taskList: any[]) {
-    if (await this.getCacheLock()) {
-      accessLogger.info(`Cache is lock ,wait for one second`);
-      await sleep(1000);
-      await this.pushTask(taskList);
-      return;
-    }
-    await this.setCacheLock(true);
-    const cacheKey = `queue:${this.address.toLowerCase()}`;
-    const cacheList = await this.cache.get(cacheKey) || [];
-    const newList: any[] = [];
-    for (const task of taskList) {
-      if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
-        accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
-      } else {
-        newList.push(task);
+    await this.mutex.runExclusive(async () => {
+      const cacheKey = `queue:${this.address.toLowerCase()}`;
+      const cacheList = await this.cacheTx.get(cacheKey) || [];
+      const newList: any[] = [];
+      for (const task of taskList) {
+        if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+          accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+        } else {
+          task.count = (task.count || 0) + 1;
+          newList.push(task);
+        }
       }
-    }
-    await this.cache.set(cacheKey, [...cacheList, ...newList]);
-    await this.setCacheLock(false);
+      await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
+    });
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
