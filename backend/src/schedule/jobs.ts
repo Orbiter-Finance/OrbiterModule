@@ -323,7 +323,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 
     // TODO
     // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism('0 */5 * * * *', callback, batchTxSend.name).schedule();
+    new MJobPessimism('0 */1 * * * *', callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
