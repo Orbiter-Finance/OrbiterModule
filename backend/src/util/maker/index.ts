@@ -384,10 +384,14 @@ export async function confirmToSNTransaction(
       rollback
     )
   } catch (error) {
+    setStarknetLock(false);
     getLoggerService(String(chainId)).error(
-      'confirmToSNTransaction error',
-      error.message
-    )
+        'confirmToSNTransaction error',
+        error.message
+    );
+    telegramBot.sendMessage(`${txID} confirmToSNTransaction error, ${error.message}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    });
   }
 }
 
