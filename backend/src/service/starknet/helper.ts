@@ -108,7 +108,7 @@ export class StarknetHelp {
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
-    return (await this.cache.get(cacheKey)) || [];
+    return (await this.cacheTx.get(cacheKey)) || [];
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
