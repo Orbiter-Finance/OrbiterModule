@@ -10,7 +10,7 @@ import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
 import { makerConfig } from "../config";
 import { equals } from "orbiter-chaincore/src/utils/core";
-import { StarknetHelp, starknetLock } from "../service/starknet/helper";
+import { setStarknetLock, StarknetHelp, starknetLock } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
 import { sleep } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
@@ -18,6 +18,7 @@ import { In } from "typeorm";
 import { Mutex } from "async-mutex";
 import { getTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
+import { telegramBot } from "../sms/telegram";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -194,18 +195,30 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             if (i < taskList.length - maxTaskCount) {
               clearTaskList.push(task);
               accessLogger.error(`starknet_max_count_limit ${taskList.length}`);
+              // TODO test
+              telegramBot.sendMessage(`starknet_max_count_limit ${taskList.length}, value: ${task.signParam.amount}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+              })
               continue;
             }
             // expire time limit
             if (task.createTime < new Date().valueOf() - expireTime) {
               clearTaskList.push(task);
-              accessLogger.error(`starknet_expire_time_limit ${new Date(task.createTime)}`);
+              accessLogger.error(`starknet_expire_time_limit ${new Date(task.createTime)} ${task}`);
+              // TODO test
+              telegramBot.sendMessage(`starknet_expire_time_limit ${new Date(task.createTime)}, value: ${task.signParam.amount}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+              })
               continue;
             }
             // retry count limit
             if (task.count > maxTryCount) {
               clearTaskList.push(task);
               accessLogger.error(`starknet_retry_count_limit ${task.count}`);
+              // TODO test
+              telegramBot.sendMessage(`starknet_retry_count_limit ${task.count}, value: ${task.signParam.amount}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+              })
               continue;
             }
             execTaskList.push(task);
@@ -214,6 +227,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             accessLogger.error(`starknet_task_clear ${clearTaskList.length}`);
             if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
               // TODO sms
+              telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+              });
               limitWaringTime = new Date().valueOf();
             }
             await starknet.clearTask(clearTaskList);
@@ -261,7 +277,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
               accessLogger.error(`${makerAddress} maker starknet insufficient Balance`);
               if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
                 // TODO sms
-
+                telegramBot.sendMessage(`${makerAddress} maker starknet insufficient Balance, ${needPay} > ${makerBalance}`).catch(error => {
+                  accessLogger.error('send telegram message error', error);
+                });
                 balanceWaringTime = new Date().valueOf();
               }
               return;
@@ -275,7 +293,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           const paramsList = queueList.map(item => item.params);
           await starknet.clearTask(queueList);
           try {
-            starknetLock = true;
+            setStarknetLock(true);
             accessLogger.info('starknet_sql_nonce =', nonce);
             accessLogger.info('starknet_consume_count =', queueList.length);
             const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
