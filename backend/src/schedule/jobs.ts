@@ -154,8 +154,8 @@ export function jobBalanceAlarm() {
 }
 
 const mutexMap = new Map<string, Mutex>();
-let limitWaringTime = new Date().valueOf();
-let balanceWaringTime = new Date().valueOf();
+let limitWaringTime = 0;
+let balanceWaringTime = 0;
 // TODO
 // Alarm interval duration(second)
 const waringInterval = 30;
@@ -293,6 +293,10 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
           const paramsList = queueList.map(item => item.params);
           await starknet.clearTask(queueList);
+            if (!queueList.length) {
+                accessLogger.info('There are no consumable tasks in the starknet queue');
+                return;
+            }
           try {
             setStarknetLock(true);
             accessLogger.info('starknet_sql_nonce =', nonce);
@@ -324,7 +328,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 
     // TODO
     // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism('0 */1 * * * *', callback, batchTxSend.name).schedule();
+    new MJobPessimism('0 */2 * * * *', callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
