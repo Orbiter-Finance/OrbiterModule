@@ -169,7 +169,7 @@ const maxTryCount: number = 2;
 const alarmMulti = 3;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
-  const makerSend = (makerAddress, chainId, cronId) => {
+  const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
       const mutex = mutexMap.get(`${makerAddress}_${chainId}_mutex`);
       if (await mutex.isLocked()) {
@@ -297,7 +297,17 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             setStarknetLock(makerAddress, true);
             accessLogger.info('starknet_sql_nonce =', nonce);
             accessLogger.info('starknet_consume_count =', queueList.length);
-            const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);
+              let hash = '';
+              if (signParamList.length === 1) {
+                  accessLogger.info('starknet sent one ====');
+                  const res: any = await starknet.signTransfer({ ...signParamList[0], nonce });
+                  hash = res.hash;
+              } else {
+                  accessLogger.info('starknet sent multi ====');
+                  const res: any = await starknet.signMultiTransfer(signParamList, nonce);
+                  hash = res.hash;
+              }
+            // const { hash }: any = await starknet.signMultiTransfer(signParamList, nonce);
             // TODO test
             telegramBot.sendMessage(`https://testnet.starkscan.co/tx/${hash}`).catch(error => {
               accessLogger.error('send telegram message error', error);
@@ -329,7 +339,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 
     // TODO
     // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism(`${cronId * 10} */2 * * * *`, callback, batchTxSend.name).schedule();
+    new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
@@ -340,10 +350,12 @@ export async function batchTxSend(chainIdList = [4, 44]) {
     }
     makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol });
   }
+  // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
+  await sleep(5000);
   for (let i = 0; i < makerDataList.length; i++) {
     const maker = makerDataList[i];
     const mutex = new Mutex();
     mutexMap.set(`${maker.makerAddress}_${maker.chainId}_mutex`, mutex);
-    makerSend(maker.makerAddress, maker.chainId, i);
+    makerSend(maker.makerAddress, maker.chainId);
   }
 }

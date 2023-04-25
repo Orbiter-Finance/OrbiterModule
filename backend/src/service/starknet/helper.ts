@@ -39,6 +39,7 @@ export function parseInputAmountToUint256(
 export class StarknetHelp {
   private cache: Keyv
   private cacheTx: Keyv
+  private cacheTxClear: Keyv
   public account: Account
   private mutex = new Mutex();
   constructor(
@@ -58,6 +59,15 @@ export class StarknetHelp {
     this.cacheTx = new Keyv({
       store: new KeyvFile({
         filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
+        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        encode: JSON.stringify, // serialize function
+        decode: JSON.parse, // deserialize function
+      }),
+    })
+    this.cacheTxClear = new Keyv({
+      store: new KeyvFile({
+        filename: `logs/starknetTx/${this.address.toLowerCase()}_clear`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
         writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
@@ -87,6 +97,10 @@ export class StarknetHelp {
       const leftTaskList = allTaskList.filter(task => {
         return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
+      const clearTaskList = allTaskList.filter(task => {
+        return taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+      });
+      await this.cacheTxClear.set(cacheKey, clearTaskList);
       await this.cacheTx.set(cacheKey, leftTaskList);
     });
   }
@@ -225,7 +239,7 @@ export class StarknetHelp {
     }
   }
 
-    async signMutiTransfer(paramsList: {
+    async signMultiTransfer(paramsList: {
         tokenAddress: string
         recipient: string
         amount: string
