@@ -183,35 +183,41 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             return;
           }
           // TODO
+          // Execute several transactions at once
+          const execTaskCount = 3;
+          // Maximum number of transactions to be stacked in the memory pool
           const maxTaskCount: number = 5;
           const expireTime: number = 5 * 60 * 1000;
-          const maxTryCount: number = 5;
+          const maxTryCount: number = 2;
           // Balance alarm multiplier
           const alarmMulti = 3;
           // Exceeded limit, clear task
           const clearTaskList = [];
           // Meet the limit, execute the task
           const execTaskList = [];
-          // error message
+          // Error message
           const errorMsgList: string[] = [];
           for (let i = 0; i < taskList.length; i++) {
             const task = taskList[i];
             // max length limit
             if (i < taskList.length - maxTaskCount) {
               clearTaskList.push(task);
-              errorMsgList.push(`starknet_max_count_limit ${taskList.length}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+              errorMsgList.push(`starknet_max_count_limit ${taskList.length} > ${maxTaskCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             // expire time limit
             if (task.createTime < new Date().valueOf() - expireTime) {
               clearTaskList.push(task);
-              errorMsgList.push(`starknet_expire_time_limit ${new Date(task.createTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+              const formatDate = (timestamp: number) => {
+                return new Date(timestamp).toDateString() + " " + new Date(timestamp).toLocaleTimeString();
+              };
+              errorMsgList.push(`starknet_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             // retry count limit
             if (task.count > maxTryCount) {
               clearTaskList.push(task);
-              errorMsgList.push(`starknet_retry_count_limit ${task.count}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+              errorMsgList.push(`starknet_retry_count_limit ${task.count} > ${maxTryCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             execTaskList.push(task);
@@ -229,8 +235,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           }
 
           const queueList: any[] = [];
-          // TODO
-          for (let i = 0; i < Math.min(execTaskList.length, 3); i++) {
+          for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
             const task = execTaskList[i];
             // Database filtering
             const makerNodeCount: number = await repositoryMakerNode().count(<any>{
