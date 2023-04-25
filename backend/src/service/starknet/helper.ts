@@ -98,7 +98,7 @@ export class StarknetHelp {
         return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
       const clearTaskList = allTaskList.filter(task => {
-        return taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+        return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
       await this.cacheTxClear.set(cacheKey, clearTaskList);
       await this.cacheTx.set(cacheKey, leftTaskList);

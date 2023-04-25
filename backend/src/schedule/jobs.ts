@@ -180,7 +180,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
         accessLogger.info(`${makerAddress}_${chainId} is lock, waiting for the end of the previous transaction`);
       }
       await mutex.runExclusive(async () => {
-        accessLogger.info(`====================== ${makerAddress} batch tx cron start ======================`);
+        accessLogger.info(`================== ${makerAddress} batch tx cron start ==================`);
         if (Number(chainId) === 4 || Number(chainId) === 44) {
           if (starknetLockMap[makerAddress.toLowerCase()]) {
             accessLogger.info('Starknet is lock, waiting for the end of the previous transaction');
