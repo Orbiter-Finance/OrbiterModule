@@ -315,6 +315,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             await starknet.pushTask(queueList);
             await rollback(error, nonce);
             await sleep(1000 * 2);
+            setStarknetLock(makerAddress, false);
             await sendTxConsumeHandle({
               code: 1,
               txid: 'starknet transfer error: ' + error.message,
