@@ -10,7 +10,7 @@ import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
 import { makerConfig } from "../config";
 import { equals } from "orbiter-chaincore/src/utils/core";
-import { setStarknetLock, StarknetHelp, starknetLock } from "../service/starknet/helper";
+import { setStarknetLock, StarknetHelp, starknetLockMap } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
 import { sleep } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
@@ -159,6 +159,14 @@ let balanceWaringTime = 0;
 // TODO
 // Alarm interval duration(second)
 const waringInterval = 180;
+// Execute several transactions at once
+const execTaskCount = 3;
+// Maximum number of transactions to be stacked in the memory pool
+const maxTaskCount: number = 5;
+const expireTime: number = 5 * 60 * 1000;
+const maxTryCount: number = 2;
+// Balance alarm multiplier
+const alarmMulti = 3;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
@@ -168,9 +176,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
         accessLogger.info(`${makerAddress}_${chainId} is lock, waiting for the end of the previous transaction`);
       }
       await mutex.runExclusive(async () => {
-        accessLogger.info(`=========== batch tx cron start ===========`);
+        accessLogger.info(`====================== ${makerAddress} batch tx cron start ======================`);
         if (Number(chainId) === 4 || Number(chainId) === 44) {
-          if (starknetLock) {
+          if (starknetLockMap[makerAddress.toLowerCase()]) {
             accessLogger.info('Starknet is lock, waiting for the end of the previous transaction');
             return;
           }
@@ -182,15 +190,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             accessLogger.info('There are no consumable tasks in the starknet queue');
             return;
           }
-          // TODO
-          // Execute several transactions at once
-          const execTaskCount = 3;
-          // Maximum number of transactions to be stacked in the memory pool
-          const maxTaskCount: number = 5;
-          const expireTime: number = 5 * 60 * 1000;
-          const maxTryCount: number = 2;
-          // Balance alarm multiplier
-          const alarmMulti = 3;
           // Exceeded limit, clear task
           const clearTaskList = [];
           // Meet the limit, execute the task
@@ -277,6 +276,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
               return;
             } else if (needPay.multipliedBy(alarmMulti).gt(makerBalance)) {
               accessLogger.warn(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`);
+              // TODO sms
               telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`).catch(error => {
                 accessLogger.error('send telegram message error', error);
               });
@@ -294,7 +294,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 return;
             }
           try {
-            setStarknetLock(true);
+            setStarknetLock(makerAddress, true);
             accessLogger.info('starknet_sql_nonce =', nonce);
             accessLogger.info('starknet_consume_count =', queueList.length);
             const { hash }: any = await starknet.signMutiTransfer(signParamList, nonce);

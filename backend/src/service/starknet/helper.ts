@@ -16,10 +16,10 @@ import { Mutex } from "async-mutex";
 
 const accessLogger = getLoggerService('4')
 
-export let starknetLock = false;
+export let starknetLockMap = {};
 
-export function setStarknetLock(status: boolean) {
-  starknetLock = status;
+export function setStarknetLock(makerAddress: string, status: boolean) {
+  starknetLockMap[makerAddress.toLowerCase()] = status;
 }
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'

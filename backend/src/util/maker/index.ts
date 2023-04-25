@@ -324,7 +324,7 @@ function confirmToLPTransaction(
 export async function confirmToSNTransaction(
   txID: string,
   chainId: number,
-  paramsList: { transactionID: string }[],
+  paramsList: { makerAddress: string, transactionID: string }[],
   rollback: any
 ) {
   try {
@@ -354,7 +354,7 @@ export async function confirmToSNTransaction(
       // ) {
       //   return true
       // }
-      setStarknetLock(false)
+      setStarknetLock(paramsList[0].makerAddress, false);
       return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
@@ -373,7 +373,7 @@ export async function confirmToSNTransaction(
             { state: 3 }
         );
       }
-      setStarknetLock(false);
+      setStarknetLock(paramsList[0].makerAddress, false);
       return true
     }
     await sleep(1000 * 30)
@@ -384,7 +384,7 @@ export async function confirmToSNTransaction(
       rollback
     )
   } catch (error) {
-    setStarknetLock(false);
+    setStarknetLock(paramsList[0].makerAddress, false);
     getLoggerService(String(chainId)).error(
         'confirmToSNTransaction error',
         error.message
@@ -794,7 +794,7 @@ export async function sendTxConsumeHandle(result: any) {
       confirmToSNTransaction(
         txID,
         toChainID,
-        [{ transactionID }],
+          [{ makerAddress, transactionID }],
         response.rollback
       )
     } else if (toChainID === 8 || toChainID === 88) {
