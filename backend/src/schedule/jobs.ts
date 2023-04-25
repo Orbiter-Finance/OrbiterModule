@@ -169,7 +169,7 @@ const maxTryCount: number = 2;
 const alarmMulti = 3;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
-  const makerSend = (makerAddress, chainId) => {
+  const makerSend = (makerAddress, chainId, cronId) => {
     const callback = async () => {
       const mutex = mutexMap.get(`${makerAddress}_${chainId}_mutex`);
       if (await mutex.isLocked()) {
@@ -328,21 +328,21 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 
     // TODO
     // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism('0 */2 * * * *', callback, batchTxSend.name).schedule();
+    new MJobPessimism(`${cronId * 10} */2 * * * *`, callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
-  // const makerAddressList = Array.from(new Set(starknetMakerList.map(item => item.sender)));
-  const makerDataList: { makerAddress: string, chainId: string }[] = [];
+  const makerDataList: { makerAddress: string, chainId: string, symbol: string }[] = [];
   for (const data of chainMakerList) {
-    if (makerDataList.find(item => item.chainId === data.toChain.id)) {
+    if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
       continue;
     }
-    makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id });
+    makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol });
   }
-  for (const maker of makerDataList) {
+  for (let i = 0; i < makerDataList.length; i++) {
+    const maker = makerDataList[i];
     const mutex = new Mutex();
     mutexMap.set(`${maker.makerAddress}_${maker.chainId}_mutex`, mutex);
-    makerSend(maker.makerAddress, maker.chainId);
+    makerSend(maker.makerAddress, maker.chainId, i);
   }
 }
