@@ -16,7 +16,7 @@ import { sleep } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
 import { In } from "typeorm";
 import { Mutex } from "async-mutex";
-import { getTokenBalance } from "../service/maker_wealth";
+import { getStarknetTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
 import { telegramBot } from "../sms/telegram";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
@@ -158,7 +158,7 @@ let limitWaringTime = 0;
 let balanceWaringTime = 0;
 // TODO
 // Alarm interval duration(second)
-const waringInterval = 30;
+const waringInterval = 180;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
@@ -186,49 +186,41 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           const maxTaskCount: number = 5;
           const expireTime: number = 5 * 60 * 1000;
           const maxTryCount: number = 5;
+          // Balance alarm multiplier
+          const alarmMulti = 3;
           // Exceeded limit, clear task
           const clearTaskList = [];
           // Meet the limit, execute the task
           const execTaskList = [];
+          // error message
+          const errorMsgList: string[] = [];
           for (let i = 0; i < taskList.length; i++) {
             const task = taskList[i];
             // max length limit
             if (i < taskList.length - maxTaskCount) {
               clearTaskList.push(task);
-              accessLogger.error(`starknet_max_count_limit ${taskList.length}`);
-              // TODO test
-              telegramBot.sendMessage(`starknet_max_count_limit ${taskList.length}, value: ${task.signParam.amount}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-              })
+              errorMsgList.push(`starknet_max_count_limit ${taskList.length}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             // expire time limit
             if (task.createTime < new Date().valueOf() - expireTime) {
               clearTaskList.push(task);
-              accessLogger.error(`starknet_expire_time_limit ${new Date(task.createTime)} ${task}`);
-              // TODO test
-              telegramBot.sendMessage(`starknet_expire_time_limit ${new Date(task.createTime)}, value: ${task.signParam.amount}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-              })
+              errorMsgList.push(`starknet_expire_time_limit ${new Date(task.createTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             // retry count limit
             if (task.count > maxTryCount) {
               clearTaskList.push(task);
-              accessLogger.error(`starknet_retry_count_limit ${task.count}`);
-              // TODO test
-              telegramBot.sendMessage(`starknet_retry_count_limit ${task.count}, value: ${task.signParam.amount}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-              })
+              errorMsgList.push(`starknet_retry_count_limit ${task.count}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
               continue;
             }
             execTaskList.push(task);
           }
           if (clearTaskList.length) {
-            accessLogger.error(`starknet_task_clear ${clearTaskList.length}`);
+            accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
             if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
               // TODO sms
-              telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}`).catch(error => {
+              telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}, ${errorMsgList[0]}`).catch(error => {
                 accessLogger.error('send telegram message error', error);
               });
               limitWaringTime = new Date().valueOf();
@@ -265,25 +257,24 @@ export async function batchTxSend(chainIdList = [4, 44]) {
               return;
             }
             // Maker balance judgment
-            const makerBalance: string | number = (await getTokenBalance(
-                makerAddress,
-                chainId,
-                equals(chainId, 44) ? 'starknet_test' : 'starknet',
-                tokenAddress,
-                market.toChain.symbol
-            )) || 0;
+            const makerBalance: BigNumber = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
             const needPay: BigNumber = tokenPay[tokenAddress];
             // Insufficient Balance
-            if (needPay.comparedTo(makerBalance)) {
-              accessLogger.error(`${makerAddress} maker starknet insufficient Balance`);
+            if (needPay.gt(makerBalance)) {
+              accessLogger.error(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`);
               if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
                 // TODO sms
-                telegramBot.sendMessage(`${makerAddress} maker starknet insufficient Balance, ${needPay} > ${makerBalance}`).catch(error => {
+                telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`).catch(error => {
                   accessLogger.error('send telegram message error', error);
                 });
                 balanceWaringTime = new Date().valueOf();
               }
               return;
+            } else if (needPay.multipliedBy(alarmMulti).gt(makerBalance)) {
+              accessLogger.warn(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`);
+              telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+              });
             }
           }
 

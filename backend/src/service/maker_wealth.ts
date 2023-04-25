@@ -408,3 +408,25 @@ export async function saveWealths(wealths: WealthsChain[]) {
     }
   }
 }
+
+import {
+  Contract,
+  SequencerProvider,
+} from "starknet";
+import StarknetTokenABI from "./starknet/Starknet_Token.json";
+
+export async function getStarknetTokenBalance(chainId: number, address: string, tokenAddress: string): Promise<BigNumber> {
+  const rpcFirst = equals(chainId, 44) ? makerConfig.starknet_test.api.endPoint : makerConfig.starknet.api.endPoint;
+  const provider = new SequencerProvider({
+    baseUrl: rpcFirst,
+    feederGatewayUrl: "feeder_gateway",
+    gatewayUrl: "gateway",
+  });
+  const contractInstance = new Contract(
+      <any>StarknetTokenABI,
+      tokenAddress,
+      provider,
+  );
+  const balanceResult = (await contractInstance.balanceOf(address)).balance;
+  return new BigNumber(balanceResult.low.toString());
+}
