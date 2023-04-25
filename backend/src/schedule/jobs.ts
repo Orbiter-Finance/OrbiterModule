@@ -172,6 +172,10 @@ export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
       const mutex = mutexMap.get(`${makerAddress}_${chainId}_mutex`);
+      if(!mutex) {
+        accessLogger.error(`${makerAddress}_${chainId} mutex instance does not exist`);
+        return
+      }
       if (await mutex.isLocked()) {
         accessLogger.info(`${makerAddress}_${chainId} is lock, waiting for the end of the previous transaction`);
       }
@@ -191,9 +195,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             return;
           }
           // Exceeded limit, clear task
-          const clearTaskList = [];
+          const clearTaskList: any[] = [];
           // Meet the limit, execute the task
-          const execTaskList = [];
+          const execTaskList: any[]  = [];
           // Error message
           const errorMsgList: string[] = [];
           for (let i = 0; i < taskList.length; i++) {
