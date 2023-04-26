@@ -90,7 +90,7 @@ export class StarknetHelp {
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
   }
-  async clearTask(taskList: any[]) {
+  async clearTask(taskList: any[], reason: string) {
     await this.mutex.runExclusive(async () => {
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
@@ -100,11 +100,25 @@ export class StarknetHelp {
       const clearTaskList = allTaskList.filter(task => {
         return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
+      console.log('allTask', allTaskList.map(item => item.params.amountToSend),
+          'leftTask', leftTaskList.map(item => item.params.amountToSend),
+          'clearTask', clearTaskList.map(item => item.params.amountToSend));
       await this.cacheTx.set(cacheKey, leftTaskList);
       const inputCacheClear = async () => {
         if (clearTaskList.length) {
-          const clearTaskList: any[] = await this.cacheTxClear.get(cacheKey) || [];
-          await this.cacheTxClear.set(cacheKey, clearTaskList);
+          const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
+          cacheList.push({
+            list: clearTaskList.map(item => {
+              return {
+                transactionID: item.params.transactionID,
+                ownerAddress: item.params.ownerAddress,
+                fromChainID: item.params.fromChainID,
+                symbol: item.params.symbol,
+                amountToSend: item.params.amountToSend
+              };
+            }), reason
+          });
+          await this.cacheTxClear.set(cacheKey, cacheList);
         }
       };
       inputCacheClear();
