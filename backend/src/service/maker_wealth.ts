@@ -166,11 +166,16 @@ async function getTokenBalance(
       case 519:
         // const balanceService =
         // value = await balanceService.getBalance(makerAddress, tokenAddress);
-        if (!balanceService[String(chainId)]) {
-          balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
+        try {
+          if (!balanceService[String(chainId)]) {
+            balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
+          }
+          const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
+          return result && result.balance;
+        } catch(error){
+          console.error(error);
+          return '0';
         }
-        const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
-        return result && result.balance;
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
