@@ -13,6 +13,7 @@ import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
 import { Mutex } from "async-mutex";
+import { telegramBot } from "../../sms/telegram";
 
 const accessLogger = getLoggerService('4')
 
@@ -108,17 +109,20 @@ export class StarknetHelp {
       const inputCacheClear = async () => {
         if (clearTaskList.length) {
           const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
-          cacheList.push({
-            list: clearTaskList.map(item => {
-              return {
-                transactionID: item.params.transactionID,
-                ownerAddress: item.params.ownerAddress,
-                fromChainID: item.params.fromChainID,
-                symbol: item.params.symbol,
-                amountToSend: item.params.amountToSend
-              };
-            }), reason
-          });
+            const clearData: any = {
+                list: clearTaskList.map(item => {
+                    return {
+                        address: item.params.ownerAddress,
+                        chainId: item.params.fromChainID,
+                        symbol: item.params.symbol,
+                        amount: item.params.amountToSend
+                    };
+                }), reason
+            };
+          cacheList.push(clearData);
+            telegramBot.sendMessage(`starknet_task_clear ${JSON.stringify(clearData)}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+            });
           await this.cacheTxClear.set(cacheKey, cacheList);
         }
       };
