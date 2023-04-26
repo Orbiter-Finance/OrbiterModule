@@ -41,7 +41,7 @@ export class StarknetHelp {
   private cacheTx: Keyv
   private cacheTxClear: Keyv
   public account: Account
-  private isTaskLock = false
+  public static isTaskLock = false
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -91,13 +91,13 @@ export class StarknetHelp {
     return Number(await this.account.getNonce())
   }
   async clearTask(taskList: any[], reason: string) {
-      if (this.isTaskLock) {
+      if (StarknetHelp.isTaskLock) {
           accessLogger.info('Task is lock, wait for one second');
           await sleep(1000);
           await this.clearTask(taskList, reason);
           return;
       }
-      this.isTaskLock = true;
+      StarknetHelp.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
       const leftTaskList = allTaskList.filter(task => {
@@ -129,16 +129,16 @@ export class StarknetHelp {
           });
           await this.cacheTxClear.set(cacheKey, cacheList);
       }
-      this.isTaskLock = false;
+      StarknetHelp.isTaskLock = false;
   }
   async pushTask(taskList: any[]) {
-      if (this.isTaskLock) {
+      if (StarknetHelp.isTaskLock) {
           accessLogger.info('Task is lock, wait for one second');
           await sleep(1000);
           await this.pushTask(taskList);
           return;
       }
-      this.isTaskLock = true;
+      StarknetHelp.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const cacheList = await this.cacheTx.get(cacheKey) || [];
       const newList: any[] = [];
@@ -151,7 +151,7 @@ export class StarknetHelp {
           }
       }
       await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
-      this.isTaskLock = false;
+      StarknetHelp.isTaskLock = false;
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
