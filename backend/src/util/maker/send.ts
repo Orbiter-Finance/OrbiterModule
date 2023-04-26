@@ -120,7 +120,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
     }
   }
 }
-const mutexMap = new Map<string, Mutex>();
+const starknetMutex = new Mutex();
 // SendQueue
 const sendQueue = new SendQueue()
 export async function sendConsumer(value: any) {
@@ -295,21 +295,11 @@ export async function sendConsumer(value: any) {
   if (chainID == 4 || chainID == 44) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-      const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-      const mutex = new Mutex();
-      const key = `${makerAddress.toLowerCase()}_mutex`;
-      if (!mutexMap.get(key)) {
-        mutexMap.set(key, mutex);
-      }
-      const starknetMutex = mutexMap.get(key);
-      if (!starknetMutex) {
-          accessLogger.error(`Starknet mutex get fail`);
-          return
-      }
       if(starknetMutex.isLocked()) {
         accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
       }
       await starknetMutex.runExclusive(async () => {
+        const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
         const queueList = await starknet.getTask();
         if (queueList.find(item => item.params?.transactionID === transactionID)) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
