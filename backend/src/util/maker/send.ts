@@ -295,7 +295,11 @@ export async function sendConsumer(value: any) {
   if (chainID == 4 || chainID == 44) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-      if(starknetMutex.isLocked()) {
+      if(!starknetMutex) {
+          accessLogger.error(`Starknet mutex init fail`);
+          return
+      }
+      if(await starknetMutex.isLocked()) {
         accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
       }
       await starknetMutex.runExclusive(async () => {
