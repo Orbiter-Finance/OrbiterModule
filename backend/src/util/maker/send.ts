@@ -294,16 +294,16 @@ export async function sendConsumer(value: any) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
       const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-      if (StarknetHelp.isTaskLock) {
-        accessLogger.info('Task is lock, wait for one second');
+      if (StarknetHelp.isProcessLock) {
+        accessLogger.info('Starknet task is lock, wait for one second');
         await sleep(1000);
         return await sendConsumer(value);
       }
-      StarknetHelp.isTaskLock = true;
+      StarknetHelp.isProcessLock = true;
       const queueList = await starknet.getTask();
       if (queueList.find(item => item.params?.transactionID === transactionID)) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
-          StarknetHelp.isTaskLock = false;
+          StarknetHelp.isProcessLock = false;
           return {
               code: 1,
               error: 'starknet transfer error',
@@ -324,7 +324,7 @@ export async function sendConsumer(value: any) {
       }
       accessLogger.info('result_nonde =', result_nonce);
       accessLogger.info(`starknet_queue_count = ${queueList.length}`);
-      StarknetHelp.isTaskLock = false;
+      StarknetHelp.isProcessLock = false;
       return {
         code: 2,
         params: value

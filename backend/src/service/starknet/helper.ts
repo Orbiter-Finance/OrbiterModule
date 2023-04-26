@@ -41,6 +41,7 @@ export class StarknetHelp {
   private cacheTx: Keyv
   private cacheTxClear: Keyv
   public account: Account
+  public static isProcessLock = false
   public static isTaskLock = false
   constructor(
     public readonly network: starknetNetwork,
