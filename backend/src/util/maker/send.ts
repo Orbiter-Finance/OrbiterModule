@@ -302,7 +302,10 @@ export async function sendConsumer(value: any) {
         mutexMap.set(key, mutex);
       }
       const starknetMutex = mutexMap.get(key);
-
+      if (!starknetMutex) {
+          accessLogger.error(`Starknet mutex get fail`);
+          return
+      }
       if(starknetMutex.isLocked()) {
         accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
       }
