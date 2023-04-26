@@ -29,6 +29,7 @@ import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, transfers } from './new_maker'
+import { Mutex } from "async-mutex";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -119,6 +120,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
     }
   }
 }
+const mutexMap = new Map<string, Mutex>();
 // SendQueue
 const sendQueue = new SendQueue()
 export async function sendConsumer(value: any) {
@@ -294,37 +296,41 @@ export async function sendConsumer(value: any) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
       const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-      if (StarknetHelp.isProcessLock) {
-        accessLogger.info('Starknet task is lock, wait for one second');
-        await sleep(1000);
-        return await sendConsumer(value);
+      const mutex = new Mutex();
+      const key = `${makerAddress.toLowerCase()}_mutex`;
+      if (!mutexMap.get(key)) {
+        mutexMap.set(key, mutex);
       }
-      StarknetHelp.isProcessLock = true;
-      const queueList = await starknet.getTask();
-      if (queueList.find(item => item.params?.transactionID === transactionID)) {
+      const starknetMutex = mutexMap.get(key);
+
+      if(starknetMutex.isLocked()) {
+        accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
+      }
+      await starknetMutex.runExclusive(async () => {
+        const queueList = await starknet.getTask();
+        if (queueList.find(item => item.params?.transactionID === transactionID)) {
           accessLogger.info('TransactionID was exist: ' + transactionID);
-          StarknetHelp.isProcessLock = false;
           return {
-              code: 1,
-              error: 'starknet transfer error',
-              params: value
+            code: 1,
+            error: 'starknet transfer error',
+            params: value
           };
-      } else {
+        } else {
           const queue = {
-              createTime: new Date().valueOf(),
-              params: value,
-              signParam: {
-                  recipient: toAddress,
-                  tokenAddress,
-                  amount: String(amountToSend)
-              }
+            createTime: new Date().valueOf(),
+            params: value,
+            signParam: {
+              recipient: toAddress,
+              tokenAddress,
+              amount: String(amountToSend)
+            }
           };
           queueList.push(queue);
           await starknet.pushTask([queue]);
-      }
-      accessLogger.info('result_nonde =', result_nonce);
-      accessLogger.info(`starknet_queue_count = ${queueList.length}`);
-      StarknetHelp.isProcessLock = false;
+        }
+        accessLogger.info('result_nonde =', result_nonce);
+        accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+      });
       return {
         code: 2,
         params: value

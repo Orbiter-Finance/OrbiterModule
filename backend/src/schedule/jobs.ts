@@ -15,7 +15,6 @@ import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
 import { sleep } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
 import { In } from "typeorm";
-import { Mutex } from "async-mutex";
 import { getStarknetTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
 import { telegramBot } from "../sms/telegram";
@@ -153,7 +152,6 @@ export function jobBalanceAlarm() {
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
 
-const mutexMap = new Map<string, Mutex>();
 let limitWaringTime = 0;
 let balanceWaringTime = 0;
 // TODO
@@ -171,174 +169,164 @@ const alarmMulti = 3;
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
-      const mutex = mutexMap.get(`${makerAddress}_${chainId}_mutex`);
-      if(!mutex) {
-        accessLogger.error(`${makerAddress}_${chainId} mutex instance does not exist`);
-        return
-      }
-      if (await mutex.isLocked()) {
-        accessLogger.info(`${makerAddress}_${chainId} is lock, waiting for the end of the previous transaction`);
-      }
-      await mutex.runExclusive(async () => {
         accessLogger.info(`================== ${makerAddress} batch tx cron start ==================`);
         if (Number(chainId) === 4 || Number(chainId) === 44) {
-          if (starknetLockMap[makerAddress.toLowerCase()]) {
-            accessLogger.info('Starknet is lock, waiting for the end of the previous transaction');
-            return;
-          }
-          const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
-          const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-          const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-          const taskList = await starknet.getTask();
-          if (!taskList || !taskList.length) {
-            accessLogger.info('There are no consumable tasks in the starknet queue');
-            return;
-          }
-          // Exceeded limit, clear task
-          const clearTaskList: any[] = [];
-          // Meet the limit, execute the task
-          const execTaskList: any[]  = [];
-          // Error message
-          const errorMsgList: string[] = [];
-          for (let i = 0; i < taskList.length; i++) {
-            const task = taskList[i];
-            // max length limit
-            if (i < taskList.length - maxTaskCount) {
-              clearTaskList.push(task);
-              errorMsgList.push(`starknet_max_count_limit ${taskList.length} > ${maxTaskCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
-              continue;
+            if (starknetLockMap[makerAddress.toLowerCase()]) {
+                accessLogger.info('Starknet is lock, waiting for the end of the previous transaction');
+                return;
             }
-            // expire time limit
-            if (task.createTime < new Date().valueOf() - expireTime) {
-              clearTaskList.push(task);
-              const formatDate = (timestamp: number) => {
-                return new Date(timestamp).toDateString() + " " + new Date(timestamp).toLocaleTimeString();
-              };
-              errorMsgList.push(`starknet_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
-              continue;
+            const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+            const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
+            const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+            const taskList = await starknet.getTask();
+            if (!taskList || !taskList.length) {
+                accessLogger.info('There are no consumable tasks in the starknet queue');
+                return;
             }
-            // retry count limit
-            if (task.count > maxTryCount) {
-              clearTaskList.push(task);
-              errorMsgList.push(`starknet_retry_count_limit ${task.count} > ${maxTryCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
-              continue;
+            // Exceeded limit, clear task
+            const clearTaskList: any[] = [];
+            // Meet the limit, execute the task
+            const execTaskList: any[]  = [];
+            // Error message
+            const errorMsgList: string[] = [];
+            for (let i = 0; i < taskList.length; i++) {
+                const task = taskList[i];
+                // max length limit
+                if (i < taskList.length - maxTaskCount) {
+                    clearTaskList.push(task);
+                    errorMsgList.push(`starknet_max_count_limit ${taskList.length} > ${maxTaskCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                    continue;
+                }
+                // expire time limit
+                if (task.createTime < new Date().valueOf() - expireTime) {
+                    clearTaskList.push(task);
+                    const formatDate = (timestamp: number) => {
+                        return new Date(timestamp).toDateString() + " " + new Date(timestamp).toLocaleTimeString();
+                    };
+                    errorMsgList.push(`starknet_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                    continue;
+                }
+                // retry count limit
+                if (task.count > maxTryCount) {
+                    clearTaskList.push(task);
+                    errorMsgList.push(`starknet_retry_count_limit ${task.count} > ${maxTryCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                    continue;
+                }
+                execTaskList.push(task);
             }
-            execTaskList.push(task);
-          }
-          if (clearTaskList.length) {
-            accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
-            if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
-              // TODO sms
-              telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}, ${errorMsgList[0]}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-              });
-              limitWaringTime = new Date().valueOf();
+            if (clearTaskList.length) {
+                accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
+                if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
+                    // TODO sms
+                    telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}, ${errorMsgList[0]}`).catch(error => {
+                        accessLogger.error('send telegram message error', error);
+                    });
+                    limitWaringTime = new Date().valueOf();
+                }
+                await starknet.clearTask(clearTaskList,'Exceeded limit');
             }
-            await starknet.clearTask(clearTaskList,'Exceeded limit');
-          }
 
-          const queueList: any[] = [];
-          for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
-            const task = execTaskList[i];
-            // Database filtering
-            const makerNodeCount: number = await repositoryMakerNode().count(<any>{
-              transactionID: task.params?.transactionID, state: In([1, 20])
-            });
-            if (!makerNodeCount) {
-              accessLogger.error(`Transaction cannot be sent ${JSON.stringify(task)}`);
-              await starknet.clearTask([task], 'Database tx cannot be sent');
-              continue;
-            }
-            queueList.push(JSON.parse(JSON.stringify(task)));
-          }
-          const tokenPay: { [tokenAddress: string]: BigNumber } = {};
-          for (const queue of queueList) {
-            tokenPay[queue.signParam.tokenAddress] = new BigNumber(tokenPay[queue.signParam.tokenAddress] || 0).plus(queue.signParam.amount);
-          }
-          const makerList = await getNewMarketList();
-          for (const tokenAddress in tokenPay) {
-            const market = makerList.find(item => equals(item.toChain.id, chainId) && equals(item.toChain.tokenAddress, tokenAddress));
-            if (!market) {
-              accessLogger.error(
-                  `Transaction pair not found market: - ${chainId} ${tokenAddress}`
-              );
-              return;
-            }
-            // Maker balance judgment
-            const makerBalance: BigNumber = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
-            const needPay: BigNumber = tokenPay[tokenAddress];
-            // Insufficient Balance
-            if (needPay.gt(makerBalance)) {
-              accessLogger.error(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`);
-              if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
-                // TODO sms
-                telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`).catch(error => {
-                  accessLogger.error('send telegram message error', error);
+            const queueList: any[] = [];
+            for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
+                const task = execTaskList[i];
+                // Database filtering
+                const makerNodeCount: number = await repositoryMakerNode().count(<any>{
+                    transactionID: task.params?.transactionID, state: In([1, 20])
                 });
-                balanceWaringTime = new Date().valueOf();
-              }
-              return;
-            } else if (needPay.multipliedBy(alarmMulti).gt(makerBalance)) {
-              accessLogger.warn(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`);
-              // TODO sms
-              telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-              });
+                if (!makerNodeCount) {
+                    accessLogger.error(`Transaction cannot be sent ${JSON.stringify(task)}`);
+                    await starknet.clearTask([task], 'Database tx cannot be sent');
+                    continue;
+                }
+                queueList.push(JSON.parse(JSON.stringify(task)));
             }
-          }
+            const tokenPay: { [tokenAddress: string]: BigNumber } = {};
+            for (const queue of queueList) {
+                tokenPay[queue.signParam.tokenAddress] = new BigNumber(tokenPay[queue.signParam.tokenAddress] || 0).plus(queue.signParam.amount);
+            }
+            const makerList = await getNewMarketList();
+            for (const tokenAddress in tokenPay) {
+                const market = makerList.find(item => equals(item.toChain.id, chainId) && equals(item.toChain.tokenAddress, tokenAddress));
+                if (!market) {
+                    accessLogger.error(
+                        `Transaction pair not found market: - ${chainId} ${tokenAddress}`
+                    );
+                    return;
+                }
+                // Maker balance judgment
+                const makerBalance: BigNumber = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
+                const needPay: BigNumber = tokenPay[tokenAddress];
+                // Insufficient Balance
+                if (needPay.gt(makerBalance)) {
+                    accessLogger.error(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`);
+                    if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
+                        // TODO sms
+                        telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`).catch(error => {
+                            accessLogger.error('send telegram message error', error);
+                        });
+                        balanceWaringTime = new Date().valueOf();
+                    }
+                    return;
+                } else if (needPay.multipliedBy(alarmMulti).gt(makerBalance)) {
+                    accessLogger.warn(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`);
+                    // TODO sms
+                    telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`).catch(error => {
+                        accessLogger.error('send telegram message error', error);
+                    });
+                }
+            }
 
-          const { nonce, rollback } = await starknet.takeOutNonce();
-          // signParam: {recipient: toAddress,tokenAddress,amount: String(amountToSend)}
-          const signParamList = queueList.map(item => item.signParam);
-          // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
-          const paramsList = queueList.map(item => item.params);
-          if (!queueList.length) {
-              accessLogger.info('There are no consumable tasks in the starknet queue');
-              return;
-          }
-          try {
-            setStarknetLock(makerAddress, true);
-            await starknet.clearTask(queueList,'Send tx');
-            accessLogger.info('starknet_sql_nonce =', nonce);
-            accessLogger.info('starknet_consume_count =', queueList.length);
-              let hash = '';
-              if (signParamList.length === 1) {
-                  accessLogger.info('starknet sent one ====');
-                  const res: any = await starknet.signTransfer({ ...signParamList[0], nonce });
-                  hash = res.hash;
-              } else {
-                  accessLogger.info('starknet sent multi ====');
-                  const res: any = await starknet.signMultiTransfer(signParamList, nonce);
-                  hash = res.hash;
-              }
-            // const { hash }: any = await starknet.signMultiTransfer(signParamList, nonce);
-            // TODO test
-            telegramBot.sendMessage(`https://testnet.starkscan.co/tx/${hash}`).catch(error => {
-              accessLogger.error('send telegram message error', error);
-            });
-            await sleep(1000 * 10);
-            await sendTxConsumeHandle({
-              code: 3,
-              txid: hash,
-              rollback,
-              params: paramsList[0],
-              paramsList
-            });
-          } catch (error) {
-            accessLogger.info(`starknet transfer restore: ${queueList.length}`);
-            await starknet.pushTask(queueList);
-            await rollback(error, nonce);
-            await sleep(1000 * 2);
-            setStarknetLock(makerAddress, false);
-            await sendTxConsumeHandle({
-              code: 1,
-              txid: 'starknet transfer error: ' + error.message,
-              result_nonce: nonce,
-              params: paramsList[0]
-            });
-          }
+            const { nonce, rollback } = await starknet.takeOutNonce();
+            // signParam: {recipient: toAddress,tokenAddress,amount: String(amountToSend)}
+            const signParamList = queueList.map(item => item.signParam);
+            // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
+            const paramsList = queueList.map(item => item.params);
+            if (!queueList.length) {
+                accessLogger.info('There are no consumable tasks in the starknet queue');
+                return;
+            }
+            try {
+                setStarknetLock(makerAddress, true);
+                await starknet.clearTask(queueList,'Send tx');
+                accessLogger.info('starknet_sql_nonce =', nonce);
+                accessLogger.info('starknet_consume_count =', queueList.length);
+                let hash = '';
+                if (signParamList.length === 1) {
+                    accessLogger.info('starknet sent one ====');
+                    const res: any = await starknet.signTransfer({ ...signParamList[0], nonce });
+                    hash = res.hash;
+                } else {
+                    accessLogger.info('starknet sent multi ====');
+                    const res: any = await starknet.signMultiTransfer(signParamList, nonce);
+                    hash = res.hash;
+                }
+                // const { hash }: any = await starknet.signMultiTransfer(signParamList, nonce);
+                // TODO test
+                telegramBot.sendMessage(`https://testnet.starkscan.co/tx/${hash}`).catch(error => {
+                    accessLogger.error('send telegram message error', error);
+                });
+                await sleep(1000 * 10);
+                await sendTxConsumeHandle({
+                    code: 3,
+                    txid: hash,
+                    rollback,
+                    params: paramsList[0],
+                    paramsList
+                });
+            } catch (error) {
+                accessLogger.info(`starknet transfer restore: ${queueList.length}`);
+                await starknet.pushTask(queueList);
+                await rollback(error, nonce);
+                await sleep(1000 * 2);
+                setStarknetLock(makerAddress, false);
+                await sendTxConsumeHandle({
+                    code: 1,
+                    txid: 'starknet transfer error: ' + error.message,
+                    result_nonce: nonce,
+                    params: paramsList[0]
+                });
+            }
         }
-      });
     };
 
     // TODO
@@ -358,8 +346,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
   await sleep(5000);
   for (let i = 0; i < makerDataList.length; i++) {
     const maker = makerDataList[i];
-    const mutex = new Mutex();
-    mutexMap.set(`${maker.makerAddress}_${maker.chainId}_mutex`, mutex);
     makerSend(maker.makerAddress, maker.chainId);
   }
 }
