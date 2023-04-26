@@ -302,36 +302,38 @@ export async function sendConsumer(value: any) {
       if(await starknetMutex.isLocked()) {
         accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
       }
-      await starknetMutex.runExclusive(async () => {
-        const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-        const queueList = await starknet.getTask();
-        if (queueList.find(item => item.params?.transactionID === transactionID)) {
-          accessLogger.info('TransactionID was exist: ' + transactionID);
-          return {
-            code: 1,
-            error: 'starknet transfer error',
-            params: value
-          };
-        } else {
-          const queue = {
-            createTime: new Date().valueOf(),
-            params: value,
-            signParam: {
-              recipient: toAddress,
-              tokenAddress,
-              amount: String(amountToSend)
-            }
-          };
-          queueList.push(queue);
-          await starknet.pushTask([queue]);
-        }
-        accessLogger.info('result_nonde =', result_nonce);
-        accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+      return new Promise(async (resolve) => {
+          await starknetMutex.runExclusive(async () => {
+              const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+              const queueList = await starknet.getTask();
+              if (queueList.find(item => item.params?.transactionID === transactionID)) {
+                  accessLogger.info('TransactionID was exist: ' + transactionID);
+                  resolve({
+                      code: 1,
+                      error: 'starknet transfer error',
+                      params: value
+                  });
+              } else {
+                  const queue = {
+                      createTime: new Date().valueOf(),
+                      params: value,
+                      signParam: {
+                          recipient: toAddress,
+                          tokenAddress,
+                          amount: String(amountToSend)
+                      }
+                  };
+                  queueList.push(queue);
+                  await starknet.pushTask([queue]);
+              }
+              accessLogger.info('result_nonde =', result_nonce);
+              accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+              resolve({
+                  code: 2,
+                  params: value
+              });
+          });
       });
-      return {
-        code: 2,
-        params: value
-      };
   }
 
   // immutablex || immutablex_test
