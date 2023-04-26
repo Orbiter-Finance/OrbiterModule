@@ -100,6 +100,7 @@ export class StarknetHelp {
       const clearTaskList = allTaskList.filter(task => {
         return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
+      // TODO test
       console.log('allTask', allTaskList.map(item => item.params.amountToSend),
           'leftTask', leftTaskList.map(item => item.params.amountToSend),
           'clearTask', clearTaskList.map(item => item.params.amountToSend));
@@ -142,7 +143,7 @@ export class StarknetHelp {
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
-    return (await this.cacheTx.get(cacheKey)) || [];
+    return JSON.parse(JSON.stringify((await this.cacheTx.get(cacheKey)) || []));
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
