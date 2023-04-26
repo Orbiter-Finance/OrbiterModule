@@ -12,7 +12,6 @@ import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
-import { Mutex } from "async-mutex";
 import { telegramBot } from "../../sms/telegram";
 
 const accessLogger = getLoggerService('4')
@@ -42,7 +41,7 @@ export class StarknetHelp {
   private cacheTx: Keyv
   private cacheTxClear: Keyv
   public account: Account
-  private mutex = new Mutex();
+  private isTaskLock = false
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -92,58 +91,67 @@ export class StarknetHelp {
     return Number(await this.account.getNonce())
   }
   async clearTask(taskList: any[], reason: string) {
-    await this.mutex.runExclusive(async () => {
+      if (this.isTaskLock) {
+          accessLogger.info('Task is lock, wait for one second');
+          await sleep(1000);
+          await this.clearTask(taskList, reason);
+          return;
+      }
+      this.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
       const leftTaskList = allTaskList.filter(task => {
-        return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
       const clearTaskList = allTaskList.filter(task => {
-        return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
       // TODO test
       console.log('allTask', allTaskList.map(item => item.params.amountToSend),
           'leftTask', leftTaskList.map(item => item.params.amountToSend),
           'clearTask', clearTaskList.map(item => item.params.amountToSend));
       await this.cacheTx.set(cacheKey, leftTaskList);
-      const inputCacheClear = async () => {
-        if (clearTaskList.length) {
+      if (clearTaskList.length) {
           const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
-            const clearData: any = {
-                list: clearTaskList.map(item => {
-                    return {
-                        address: item.params.ownerAddress,
-                        chainId: item.params.fromChainID,
-                        symbol: item.params.symbol,
-                        amount: item.params.amountToSend
-                    };
-                }), reason
-            };
+          const clearData: any = {
+              list: clearTaskList.map(item => {
+                  return {
+                      address: item.params.ownerAddress,
+                      chainId: item.params.fromChainID,
+                      symbol: item.params.symbol,
+                      amount: item.params.amountToSend
+                  };
+              }), reason
+          };
           cacheList.push(clearData);
-            telegramBot.sendMessage(`starknet_task_clear ${JSON.stringify(clearData)}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
-            });
+          telegramBot.sendMessage(`starknet_task_clear ${JSON.stringify(clearData)}`).catch(error => {
+              accessLogger.error('send telegram message error', error);
+          });
           await this.cacheTxClear.set(cacheKey, cacheList);
-        }
-      };
-      inputCacheClear();
-    });
+      }
+      this.isTaskLock = false;
   }
   async pushTask(taskList: any[]) {
-    await this.mutex.runExclusive(async () => {
+      if (this.isTaskLock) {
+          accessLogger.info('Task is lock, wait for one second');
+          await sleep(1000);
+          await this.pushTask(taskList);
+          return;
+      }
+      this.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const cacheList = await this.cacheTx.get(cacheKey) || [];
       const newList: any[] = [];
       for (const task of taskList) {
-        if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
-          accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
-        } else {
-          task.count = (task.count || 0) + 1;
-          newList.push(task);
-        }
+          if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+              accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+          } else {
+              task.count = (task.count || 0) + 1;
+              newList.push(task);
+          }
       }
       await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
-    });
+      this.isTaskLock = false;
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
