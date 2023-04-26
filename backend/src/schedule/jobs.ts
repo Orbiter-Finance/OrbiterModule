@@ -298,7 +298,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
           }
           try {
             setStarknetLock(makerAddress, true);
-            await starknet.clearTask(queueList,'Send Tx');
+            await starknet.clearTask(queueList,'Send tx');
             accessLogger.info('starknet_sql_nonce =', nonce);
             accessLogger.info('starknet_consume_count =', queueList.length);
               let hash = '';

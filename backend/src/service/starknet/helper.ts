@@ -111,7 +111,7 @@ export class StarknetHelp {
           'leftTask', leftTaskList.map(item => item.params.amountToSend),
           'clearTask', clearTaskList.map(item => item.params.amountToSend));
       await this.cacheTx.set(cacheKey, leftTaskList);
-      if (clearTaskList.length) {
+      if (clearTaskList.length && reason !== 'Send tx') {
           const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
           const clearData: any = {
               list: clearTaskList.map(item => {
