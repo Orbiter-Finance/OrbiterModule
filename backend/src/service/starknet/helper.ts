@@ -36,9 +36,19 @@ export function parseInputAmountToUint256(
 ) {
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
+
+const cacheTx: Keyv = new Keyv({
+    store: new KeyvFile({
+        filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
+        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        encode: JSON.stringify, // serialize function
+        decode: JSON.parse, // deserialize function
+    }),
+});
+
 export class StarknetHelp {
   private cache: Keyv
-  private cacheTx: Keyv
   private cacheTxClear: Keyv
   public account: Account
   public static isTaskLock = false
@@ -50,15 +60,6 @@ export class StarknetHelp {
     this.cache = new Keyv({
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
-        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
-        encode: JSON.stringify, // serialize function
-        decode: JSON.parse, // deserialize function
-      }),
-    })
-    this.cacheTx = new Keyv({
-      store: new KeyvFile({
-        filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
         writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
@@ -99,7 +100,7 @@ export class StarknetHelp {
       }
       StarknetHelp.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
-      const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
+      const allTaskList: any[] = await cacheTx.get(cacheKey) || [];
       const leftTaskList = allTaskList.filter(task => {
           return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
@@ -110,7 +111,7 @@ export class StarknetHelp {
       console.log('allTask', allTaskList.map(item => item.params.amountToSend),
           'leftTask', leftTaskList.map(item => item.params.amountToSend),
           'clearTask', clearTaskList.map(item => item.params.amountToSend));
-      await this.cacheTx.set(cacheKey, leftTaskList);
+      await cacheTx.set(cacheKey, leftTaskList);
       if (clearTaskList.length && reason !== 'Send tx') {
           const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
           const clearData: any = {
@@ -140,7 +141,7 @@ export class StarknetHelp {
       }
       StarknetHelp.isTaskLock = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
-      const cacheList = await this.cacheTx.get(cacheKey) || [];
+      const cacheList = await cacheTx.get(cacheKey) || [];
       const newList: any[] = [];
       for (const task of taskList) {
           if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
@@ -150,12 +151,12 @@ export class StarknetHelp {
               newList.push(task);
           }
       }
-      await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
+      await cacheTx.set(cacheKey, [...cacheList, ...newList]);
       StarknetHelp.isTaskLock = false;
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
-    return JSON.parse(JSON.stringify((await this.cacheTx.get(cacheKey)) || []));
+    return JSON.parse(JSON.stringify((await cacheTx.get(cacheKey)) || []));
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()

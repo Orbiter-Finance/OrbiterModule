@@ -299,10 +299,10 @@ export async function sendConsumer(value: any) {
           accessLogger.error(`Starknet mutex init fail`);
           return
       }
-      if(await starknetMutex.isLocked()) {
-        accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
-      }
       return new Promise(async (resolve) => {
+          if(await starknetMutex.isLocked()) {
+            accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
+          }
           await starknetMutex.runExclusive(async () => {
               const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
               const queueList = await starknet.getTask();
@@ -327,7 +327,7 @@ export async function sendConsumer(value: any) {
                   await starknet.pushTask([queue]);
               }
               accessLogger.info('result_nonde =', result_nonce);
-              accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+              accessLogger.info(`starknet_queue_count = ${queueList.length}， instance ${process.env.NODE_APP_INSTANCE}`);
               resolve({
                   code: 2,
                   params: value
