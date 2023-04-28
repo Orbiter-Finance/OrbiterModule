@@ -300,11 +300,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     const res: any = await starknet.signMultiTransfer(signParamList, nonce);
                     hash = res.hash;
                 }
-                // const { hash }: any = await starknet.signMultiTransfer(signParamList, nonce);
-                // TODO test
-                telegramBot.sendMessage(`https://testnet.starkscan.co/tx/${hash}`).catch(error => {
-                    accessLogger.error('send telegram message error', error);
-                });
                 await sleep(1000 * 10);
                 await sendTxConsumeHandle({
                     code: 3,

@@ -113,10 +113,6 @@ export class StarknetHelp {
       const clearTaskList = allTaskList.filter(task => {
           return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
-      // TODO test
-      console.log('allTask', allTaskList.map(item => item.params.amountToSend),
-          'leftTask', leftTaskList.map(item => item.params.amountToSend),
-          'clearTask', clearTaskList.map(item => item.params.amountToSend));
       await this.cacheTx.set(cacheKey, leftTaskList);
       if (clearTaskList.length && reason !== 'Send tx') {
           const cacheList: any[] = getClearList() || [];
@@ -132,9 +128,6 @@ export class StarknetHelp {
               }), reason
           };
           cacheList.push(clearData);
-          telegramBot.sendMessage(`starknet_task_clear ${JSON.stringify(clearData)}`).catch(error => {
-              accessLogger.error('send telegram message error', error);
-          });
           setClearList(cacheList);
       }
       StarknetHelp.isTaskLock = false;
