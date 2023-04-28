@@ -526,7 +526,8 @@ export async function sendTransaction(
   nonce,
   result_nonce = 0,
   ownerAddress = '',
-  retryCount = 0
+  retryCount = 0,
+  fromHash?
 ) {
   const accessLogger = getLoggerService(toChainID);
   const amountToSend = getAmountToSend(
@@ -586,7 +587,8 @@ export async function sendTransaction(
     result_nonce,
     fromChainID,
     lpMemo: nonce,
-    ownerAddress
+    ownerAddress,
+    fromHash
   }).catch(error => {
     errorLogger.warn(`enqueue error:`, error);
   });

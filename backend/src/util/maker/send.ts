@@ -327,7 +327,7 @@ export async function sendConsumer(value: any) {
                   await starknet.pushTask([queue]);
               }
               accessLogger.info('result_nonde =', result_nonce);
-              accessLogger.info(`starknet_queue_count = ${queueList.length}， instance ${process.env.NODE_APP_INSTANCE}`);
+              accessLogger.info(`starknet_queue_count = ${queueList.length}`);
               resolve({
                   code: 2,
                   params: value

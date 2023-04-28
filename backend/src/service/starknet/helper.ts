@@ -13,6 +13,8 @@ import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
 import { telegramBot } from "../../sms/telegram";
+import fs from "fs";
+import path from "path";
 
 const accessLogger = getLoggerService('4')
 
@@ -37,10 +39,17 @@ export function parseInputAmountToUint256(
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
 
+export function setClearList(data: any[]) {
+    fs.writeFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`), JSON.stringify(data));
+}
+
+export function getClearList() {
+    return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+}
+
 export class StarknetHelp {
   private cache: Keyv
   private cacheTx: Keyv
-  private cacheTxClear: Keyv
   public account: Account
   public static isTaskLock = false
   constructor(
@@ -66,15 +75,6 @@ export class StarknetHelp {
               decode: JSON.parse, // deserialize function
           }),
       });
-    this.cacheTxClear = new Keyv({
-      store: new KeyvFile({
-        filename: `logs/starknetTx/${this.address.toLowerCase()}_clear`, // the file path to store the data
-        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 0,
-        encode: JSON.stringify, // serialize function
-        decode: JSON.parse, // deserialize function
-      }),
-    })
 
     const provider = getProviderV4(network)
     this.account = new Account(
@@ -114,12 +114,13 @@ export class StarknetHelp {
           'clearTask', clearTaskList.map(item => item.params.amountToSend));
       await this.cacheTx.set(cacheKey, leftTaskList);
       if (clearTaskList.length && reason !== 'Send tx') {
-          const cacheList: any[] = await this.cacheTxClear.get(cacheKey) || [];
+          const cacheList: any[] = getClearList() || [];
           const clearData: any = {
               list: clearTaskList.map(item => {
                   return {
                       address: item.params.ownerAddress,
                       chainId: item.params.fromChainID,
+                      hash: item.params.fromHash,
                       symbol: item.params.symbol,
                       amount: item.params.amountToSend
                   };
@@ -129,7 +130,7 @@ export class StarknetHelp {
           telegramBot.sendMessage(`starknet_task_clear ${JSON.stringify(clearData)}`).catch(error => {
               accessLogger.error('send telegram message error', error);
           });
-          await this.cacheTxClear.set(cacheKey, cacheList);
+          setClearList(cacheList);
       }
       StarknetHelp.isTaskLock = false;
   }
