@@ -44,7 +44,12 @@ export function setClearList(data: any[]) {
 }
 
 export function getClearList() {
-    return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+    } catch (e) {
+        setClearList([]);
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+    }
 }
 
 export class StarknetHelp {
