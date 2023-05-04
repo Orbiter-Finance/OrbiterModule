@@ -97,11 +97,12 @@ export class StarknetHelp {
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
   }
-  async clearTask(taskList: any[], reason: string) {
+  // code:0.Normal clearing 1.Abnormal clearing
+  async clearTask(taskList: any[], code: number) {
       if (StarknetHelp.isTaskLock) {
           accessLogger.info('Task is lock, wait for one second');
           await sleep(1000);
-          await this.clearTask(taskList, reason);
+          await this.clearTask(taskList, code);
           return;
       }
       StarknetHelp.isTaskLock = true;
@@ -114,20 +115,14 @@ export class StarknetHelp {
           return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
       });
       await this.cacheTx.set(cacheKey, leftTaskList);
-      if (clearTaskList.length && reason !== 'Send tx') {
+      if (clearTaskList.length && code) {
           const cacheList: any[] = getClearList() || [];
-          const clearData: any = {
-              list: clearTaskList.map(item => {
-                  return {
-                      address: item.params.ownerAddress,
-                      chainId: item.params.fromChainID,
-                      hash: item.params.fromHash,
-                      symbol: item.params.symbol,
-                      amount: item.params.amountToSend
-                  };
-              }), reason
-          };
-          cacheList.push(clearData);
+          cacheList.push(clearTaskList.map(item => {
+              return {
+                  chainId: item.params.fromChainID,
+                  hash: item.params.fromHash
+              };
+          }));
           setClearList(cacheList);
       }
       StarknetHelp.isTaskLock = false;

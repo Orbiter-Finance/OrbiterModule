@@ -223,7 +223,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     });
                     limitWaringTime = new Date().valueOf();
                 }
-                await starknet.clearTask(clearTaskList,'Exceeded limit');
+                await starknet.clearTask(clearTaskList, 1);
             }
 
             const queueList: any[] = [];
@@ -235,7 +235,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 });
                 if (!makerNodeCount) {
                     accessLogger.error(`Transaction cannot be sent ${JSON.stringify(task)}`);
-                    await starknet.clearTask([task], 'Database tx cannot be sent');
+                    await starknet.clearTask([task], 1);
                     continue;
                 }
                 queueList.push(JSON.parse(JSON.stringify(task)));
@@ -287,7 +287,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             }
             try {
                 setStarknetLock(makerAddress, true);
-                await starknet.clearTask(queueList,'Send tx');
+                await starknet.clearTask(queueList, 0);
                 accessLogger.info('starknet_sql_nonce =', nonce);
                 accessLogger.info('starknet_consume_count =', queueList.length);
                 let hash = '';
