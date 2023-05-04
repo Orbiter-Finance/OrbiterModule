@@ -158,13 +158,11 @@ let balanceWaringTime = 0;
 // Alarm interval duration(second)
 const waringInterval = 180;
 // Execute several transactions at once
-const execTaskCount = 3;
+const execTaskCount = 10;
 // Maximum number of transactions to be stacked in the memory pool
-const maxTaskCount: number = 5;
-const expireTime: number = 5 * 60 * 1000;
-const maxTryCount: number = 2;
-// Balance alarm multiplier
-const alarmMulti = 3;
+const maxTaskCount: number = 100;
+const expireTime: number = 20 * 60 * 1000;
+const maxTryCount: number = 3;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
@@ -267,12 +265,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                         balanceWaringTime = new Date().valueOf();
                     }
                     return;
-                } else if (needPay.multipliedBy(alarmMulti).gt(makerBalance)) {
-                    accessLogger.warn(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`);
-                    // TODO sms
-                    telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} balance will soon be insufficient to cover the next batch, ${needPay.toString()} * ${alarmMulti} > ${makerBalance.toString()}`).catch(error => {
-                        accessLogger.error('send telegram message error', error);
-                    });
                 }
             }
 
@@ -324,9 +316,8 @@ export async function batchTxSend(chainIdList = [4, 44]) {
         }
     };
 
-    // TODO
-    // new MJobPessimism('*/30 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
+    new MJobPessimism('*/10 * * * * *', callback, batchTxSend.name).schedule();
+    // new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
