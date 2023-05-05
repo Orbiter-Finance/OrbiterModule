@@ -965,7 +965,7 @@ export async function sendConsumer(value: any) {
   if (chainID == 16 || chainID == 516) {
     gasLimit = 250000;
   }
-  if (toChain === 'arbitrum_test' || toChain === 'arbitrum' || toChain === 'zksync2_test' || toChain === 'zksync2') {
+  if (toChain === 'arbitrum_test' || toChain === 'arbitrum') {
     try {
       if (isEthTokenAddress(tokenAddress)) {
         gasLimit = await web3.eth.estimateGas({
@@ -981,6 +981,26 @@ export async function sendConsumer(value: any) {
           })
       }
       gasLimit = Math.ceil(Number(gasLimit) * 1.5)
+    } catch (error) {
+      gasLimit = 1000000
+    }
+    accessLogger.info('arGasLimit =', gasLimit)
+  }
+  if (toChain === 'zksync2_test' || toChain === 'zksync2') {
+    try {
+      if (isEthTokenAddress(tokenAddress)) {
+        gasLimit = await web3.eth.estimateGas({
+          from: makerAddress,
+          to: toAddress,
+          value: web3.utils.toHex(amountToSend),
+        })
+      } else {
+        gasLimit = await tokenContract.methods
+          .transfer(toAddress, web3.utils.toHex(amountToSend))
+          .estimateGas({
+            from: makerAddress,
+          })
+      }
     } catch (error) {
       gasLimit = 1000000
     }
