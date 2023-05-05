@@ -2,6 +2,7 @@ import { Mutex } from "async-mutex";
 import { accessLogger } from './logger';
 import dayjs from 'dayjs';
 import { doSms } from "../sms/smsSchinese";
+import { telegramBot } from "../sms/telegram";
 
 type Message = {
     id: string;
@@ -91,9 +92,11 @@ export class MessageQueue {
             const timeout = Date.now() - this.lastConsumeTime;
             if (timeout > 1000 * 60 * 5 && this.size() > 0) {
                 if (Date.now() - this.lastDoSMS >= 1000 * 60 * 3) {
-                    doSms(
-                        `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`
-                    )
+                    const alert = `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`;
+                    doSms(alert)
+                    telegramBot.sendMessage(alert).catch(error => {
+                        accessLogger.error('send telegram message error', error);
+                    })
                     this.lastDoSMS = Date.now();
                 }
             }

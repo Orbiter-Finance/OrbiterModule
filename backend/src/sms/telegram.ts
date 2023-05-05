@@ -6,12 +6,16 @@ export interface TelegramOption {
     token: string;
 }
 import axios from 'axios'
+import { accessLogger } from '../util/logger';
 export default class Telegram {
     constructor(
         private readonly opts?: TelegramOption,
     ) {
     }
     async sendMessage(messageText: string) {
+        if (!process.env["TELEGRAM_TOKEN"] || !process.env["CHAT_ID"]) {
+            accessLogger.error('Telegram Token null');
+        }
         const requestData = {
             chat_id: this.opts?.chatId,
             text: messageText,
