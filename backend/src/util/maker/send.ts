@@ -853,8 +853,7 @@ export async function sendConsumer(value: any) {
     accessLogger.error(`RPC not obtained ToChain ${toChain}`)
     return
   }
-  // TODO test
-  console.log(`Web3Net ${web3Net}`);
+
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
 
