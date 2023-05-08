@@ -169,10 +169,10 @@ const maxTryCount: number = 3;
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
-        accessLogger.info(`================== ${makerAddress} batch tx cron start ==================`);
+        console.log(`================== ${makerAddress} batch send tx cron ==================`);
         if (Number(chainId) === 4 || Number(chainId) === 44) {
             if (starknetLockMap[makerAddress.toLowerCase()]) {
-                accessLogger.info('Starknet is lock, waiting for the end of the previous transaction');
+                console.log('Starknet is lock, waiting for the end of the previous transaction');
                 return;
             }
             const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
@@ -180,7 +180,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
             const taskList = await starknet.getTask();
             if (!taskList || !taskList.length) {
-                accessLogger.info('There are no consumable tasks in the starknet queue');
+                console.log('There are no consumable tasks in the starknet queue');
                 return;
             }
             // Exceeded limit, clear task
