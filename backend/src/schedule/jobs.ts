@@ -19,6 +19,8 @@ import { getStarknetTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
 import { telegramBot } from "../sms/telegram";
 import { doSms } from "../sms/smsSchinese";
+import fs from "fs";
+import path from "path";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -336,4 +338,66 @@ export async function batchTxSend(chainIdList = [4, 44]) {
     const maker = makerDataList[i];
     makerSend(maker.makerAddress, maker.chainId);
   }
+}
+
+export async function watchHttpEndPoint() {
+  const chainList = ["goerli", "optimism_test", "arbitrum_test"];
+  const dir: string = `../../logs/endPoint`;
+  const createDir = () => {
+    return new Promise(async (resolve) => {
+      await fs.stat(path.join(__dirname, dir), async (err, data) => {
+        if (err) {
+          await fs.mkdir(path.join(__dirname, dir), (err) => {
+            if (err && err.code === 'EEXIST') {
+              console.log("EEXIST");
+            }
+            resolve(1);
+          });
+        }
+        resolve(1);
+      });
+    });
+  };
+  if (!await createDir()) {
+    console.log('create dir fail');
+    return;
+  }
+
+  for (const chain of chainList) {
+    if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
+      const dirFile: string = `${dir}/${chain}.json`;
+      let data: { current?, httpEndPoint?, httpEndPointInfura? } = {};
+      try {
+        data = JSON.parse(fs.readFileSync(path.join(__dirname, dirFile)).toString()) || {};
+      } catch (e) {
+        data = { current: 2 };
+      }
+      data.httpEndPoint = makerConfig[chain]?.httpEndPoint;
+      data.httpEndPointInfura = makerConfig[chain]?.httpEndPointInfura;
+      fs.writeFileSync(path.join(__dirname, dirFile), JSON.stringify(data));
+    }
+  }
+
+
+  const callback = async () => {
+    for (const chain of chainList) {
+      if (makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
+        const dirFile: string = `${dir}/${chain}.json`;
+        let data: { current?, httpEndPoint?, httpEndPointInfura? } = JSON.parse(fs.readFileSync(path.join(__dirname, dirFile)).toString()) || {};
+        if (data.current === 1 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPoint) {
+          makerConfig[chain].httpEndPointInfura = data.httpEndPoint;
+          accessLogger.log(`${chain} switch to httpEndPoint ${data.httpEndPoint}`);
+          continue;
+        }
+        if (data.current === 2 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPointInfura) {
+          makerConfig[chain].httpEndPointInfura = data.httpEndPointInfura;
+          accessLogger.log(`${chain} switch to httpEndPointInfura ${data.httpEndPointInfura}`);
+          continue;
+        }
+        console.log(`${chain} Nothing to Change ${makerConfig[chain]?.httpEndPointInfura}`);
+      }
+    }
+  };
+
+  new MJobPessimism('*/10 * * * * *', callback, watchHttpEndPoint.name).schedule();
 }

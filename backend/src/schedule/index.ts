@@ -6,7 +6,7 @@ import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
   batchTxSend,
   jobBalanceAlarm,
-  jobGetWealths,
+  jobGetWealths, watchHttpEndPoint,
 } from './jobs';
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
@@ -116,6 +116,7 @@ export const startMasterJobs = async () => {
     waittingStartMaker()
     startNewMakerTrxPull()
     batchTxSend()
+    watchHttpEndPoint();
   }
 }
 
