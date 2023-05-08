@@ -18,6 +18,7 @@ import { In } from "typeorm";
 import { getStarknetTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
 import { telegramBot } from "../sms/telegram";
+import { doSms } from "../sms/smsSchinese";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -154,7 +155,6 @@ export function jobBalanceAlarm() {
 
 let limitWaringTime = 0;
 let balanceWaringTime = 0;
-// TODO
 // Alarm interval duration(second)
 const waringInterval = 180;
 // Execute several transactions at once
@@ -215,8 +215,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             if (clearTaskList.length) {
                 accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
                 if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
-                    // TODO sms
-                    telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.length}, ${errorMsgList[0]}`).catch(error => {
+                    const alert: string = `starknet_task_clear ${clearTaskList.length}, ${errorMsgList[0]}`;
+                    doSms(alert);
+                    telegramBot.sendMessage(alert).catch(error => {
                         accessLogger.error('send telegram message error', error);
                     });
                     limitWaringTime = new Date().valueOf();
@@ -258,8 +259,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 if (needPay.gt(makerBalance)) {
                     accessLogger.error(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`);
                     if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
-                        // TODO sms
-                        telegramBot.sendMessage(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`).catch(error => {
+                        const alert: string = `starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`;
+                        doSms(alert);
+                        telegramBot.sendMessage(alert).catch(error => {
                             accessLogger.error('send telegram message error', error);
                         });
                         balanceWaringTime = new Date().valueOf();
