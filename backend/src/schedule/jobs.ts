@@ -353,8 +353,9 @@ export async function watchHttpEndPoint() {
                         }
                         resolve(1);
                     });
+                } else {
+                    resolve(1);
                 }
-                resolve(1);
             });
         });
     };
