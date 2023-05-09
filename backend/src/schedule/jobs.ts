@@ -323,10 +323,15 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             return { code: 0 };
         };
         if (Number(chainId) === 4 || Number(chainId) === 44) {
-            const rs = await sn();
-            // code 0.complete or wait 1.interrupt
-            if (rs.code === 1) {
+            try {
+                const rs = await sn();
+                // code 0.complete or wait 1.interrupt
+                if (rs.code === 1) {
+                    setStarknetLock(makerAddress, false);
+                }
+            } catch (e) {
                 setStarknetLock(makerAddress, false);
+                accessLogger.error(`sn job error: ${e.message}`);
             }
         }
 
