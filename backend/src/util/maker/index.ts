@@ -10,7 +10,7 @@ import {
 } from '@loopring-web/loopring-sdk'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm';
 import Web3 from 'web3'
 import { sleep } from '..'
 import { makerConfig } from '../../config'
@@ -363,16 +363,15 @@ export async function confirmToSNTransaction(
       accessLogger.info(
         'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
       )
-      for (const params of paramsList) {
-        accessLogger.info(
-            'update maker_node =',
-            `state = 3 WHERE transactionID = '${params.transactionID}'`
-        );
-        await repositoryMakerNode().update(
-            { transactionID: params.transactionID },
-            { state: 3 }
-        );
-      }
+      const transactionIDList: string[] = paramsList.map(item => item.transactionID);
+      accessLogger.info(
+          'update maker_node =',
+          `state = 3 WHERE transactionID in (${transactionIDList})`
+      );
+      await repositoryMakerNode().update(
+          { transactionID: In(transactionIDList) },
+          { state: 3 }
+      );
       setStarknetLock(paramsList[0].makerAddress, false);
       return true
     }
@@ -862,28 +861,25 @@ async function handleParamsList(result) {
   const { chainID: toChainID } = params;
   paramsList = paramsList || [params];
   const accessLogger = getLoggerService(toChainID);
-  for (const arg of paramsList) {
-    const { transactionID, toChain, amountToSend: tAmount } = arg;
-    accessLogger.info(`${arg.transactionID} sendTxConsumeHandle response =`, response);
-    accessLogger.info(
-        `update maker_node: state = 2, toTx = '${txID}', toAmount = ${tAmount} where transactionID=${transactionID}`
+  const transactionIDList: string[] = paramsList.map(item => item.transactionID);
+  accessLogger.info(`${transactionIDList} sendTxConsumeHandle response =`, response);
+  accessLogger.info(
+      `update maker_node: state = 2, toTx = '${txID}' where transactionID in (${transactionIDList})`
+  );
+  try {
+    await repositoryMakerNode().update(
+        { transactionID: In(transactionIDList) },
+        {
+          toTx: txID,
+          state: 2,
+        }
     );
-    try {
-      await repositoryMakerNode().update(
-          { transactionID: transactionID },
-          {
-            toTx: txID,
-            toAmount: tAmount,
-            state: 2,
-          }
-      );
-      accessLogger.info(
-          `[${transactionID}] sendTransaction toChain ${toChain} update success`
-      );
-    } catch (error) {
-      errorLogger.error(`[${transactionID}] updateToSqlError =`, error);
-      return;
-    }
+    accessLogger.info(
+        `[${transactionIDList}] sendTransaction update success`
+    );
+  } catch (error) {
+    errorLogger.error(`[${transactionIDList}] updateToSqlError =`, error);
+    return;
   }
 
   if (toChainID === 4 || toChainID === 44) {

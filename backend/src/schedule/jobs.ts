@@ -175,6 +175,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 console.log('Starknet is lock, waiting for the end of the previous transaction');
                 return;
             }
+            setStarknetLock(makerAddress, true);
             const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
             const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
@@ -282,7 +283,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 return;
             }
             try {
-                setStarknetLock(makerAddress, true);
                 await starknet.clearTask(queueList, 0);
                 accessLogger.info('starknet_sql_nonce =', nonce);
                 accessLogger.info('starknet_consume_count =', queueList.length);
@@ -296,7 +296,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     const res: any = await starknet.signMultiTransfer(signParamList, nonce);
                     hash = res.hash;
                 }
-                await sleep(1000 * 10);
+                await sleep(1000 * 5);
                 await sendTxConsumeHandle({
                     code: 3,
                     txid: hash,
@@ -306,7 +306,9 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 });
             } catch (error) {
                 accessLogger.info(`starknet transfer restore: ${queueList.length}`);
-                await starknet.pushTask(queueList);
+                if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+                    await starknet.pushTask(queueList);
+                }
                 await rollback(error, nonce);
                 await sleep(1000 * 2);
                 setStarknetLock(makerAddress, false);
