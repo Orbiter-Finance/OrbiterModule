@@ -160,20 +160,24 @@ let balanceWaringTime = 0;
 // Alarm interval duration(second)
 const waringInterval = 180;
 // Execute several transactions at once
-const execTaskCount = 10;
+// const execTaskCount = 10;
 // Maximum number of transactions to be stacked in the memory pool
-const maxTaskCount: number = 100;
-const expireTime: number = 20 * 60 * 1000;
+// const maxTaskCount: number = 100;
+// const expireTime: number = 20 * 60 * 1000;
 const maxTryCount: number = 3;
+// TODO test
+const execTaskCount = 3;
+const maxTaskCount: number = 5;
+const expireTime: number = 5 * 60 * 1000;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         console.log(`================== ${makerAddress} batch send tx cron ==================`);
-        if (Number(chainId) === 4 || Number(chainId) === 44) {
+        const sn = async () => {
             if (starknetLockMap[makerAddress.toLowerCase()]) {
                 console.log('Starknet is lock, waiting for the end of the previous transaction');
-                return;
+                return { code: 0 };
             }
             setStarknetLock(makerAddress, true);
             const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
@@ -182,12 +186,12 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const taskList = await starknet.getTask();
             if (!taskList || !taskList.length) {
                 console.log('There are no consumable tasks in the starknet queue');
-                return;
+                return { code: 1 };
             }
             // Exceeded limit, clear task
             const clearTaskList: any[] = [];
             // Meet the limit, execute the task
-            const execTaskList: any[]  = [];
+            const execTaskList: any[] = [];
             // Error message
             const errorMsgList: string[] = [];
             for (let i = 0; i < taskList.length; i++) {
@@ -253,7 +257,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     accessLogger.error(
                         `Transaction pair not found market: - ${chainId} ${tokenAddress}`
                     );
-                    return;
+                    return { code: 1 };
                 }
                 // Maker balance judgment
                 const makerBalance: BigNumber = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
@@ -269,7 +273,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                         });
                         balanceWaringTime = new Date().valueOf();
                     }
-                    return;
+                    return { code: 1 };
                 }
             }
 
@@ -280,7 +284,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const paramsList = queueList.map(item => item.params);
             if (!queueList.length) {
                 accessLogger.info('There are no consumable tasks in the starknet queue');
-                return;
+                return { code: 1 };
             }
             try {
                 await starknet.clearTask(queueList, 0);
@@ -316,7 +320,16 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     params: paramsList[0]
                 });
             }
+            return { code: 0 };
+        };
+        if (Number(chainId) === 4 || Number(chainId) === 44) {
+            const rs = await sn();
+            // code 0.complete or wait 1.interrupt
+            if (rs.code === 1) {
+                setStarknetLock(makerAddress, false);
+            }
         }
+
     };
 
     // TODO test
