@@ -29,7 +29,6 @@ import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, transfers } from './new_maker'
-import { Mutex } from "async-mutex";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -120,7 +119,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
     }
   }
 }
-const starknetMutex = new Mutex();
+
 // SendQueue
 const sendQueue = new SendQueue()
 export async function sendConsumer(value: any) {
@@ -295,45 +294,34 @@ export async function sendConsumer(value: any) {
   if (chainID == 4 || chainID == 44) {
       const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-      if(!starknetMutex) {
-          accessLogger.error(`Starknet mutex init fail`);
-          return
-      }
-      return new Promise(async (resolve) => {
-          if(await starknetMutex.isLocked()) {
-            accessLogger.info(`Starknet send consume is lock, waiting for the end of the previous transaction`);
-          }
-          await starknetMutex.runExclusive(async () => {
-              const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-              const queueList = await starknet.getTask();
-              if (queueList.find(item => item.params?.transactionID === transactionID)) {
-                  accessLogger.info('TransactionID was exist: ' + transactionID);
-                  resolve({
-                      code: 1,
-                      error: 'starknet transfer error',
-                      params: value
-                  });
-              } else {
-                  const queue = {
-                      createTime: new Date().valueOf(),
-                      params: value,
-                      signParam: {
-                          recipient: toAddress,
-                          tokenAddress,
-                          amount: String(amountToSend)
-                      }
-                  };
-                  queueList.push(queue);
-                  await starknet.pushTask([queue]);
-              }
-              accessLogger.info('result_nonde =', result_nonce);
-              accessLogger.info(`starknet_queue_count = ${queueList.length}`);
-              resolve({
-                  code: 2,
-                  params: value
-              });
-          });
-      });
+    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+    const queueList = await starknet.getTask();
+    if (queueList.find(item => item.params?.transactionID === transactionID)) {
+      accessLogger.info('TransactionID was exist: ' + transactionID);
+      return {
+        code: 1,
+        error: `starknet transfer error: TransactionID was exist ${transactionID}`,
+        params: value
+      };
+    } else {
+      const queue = {
+        createTime: new Date().valueOf(),
+        params: value,
+        signParam: {
+          recipient: toAddress,
+          tokenAddress,
+          amount: String(amountToSend)
+        }
+      };
+      queueList.push(queue);
+      await starknet.pushTask([queue]);
+    }
+    accessLogger.info('result_nonde =', result_nonce);
+    accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+    return {
+      code: 2,
+      params: value
+    }
   }
 
   // immutablex || immutablex_test

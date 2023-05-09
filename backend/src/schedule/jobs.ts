@@ -296,7 +296,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     const res: any = await starknet.signMultiTransfer(signParamList, nonce);
                     hash = res.hash;
                 }
-                await sleep(1000 * 5);
                 await sendTxConsumeHandle({
                     code: 3,
                     txid: hash,
@@ -310,8 +309,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     await starknet.pushTask(queueList);
                 }
                 await rollback(error, nonce);
-                await sleep(1000 * 2);
-                setStarknetLock(makerAddress, false);
                 await sendTxConsumeHandle({
                     code: 1,
                     txid: 'starknet transfer error: ' + error.message,

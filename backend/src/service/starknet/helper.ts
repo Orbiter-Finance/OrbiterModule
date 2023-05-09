@@ -39,16 +39,16 @@ export function parseInputAmountToUint256(
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
 
-export function setClearList(data: any[]) {
-    fs.writeFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`), JSON.stringify(data));
+export function setClearList(address: string, data: any[]) {
+    fs.writeFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`), JSON.stringify(data));
 }
 
-export function getClearList() {
+export function getClearList(address: string) {
     try {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
     } catch (e) {
-        setClearList([]);
-        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/clear.json`)).toString()) || [];
+        setClearList(address, []);
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
     }
 }
 
@@ -108,24 +108,28 @@ export class StarknetHelp {
           return;
       }
       starknetHelpLockMap[makerAddress] = true;
-      const cacheKey = `queue:${this.address.toLowerCase()}`;
-      const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
-      const leftTaskList = allTaskList.filter(task => {
-          return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
-      });
-      const clearTaskList = allTaskList.filter(task => {
-          return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
-      });
-      await this.cacheTx.set(cacheKey, leftTaskList);
-      if (clearTaskList.length && code) {
-          const cacheList: any[] = getClearList() || [];
-          cacheList.push(clearTaskList.map(item => {
-              return {
-                  chainId: item.params.fromChainID,
-                  hash: item.params.fromHash
-              };
-          }));
-          setClearList(cacheList);
+      try {
+          const cacheKey = `queue:${this.address.toLowerCase()}`;
+          const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
+          const leftTaskList = allTaskList.filter(task => {
+              return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          const clearTaskList = allTaskList.filter(task => {
+              return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          await this.cacheTx.set(cacheKey, leftTaskList);
+          if (clearTaskList.length && code) {
+              const cacheList: any[] = getClearList(makerAddress) || [];
+              cacheList.push(clearTaskList.map(item => {
+                  return {
+                      chainId: item.params.fromChainID,
+                      hash: item.params.fromHash
+                  };
+              }));
+              setClearList(makerAddress, cacheList);
+          }
+      } catch (e) {
+          accessLogger.error(`starknet clearTask error: ${e.message}`);
       }
       starknetHelpLockMap[makerAddress] = false;
   }
@@ -138,18 +142,22 @@ export class StarknetHelp {
           return;
       }
       starknetHelpLockMap[makerAddress] = true;
-      const cacheKey = `queue:${this.address.toLowerCase()}`;
-      const cacheList = await this.cacheTx.get(cacheKey) || [];
-      const newList: any[] = [];
-      for (const task of taskList) {
-          if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
-              accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
-          } else {
-              task.count = (task.count || 0) + 1;
-              newList.push(task);
+      try {
+          const cacheKey = `queue:${this.address.toLowerCase()}`;
+          const cacheList = await this.cacheTx.get(cacheKey) || [];
+          const newList: any[] = [];
+          for (const task of taskList) {
+              if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+                  accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+              } else {
+                  task.count = (task.count || 0) + 1;
+                  newList.push(task);
+              }
           }
+          await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
+      } catch (e) {
+          accessLogger.error(`starknet pushTask error: ${e.message}`);
       }
-      await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
       starknetHelpLockMap[makerAddress] = false;
   }
   async getTask() {
@@ -193,6 +201,7 @@ export class StarknetHelp {
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message)
         }
+        setStarknetLock(this.address.toLowerCase(), false);
       },
     }
   }
