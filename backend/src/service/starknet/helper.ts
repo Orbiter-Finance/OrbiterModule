@@ -52,11 +52,12 @@ export function getClearList() {
     }
 }
 
+export const starknetHelpLockMap = {};
+
 export class StarknetHelp {
   private cache: Keyv
   private cacheTx: Keyv
   public account: Account
-  public static isTaskLock = false
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -99,13 +100,14 @@ export class StarknetHelp {
   }
   // code:0.Normal clearing 1.Abnormal clearing
   async clearTask(taskList: any[], code: number) {
-      if (StarknetHelp.isTaskLock) {
-          accessLogger.info('Task is lock, wait for one second');
-          await sleep(1000);
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
           await this.clearTask(taskList, code);
           return;
       }
-      StarknetHelp.isTaskLock = true;
+      starknetHelpLockMap[makerAddress] = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
       const leftTaskList = allTaskList.filter(task => {
@@ -125,16 +127,17 @@ export class StarknetHelp {
           }));
           setClearList(cacheList);
       }
-      StarknetHelp.isTaskLock = false;
+      starknetHelpLockMap[makerAddress] = false;
   }
   async pushTask(taskList: any[]) {
-      if (StarknetHelp.isTaskLock) {
-          accessLogger.info('Task is lock, wait for one second');
-          await sleep(1000);
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
           await this.pushTask(taskList);
           return;
       }
-      StarknetHelp.isTaskLock = true;
+      starknetHelpLockMap[makerAddress] = true;
       const cacheKey = `queue:${this.address.toLowerCase()}`;
       const cacheList = await this.cacheTx.get(cacheKey) || [];
       const newList: any[] = [];
@@ -147,7 +150,7 @@ export class StarknetHelp {
           }
       }
       await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
-      StarknetHelp.isTaskLock = false;
+      starknetHelpLockMap[makerAddress] = false;
   }
   async getTask() {
     const cacheKey = `queue:${this.address.toLowerCase()}`;
