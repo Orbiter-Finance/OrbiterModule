@@ -160,15 +160,11 @@ let balanceWaringTime = 0;
 // Alarm interval duration(second)
 const waringInterval = 180;
 // Execute several transactions at once
-// const execTaskCount = 10;
+const execTaskCount = 10;
 // Maximum number of transactions to be stacked in the memory pool
-// const maxTaskCount: number = 100;
-// const expireTime: number = 20 * 60 * 1000;
+const maxTaskCount: number = 100;
+const expireTime: number = 20 * 60 * 1000;
 const maxTryCount: number = 3;
-// TODO test
-const execTaskCount = 3;
-const maxTaskCount: number = 5;
-const expireTime: number = 5 * 60 * 1000;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
@@ -337,9 +333,8 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 
     };
 
-    // TODO test
-    // new MJobPessimism('*/10 * * * * *', callback, batchTxSend.name).schedule();
-    new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
+    new MJobPessimism('*/10 * * * * *', callback, batchTxSend.name).schedule();
+    // new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
