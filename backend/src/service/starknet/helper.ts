@@ -1,17 +1,14 @@
 import ERC20 from './ERC20.json'
 import { utils } from 'ethers'
-import { Account, Contract, ec, Provider, uint256 } from 'starknet'
-import { sortBy } from 'lodash'
-import { Uint256 } from 'starknet/dist/utils/uint256'
+import { Account, Contract, ec, Provider, uint256, stark, BigNumberish } from 'starknet';
 import BigNumber from 'bignumber.js'
-import { BigNumberish, toBN } from 'starknet/dist/utils/number'
 import { OfflineAccount } from './account'
-import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
+import { chains } from 'orbiter-chaincore'
 const accessLogger = getLoggerService('4')
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
@@ -20,7 +17,13 @@ export function getProviderV4(network: starknetNetwork | string) {
   const sequencer = {
     network: <any>network, // for testnet you can use defaultProvider
   }
+  // const chainId = network === 'georli-alpha' ? '44' : '4'
+  // const chain = chains.getAllChains().find(item => item.internalId === chainId);
+  // if (chain?.rpc && chain.rpc.length) {
+  //   return new Provider({ sequencer, rpc: { nodeUrl: chain.rpc[0] } });
+  // }
   return new Provider({ sequencer })
+  // return new Provider({ sequencer, rpc: { nodeUrl: "https://starknet-testnet.unifra.io/v1/" } });
 }
 export function parseInputAmountToUint256(
   input: string,
@@ -143,7 +146,7 @@ export class StarknetHelp {
   }) {
     const provider = getProviderV4(this.network)
     const entrypoint = 'transfer'
-    const calldata = compileCalldata({
+    const calldata = stark.compileCalldata({
       recipient: params.recipient,
       amount: getUint256CalldataFromBN(params.amount),
     })
@@ -194,7 +197,7 @@ export async function getErc20Balance(
   const provider = getProviderV4(network)
   const abi = ERC20['abi']
   const tokenContract = new Contract(<any>abi, contractAddress, provider)
-  const balanceSender: Uint256 = (
+  const balanceSender: any = (
     await tokenContract.balanceOf(starknetAddress)
   ).balance
   return new BigNumber(balanceSender.low.toString() || 0).toNumber()
