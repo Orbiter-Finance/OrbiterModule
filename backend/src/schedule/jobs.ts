@@ -303,6 +303,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     params: paramsList[0],
                     paramsList
                 });
+                setStarknetLock(makerAddress, false);
             } catch (error) {
                 accessLogger.info(`starknet transfer restore: ${queueList.length}`);
                 if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1) {

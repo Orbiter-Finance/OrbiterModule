@@ -122,6 +122,7 @@ export class StarknetHelp {
               const cacheList: any[] = getClearList(makerAddress) || [];
               cacheList.push(clearTaskList.map(item => {
                   return {
+                      transactionID: item.params.transactionID,
                       chainId: item.params.fromChainID,
                       hash: item.params.fromHash
                   };
