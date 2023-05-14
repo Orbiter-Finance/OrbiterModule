@@ -61,7 +61,9 @@ export function checkAmount(
     return false
   }
   const rAmount = <any>realAmount.rAmount
-  const minPrice = new BigNumber(market.pool.minPrice)
+  const minPrice = new BigNumber(
+      market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+  )
     .plus(new BigNumber(market.pool.tradingFee))
     .multipliedBy(new BigNumber(10 ** market.pool.precision))
   const maxPrice = new BigNumber(market.pool.maxPrice)
