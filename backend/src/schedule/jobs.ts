@@ -162,14 +162,13 @@ const waringInterval = 180;
 // Execute several transactions at once
 const execTaskCount = 10;
 // Maximum number of transactions to be stacked in the memory pool
-const maxTaskCount: number = 100;
-const expireTime: number = 20 * 60 * 1000;
-const maxTryCount: number = 3;
+const maxTaskCount: number = 200;
+const expireTime: number = 10 * 60 * 1000;
+const maxTryCount: number = 60;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
-        console.log(`================== ${makerAddress} batch send tx cron ==================`);
         const sn = async () => {
             if (starknetLockMap[makerAddress.toLowerCase()]) {
                 console.log('Starknet is lock, waiting for the end of the previous transaction');
@@ -181,7 +180,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
             const taskList = await starknet.getTask();
             if (!taskList || !taskList.length) {
-                console.log('There are no consumable tasks in the starknet queue');
+                accessLogger.log('There are no consumable tasks in the starknet queue');
                 return { code: 1 };
             }
             // Exceeded limit, clear task
@@ -256,10 +255,10 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     return { code: 1 };
                 }
                 // Maker balance judgment
-                const makerBalance: BigNumber = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
+                const makerBalance: BigNumber | null = await getStarknetTokenBalance(chainId, makerAddress, tokenAddress);
                 const needPay: BigNumber = tokenPay[tokenAddress];
                 // Insufficient Balance
-                if (needPay.gt(makerBalance)) {
+                if (makerBalance && needPay.gt(makerBalance)) {
                     accessLogger.error(`starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`);
                     if (balanceWaringTime < new Date().valueOf() - waringInterval * 1000) {
                         const alert: string = `starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`;
@@ -305,7 +304,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 });
                 setStarknetLock(makerAddress, false);
             } catch (error) {
-                accessLogger.info(`starknet transfer restore: ${queueList.length}`);
+                accessLogger.error(`starknet transfer fail: ${queueList.map(item => item.params?.transactionID)}`);
                 if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
                     await starknet.pushTask(queueList);
                 }

@@ -385,7 +385,7 @@ export async function confirmToSNTransaction(
         'confirmToSNTransaction error',
         error.message
     );
-    telegramBot.sendMessage(`${txID} confirmToSNTransaction error, ${error.message}`).catch(error => {
+    telegramBot.sendMessage(`${txID} confirmToSNTransaction error ${paramsList.map(item => item.transactionID)}, ${error.message}`).catch(error => {
       accessLogger.error('send telegram message error', error);
     });
   }
