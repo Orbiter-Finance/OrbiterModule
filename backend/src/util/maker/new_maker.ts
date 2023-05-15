@@ -19,7 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
-const repositoryMakerNode = (): Repository<MakerNode> => {
+export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 export const chainQueue: { [key: number]: MessageQueue } = {};
@@ -163,7 +163,7 @@ async function isWatchAddress(address: string) {
     ) != -1
   )
 }
-async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
+export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
   // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(row=> row.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
@@ -434,7 +434,9 @@ export async function confirmTransactionSendMoneyBack(
         market.pool,
         tx.nonce,
         0,
-        tx.from
+        tx.from,
+          0,
+          tx.hash
       )
     })
     .catch((error) => {

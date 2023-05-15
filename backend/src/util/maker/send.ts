@@ -119,6 +119,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
     }
   }
 }
+
 // SendQueue
 const sendQueue = new SendQueue()
 export async function sendConsumer(value: any) {
@@ -291,35 +292,35 @@ export async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
-    const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()]
-    const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha'
-    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress)
-    const { nonce, rollback } = await starknet.takeOutNonce()
-    accessLogger.info('starknet_sql_nonce =', nonce)
-    accessLogger.info('result_nonde =', result_nonce)
-    try {
-      const { hash }: any = await starknet.signTransfer({
-        recipient: toAddress,
-        tokenAddress,
-        amount: String(amountToSend),
-        nonce,
-      })
-      await sleep(1000 * 10)
-      return {
-        code: 0,
-        txid: hash,
-        rollback,
-        params: value
-      }
-    } catch (error) {
-      await rollback(error, nonce)
-      await sleep(1000 * 2)
+      const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+      const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
+    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+    const queueList = await starknet.getTask();
+    if (queueList.find(item => item.params?.transactionID === transactionID)) {
+      accessLogger.info('TransactionID was exist: ' + transactionID);
       return {
         code: 1,
-        txid: 'starknet transfer error: ' + error.message,
-        result_nonce: nonce,
+        error: `starknet transfer error: TransactionID was exist ${transactionID}`,
         params: value
-      }
+      };
+    } else {
+      const queue = {
+        createTime: new Date().valueOf(),
+        params: value,
+        signParam: {
+          recipient: toAddress,
+          tokenAddress,
+          amount: String(amountToSend)
+        }
+      };
+      queueList.push(queue);
+      await starknet.pushTask([queue]);
+    }
+    accessLogger.info('result_nonde =', result_nonce);
+    accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+    return {
+      code: 2,
+      params: value
     }
   }
 
@@ -840,6 +841,7 @@ export async function sendConsumer(value: any) {
     accessLogger.error(`RPC not obtained ToChain ${toChain}`)
     return
   }
+
   const web3 = new Web3(web3Net)
   web3.eth.defaultAccount = makerAddress
 
