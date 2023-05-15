@@ -12,7 +12,6 @@ import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
-import { telegramBot } from "../../sms/telegram";
 import fs from "fs";
 import path from "path";
 
