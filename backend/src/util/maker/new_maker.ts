@@ -1,4 +1,4 @@
-import { sleep } from 'orbiter-chaincore/src/utils/core';
+import { fix0xPadStartAddress, sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
@@ -418,6 +418,14 @@ export async function confirmTransactionSendMoneyBack(
         case '44':
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
+      }
+      if (!userAddress ||
+          fix0xPadStartAddress(userAddress, 66).length !== 66 ||
+          fix0xPadStartAddress(userAddress, 66) === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+        accessLogger.error(
+            `Illegal user address ${userAddress} hash:${tx.hash}`
+        );
+        return;
       }
       accessLogger.info(`sendTransaction from hash: ${fromChainID}->${toChainID} ${tx.hash}`);
       await sendTransaction(
