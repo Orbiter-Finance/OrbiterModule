@@ -2,6 +2,21 @@ import config from '../config/index'
 import { $env } from "@/env";
 
 export default {
+  starknetFormat(address) {
+    if (!address) {
+      return "";
+    }
+    if (address.length < 66) {
+      const end = address.substring(2, address.length);
+      const add = 64 - end.length;
+      let addStr = '';
+      for (let i = 0; i < add; i++) {
+        addStr += "0";
+      }
+      address = '0x' + addStr + end;
+    }
+    return address.toLowerCase();
+  },
   getChainInfoByChainId(chainId) {
     const configChainList: any[] = config.chainConfig;
     const info = configChainList.find(item => +item.internalId === +chainId);
@@ -36,9 +51,9 @@ export default {
     if (typeof value1 !== 'string' || typeof value2 !== 'string') {
       return false;
     }
-    return value1.toLocaleLowerCase() == value2.toLocaleLowerCase() ||
-        $env.crossAddressTransferMap[value1.toLocaleLowerCase()] == value2.toLocaleLowerCase() ||
-        $env.crossAddressTransferMap[value2.toLocaleLowerCase()] == value1.toLocaleLowerCase();
+    return this.starknetFormat(value1) === this.starknetFormat(value2) ||
+        this.starknetFormat($env.crossAddressTransferMap[value1.toLocaleLowerCase()]) === this.starknetFormat(value2.toLocaleLowerCase()) ||
+        this.starknetFormat($env.crossAddressTransferMap[value2.toLocaleLowerCase()]) === this.starknetFormat(value1.toLocaleLowerCase());
   },
   chainName(chainId) {
     return this.getChainInfoByChainId(chainId)?.name || 'unknown';

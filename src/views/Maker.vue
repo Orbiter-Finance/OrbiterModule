@@ -499,6 +499,7 @@ import { ref, computed, inject, reactive, toRef, watch, getCurrentInstance,onMou
 import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
 import util from "../utils/util";
+import ERC20Abi from "../config/ERC20.json";
 import BigNumber from "bignumber.js";
 import Buffer from "vue-buffer";
 // import * as zksync from 'zksync'
@@ -761,10 +762,10 @@ const selectable = (row) => {
   if (row.status === 95 || row.status === 99) {
     return false;
   }
-  if (!util.isSupportXVMContract(row.toChainId)) {
+  if (!(util.isSupportXVMContract(row.toChainId) || Number(row.toChainId) === 4 || Number(row.toChainId) === 44)) {
     return false;
   }
-  if(!selectChainId.value){
+  if (!selectChainId.value) {
     return true;
   }
   if (sendType.value == 1) {
@@ -776,7 +777,6 @@ const selectable = (row) => {
       return true;
     }
   }
-
   return false;
 };
 
@@ -895,6 +895,34 @@ const confirmSend = async ()=>{
   const fromChainId: number = sendData.chainId;
   const chainInfo = util.getChainInfoByChainId(fromChainId);
   confirmSendVisible.value = false;
+  if (fromChainId === 4 || fromChainId === 44) {
+    const transactions = [];
+    const abis = [];
+    for (const data of dataList) {
+      transactions.push({
+        contractAddress: data.tokenAddress,
+        entrypoint: 'transfer',
+        calldata: stark.compileCalldata({
+          recipient: data.toAddress,
+          amount: getUint256CalldataFromBN(data.amount)
+        })
+      });
+      abis.push(ERC20Abi)
+    }
+    const tx = await getStarknet().account.execute(transactions, abis);
+    console.log(tx);
+    ElNotification({
+      title: 'Transfer Succeed',
+      message:
+              'The transfer was successful! Dashboard will update data list in 15 minutes!',
+      type: 'success',
+    });
+    for (const dt of dataList) {
+      const node = makerNodes.value.find(item => item.id == dt.id);
+      node.state = 21;
+    }
+    return;
+  }
   if (sendData.source === 'xvm' && util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
@@ -1074,9 +1102,24 @@ const onClickStateTag = async (item: MakerNode) => {
     }
     sendTypeShow.value = true;
 
-    await switchNetwork(fromChainId);
+    if (!isStarknet) await switchNetwork(fromChainId);
 
-    if (util.isSupportXVMContract(fromChainId)) {
+    if (isStarknet) {
+      selectShow.value = true;
+      if (!getStarknet().account?.address) {
+        await connectStarkNetWallet();
+      }
+      walletAccount = getStarknet().account?.address;
+      if (!util.equalsMakerAddress(walletAccount, fromAddress) &&
+              !util.equalsMakerAddress(walletAccount, "0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328")) {
+        selectShow.value = false;
+        throw new Error(
+                `Please switch the address to ${fromAddress} or 0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328 in the wallet!`
+        );
+      }
+    }
+
+    if (util.isSupportXVMContract(fromChainId) || isStarknet) {
       if (!selectShow.value) {
         selectShow.value = true;
         return;
@@ -1104,7 +1147,8 @@ const onClickStateTag = async (item: MakerNode) => {
           }
           sendInfo.value = dataList;
           console.log('Send info ===> ', dataList);
-          confirmSendVisible.value = true;
+          // confirmSendVisible.value = true;
+          confirmSend()
           return;
         } else {
           const dt = isOriginBack ? item.needBack : item.needTo;
@@ -1134,19 +1178,6 @@ const onClickStateTag = async (item: MakerNode) => {
       }
     }
 
-    if (isStarknet) {
-      if (!getStarknet().account?.address) {
-        await connectStarkNetWallet();
-      }
-      walletAccount = getStarknet().account?.address;
-      if (!util.equalsMakerAddress(walletAccount, fromAddress)) {
-        selectShow.value = false;
-        throw new Error(
-                `Please switch the address to ${fromAddress} in the wallet!`
-        );
-      }
-    }
-
     const toSymbol = sendType.value != 1 ? item.tokenName : item.toSymbol;
     const toChainIdName = sendType.value != 1 ? item.fromChainName : item.toChainName;
     const dataList = [{
@@ -1164,6 +1195,7 @@ const onClickStateTag = async (item: MakerNode) => {
     // confirmSendVisible.value = true;
     confirmSend();
   } catch (err) {
+    console.log('err ====', err);
     ElNotification({
       title: 'Error',
       message: `Fail: ${err.message}`,
@@ -1172,43 +1204,36 @@ const onClickStateTag = async (item: MakerNode) => {
   }
 }
 
+const getUint256CalldataFromBN = (bn) => {
+  return { type: 'struct', ...uint256.bnToUint256(bn) };
+};
+
 const starknetTransfer = async (fromAddress, toAddress, chainId, tokenAddress, amount) => {
   amount = new BigNumber(amount);
-  fromAddress = fromAddress.toLowerCase();
+  // fromAddress = fromAddress.toLowerCase();
   toAddress = toAddress.toLowerCase();
   tokenAddress = tokenAddress.toLowerCase();
   const chanInfo = util.getChainInfoByChainId(chainId);
-  let networkID = chanInfo.chainId;
-  const network = networkID == 1 ? 'mainnet-alpha' : 'georli-alpha';
-  const STARKNET_CROSS_CONTRACT_ADDRESS = {
-    'mainnet-alpha':
-            '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
-    'georli-alpha':
-            '0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3',
-  };
-  const contractAddress = STARKNET_CROSS_CONTRACT_ADDRESS[network];
+  // let networkID = chanInfo.chainId;
+  // const network = networkID == 1 ? 'mainnet-alpha' : 'georli-alpha';
+  // const STARKNET_CROSS_CONTRACT_ADDRESS = {
+  //   'mainnet-alpha':
+  //           '0x0173f81c529191726c6e7287e24626fe24760ac44dae2a1f7e02080230f8458b',
+  //   'georli-alpha':
+  //           '0x0457bf9a97e854007039c43a6cc1a81464bd2a4b907594dabc9132c162563eb3',
+  // };
+  // const contractAddress = STARKNET_CROSS_CONTRACT_ADDRESS[network];
 
-  const getUint256CalldataFromBN = (bn) => {
-    return { type: 'struct', ...uint256.bnToUint256(bn) };
-  };
-  const isMainToken = util.isEthTokenAddress(chainId, tokenAddress);
-  const transaction = isMainToken ? {
+
+  // const isMainToken = util.isEthTokenAddress(chainId, tokenAddress);
+  const transaction = {
     contractAddress: tokenAddress,
     entrypoint: 'transfer',
     calldata: stark.compileCalldata({
       recipient: toAddress,
       amount: getUint256CalldataFromBN(String(amount)),
     }),
-  } : {
-    contractAddress: contractAddress,
-    entrypoint: 'transferERC20',
-    calldata: stark.compileCalldata({
-      token: tokenAddress,
-      to: toAddress,
-      amount: getUint256CalldataFromBN(String(amount)),
-      ext: fromAddress
-    }),
-  };
+  }
   const txhash: any = await getStarknet().account.execute(transaction);
   if (txhash?.code == 'TRANSACTION_RECEIVED') {
     return txhash.transaction_hash;
