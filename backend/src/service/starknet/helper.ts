@@ -128,6 +128,9 @@ export class StarknetHelp {
               }));
               setClearList(makerAddress, cacheList);
           }
+          if (clearTaskList.length) {
+              accessLogger.info(`starknet consume task: ${clearTaskList.map(item => item.params?.transactionID)}`);
+          }
       } catch (e) {
           accessLogger.error(`starknet clearTask error: ${e.message}`);
       }
