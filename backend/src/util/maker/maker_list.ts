@@ -1,5 +1,6 @@
+import {cloneDeep} from 'lodash';
 export const makerListHistory = [];
-export const makerList = [
+const initMakerList = [
   {
     "makerAddress": "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
     "c1ID": 16,
@@ -7937,3 +7938,14 @@ export const makerList = [
         ]
     }
 ];
+const list1 = cloneDeep(initMakerList).filter(row=> row.c2ID == 14 && row.makerAddress === '0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8');
+
+const push1List = cloneDeep(list1).map(row=> {
+  row.makerAddress = '0xee73323912a4e3772b74ed0ca1595a152b0ef282';
+  return row;
+})
+const push2List = cloneDeep(list1).map(row=> {
+  row.makerAddress = '0x0a88bc5c32b684d467b43c06d9e0899efeaf59df';
+  return row;
+})
+export const makerList = [...initMakerList,...push1List,...push2List];
