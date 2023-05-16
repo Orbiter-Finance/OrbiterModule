@@ -824,7 +824,7 @@ export async function sendTxConsumeHandle(result: any) {
     if (!result?.paramsList || !result?.paramsList.length) {
       return;
     }
-    const transactionIDList: string[] = result.paramsList.map(item => item.params?.transactionID);
+    const transactionIDList: string[] = result.paramsList.map(item => item.transactionID);
     errorLogger.error(
         'updateError maker_node =',
         `state = 20 WHERE transactionID in ('${transactionIDList}')`
