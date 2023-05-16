@@ -310,10 +310,11 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 }
                 await rollback(error, nonce);
                 await sendTxConsumeHandle({
-                    code: 1,
+                    code: 4,
                     txid: 'starknet transfer error: ' + error.message,
                     result_nonce: nonce,
-                    params: paramsList[0]
+                    params: paramsList[0],
+                    paramsList
                 });
             }
             return { code: 0 };
