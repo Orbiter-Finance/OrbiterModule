@@ -820,6 +820,40 @@ export async function sendTxConsumeHandle(result: any) {
   } else if (response.code === 3) {
     // handle multiple transactions
     await handleParamsList(result);
+  } else if (response.code === 4) {
+    // handle multiple transactions fail
+    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+      return;
+    }
+    const transactionIDList: string[] = result.paramsList.map(item => item.params?.transactionID);
+    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    });
+    errorLogger.error(
+        'updateError maker_node =',
+        `state = 20 WHERE transactionID in ('${transactionIDList}')`
+    );
+    try {
+      await repositoryMakerNode().update(
+          { transactionID: In(transactionIDList) },
+          { state: 20 }
+      );
+      accessLogger.info(
+          `[${transactionIDList}] sendTransaction toChain ${toChain} state = 20  update success`
+      );
+    } catch (error) {
+      errorLogger.error(`[${transactionIDList}] updateErrorSqlError =`, error);
+      return;
+    }
+    let alert = 'Send Transaction Error Count ' + transactionIDList.length;
+    try {
+      doSms(alert);
+    } catch (error) {
+      errorLogger.error(
+          `[${transactionIDList}] sendTransactionErrorMessage =`,
+          error
+      );
+    }
   } else {
     telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionID}, errmsg: ${response.txid}`).catch(error => {
       accessLogger.error('send telegram message error', error);
