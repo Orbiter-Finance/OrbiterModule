@@ -138,7 +138,7 @@ export async function startNewMakerTrxPull() {
         return true;
       })
     }
-    pubSub.subscribe(`${intranetId}:txlist`, (result)=> {
+    pubSub.subscribe(`${intranetId}:txlist`, (result) => {
       subscribeNewTransaction(result);
       return true;
     })
@@ -286,7 +286,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
               m.fromChain.tokenAddress,
               String(tx.tokenAddress)
             ) &&
-            chainCoreUtil.equals(m.toChain.symbol, tx.symbol)
+            chainCoreUtil.equals(m.toChain.symbol, tx.symbol) &&
+            chainCoreUtil.equals(m.recipient, tx.to)
         )
         if (!marketItem) {
           accessLogger.error(
