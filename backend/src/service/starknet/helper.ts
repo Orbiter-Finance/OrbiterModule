@@ -53,6 +53,8 @@ export function getClearList(address: string) {
 
 export const starknetHelpLockMap = {};
 
+const txPool: { [makerAddress: string]: any[] } = {};
+
 export class StarknetHelp {
   private cache: Keyv
   private cacheTx: Keyv
@@ -108,15 +110,14 @@ export class StarknetHelp {
       }
       starknetHelpLockMap[makerAddress] = true;
       try {
-          const cacheKey = `queue:${this.address.toLowerCase()}`;
-          const allTaskList: any[] = await this.cacheTx.get(cacheKey) || [];
+          const allTaskList: any[] = await this.getTask();
           const leftTaskList = allTaskList.filter(task => {
               return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
           });
           const clearTaskList = allTaskList.filter(task => {
               return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
           });
-          await this.cacheTx.set(cacheKey, leftTaskList);
+          txPool[makerAddress] = leftTaskList;
           if (clearTaskList.length && code) {
               const cacheList: any[] = getClearList(makerAddress) || [];
               cacheList.push(clearTaskList.map(item => {
@@ -143,8 +144,7 @@ export class StarknetHelp {
       }
       starknetHelpLockMap[makerAddress] = true;
       try {
-          const cacheKey = `queue:${this.address.toLowerCase()}`;
-          const cacheList = await this.cacheTx.get(cacheKey) || [];
+          const cacheList: any[] = await this.getTask();
           const newList: any[] = [];
           for (const task of taskList) {
               if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
@@ -154,15 +154,14 @@ export class StarknetHelp {
                   newList.push(task);
               }
           }
-          await this.cacheTx.set(cacheKey, [...cacheList, ...newList]);
+          txPool[makerAddress] = [...cacheList, ...newList];
       } catch (e) {
           accessLogger.error(`starknet pushTask error: ${e.message}`);
       }
       starknetHelpLockMap[makerAddress] = false;
   }
-  async getTask() {
-    const cacheKey = `queue:${this.address.toLowerCase()}`;
-    return JSON.parse(JSON.stringify((await this.cacheTx.get(cacheKey)) || []));
+  async getTask(): Promise<any[]> {
+      return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
