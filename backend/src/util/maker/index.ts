@@ -821,18 +821,10 @@ export async function sendTxConsumeHandle(result: any) {
     // handle multiple transactions
     await handleParamsList(result);
   } else if (response.code === 4) {
-    // handle multiple transactions fail
-    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+    if (!result?.paramsList || !result?.paramsList.length) {
       return;
     }
     const transactionIDList: string[] = result.paramsList.map(item => item.params?.transactionID);
-    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
-      accessLogger.error('send telegram message error', error);
-    });
-    errorLogger.error(
-        'updateError maker_node =',
-        `state = 20 WHERE transactionID in ('${transactionIDList}')`
-    );
     try {
       await repositoryMakerNode().update(
           { transactionID: In(transactionIDList) },
@@ -845,6 +837,17 @@ export async function sendTxConsumeHandle(result: any) {
       errorLogger.error(`[${transactionIDList}] updateErrorSqlError =`, error);
       return;
     }
+    // handle multiple transactions fail
+    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+      return;
+    }
+    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    });
+    errorLogger.error(
+        'updateError maker_node =',
+        `state = 20 WHERE transactionID in ('${transactionIDList}')`
+    );
     let alert = 'Send Transaction Error Count ' + transactionIDList.length;
     try {
       doSms(alert);
