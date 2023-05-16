@@ -825,6 +825,10 @@ export async function sendTxConsumeHandle(result: any) {
       return;
     }
     const transactionIDList: string[] = result.paramsList.map(item => item.params?.transactionID);
+    errorLogger.error(
+        'updateError maker_node =',
+        `state = 20 WHERE transactionID in ('${transactionIDList}')`
+    );
     try {
       await repositoryMakerNode().update(
           { transactionID: In(transactionIDList) },
@@ -844,10 +848,6 @@ export async function sendTxConsumeHandle(result: any) {
     telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
       accessLogger.error('send telegram message error', error);
     });
-    errorLogger.error(
-        'updateError maker_node =',
-        `state = 20 WHERE transactionID in ('${transactionIDList}')`
-    );
     let alert = 'Send Transaction Error Count ' + transactionIDList.length;
     try {
       doSms(alert);
