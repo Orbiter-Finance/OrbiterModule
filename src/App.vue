@@ -79,14 +79,9 @@ provide('exchangeRates', exchangeRates)
 const getGlobalInfo = async () => {
   state.exchangeRates = await http.get('/v1/dashboard/rates');
 
-  const list = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
-  const newList = [];
-  for (const data of list) {
-    if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
-      newList.push(data);
-    }
-  }
-  state.makerAddresses = newList
+  const list: any[] = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
+  list.push("0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8");
+  state.makerAddresses = list;
 
   const mk: string = router?.currentRoute?._value?.query?.makerAddress;
   const reg = new RegExp(/^0x[a-fA-F0-9]{40}$/);
