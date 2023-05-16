@@ -127,7 +127,7 @@ function transforeData(list: any = []) {
       item.state = 20;
     }
 
-    item['makerAddressHref'] = accountExploreUrl[item.fromChainId] + item['makerAddress']
+    item['makerAddressHref'] = accountExploreUrl[item.toChainId] + item['makerAddress']
     item['userAddressHref'] = accountExploreUrl[item.fromChainId] + item['userAddress']
     item['replyAccountHref'] = accountExploreUrl[item.toChainId] + item['replyAccount']
     item['fromTxHref'] = $env.txExploreUrl[item.fromChainId] + item['fromTx']
