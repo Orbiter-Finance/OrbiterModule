@@ -10,7 +10,7 @@ import {
 } from '@loopring-web/loopring-sdk'
 import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
-import { Repository } from 'typeorm'
+import { In, Repository } from 'typeorm';
 import Web3 from 'web3'
 import { sleep } from '..'
 import { makerConfig } from '../../config'
@@ -23,7 +23,7 @@ import { makerList, makerListHistory } from './maker_list'
 import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
-import { getProviderV4 } from '../../service/starknet/helper'
+import { getProviderV4 } from '../../service/starknet/helper';
 import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
@@ -323,10 +323,8 @@ function confirmToLPTransaction(
 
 export async function confirmToSNTransaction(
   txID: string,
-  transactionID: string,
   chainId: number,
-  makerAddress: string,
-  nonce: string,
+  paramsList: { makerAddress: string, transactionID: string }[],
   rollback: any
 ) {
   try {
@@ -344,7 +342,7 @@ export async function confirmToSNTransaction(
     // When reject
     if (txStatus == 'REJECTED') {
       errorLogger.info(
-        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${transactionID} transaction_failure_reason,`,
+        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))} transaction_failure_reason,`,
         response['transaction_failure_reason']
       )
       // check nonce
@@ -364,30 +362,32 @@ export async function confirmToSNTransaction(
       accessLogger.info(
         'sn_Transaction with hash ' + txID + ' has been successfully confirmed'
       )
+      const transactionIDList: string[] = paramsList.map(item => item.transactionID);
       accessLogger.info(
-        'update maker_node =',
-        `state = 3 WHERE transactionID = '${transactionID}'`
-      )
+          'update maker_node =',
+          `state = 3 WHERE transactionID in (${transactionIDList})`
+      );
       await repositoryMakerNode().update(
-        { transactionID: transactionID },
-        { state: 3 }
-      )
+          { transactionID: In(transactionIDList) },
+          { state: 3 }
+      );
       return true
     }
     await sleep(1000 * 30)
     return await confirmToSNTransaction(
       txID,
-      transactionID,
       chainId,
-      makerAddress,
-      nonce,
+      paramsList,
       rollback
     )
   } catch (error) {
     getLoggerService(String(chainId)).error(
-      'confirmToSNTransaction error',
-      error.message
-    )
+        'confirmToSNTransaction error',
+        error.message
+    );
+    telegramBot.sendMessage(`${txID} confirmToSNTransaction error ${paramsList.map(item => item.transactionID)}, ${error.message}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    });
   }
 }
 
@@ -522,7 +522,8 @@ export async function sendTransaction(
   nonce,
   result_nonce = 0,
   ownerAddress = '',
-  retryCount = 0
+  retryCount = 0,
+  fromHash?
 ) {
   const accessLogger = getLoggerService(toChainID);
   const amountToSend = getAmountToSend(
@@ -582,7 +583,8 @@ export async function sendTransaction(
     result_nonce,
     fromChainID,
     lpMemo: nonce,
-    ownerAddress
+    ownerAddress,
+    fromHash
   }).catch(error => {
     errorLogger.warn(`enqueue error:`, error);
   });
@@ -760,7 +762,8 @@ export async function sendTxConsumeHandle(result: any) {
     amountToSend: tAmount,
     lpMemo: nonce } = params;
   const accessLogger = getLoggerService(toChainID);
-  accessLogger.info(`${transactionID} sendTxConsumeHandle response =`, response);
+  if (response.code !== 2 && response.code !== 3) accessLogger.info(`${transactionID} sendTxConsumeHandle response =`, response);
+  // code 0:handle single payment 1:fail 2:store multiple transactions 3:handle multiple payments
   if (!response.code) {
     var txID = response.txid
     accessLogger.info(
@@ -788,22 +791,18 @@ export async function sendTxConsumeHandle(result: any) {
     } else if (toChainID === 4 || toChainID === 44) {
       confirmToSNTransaction(
         txID,
-        transactionID,
         toChainID,
-        makerAddress,
-        nonce,
+          [{ makerAddress, transactionID }],
         response.rollback
       )
     } else if (toChainID === 8 || toChainID === 88) {
       console.warn({ toChainID, toChain, txID, transactionID })
-      // confirmToSNTransaction(txID, transactionID, toChainID)
     } else if (toChainID === 9 || toChainID === 99) {
       confirmToLPTransaction(txID, transactionID, toChainID, makerAddress)
     } else if (toChainID === 11 || toChainID === 511) {
       accessLogger.info(
         `dYdX transfer succceed. txID: ${txID}, transactionID: ${transactionID}`
       )
-      // confirmToSNTransaction(txID, transactionID, toChainID)
     } else if (toChainID === 12 || toChainID === 512) {
       if (txID.indexOf('sync-tx:') != -1) {
         txID = txID.replace('sync-tx:', '0x')
@@ -814,6 +813,50 @@ export async function sendTxConsumeHandle(result: any) {
     }
     await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
     // update todo
+  } else if (response.code === 2) {
+    // Store multiple transactions
+    console.log(`Store success toChainID: ${toChainID} tAmount: ${tAmount}`)
+    accessLogger.info(`Store success toChainID: ${toChainID} tAmount: ${tAmount}`);
+  } else if (response.code === 3) {
+    // handle multiple transactions
+    await handleParamsList(result);
+  } else if (response.code === 4) {
+    if (!result?.paramsList || !result?.paramsList.length) {
+      return;
+    }
+    const transactionIDList: string[] = result.paramsList.map(item => item.transactionID);
+    errorLogger.error(
+        'updateError maker_node =',
+        `state = 20 WHERE transactionID in ('${transactionIDList}')`
+    );
+    try {
+      await repositoryMakerNode().update(
+          { transactionID: In(transactionIDList) },
+          { state: 20 }
+      );
+      accessLogger.info(
+          `[${transactionIDList}] sendTransaction toChain ${toChain} state = 20  update success`
+      );
+    } catch (error) {
+      errorLogger.error(`[${transactionIDList}] updateErrorSqlError =`, error);
+      return;
+    }
+    // handle multiple transactions fail
+    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+      return;
+    }
+    telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
+      accessLogger.error('send telegram message error', error);
+    });
+    let alert = 'Send Transaction Error Count ' + transactionIDList.length;
+    try {
+      doSms(alert);
+    } catch (error) {
+      errorLogger.error(
+          `[${transactionIDList}] sendTransactionErrorMessage =`,
+          error
+      );
+    }
   } else {
     telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionID}, errmsg: ${response.txid}`).catch(error => {
       accessLogger.error('send telegram message error', error);
@@ -843,5 +886,43 @@ export async function sendTxConsumeHandle(result: any) {
         error
       )
     }
+  }
+}
+
+async function handleParamsList(result) {
+  let { params, paramsList, ...response } = result;
+  const txID = response.txid;
+  const { chainID: toChainID } = params;
+  paramsList = paramsList || [params];
+  const accessLogger = getLoggerService(toChainID);
+  const transactionIDList: string[] = paramsList.map(item => item.transactionID);
+  accessLogger.info(`${transactionIDList} sendTxConsumeHandle response =`, response);
+  accessLogger.info(
+      `update maker_node: state = 2, toTx = '${txID}' where transactionID in (${transactionIDList})`
+  );
+  try {
+    await repositoryMakerNode().update(
+        { transactionID: In(transactionIDList) },
+        {
+          toTx: txID,
+          state: 2,
+        }
+    );
+    accessLogger.info(
+        `[${transactionIDList}] sendTransaction update success`
+    );
+  } catch (error) {
+    errorLogger.error(`[${transactionIDList}] updateToSqlError =`, error);
+    return;
+  }
+
+  if (toChainID === 4 || toChainID === 44) {
+    const txID = response.txid;
+    confirmToSNTransaction(
+        txID,
+        toChainID,
+        paramsList,
+        response.rollback
+    );
   }
 }

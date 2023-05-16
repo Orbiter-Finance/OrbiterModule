@@ -12,7 +12,16 @@ import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
 import { sleep } from '../../util'
+import fs from "fs";
+import path from "path";
+
 const accessLogger = getLoggerService('4')
+
+export let starknetLockMap = {};
+
+export function setStarknetLock(makerAddress: string, status: boolean) {
+  starknetLockMap[makerAddress.toLowerCase()] = status;
+}
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
@@ -28,8 +37,27 @@ export function parseInputAmountToUint256(
 ) {
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
+
+export function setClearList(address: string, data: any[]) {
+    fs.writeFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`), JSON.stringify(data));
+}
+
+export function getClearList(address: string) {
+    try {
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
+    } catch (e) {
+        setClearList(address, []);
+        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
+    }
+}
+
+export const starknetHelpLockMap = {};
+
+const txPool: { [makerAddress: string]: any[] } = {};
+
 export class StarknetHelp {
   private cache: Keyv
+  private cacheTx: Keyv
   public account: Account
   constructor(
     public readonly network: starknetNetwork,
@@ -45,6 +73,16 @@ export class StarknetHelp {
         decode: JSON.parse, // deserialize function
       }),
     })
+      this.cacheTx = new Keyv({
+          store: new KeyvFile({
+              filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
+              expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+              writeDelay: 0,
+              encode: JSON.stringify, // serialize function
+              decode: JSON.parse, // deserialize function
+          }),
+      });
+
     const provider = getProviderV4(network)
     this.account = new Account(
       provider,
@@ -60,6 +98,70 @@ export class StarknetHelp {
 
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
+  }
+  // code:0.Normal clearing 1.Abnormal clearing
+  async clearTask(taskList: any[], code: number) {
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
+          await this.clearTask(taskList, code);
+          return;
+      }
+      starknetHelpLockMap[makerAddress] = true;
+      try {
+          const allTaskList: any[] = await this.getTask();
+          const leftTaskList = allTaskList.filter(task => {
+              return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          const clearTaskList = allTaskList.filter(task => {
+              return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          txPool[makerAddress] = leftTaskList;
+          if (clearTaskList.length && code) {
+              const cacheList: any[] = getClearList(makerAddress) || [];
+              cacheList.push(clearTaskList.map(item => {
+                  return {
+                      transactionID: item.params.transactionID,
+                      chainId: item.params.fromChainID,
+                      hash: item.params.fromHash
+                  };
+              }));
+              setClearList(makerAddress, cacheList);
+          }
+      } catch (e) {
+          accessLogger.error(`starknet clearTask error: ${e.message}`);
+      }
+      starknetHelpLockMap[makerAddress] = false;
+  }
+  async pushTask(taskList: any[]) {
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
+          await this.pushTask(taskList);
+          return;
+      }
+      starknetHelpLockMap[makerAddress] = true;
+      try {
+          const cacheList: any[] = await this.getTask();
+          const newList: any[] = [];
+          for (const task of taskList) {
+              if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+                  accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+              } else {
+                  task.count = (task.count || 0) + 1;
+                  newList.push(task);
+              }
+          }
+          txPool[makerAddress] = [...cacheList, ...newList];
+      } catch (e) {
+          accessLogger.error(`starknet pushTask error: ${e.message}`);
+      }
+      starknetHelpLockMap[makerAddress] = false;
+  }
+  async getTask(): Promise<any[]> {
+      return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
@@ -98,6 +200,7 @@ export class StarknetHelp {
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message)
         }
+        setStarknetLock(this.address.toLowerCase(), false);
       },
     }
   }
@@ -175,6 +278,50 @@ export class StarknetHelp {
       hash,
     }
   }
+
+    async signMultiTransfer(paramsList: {
+        tokenAddress: string
+        recipient: string
+        amount: string
+    }[], nonce: number) {
+        const provider = getProviderV4(this.network);
+        const entrypoint = 'transfer';
+        const invocationList: { contractAddress: string, entrypoint: string, calldata: any }[] = [];
+
+        for (const params of paramsList) {
+            const calldata = compileCalldata({
+                recipient: params.recipient,
+                amount: getUint256CalldataFromBN(params.amount),
+            });
+
+            invocationList.push({ contractAddress: params.tokenAddress, entrypoint, calldata });
+        }
+        const ofa = new OfflineAccount(provider, this.address, this.account.signer);
+        const trx = await ofa.signMutiTx(
+            invocationList,
+            nonce
+        );
+        if (!trx || !trx.transaction_hash) {
+            throw new Error(`Starknet Failed to send transaction hash does not exist`);
+        }
+        await sleep(1000);
+        const hash = trx.transaction_hash;
+        try {
+            const response = await provider.getTransaction(hash);
+            if (
+                !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+                    response['status']
+                )
+            ) {
+                accessLogger.error('Straknet Send After status error:', response);
+            }
+        } catch (error) {
+            accessLogger.error(`Starknet Send After GetTransaction Erro:`, error);
+        }
+        return {
+            hash,
+        };
+    }
 }
 /**
  *

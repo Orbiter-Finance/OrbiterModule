@@ -1,4 +1,4 @@
-import { sleep } from 'orbiter-chaincore/src/utils/core';
+import { fix0xPadStartAddress, sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
@@ -19,7 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 const allChainsConfig = [...mainnetChains, ...testnetChains]
-const repositoryMakerNode = (): Repository<MakerNode> => {
+export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 export const chainQueue: { [key: number]: MessageQueue } = {};
@@ -61,7 +61,9 @@ export function checkAmount(
     return false
   }
   const rAmount = <any>realAmount.rAmount
-  const minPrice = new BigNumber(market.pool.minPrice)
+  const minPrice = new BigNumber(
+      market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+  )
     .plus(new BigNumber(market.pool.tradingFee))
     .multipliedBy(new BigNumber(10 ** market.pool.precision))
   const maxPrice = new BigNumber(market.pool.maxPrice)
@@ -161,7 +163,7 @@ async function isWatchAddress(address: string) {
     ) != -1
   )
 }
-async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
+export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
   // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(row=> row.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
@@ -420,6 +422,14 @@ export async function confirmTransactionSendMoneyBack(
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           break
       }
+      if (!userAddress ||
+          fix0xPadStartAddress(userAddress, 66).length !== 66 ||
+          fix0xPadStartAddress(userAddress, 66) === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+        accessLogger.error(
+            `Illegal user address ${userAddress} hash:${tx.hash}`
+        );
+        return;
+      }
       accessLogger.info(`sendTransaction from hash: ${fromChainID}->${toChainID} ${tx.hash}`);
       await sendTransaction(
         makerAddress,
@@ -433,7 +443,9 @@ export async function confirmTransactionSendMoneyBack(
         market.pool,
         tx.nonce,
         0,
-        tx.from
+        tx.from,
+          0,
+          tx.hash
       )
     })
     .catch((error) => {
