@@ -903,22 +903,6 @@ export async function sendConsumer(value: any) {
      * you need to increase a nonce which is tied to the sender wallet.
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
-
-    // zkera
-    if (chainID == 14 || chainID == 514) {
-      const actNonce = await web3.eth.getTransactionCount(
-          <any>web3.eth.defaultAccount
-      );
-      accessLogger.info('zkera pending_nonce =', nonce);
-      accessLogger.info('zkera act_nonce =', actNonce);
-      accessLogger.info('zkera sql_nonce =', sql_nonce);
-      if (sql_nonce - actNonce > 19) {
-        accessLogger.info(`zkera sql_nonce - actNonce > 19, retry after 10 seconds.`);
-        await sleep(10000);
-        return await sendConsumer({ ...value, result_nonce: 0 });
-      }
-    }
-
     accessLogger.info(
       `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
     )
@@ -930,6 +914,22 @@ export async function sendConsumer(value: any) {
         result_nonce = nonce
       } else {
         result_nonce = sql_nonce + 1
+      }
+    }
+
+    // zkera
+    if (chainID == 14 || chainID == 514) {
+      const actNonce = await web3.eth.getTransactionCount(
+          <any>web3.eth.defaultAccount
+      );
+      accessLogger.info('zkera pending_nonce =', nonce);
+      accessLogger.info('zkera act_nonce =', actNonce);
+      accessLogger.info('zkera sql_nonce =', sql_nonce);
+      accessLogger.info('zkera result_nonce =', result_nonce);
+      if (result_nonce - actNonce > 19) {
+        accessLogger.info(`zkera result_nonce - actNonce > 19, retry after 10 seconds.`);
+        await sleep(10000);
+        return await sendConsumer({ ...value, result_nonce: 0 });
       }
     }
 
