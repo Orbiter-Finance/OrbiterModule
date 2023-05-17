@@ -928,8 +928,8 @@ export async function sendConsumer(value: any) {
       accessLogger.info('zkera result_nonce =', result_nonce);
       if (result_nonce - actNonce > 19) {
         accessLogger.info(`zkera result_nonce - actNonce > 19, retry after 10 seconds.`);
-        await sleep(10000);
-        return await sendConsumer({ ...value, result_nonce: 0 });
+        await sleep(30000);
+        // return await sendConsumer({ ...value, result_nonce: 0 });
       }
     }
 
