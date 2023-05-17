@@ -1155,21 +1155,30 @@ export async function sendConsumer(value: any) {
         accessLogger.info('send transaction receipt=', JSON.stringify(tx))
       })
       .on('error', async (err: any) => {
+        const result = {
+          code: 1,
+          txid: err,
+          error: err,
+          result_nonce,
+          params: value,
+          sms: true
+        }
         nonceDic[makerAddress][chainID] = result_nonce - 1;
         if (chainID == 14 || chainID == 514) {
           const msg = typeof err === "object" ? (err?.message ? err.message : JSON.stringify(err)) : err;
           if (msg.indexOf('nonce too high. allowed nonce range') !== -1) {
             accessLogger.info('zkera nonce too high. allowed nonce range, wait for 30s');
+            result.sms =false;
             await sleep(30000);
+            // remove exist cache
+            chainTransferMap?.delete(transactionID);
+            //
+            chainQueue[Number(chainID)].enqueue(transactionID, value).catch(error => {
+              errorLogger.warn(`retry enqueue error:`, error);
+            });
           }
         }
-        resolve({
-          code: 1,
-          txid: err,
-          error: err,
-          result_nonce,
-          params: value
-        })
+        resolve(result)
       })
   })
 }
