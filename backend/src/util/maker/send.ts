@@ -903,6 +903,18 @@ export async function sendConsumer(value: any) {
      * you need to increase a nonce which is tied to the sender wallet.
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
+
+    // zkera
+    if (chainID == 14 || chainID == 514) {
+      if (nonce - sql_nonce > 20) {
+        accessLogger.info(
+            `nonce - sql_nonce > 20 nonce:${nonce}, sql_nonce:${sql_nonce}`
+        );
+        await sleep(5000);
+        await sendConsumer(value);
+      }
+    }
+
     accessLogger.info(
       `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
     )
