@@ -1169,7 +1169,7 @@ export async function sendConsumer(value: any) {
           if (msg.indexOf('nonce too high. allowed nonce range') !== -1) {
             accessLogger.info('zkera nonce too high. allowed nonce range, wait for 30s');
             result.sms =false;
-            await sleep(30000);
+            await sleep(15000);
             // remove exist cache
             chainTransferMap?.delete(transactionID);
             //
