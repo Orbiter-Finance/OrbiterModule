@@ -906,12 +906,17 @@ export async function sendConsumer(value: any) {
 
     // zkera
     if (chainID == 14 || chainID == 514) {
-      if (nonce - sql_nonce > 20) {
-        accessLogger.info(
-            `nonce - sql_nonce > 20 nonce:${nonce}, sql_nonce:${sql_nonce}`
-        );
+      const actNonce = await web3.eth.getTransactionCount(
+          <any>web3.eth.defaultAccount
+      );
+      if (sql_nonce - actNonce > 19) {
+        accessLogger.info(`zkera sql_nonce - actNonce > 19`);
+        accessLogger.info('zkera pending_nonce =', nonce);
+        accessLogger.info('zkera act_nonce =', actNonce);
+        accessLogger.info('zkera sql_nonce =', sql_nonce);
         await sleep(5000);
-        await sendConsumer(value);
+        await sendConsumer({ ...value, result_nonce: 0 });
+        return;
       }
     }
 
