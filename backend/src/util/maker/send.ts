@@ -909,14 +909,13 @@ export async function sendConsumer(value: any) {
       const actNonce = await web3.eth.getTransactionCount(
           <any>web3.eth.defaultAccount
       );
+      accessLogger.info('zkera pending_nonce =', nonce);
+      accessLogger.info('zkera act_nonce =', actNonce);
+      accessLogger.info('zkera sql_nonce =', sql_nonce);
       if (sql_nonce - actNonce > 19) {
-        accessLogger.info(`zkera sql_nonce - actNonce > 19`);
-        accessLogger.info('zkera pending_nonce =', nonce);
-        accessLogger.info('zkera act_nonce =', actNonce);
-        accessLogger.info('zkera sql_nonce =', sql_nonce);
-        await sleep(5000);
-        await sendConsumer({ ...value, result_nonce: 0 });
-        return;
+        accessLogger.info(`zkera sql_nonce - actNonce > 19, retry after 10 seconds.`);
+        await sleep(10000);
+        return await sendConsumer({ ...value, result_nonce: 0 });
       }
     }
 
@@ -1147,8 +1146,15 @@ export async function sendConsumer(value: any) {
       .on('receipt', (tx: any) => {
         accessLogger.info('send transaction receipt=', JSON.stringify(tx))
       })
-      .on('error', (err: any) => {
+      .on('error', async (err: any) => {
         nonceDic[makerAddress][chainID] = result_nonce - 1;
+        if (chainID == 14 || chainID == 514) {
+          const msg = typeof err === "object" ? (err?.message ? err.message : JSON.stringify(err)) : err;
+          if (msg.indexOf('nonce too high. allowed nonce range') !== -1) {
+            accessLogger.info('zkera nonce too high. allowed nonce range, wait for 30s');
+            await sleep(30000);
+          }
+        }
         resolve({
           code: 1,
           txid: err,
