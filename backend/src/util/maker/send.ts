@@ -918,20 +918,28 @@ export async function sendConsumer(value: any) {
     }
 
     // zkera
-    if (chainID == 14 || chainID == 514) {
-      const actNonce = await web3.eth.getTransactionCount(
-          <any>web3.eth.defaultAccount
-      );
-      accessLogger.info('zkera pending_nonce =', nonce);
-      accessLogger.info('zkera act_nonce =', actNonce);
-      accessLogger.info('zkera sql_nonce =', sql_nonce);
-      accessLogger.info('zkera result_nonce =', result_nonce);
-      if (result_nonce - actNonce > 19) {
-        accessLogger.info(`zkera result_nonce - actNonce > 19, retry after 10 seconds.`);
-        await sleep(30000);
-        // return await sendConsumer({ ...value, result_nonce: 0 });
-      }
-    }
+    // if (chainID == 14 || chainID == 514) {
+    //   try {
+    //     const actNonce = await web3.eth.getTransactionCount(
+    //         <any>web3.eth.defaultAccount
+    //     );
+    //     accessLogger.info('zkera pending_nonce =', nonce);
+    //     accessLogger.info('zkera act_nonce =', actNonce);
+    //     accessLogger.info('zkera sql_nonce =', sql_nonce);
+    //     accessLogger.info('zkera result_nonce =', result_nonce);
+    //     if (result_nonce - actNonce > 19) {
+    //       accessLogger.info(`zkera result_nonce - actNonce > 19, retry after 10 seconds.`);
+    //       // await sleep(30000);
+    //       // return await sendConsumer({ ...value, result_nonce: 0 });
+    //     }
+    //   } catch (err) {
+    //     return {
+    //       code: 1,
+    //       txid: 'zkera getTransactionCount failed: ' + err.message,
+    //       params: value
+    //     };
+    //   }
+    // }
 
     if (!nonceDic[makerAddress]) {
       nonceDic[makerAddress] = {}
