@@ -307,6 +307,15 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 accessLogger.error(`starknet transfer fail: ${queueList.map(item => item.params?.transactionID)}`);
                 if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
                     await starknet.pushTask(queueList);
+                } else if (error.message.indexOf('Invalid transaction nonce. Expected:') !== -1
+                    && error.message.indexOf('got:') !== -1) {
+                    const arr: string[] = error.message.split(', got: ');
+                    const nonce1 = arr[0].replace(/[^0-9]/g, "");
+                    const nonce2 = arr[1].replace(/[^0-9]/g, "");
+                    if (Number(nonce) !== Number(nonce1) && Number(nonce) !== Number(nonce2)) {
+                        accessLogger.error(`starknet sequencer error: ${nonce} != ${nonce1}, ${nonce} != ${nonce2}`);
+                        await starknet.pushTask(queueList);
+                    }
                 }
                 await rollback(error, nonce);
                 await sendTxConsumeHandle({
