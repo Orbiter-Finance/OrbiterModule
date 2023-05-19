@@ -53,6 +53,7 @@ export const CHAIN_INDEX: any = {
   515: "bnbchain",
   16: "arbitrum_nova",
   516: "arbitrum_nova",
+  17: "polygon_zkevm",
   517: "polygon_zkevm",
   518: "scroll_l1_test",
   519: "scroll_l2_test",
@@ -368,10 +369,14 @@ export function getAmountToSend(
     return;
   }
   
-  const rAmount = <any>realAmount.rAmount;
+  let rAmount = <any>realAmount.rAmount;
   if (nonce > 8999) {
     console.error("nonce too high, not allowed");
     return;
+  }
+  if (toChainID === 3) {
+    var prefix = rAmount.substr(0, 11);
+    rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
   const readyAmount = getToAmountFromUserAmount(

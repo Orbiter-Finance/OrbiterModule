@@ -157,7 +157,7 @@ export class StarknetHelp {
     if (!trx || !trx.transaction_hash) {
       throw new Error(`Starknet Failed to send transaction hash does not exist`)
     }
-    sleep(1000)
+    await sleep(1000)
     const hash = trx.transaction_hash
     try {
       const response = await provider.getTransaction(hash)

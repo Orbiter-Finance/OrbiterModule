@@ -164,18 +164,13 @@ async function getTokenBalance(
       case 517:
       case 518:
       case 519:
-        // const balanceService =
+        // const balanceService = 
         // value = await balanceService.getBalance(makerAddress, tokenAddress);
-        try {
-          if (!balanceService[String(chainId)]) {
-            balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
-          }
-          const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
-          return result && result.balance;
-        } catch(error){
-          console.error(error);
-          return '0';
+        if (!balanceService[String(chainId)]) {
+          balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
         }
+        const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
+        return result && result.balance;
         break
       default:
         const alchemyUrl = makerConfig[chainName]?.httpEndPoint || makerConfig[chainId]?.httpEndPoint
@@ -296,8 +291,7 @@ export async function getWealthsChains(makerAddress: string) {
       continue
     }
     // find token 
-    const chain1 = chains.getChainByInternalId(String(item.c1ID))
-    if (!chain1) continue;
+    const chain1:any = chains.getChainByInternalId(String(item.c1ID))
     const token1 = chains.getTokenByAddress(chain1.chainId, item.t1Address);
     pushToChainBalances(
       pushToChains(item.makerAddress, item.c1ID, item.c1Name),
@@ -305,7 +299,7 @@ export async function getWealthsChains(makerAddress: string) {
       token1?.symbol || "",
       token1?.decimals || item.precision
     )
-    const chain2 = chains.getChainByInternalId(String(item.c2ID))
+    const chain2:any = chains.getChainByInternalId(String(item.c2ID))
     const token2 = chains.getTokenByAddress(chain2.chainId, item.t2Address);
     pushToChainBalances(
       pushToChains(item.makerAddress, item.c2ID, item.c2Name),

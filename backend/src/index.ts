@@ -1,3 +1,4 @@
+import { LoggerService } from 'orbiter-chaincore/src/utils';
 import cluster from 'cluster'
 import Koa from 'koa'
 import koaBodyparser from 'koa-bodyparser'
@@ -50,6 +51,7 @@ export const startKoa = () => {
   })
 }
 
+
 const main = async () => {
   try {
     // initialize mysql connect, waiting for mysql server started
@@ -89,20 +91,20 @@ const main = async () => {
       startMasterJobs()
 
       // Manage child process
-      let childProcessId: number | undefined
-      cluster.on('exit', (worker, code, signal) => {
-        // Refork
-        if (worker.process.pid == childProcessId) {
-          accessLogger.info(
-            `Child process exited, code: ${code}, signal: ${signal}, refork it!`
-          )
-          cluster.fork()
-        }
-      })
-      cluster.on('fork', (worker) => {
-        childProcessId = worker.process.pid
-      })
-      cluster.fork()
+      // let childProcessId: number | undefined
+      // cluster.on('exit', (worker, code, signal) => {
+      //   // Refork
+      //   if (worker.process.pid == childProcessId) {
+      //     accessLogger.info(
+      //       `Child process exited, code: ${code}, signal: ${signal}, refork it!`
+      //     )
+      //     cluster.fork()
+      //   }
+      // })
+      // cluster.on('fork', (worker) => {
+      //   childProcessId = worker.process.pid
+      // })
+      // cluster.fork()
     } else {
       // Start WorkerJobs in child process
       startWorkerJobs()
