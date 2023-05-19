@@ -169,6 +169,7 @@ export const doBalanceAlarm = new (class {
       if (doBalanceAlarmItem.balance < baseline) {
         const index = this.prevList.findIndex(
           (item) =>
+            item.makerAddress == doBalanceAlarmItem.makerAddress &&
             item.chainId == doBalanceAlarmItem.chainId &&
             item.tokenAddress == doBalanceAlarmItem.tokenAddress
         )
