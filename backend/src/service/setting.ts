@@ -185,7 +185,7 @@ export const doBalanceAlarm = new (class {
       alerts.push({
         labels: {
           alertname: 'Not enough balance',
-          instance: `${item.chainName}-${item.tokenName
+          instance: `${item.makerAddress} - ${item.chainName}-${item.tokenName
             }: ${item.balance.toFixed(6)}`,
           serverity: 'critical',
         },
