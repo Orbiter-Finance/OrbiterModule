@@ -556,25 +556,19 @@
     "chainId": "59140",
     "networkId": "59140",
     "internalId": "522",
-    "name": "ConsenSys(G)",
+    "name": "Linea(G)",
     "debug": false,
     "contracts": [],
     "features": ["BlockScout"],
     "nativeCurrency": {
-      "name": "crETH",
+      "name": "ETH",
       "symbol": "ETH",
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
-    "rpc": [
-      "https://consensys-zkevm-goerli-prealpha.infura.io/v3/bdf92864a1d3482b977c8d05f7ddebda",
-      "https://consensys-zkevm-goerli-prealpha.infura.io/v3/97a8e176bc954b59808a0ea0fd0524af",
-      "https://consensys-zkevm-goerli-prealpha.infura.io/v3/db173a91e6204f08977fd7fd89185549",
-      "https://consensys-zkevm-goerli-prealpha.infura.io/v3/f49cc8a59dcb4f368284ce134937061a",
-      "https://consensys-zkevm-goerli-prealpha.infura.io/v3/dc4ebeb3ac0e4f0dbedb02caa0c497a0"
-    ],
+    "rpc": ["https://rpc.goerli.linea.build"],
     "watch": ["rpc"],
     "tokens": [],
-    "infoURL": " https://explorer.goerli.zkevm.consensys.net"
+    "infoURL": " https://explorer.goerli.linea.build"
   }
 ]
