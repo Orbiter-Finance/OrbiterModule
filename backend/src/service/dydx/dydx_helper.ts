@@ -37,7 +37,7 @@ export class DydxHelper {
   private chainId: number
   private networkId: number
   private host: string
-  private web3?: Web3 = undefined
+  private web3?: any = undefined
   private signingMethod?: SigningMethod
 
   /**
@@ -47,7 +47,7 @@ export class DydxHelper {
    */
   constructor(
     chainId: number,
-    web3?: Web3,
+    web3?: any,
     signingMethod = SigningMethod.TypedData
   ) {
     if (chainId == 11) {

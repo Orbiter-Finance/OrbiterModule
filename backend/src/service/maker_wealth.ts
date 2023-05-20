@@ -61,41 +61,41 @@ async function getTokenBalance(
         break
       case 9:
       case 99:
-        {
-          let api = makerConfig.loopring.api
-          let httpEndPoint = makerConfig.loopring.httpEndPoint
-          let accountID: Number | undefined
-          if (chainId === 99) {
-            api = makerConfig.loopring_test.api
-            httpEndPoint = makerConfig.loopring_test.httpEndPoint
-          }
-          let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
-          // getAccountID first
-          const accountInfo = await axios(
-            `${api.endPoint}/account?owner=${makerAddress}`
-          )
-          if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
-            accountID = accountInfo.data.accountId
-          }
-          const lpTokenInfo = tokenInfos.find(
-            (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
-          )
-          const balanceData = await axios.get(
-            `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0
-            }`
-          )
-          if (balanceData.status == 200 && balanceData.statusText == 'OK') {
-            if (balanceData.data && balanceData.data.length == 0) {
-              value = '0'
-            }
-            let balanceMap = balanceData.data[0]
-            let totalBalance = balanceMap.total ? balanceMap.total : 0
-            let locked = balanceMap.locked ? balanceMap.locked : 0
-            let withDraw = balanceMap.withDraw ? balanceMap.withDraw : 0
-            value = totalBalance - locked - withDraw + ''
-          }
-        }
-        break
+        // {
+        //   let api = makerConfig.loopring.api
+        //   let httpEndPoint = makerConfig.loopring.httpEndPoint
+        //   let accountID: Number | undefined
+        //   if (chainId === 99) {
+        //     api = makerConfig.loopring_test.api
+        //     httpEndPoint = makerConfig.loopring_test.httpEndPoint
+        //   }
+        //   let tokenInfos = await loopring_help.getTokenInfos(httpEndPoint)
+        //   // getAccountID first
+        //   const accountInfo = await axios(
+        //     `${api.endPoint}/account?owner=${makerAddress}`
+        //   )
+        //   if (accountInfo.status == 200 && accountInfo.statusText == 'OK') {
+        //     accountID = accountInfo.data.accountId
+        //   }
+        //   const lpTokenInfo = tokenInfos.find(
+        //     (item) => item.address.toLowerCase() === tokenAddress.toLowerCase()
+        //   )
+        //   const balanceData = await axios.get(
+        //     `${api.endPoint}/user/balances?accountId=${accountID}&tokens=${lpTokenInfo ? lpTokenInfo.tokenId : 0
+        //     }`
+        //   )
+        //   if (balanceData.status == 200 && balanceData.statusText == 'OK') {
+        //     if (balanceData.data && balanceData.data.length == 0) {
+        //       value = '0'
+        //     }
+        //     let balanceMap = balanceData.data[0]
+        //     let totalBalance = balanceMap.total ? balanceMap.total : 0
+        //     let locked = balanceMap.locked ? balanceMap.locked : 0
+        //     let withDraw = balanceMap.withDraw ? balanceMap.withDraw : 0
+        //     value = totalBalance - locked - withDraw + ''
+        //   }
+        // }
+        // break
       case 8:
       case 88:
         const imxHelper = new IMXHelper(chainId)

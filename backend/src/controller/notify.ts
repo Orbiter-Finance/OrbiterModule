@@ -4,7 +4,7 @@ import KoaRouter from 'koa-router'
 import { DydxHelper } from '../service/dydx/dydx_helper'
 import { uniqBy } from 'lodash'
 export default function (router: KoaRouter<DefaultState, Context>) {
-  router.post('notify/dydx', async ({ request, restful }) => {
+  router.post('notify/dydx', async ({ request, restful }: any) => {
     //
     const { txlist, account } = request.body
     const address = request.body['address'].toLowerCase()

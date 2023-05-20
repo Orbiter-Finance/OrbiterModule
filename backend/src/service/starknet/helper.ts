@@ -1,12 +1,8 @@
 import ERC20 from './ERC20.json'
 import { utils } from 'ethers'
-import { Account, Contract, ec, Provider, uint256 } from 'starknet'
-import { sortBy } from 'lodash'
-import { Uint256 } from 'starknet/dist/utils/uint256'
+import { Account, Contract, ec, Provider, uint256, stark } from 'starknet';
 import BigNumber from 'bignumber.js'
-import { BigNumberish, toBN } from 'starknet/dist/utils/number'
 import { OfflineAccount } from './account'
-import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
@@ -143,7 +139,7 @@ export class StarknetHelp {
   }) {
     const provider = getProviderV4(this.network)
     const entrypoint = 'transfer'
-    const calldata = compileCalldata({
+    const calldata = stark.compileCalldata({
       recipient: params.recipient,
       amount: getUint256CalldataFromBN(params.amount),
     })
@@ -194,12 +190,12 @@ export async function getErc20Balance(
   const provider = getProviderV4(network)
   const abi = ERC20['abi']
   const tokenContract = new Contract(<any>abi, contractAddress, provider)
-  const balanceSender: Uint256 = (
+  const balanceSender: any = (
     await tokenContract.balanceOf(starknetAddress)
   ).balance
   return new BigNumber(balanceSender.low.toString() || 0).toNumber()
 }
 
-export function getUint256CalldataFromBN(bn: BigNumberish) {
+export function getUint256CalldataFromBN(bn: any) {
   return { type: 'struct' as const, ...uint256.bnToUint256(String(bn)) }
 }
