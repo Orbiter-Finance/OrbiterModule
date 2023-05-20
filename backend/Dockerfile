@@ -4,11 +4,12 @@ FROM node:14-alpine
 # For @dydxprotocol/starkex-lib
 RUN apk add g++ make python3
 
-WORKDIR /app
 RUN apk update && apk add git
 
+WORKDIR /app
+
 COPY package.json ./
-RUN yarn install --network-timeout 600000
-COPY . .
-RUN yarn run build
+RUN yarn install
+COPY ./ .
 RUN yarn run postinstall
+RUN yarn build
