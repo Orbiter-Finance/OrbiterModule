@@ -38,6 +38,7 @@ async function getTokenBalance(
   tokenName: string
 ): Promise<string | undefined> {
   let value: string | undefined
+  if (!makerAddress) return undefined;
   try {
     switch (chainId) {
       case 3:
