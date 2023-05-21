@@ -1,4 +1,5 @@
 import {cloneDeep} from 'lodash';
+import { makerList as maker_list_e4e } from './maker_list_e4e';
 export const makerListHistory = [];
 const initMakerList = [
   {
@@ -7948,4 +7949,4 @@ const push2List = cloneDeep(list1).map(row=> {
   row.makerAddress = '0x0a88bc5c32b684d467b43c06d9e0899efeaf59df';
   return row;
 })
-export const makerList = [...initMakerList,...push1List,...push2List];
+export const makerList = [...initMakerList, ...push1List, ...push2List, ...maker_list_e4e];
