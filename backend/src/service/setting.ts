@@ -8,6 +8,8 @@ import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerAddresses } from './maker'
 import { getWealths } from './maker_wealth'
+import { doSms } from "../sms/smsSchinese";
+import { telegramBot } from "../sms/telegram";
 
 type BalanceAlarm = {
   chainId: number
@@ -180,16 +182,10 @@ export const doBalanceAlarm = new (class {
     }
     this.prevList = await this.list(onCompared)
 
-    const alerts: any[] = []
+    const alerts: string[] = [];
     for (const item of doList) {
-      alerts.push({
-        labels: {
-          alertname: 'Not enough balance',
-          instance: `${item.makerAddress} - ${item.chainName}-${item.tokenName
-            }: ${item.balance.toFixed(6)}`,
-          serverity: 'critical',
-        },
-      })
+      alerts.push(`Insufficient balance ${item.makerAddress} - ${item.chainName}-${item.tokenName
+      }: ${item.balance.toFixed(6)}`)
     }
 
     // Post to alertmanager
@@ -201,10 +197,8 @@ export const doBalanceAlarm = new (class {
       try {
         accessLogger.info('postToAlertmanager: ', JSON.stringify(alerts))
 
-        const url = `${prometheusConfig.alertmanager.api}/api/v2/alerts`
-        await axios.post(url, alerts, {
-          headers: { 'Content-Type': 'application/json' },
-        })
+        telegramBot.sendMessage('Insufficient', alerts.join(' '));
+        doSms(alerts.join(' '));
       } catch (err) {
         errorLogger.error('ToAlertmanager faild: ', err.message)
 
