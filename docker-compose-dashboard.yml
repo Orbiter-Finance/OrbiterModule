@@ -41,6 +41,11 @@ services:
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
+      SMS_UID: '${SMS_UID}'
+      SMS_KEY: '${SMS_KEY}'
+      SMS_NUMBERS: '${SMS_NUMBERS}'
+      TELEGRAM_TOKEN: '${TELEGRAM_TOKEN}'
+      CHAT_ID: '${CHAT_ID}'
     depends_on:
       - db 
     links:
