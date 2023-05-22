@@ -200,6 +200,7 @@ export class StarknetHelp {
         } catch (error) {
           accessLogger.error('Starknet Rollback error:' + error.message)
         }
+        await sleep(1000);
         setStarknetLock(this.address.toLowerCase(), false);
       },
     }
