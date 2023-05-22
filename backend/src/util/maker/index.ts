@@ -681,7 +681,8 @@ export async function sendTxConsumeHandle(result: any) {
       return;
     }
     // handle multiple transactions fail
-    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+    if (response.txid.indexOf('StarkNet Alpha throughput limit reached') !== -1 ||
+        response.txid.indexOf('Bad Gateway') !== -1) {
       return;
     } else if (response.txid.indexOf('Invalid transaction nonce. Expected:') !== -1 && response.txid.indexOf('got:') !== -1) {
       const arr: string[] = response.txid.split(', got: ');

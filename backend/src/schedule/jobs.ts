@@ -305,7 +305,8 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 setStarknetLock(makerAddress, false);
             } catch (error) {
                 accessLogger.error(`starknet transfer fail: ${queueList.map(item => item.params?.transactionID)}`);
-                if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1) {
+                if (error.message.indexOf('StarkNet Alpha throughput limit reached') !== -1 ||
+                    error.message.indexOf('Bad Gateway') !== -1) {
                     await starknet.pushTask(queueList);
                 } else if (error.message.indexOf('Invalid transaction nonce. Expected:') !== -1
                     && error.message.indexOf('got:') !== -1) {
