@@ -198,7 +198,7 @@ export const doBalanceAlarm = new (class {
         accessLogger.info('postToAlertmanager: ', JSON.stringify(alerts))
 
         telegramBot.sendMessage('Insufficient', alerts.join(' '));
-        doSms(alerts.join(' '));
+        doSms(alerts.join(' '), true);
       } catch (err) {
         errorLogger.error('ToAlertmanager faild: ', err.message)
 

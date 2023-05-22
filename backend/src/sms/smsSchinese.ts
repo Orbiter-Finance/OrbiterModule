@@ -9,8 +9,9 @@ const { schinese } = require('./config')
  */
 
 //function
-export const doSms = async function (alert) {
+export const doSms = async function (alert, isDashboard?: boolean) {
   const { options } = schinese
+  if (!isDashboard) return;
   let smsText = alert
 
   const params = {
