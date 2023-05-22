@@ -354,6 +354,9 @@ export async function confirmToSNTransaction(
       // ) {
       //   return true
       // }
+        telegramBot.sendMessage(`starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))}, transaction_failure_reason:${response['transaction_failure_reason']}`).catch(error => {
+            accessLogger.error('send telegram message error', error);
+        });
       return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
