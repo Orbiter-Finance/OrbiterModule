@@ -388,7 +388,10 @@ export async function confirmToSNTransaction(
       'confirmToSNTransaction error',
       error.message
     );
-    if (Number(chainId) === 4 && error.message.indexOf(`Cannot use 'in' operator to search for 'calldata' in`) !== -1) {
+    if (Number(chainId) === 4 &&
+        (error.message.indexOf(`Cannot use 'in' operator to search for 'calldata' in`) !== -1 ||
+            error.message.indexOf('Bad Gateway') !== -1)
+    ) {
       return;
     }
     telegramBot.sendMessage(`${txID} confirmToSNTransaction error ${paramsList.map(item => item.transactionID)}, ${error.message}`).catch(error => {
