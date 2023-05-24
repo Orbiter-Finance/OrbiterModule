@@ -216,12 +216,11 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             }
             if (clearTaskList.length) {
                 accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
+                telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.map(item => item.params?.transactionID)}`).catch(error => {
+                    accessLogger.error('send telegram message error', error);
+                });
                 if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
-                    const alert: string = `starknet_task_clear ${clearTaskList.map(item => item.params?.transactionID)}`;
-                    doSms(alert);
-                    telegramBot.sendMessage(alert).catch(error => {
-                        accessLogger.error('send telegram message error', error);
-                    });
+                    doSms(`starknet_task_clear count ${clearTaskList.length}`);
                     limitWaringTime = new Date().valueOf();
                 }
                 await starknet.clearTask(clearTaskList, 1);

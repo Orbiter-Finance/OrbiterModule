@@ -18,6 +18,7 @@ import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
+import { validateAndParseAddress } from "starknet";
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -420,6 +421,14 @@ export async function confirmTransactionSendMoneyBack(
         case '4':
         case '44':
           userAddress = tx.extra['ext'].replace('0x03', '0x')
+          try {
+            validateAndParseAddress(userAddress);
+          } catch (e) {
+            accessLogger.error(
+                `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
+            );
+            return;
+          }
           break
       }
       if (!userAddress ||
