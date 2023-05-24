@@ -80,9 +80,9 @@ const getGlobalInfo = async () => {
   const list = resp.data.makerAddresses;
   const newList = [];
   for (const data of list) {
-    if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
+    // if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
       newList.push(data);
-    }
+    // }
   }
 
   const arr = window.location.search.split('=');
