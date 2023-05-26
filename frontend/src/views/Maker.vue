@@ -161,36 +161,38 @@
           </template>
         </el-popover>
       </div>
-      <div>FromAmountTotal: {{ statistics.fromAmount }}</div>
-      <div>ToAmountTotal: {{ statistics.toAmount }}</div>
-      <div style="color: #67c23a; font-weight: 600">
-        +{{ statistics.profit['USD'] }} USD
-      </div>
-      <el-dropdown>
-        <div style="color: #409eff; font-weight: 600">
-          +{{ statistics.profit['ETH'] }} ETH
+      <div v-if="!isShowSensitive" class="maker-header__statistics">
+        <div>FromAmountTotal: {{ statistics.fromAmount }}</div>
+        <div>ToAmountTotal: {{ statistics.toAmount }}</div>
+        <div style="color: #67c23a; font-weight: 600">
+          +{{ statistics.profit['USD'] }} USD
         </div>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item
-              v-for="(val, key) in statistics.profit"
-              :key="key"
-            >
-              <div style="color: #409eff; font-weight: 600">
-                + {{ val }} {{ key }}
-              </div>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+        <el-dropdown>
+          <div style="color: #409eff; font-weight: 600">
+            +{{ statistics.profit['ETH'] }} ETH
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                      v-for="(val, key) in statistics.profit"
+                      :key="key"
+              >
+                <div style="color: #409eff; font-weight: 600">
+                  + {{ val }} {{ key }}
+                </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-      <div style="color: #f56c6c; font-weight: 600">
-        +{{ statistics.profit['CNY'] }} CNY
+        <div style="color: #f56c6c; font-weight: 600">
+          +{{ statistics.profit['CNY'] }} CNY
+        </div>
       </div>
-      <div style="margin-left: auto">
+      <div v-if="!isShowSensitive" style="margin-left: auto">
         <router-link
-          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
-          target="_blank"
+                :to="`/maker/history?makerAddress=${makerAddressSelected}`"
+                target="_blank"
         >
           <el-button size="small" round>All transactions</el-button>
         </router-link>
@@ -324,7 +326,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="120">
+          <el-table-column v-if="!isShowSensitive" width="120">
             <template #header>
               FromAmount
               <br />ToAmount
@@ -348,7 +350,7 @@
               </TextLong>
             </template>
           </el-table-column>
-          <el-table-column label="Profit" width="150">
+          <el-table-column v-if="!isShowSensitive" label="Profit" width="150">
             <template #default="{ row }">
               <div v-if="row.profitUSD > 0" class="amount-operator--plus">
                 +{{ row.profitUSD }} USD
@@ -401,6 +403,7 @@ import {
 } from 'orbiter-sdk'
 import { ref, computed, inject, reactive, toRef, watch } from 'vue'
 import Web3 from 'web3'
+import { isSensitive } from "@/config";
 
 // mainnet > Mainnet, arbitrum > Arbitrum, zksync > zkSync
 const CHAIN_NAME_MAPPING = {
@@ -547,6 +550,7 @@ const loadingStatistics = ref(false)
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
+const isShowSensitive = ref(isSensitive);
 const pagesizes = computed(() =>
   Array.from(new Set([100, 200, 300, 400, Math.ceil(total.value / 100) * 100]))
 )
@@ -600,6 +604,7 @@ const getMakerNodes = async (more: any = {}) => {
   total.value = _total.value
 }
 const getStatistics = async (more: any = {}) => {
+  if (isSensitive) return;
   loadingStatistics.value = true
   try {
     prevMore = {
