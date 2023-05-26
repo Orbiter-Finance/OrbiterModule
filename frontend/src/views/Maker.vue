@@ -283,7 +283,7 @@
               </a>
             </template>
           </el-table-column>
-          <el-table-column width="145">
+          <el-table-column :width="!isShowSensitive ? 145 : 250">
             <template #header>
               FromTx
               <br />FromTime
@@ -301,7 +301,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="145">
+          <el-table-column :width="!isShowSensitive ? 145 : 250">
             <template #header>
               ToTx
               <br />ToTime
