@@ -956,7 +956,7 @@ export async function sendConsumer(value: any) {
   let maxPrice = 230
   if (isEthTokenAddress(tokenAddress)) {
     if (chainID == 1 || chainID == 5) {
-      maxPrice = 300;
+      maxPrice = 260;
     }
   }
   if (tokenInfo && tokenInfo.symbol === 'USDC') {

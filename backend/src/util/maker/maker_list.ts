@@ -4131,7 +4131,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0021,
-    "c2TradingFee": 0.0072,
+    "c2TradingFee": 0.006,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4162,7 +4162,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0016,
-    "c2TradingFee": 0.0009,
+    "c2TradingFee": 0.0013,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4224,7 +4224,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0016,
-    "c2TradingFee": 0.0006,
+    "c2TradingFee": 0.0009,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4255,7 +4255,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0018,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.0009,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4286,7 +4286,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0018,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.0009,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4317,7 +4317,7 @@ export const makerList = [
     "c2MaxPrice": 3,
     "precision": 18,
     "c1TradingFee": 0.0018,
-    "c2TradingFee": 0.0008,
+    "c2TradingFee": 0.0013,
     "c1GasFee": 0,
     "c2GasFee": 1,
     "c1AvalibleTimes": [
@@ -4503,7 +4503,7 @@ export const makerList = [
     "c2MinPrice": 0.005,
     "c2MaxPrice": 5,
     "precision": 18,
-    "c1TradingFee": 0.001,
+    "c1TradingFee": 0.0013,
     "c2TradingFee": 0.0016,
     "c1GasFee": 1,
     "c2GasFee": 0,
