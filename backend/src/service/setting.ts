@@ -159,6 +159,7 @@ type DoBalanceAlarmItem = {
   tokenName: string
   balance: number
 }
+let alertTime = 0;
 export const doBalanceAlarm = new (class {
   prevList: DoBalanceAlarmItem[] = []
 
@@ -218,6 +219,8 @@ export const doBalanceAlarm = new (class {
       baseline: number
     ) => void
   ) {
+    const isLog = new Date().valueOf() > alertTime + 10 * 60 * 1000;
+    const logList = [];
     const makerAddresses = await getMakerAddresses();
 
     const list: DoBalanceAlarmItem[] = []
@@ -251,8 +254,15 @@ export const doBalanceAlarm = new (class {
           if (!Number.isNaN(balance)) {
             balance < baseline && list.push(doBalanceAlarmItem)
           }
+          if (isLog) {
+            logList.push(`${item}-${doBalanceAlarmItem.chainName}-${doBalanceAlarmItem.tokenName}-${balance.toFixed(6)}-${baseline.toFixed(6)}`);
+          }
         }
       }
+    }
+    if (isLog && logList.length) {
+      accessLogger.info(logList.join(' '));
+      alertTime = new Date().valueOf();
     }
 
     return list
