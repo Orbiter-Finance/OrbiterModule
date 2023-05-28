@@ -219,8 +219,8 @@ export const doBalanceAlarm = new (class {
       baseline: number
     ) => void
   ) {
-    const isLog = new Date().valueOf() > alertTime + 10 * 60 * 1000;
-    const logList = [];
+    const isLog = new Date().valueOf() > alertTime + 60 * 60 * 1000;
+    const logMap = {};
     const makerAddresses = await getMakerAddresses();
 
     const list: DoBalanceAlarmItem[] = []
@@ -255,14 +255,19 @@ export const doBalanceAlarm = new (class {
             balance < baseline && list.push(doBalanceAlarmItem)
           }
           if (isLog) {
-            logList.push(`${item}-${doBalanceAlarmItem.chainName}-${doBalanceAlarmItem.tokenName}-${balance.toFixed(6)}-${baseline.toFixed(6)}`);
+            logMap[item] = logMap[item] || [];
+            logMap[item].push(`${doBalanceAlarmItem.chainName}-${doBalanceAlarmItem.tokenName}-${balance.toFixed(2)}-${Number(baseline).toFixed(2)}`);
           }
         }
       }
     }
-    if (isLog && logList.length) {
-      accessLogger.info(logList.join(' '));
-      alertTime = new Date().valueOf();
+    if (isLog && Object.keys(logMap).length) {
+        const logList = [];
+        for (const address in logMap) {
+            logList.push(`${address}:${logMap[address].join(' ')}`);
+        }
+        accessLogger.info(logList.join(' '));
+        alertTime = new Date().valueOf();
     }
 
     return list
