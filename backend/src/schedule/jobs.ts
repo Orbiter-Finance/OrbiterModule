@@ -434,6 +434,7 @@ function watchStarknetAlarm() {
                 accessLogger.error('send telegram message error', error);
             });
             doSms(`${key} count ${alarmMsgMap[key].length}`);
+            delete alarmMsgMap[key];
         }
     }, waringInterval * 1000);
 }
