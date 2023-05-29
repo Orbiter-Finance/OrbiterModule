@@ -8,6 +8,7 @@ WORKDIR /app
 RUN apk update && apk add git
 
 COPY package.json .
+COPY yarn.lock .
 RUN yarn install --network-timeout 600000
 COPY ./ .
 RUN yarn run build
