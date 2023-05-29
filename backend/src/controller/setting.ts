@@ -9,7 +9,7 @@ import {
 } from '../service/setting'
 
 export default function (router: KoaRouter<DefaultState, Context>) {
-  router.get('setting/balance_alarms', async ({ restful, request }) => {
+  router.get('setting/balance_alarms', async ({ restful, request }: any) => {
     const makerAddress = String(request.query.makerAddress || '')
 
     const list = await getBalanceAlarms(makerAddress)
@@ -17,7 +17,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json({ list, defaultBaseline: DEFAULT_BALANCE_ALARM_BASELINE })
   })
 
-  router.post('setting/balance_alarms/save', async ({ restful, request }) => {
+  router.post('setting/balance_alarms/save', async ({ restful, request }: any) => {
     const { makerAddress, value } = request.body || {}
 
     await saveBalanceAlarms(makerAddress, value)
@@ -26,7 +26,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   })
 
   // set dydx's ApiKeyCredentials
-  router.post('setting/dydx_api_key_credentials', async ({ request, restful }) => {
+  router.post('setting/dydx_api_key_credentials', async ({ request, restful }: any) => {
     const { body } = request
     
     const makerAddresses: string[] = []
