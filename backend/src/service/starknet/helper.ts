@@ -11,7 +11,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
-import { sleep } from '../../util'
+import { readLogJson, sleep, writeLogJson } from '../../util';
 import fs from "fs";
 import path from "path";
 
@@ -38,26 +38,12 @@ export function parseInputAmountToUint256(
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
 
-export function setClearList(address: string, data: any[]) {
-    fs.writeFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`), JSON.stringify(data));
-}
-
-export function getClearList(address: string) {
-    try {
-        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
-    } catch (e) {
-        setClearList(address, []);
-        return JSON.parse(fs.readFileSync(path.join(__dirname, `../../../logs/starknetTx/${address}_clear.json`)).toString()) || [];
-    }
-}
-
 export const starknetHelpLockMap = {};
 
 const txPool: { [makerAddress: string]: any[] } = {};
 
 export class StarknetHelp {
   private cache: Keyv
-  private cacheTx: Keyv
   public account: Account
   constructor(
     public readonly network: starknetNetwork,
@@ -73,15 +59,6 @@ export class StarknetHelp {
         decode: JSON.parse, // deserialize function
       }),
     })
-      this.cacheTx = new Keyv({
-          store: new KeyvFile({
-              filename: `logs/starknetTx/${this.address.toLowerCase()}`, // the file path to store the data
-              expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-              writeDelay: 0,
-              encode: JSON.stringify, // serialize function
-              decode: JSON.parse, // deserialize function
-          }),
-      });
 
     const provider = getProviderV4(network)
     this.account = new Account(
@@ -119,7 +96,7 @@ export class StarknetHelp {
           });
           txPool[makerAddress] = leftTaskList;
           if (clearTaskList.length && code) {
-              const cacheList: any[] = getClearList(makerAddress) || [];
+              const cacheList: any[] = await readLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear');
               cacheList.push(clearTaskList.map(item => {
                   return {
                       transactionID: item.params.transactionID,
@@ -127,7 +104,7 @@ export class StarknetHelp {
                       hash: item.params.fromHash
                   };
               }));
-              setClearList(makerAddress, cacheList);
+              await writeLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear', cacheList);
           }
       } catch (e) {
           accessLogger.error(`starknet clearTask error: ${e.message}`);

@@ -12,7 +12,7 @@ import { makerConfig } from "../config";
 import { equals } from "orbiter-chaincore/src/utils/core";
 import { setStarknetLock, StarknetHelp, starknetLockMap } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
-import { isDevelopment, sleep } from "../util";
+import { isDevelopment, readLogJson, sleep, writeLogJson } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
 import { In } from "typeorm";
 import { getStarknetTokenBalance } from "../service/maker_wealth";
@@ -21,6 +21,7 @@ import { telegramBot } from "../sms/telegram";
 import { doSms } from "../sms/smsSchinese";
 import fs from "fs";
 import path from "path";
+import { clearInterval } from "timers";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -155,16 +156,17 @@ export function jobBalanceAlarm() {
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
 
-let limitWaringTime = 0;
+let alarmMsgMap = {};
 let balanceWaringTime = 0;
 // Alarm interval duration(second)
-const waringInterval = 180;
+let waringInterval = 180;
 // Execute several transactions at once
-const execTaskCount = 10;
+let execTaskCount = 50;
 // Maximum number of transactions to be stacked in the memory pool
-const maxTaskCount: number = 200;
-const expireTime: number = 10 * 60 * 1000;
-const maxTryCount: number = 60;
+let maxTaskCount: number = 200;
+let expireTime: number = 30 * 60;
+let maxTryCount: number = 180;
+let cron;
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
@@ -198,12 +200,12 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     continue;
                 }
                 // expire time limit
-                if (task.createTime < new Date().valueOf() - expireTime) {
+                if (task.createTime < new Date().valueOf() - expireTime * 1000) {
                     clearTaskList.push(task);
                     const formatDate = (timestamp: number) => {
                         return new Date(timestamp).toDateString() + " " + new Date(timestamp).toLocaleTimeString();
                     };
-                    errorMsgList.push(`starknet_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                    errorMsgList.push(`starknet_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime * 1000)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
                     continue;
                 }
                 // retry count limit
@@ -216,13 +218,8 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             }
             if (clearTaskList.length) {
                 accessLogger.error(`starknet_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
-                telegramBot.sendMessage(`starknet_task_clear ${clearTaskList.map(item => item.params?.transactionID)}`).catch(error => {
-                    accessLogger.error('send telegram message error', error);
-                });
-                if (limitWaringTime < new Date().valueOf() - waringInterval * 1000) {
-                    doSms(`starknet_task_clear count ${clearTaskList.length}`);
-                    limitWaringTime = new Date().valueOf();
-                }
+                alarmMsgMap['starknet_task_clear'] = alarmMsgMap['starknet_task_clear'] || [];
+                alarmMsgMap['starknet_task_clear'].push(...clearTaskList.map(item => item.params?.transactionID));
                 await starknet.clearTask(clearTaskList, 1);
             }
 
@@ -361,52 +358,25 @@ export async function batchTxSend(chainIdList = [4, 44]) {
     const maker = makerDataList[i];
     makerSend(maker.makerAddress, maker.chainId);
   }
+  watchStarknetAlarm();
 }
 
 export async function watchHttpEndPoint() {
     const chainList = isDevelopment() ? ["goerli", "optimism_test", "arbitrum_test"] : ["mainnet", "arbitrum", "optimism", "polygon"];
-    const dir: string = `../../logs/endPoint`;
-    const createDir = () => {
-        return new Promise(async (resolve) => {
-            await fs.stat(path.join(__dirname, dir), async (err, data) => {
-                if (err) {
-                    await fs.mkdir(path.join(__dirname, dir), (err) => {
-                        if (err && err.code === 'EEXIST') {
-                            console.log("EEXIST");
-                        }
-                        resolve(1);
-                    });
-                } else {
-                    resolve(1);
-                }
-            });
-        });
-    };
-    if (!await createDir()) {
-        return;
-    }
 
     for (const chain of chainList) {
         if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
-            const dirFile: string = `${dir}/${chain}.json`;
-            let data: { current?, httpEndPoint?, httpEndPointInfura? } = {};
-            try {
-                data = JSON.parse(fs.readFileSync(path.join(__dirname, dirFile)).toString()) || {};
-            } catch (e) {
-                data = { current: 2 };
-            }
+            const data: { current?, httpEndPoint?, httpEndPointInfura? } = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
             data.httpEndPoint = makerConfig[chain]?.httpEndPoint;
             data.httpEndPointInfura = makerConfig[chain]?.httpEndPointInfura;
-            fs.writeFileSync(path.join(__dirname, dirFile), JSON.stringify(data));
+            await writeLogJson(`${chain}.json`, 'endPoint', data);
         }
     }
-
 
     const callback = async () => {
         for (const chain of chainList) {
             if (makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
-                const dirFile: string = `${dir}/${chain}.json`;
-                let data: { current?, httpEndPoint?, httpEndPointInfura? } = JSON.parse(fs.readFileSync(path.join(__dirname, dirFile)).toString()) || {};
+                const data: { current?, httpEndPoint?, httpEndPointInfura? } = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
                 if (data.current === 1 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPoint) {
                     makerConfig[chain].httpEndPointInfura = data.httpEndPoint;
                     accessLogger.log(`${chain} switch to httpEndPoint ${data.httpEndPoint}`);
@@ -420,4 +390,57 @@ export async function watchHttpEndPoint() {
     };
 
     new MJobPessimism('*/10 * * * * *', callback, watchHttpEndPoint.name).schedule();
+}
+
+export async function watchStarknetLimit() {
+    const callback = async () => {
+        const data: { waringInterval: number, execTaskCount: number, maxTaskCount: number, expireTime: number, maxTryCount: number } =
+            await readLogJson(`limit.json`, 'starknetTx/limit', {
+                waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount
+            });
+        if (waringInterval !== data.waringInterval) {
+            waringInterval = data.waringInterval;
+            watchStarknetAlarm();
+            accessLogger.log(`waringInterval change to ${waringInterval}s`);
+        }
+        if (execTaskCount !== data.execTaskCount) {
+            execTaskCount = data.execTaskCount;
+            accessLogger.log(`execTaskCount change to ${execTaskCount}`);
+        }
+        if (maxTaskCount !== data.maxTaskCount) {
+            maxTaskCount = data.maxTaskCount;
+            accessLogger.log(`maxTaskCount change to ${maxTaskCount}`);
+        }
+        if (expireTime !== data.expireTime) {
+            expireTime = data.expireTime;
+            accessLogger.log(`expireTime change to ${expireTime}s`);
+        }
+        if (maxTryCount !== data.maxTryCount) {
+            maxTryCount = data.maxTryCount;
+            accessLogger.log(`maxTryCount change to ${maxTryCount}`);
+        }
+    };
+
+    new MJobPessimism('*/30 * * * * *', callback, watchStarknetLimit.name).schedule();
+}
+
+function watchStarknetAlarm() {
+    if (cron) {
+        clearInterval(cron);
+    }
+    cron = setInterval(() => {
+        // TODO test
+        console.log(`watch starknet alarm ${waringInterval}s ${Object.keys(alarmMsgMap).length}`);
+        for (const key in alarmMsgMap) {
+            telegramBot.sendMessage(`${key} ${(<string[]>alarmMsgMap[key]).join(',')}`).catch(error => {
+                accessLogger.error('send telegram message error', error);
+            });
+            doSms(`${key} count ${alarmMsgMap[key].length}`);
+        }
+    }, waringInterval * 1000);
+}
+
+export async function watchLogs() {
+    watchHttpEndPoint();
+    watchStarknetLimit();
 }

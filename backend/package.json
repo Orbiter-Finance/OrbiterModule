@@ -43,6 +43,7 @@
     "koa2-cors": "^2.0.6",
     "lodash": "^4.17.21",
     "log4js": "^6.3.0",
+    "mkdirp": "^3.0.1",
     "mysql2": "^2.3.3",
     "node-cache": "^5.1.2",
     "node-fetch": "^1.7.3",
