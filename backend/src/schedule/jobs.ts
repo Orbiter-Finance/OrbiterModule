@@ -268,7 +268,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 }
             }
 
-            const { nonce, rollback } = await starknet.takeOutNonce();
             // signParam: {recipient: toAddress,tokenAddress,amount: String(amountToSend)}
             const signParamList = queueList.map(item => item.signParam);
             // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
@@ -279,6 +278,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             }
             try {
                 await starknet.clearTask(queueList, 0);
+                const { nonce, rollback } = await starknet.takeOutNonce();
                 accessLogger.info('starknet_sql_nonce =', nonce);
                 accessLogger.info('starknet_consume_count =', queueList.length);
                 let hash = '';
@@ -429,8 +429,6 @@ function watchStarknetAlarm() {
         clearInterval(cron);
     }
     cron = setInterval(() => {
-        // TODO test
-        console.log(`watch starknet alarm ${waringInterval}s ${Object.keys(alarmMsgMap).length}`);
         for (const key in alarmMsgMap) {
             telegramBot.sendMessage(`${key} ${(<string[]>alarmMsgMap[key]).join(',')}`).catch(error => {
                 accessLogger.error('send telegram message error', error);
