@@ -141,7 +141,7 @@
           Next Page
         </el-button>
       </el-button-group>
-      <div>TransactionTotal: {{ statistics.total }}</div>
+      <div>TransactionTotal: {{ !isShowSensitive ? statistics.total : total }}</div>
       <div>
         <el-popover placement="bottom" width="max-content" trigger="hover">
           <template #default>
