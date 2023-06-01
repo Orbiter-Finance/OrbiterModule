@@ -362,7 +362,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
 }
 
 export async function watchHttpEndPoint() {
-    const chainList = isDevelopment() ? ["goerli", "optimism_test", "arbitrum_test"] : ["mainnet", "arbitrum", "optimism", "polygon"];
+    const chainList = ["mainnet", "arbitrum", "optimism", "polygon"];
 
     for (const chain of chainList) {
         if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
