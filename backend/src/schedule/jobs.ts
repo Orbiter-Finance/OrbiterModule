@@ -12,7 +12,7 @@ import { makerConfig } from "../config";
 import { equals } from "orbiter-chaincore/src/utils/core";
 import { setStarknetLock, StarknetHelp, starknetLockMap } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
-import { isDevelopment, readLogJson, sleep, writeLogJson } from "../util";
+import { readLogJson, sleep, writeLogJson } from "../util";
 import { sendTxConsumeHandle } from "../util/maker";
 import { In } from "typeorm";
 import { getStarknetTokenBalance } from "../service/maker_wealth";
