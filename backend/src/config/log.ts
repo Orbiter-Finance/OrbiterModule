@@ -2,7 +2,7 @@ import { Configuration } from 'log4js'
 import path from 'path'
 
 const logsDir = 'logs'
-const defaultC = { appenders: ['access', 'console'], level: 'trace' }
+const defaultC = { appenders: ['access', 'console','logstash'], level: 'trace' }
 const configure: Configuration = {
   appenders: {
     access: {
@@ -18,11 +18,20 @@ const configure: Configuration = {
       mode: 0o644
     },
     console: { type: 'console' },
+    logstash: {
+      type: "log4js-logstash-tcp",
+      host: process.env.logstashHost,
+      port: process.env.logstashPort,
+      retry: {
+        interval: 5000,   
+        count: -1,
+      },
+    },
   },
   categories: {
     default: defaultC,
     access: defaultC,
-    error: { appenders: ['error', 'console'], level: 'trace' },
+    error: { appenders: ['error', 'console','logstash'], level: 'trace' },
   },
 }
 
