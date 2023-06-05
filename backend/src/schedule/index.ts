@@ -58,14 +58,13 @@ export async function waittingStartMaker() {
         try {
           doSms(alert)
           telegramBot.sendMessage(alert).catch(error => {
-            accessLogger.error('send telegram message error', error);
+            accessLogger.error(`send telegram message error ${error.stack}`);
           })
           accessLogger.info(
-            'sendNeedPrivateKeyMessage,   smsTimeStamp =',
-            nowTime
+            `sendNeedPrivateKeyMessage,   smsTimeStamp = ${nowTime}`
           )
         } catch (error) {
-          errorLogger.error('sendPrivateSMSError =', error)
+          errorLogger.error(`sendPrivateSMSError = ${error}`)
         }
         smsTimeStamp = nowTime
       }

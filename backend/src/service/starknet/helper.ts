@@ -188,8 +188,7 @@ export class StarknetHelp {
         try {
           let nonces = await this.getAvailableNonce()
           accessLogger.info(
-            `Starknet Rollback ${error.message} error fallback nonces ${nonce} available`,
-            JSON.stringify(nonces)
+            `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
           )
           nonces.push(nonce)
           //
@@ -198,7 +197,7 @@ export class StarknetHelp {
           })
           await this.cache.set(cacheKey, nonces)
         } catch (error) {
-          accessLogger.error('Starknet Rollback error:' + error.message)
+          accessLogger.error(`Starknet Rollback error: ${ error.message}`)
         }
         await sleep(1000);
         setStarknetLock(this.address.toLowerCase(), false);
@@ -221,12 +220,7 @@ export class StarknetHelp {
         nonces.push(localLastNonce)
       }
       accessLogger.info(
-        'Generate starknet_getNetwork_nonce =',
-        networkLastNonce,
-        'nonces:',
-        nonces,
-        'networkLastNonce:',
-        networkLastNonce
+        `Generate starknet_getNetwork_nonce = ${networkLastNonce}, nonces: ${nonces}`
       )
       await this.cache.set(cacheKey, nonces)
       nonces.sort((a, b) => {
@@ -270,10 +264,10 @@ export class StarknetHelp {
           response['status']
         )
       ) {
-        accessLogger.error('Straknet Send After status error:', response)
+        accessLogger.error(`Straknet Send After status error: ${response}`)
       }
     } catch (error) {
-      accessLogger.error(`Starknet Send After GetTransaction Erro:`, error)
+      accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`)
     }
     return {
       hash,
@@ -314,10 +308,10 @@ export class StarknetHelp {
                     response['status']
                 )
             ) {
-                accessLogger.error('Straknet Send After status error:', response);
+                accessLogger.error(`Straknet Send After status error: ${response}`);
             }
         } catch (error) {
-            accessLogger.error(`Starknet Send After GetTransaction Erro:`, error);
+            accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
         }
         return {
             hash,

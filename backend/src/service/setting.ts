@@ -205,7 +205,7 @@ export const doBalanceAlarm = new (class {
           headers: { 'Content-Type': 'application/json' },
         })
       } catch (err) {
-        errorLogger.error('ToAlertmanager faild: ', err.message)
+        errorLogger.error(`ToAlertmanager faild: ${err.message}`)
 
         // Await some time, retry
         if (total < 5) {
