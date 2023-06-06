@@ -134,7 +134,7 @@ export async function startNewMakerTrxPull() {
       chainQueue[insideChainId] = new MessageQueue(`chain:${insideChainId}`, sendConsumer);
       chainQueue[insideChainId].consumeQueue(async (error, result) => {
         if (error) {
-          accessLogger.error(`An error occurred while consuming messages`, error);
+          accessLogger.error(`An error occurred while consuming messages ${error}`);
           return;
         }
         await sendTxConsumeHandle(result);
@@ -182,8 +182,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         // check send
         if (!fromChain) {
           errorLogger.error(
-            `transaction fromChainId ${tx.chainId} does not exist: `,
-            tx.hash
+            `transaction fromChainId ${tx.chainId} does not exist: ${tx.hash}`
           )
           continue
         }
@@ -247,8 +246,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           accessLogger.error(
             `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
             },fromChainId=${fromChain.internalId},hash=${tx.hash
-            },value=${tx.value.toString()}`,
-            JSON.stringify(result)
+            },value=${tx.value.toString()} ${JSON.stringify(result)}`
           )
           continue
         }
@@ -256,8 +254,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           accessLogger.error(
             `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
             },fromChainId=${fromChain.internalId},hash=${tx.hash
-            },value=${tx.value.toString()}`,
-            JSON.stringify(result)
+            },value=${tx.value.toString()} ${JSON.stringify(result)}`
           )
           continue
         }
@@ -275,8 +272,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
           accessLogger.error(
-            `[${transactionID}] Refund The query currency information does not exist: ` +
-            JSON.stringify(tx)
+            `[${transactionID}] Refund The query currency information does not exist: ${JSON.stringify(tx)}`
           )
           continue
         }
@@ -314,15 +310,14 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           )
           if (!checkAmountResult) {
             accessLogger.error(
-              `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash}`,
-              JSON.stringify(tx)
+              `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash} ${JSON.stringify(tx)}`,
             )
             continue
           }
         }
         await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
       } catch (error) {
-        errorLogger.error(`${tx.hash} startNewMakerTrxPull error:`, error)
+        errorLogger.error(`${tx.hash} startNewMakerTrxPull error: ${error}`)
       }
     }
   }
@@ -373,11 +368,11 @@ export async function confirmTransactionSendMoneyBack(
       transactionID,
     })
     if (makerNode) {
-      accessLogger.info('TransactionID was exist: ' + transactionID)
+      accessLogger.info(`TransactionID was exist: ${transactionID}`)
       return
     }
   } catch (error) {
-    errorLogger.error(`[${transactionID}] isHaveSqlError =`, error)
+    errorLogger.error(`[${transactionID}] isHaveSqlError = ${error}` )
     return
   }
 
@@ -458,7 +453,7 @@ export async function confirmTransactionSendMoneyBack(
       )
     })
     .catch((error) => {
-      errorLogger.error(`[${transactionID}] newTransactionSqlError =`, error)
+      errorLogger.error(`[${transactionID}] newTransactionSqlError = ${error}`)
       return
     })
 

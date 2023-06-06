@@ -21,6 +21,8 @@ services:
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
+      logstashHost: '${logstashHost}'
+      logstashPort: '${logstashPort}'
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'

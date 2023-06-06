@@ -260,7 +260,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                         const alert: string = `starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`;
                         doSms(alert);
                         telegramBot.sendMessage(alert).catch(error => {
-                            accessLogger.error('send telegram message error', error);
+                            accessLogger.error(`send telegram message error ${error.stack}`);
                         });
                         balanceWaringTime = new Date().valueOf();
                     }
@@ -279,8 +279,8 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const { nonce, rollback } = await starknet.takeOutNonce();
             try {
                 await starknet.clearTask(queueList, 0);
-                accessLogger.info('starknet_sql_nonce =', nonce);
-                accessLogger.info('starknet_consume_count =', queueList.length);
+                accessLogger.info(`starknet_sql_nonce = ${nonce}`);
+                accessLogger.info(`starknet_consume_count = ${queueList.length}`);
                 let hash = '';
                 if (signParamList.length === 1) {
                     accessLogger.info('starknet sent one ====');
@@ -431,7 +431,7 @@ function watchStarknetAlarm() {
     cron = setInterval(() => {
         for (const key in alarmMsgMap) {
             telegramBot.sendMessage(`${key} ${(<string[]>alarmMsgMap[key]).join(',')}`).catch(error => {
-                accessLogger.error('send telegram message error', error);
+                accessLogger.error(`send telegram message error ${error.stack}`);
             });
             doSms(`${key} count ${alarmMsgMap[key].length}`);
             delete alarmMsgMap[key];

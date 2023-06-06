@@ -202,8 +202,8 @@ export async function getTokenBalance(
     }
   } catch (error) {
     errorLogger.error(
-      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: `,
-      error.message
+      `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: ${error.message}`
+      
     )
   }
 
