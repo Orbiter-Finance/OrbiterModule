@@ -1053,8 +1053,8 @@ export async function sendConsumer(value: any) {
       .transfer(toAddress, web3.utils.toHex(amountToSend))
       .encodeABI()
   }
-  if ([1, 5].includes(chainID)) {
-    try {
+  if ([1, 5,7,77].includes(chainID)) {
+   try {
       // eip 1559 send
       const config = chains.getChainInfo(Number(chainID));
       if (config && config.rpc.length <= 0) {
@@ -1079,6 +1079,12 @@ export async function sendConsumer(value: any) {
 
       details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
       details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
+      if ([7,77].includes(chainID)) {
+        const feeData = await httpsProvider.getFeeData();
+        const opGasPrice = feeData.gasPrice?.mul(5);
+        details['maxFeePerGas'] = opGasPrice?.toHexString();
+      }
+
       details['gasLimit'] = web3.utils.toHex(gasLimit)
       details['type'] = 2
       const wallet = new ethers.Wallet(
