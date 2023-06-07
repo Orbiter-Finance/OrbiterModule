@@ -1056,6 +1056,8 @@ export async function sendConsumer(value: any) {
   if ([1, 5,7,77].includes(chainID)) {
    try {
       // eip 1559 send
+      const networkId = makerConfig[toChain]?.customChainId
+      details['chainId'] = networkId;
       const config = chains.getChainInfo(Number(chainID));
       if (config && config.rpc.length <= 0) {
         throw new Error('Missing RPC configuration')
@@ -1065,24 +1067,36 @@ export async function sendConsumer(value: any) {
       // if (feeData) {
       delete details['gasPrice']
       delete details['gas']
-      let maxPriorityFeePerGas = 1000000000
-      try {
-        if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
-          const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
-          if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-            maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas
+
+      if ([1, 5].includes(chainID)) {
+        let maxPriorityFeePerGas = 1000000000
+        try {
+          if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
+            const alchemyMaxPriorityFeePerGas = await httpsProvider.send("eth_maxPriorityFeePerGas", []);
+            if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
+              maxPriorityFeePerGas = alchemyMaxPriorityFeePerGas
+            }
           }
+        } catch (error) {
+          accessLogger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
         }
-      } catch (error) {
-        accessLogger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
+        details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
+        details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
       }
 
-      details['maxPriorityFeePerGas'] = web3.utils.toHex(maxPriorityFeePerGas)
-      details['maxFeePerGas'] = web3.utils.toHex(maxPrice * 10 ** 9)
-      if ([7,77].includes(chainID)) {
-        const feeData = await httpsProvider.getFeeData();
-        const opGasPrice = feeData.gasPrice?.mul(5);
-        details['maxFeePerGas'] = opGasPrice?.toHexString();
+      if ([7, 77].includes(chainID)) {
+        const opGasPrice = await httpsProvider.getGasPrice();
+        details['maxPriorityFeePerGas'] = opGasPrice.toHexString();
+        details['maxFeePerGas'] = opGasPrice.mul(5).toHexString();
+
+        if (config && config.rpc.length > 0 && web3Net.includes('alchemyapi')) {
+          try {
+            const feeData = await httpsProvider.getFeeData();
+            details['maxPriorityFeePerGas'] = feeData.maxPriorityFeePerGas?.mul(2).toHexString();
+          } catch (error) {
+            accessLogger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
+          }
+        }
       }
 
       details['gasLimit'] = web3.utils.toHex(gasLimit)
