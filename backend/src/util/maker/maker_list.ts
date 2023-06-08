@@ -5693,38 +5693,7 @@ export const makerList = [
         "endTime": 99999999999999
       }
     ]
-  },
-  {
-    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
-    "c1ID": 1,
-    "c2ID": 14,
-    "c1Name": "mainnet",
-    "c2Name": "zksync2",
-    "t1Address": "0x0000000000000000000000000000000000000000",
-    "t2Address": "0x0000000000000000000000000000000000000000",
-    "tName": "ETH",
-    "c1MinPrice": 0.005,
-    "c1MaxPrice": 10,
-    "c2MinPrice": 0.005,
-    "c2MaxPrice": 3,
-    "precision": 18,
-    "c1TradingFee": 0.0021,
-    "c2TradingFee": 0.006,
-    "c1GasFee": 0,
-    "c2GasFee": 1,
-    "c1AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ],
-    "c2AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ]
-  },
+  }
 ]
 
 export const makerListHistory = []
