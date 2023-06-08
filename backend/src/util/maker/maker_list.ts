@@ -8290,4 +8290,21 @@ const push2List = cloneDeep(list1).map(row=> {
     row.makerAddress = '0x0a88bc5c32b684d467b43c06d9e0899efeaf59df';
     return row;
 })
-export const makerList = [...makerList80c, ...initMakerList, ...push1List, ...push2List];
+
+const allMakerList = [...makerList80c, ...initMakerList, ...push1List, ...push2List]
+
+const filterMakerList = [];
+
+for (const data of allMakerList) {
+    if (!filterMakerList.find(item =>
+        item.makerAddress.toLowerCase() === data.makerAddress.toLowerCase() &&
+        (Number(item.c1ID) === Number(data.c1ID) && item.t1Address.toLowerCase() === data.t1Address.toLowerCase() &&
+            Number(item.c2ID) === Number(data.c2ID) && item.t2Address.toLowerCase() === data.t2Address.toLowerCase()) ||
+        (Number(item.c1ID) === Number(data.c2ID) && item.t1Address.toLowerCase() === data.t2Address.toLowerCase() &&
+            Number(item.c2ID) === Number(data.c1ID) && item.t2Address.toLowerCase() === data.t1Address.toLowerCase())
+    )) {
+        filterMakerList.push(data);
+    }
+}
+
+export const makerList = filterMakerList;
