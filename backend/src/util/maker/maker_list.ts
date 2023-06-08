@@ -8303,6 +8303,9 @@ for (const data of allMakerList) {
         (Number(item.c1ID) === Number(data.c2ID) && item.t1Address.toLowerCase() === data.t2Address.toLowerCase() &&
             Number(item.c2ID) === Number(data.c1ID) && item.t2Address.toLowerCase() === data.t1Address.toLowerCase())
     )) {
+        data.makerAddress = data.makerAddress.toLowerCase();
+        data.t1Address = data.t1Address.toLowerCase();
+        data.t2Address = data.t2Address.toLowerCase();
         filterMakerList.push(data);
     }
 }
