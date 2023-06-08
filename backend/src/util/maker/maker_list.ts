@@ -5697,14 +5697,20 @@ const initMakerList = [
         ]
     }
 ];
-const list1 = cloneDeep(initMakerList).filter(row=> row.c2ID == 14 && row.makerAddress === '0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8');
 
-const push1List = cloneDeep(list1).map(row=> {
+const e4eList = cloneDeep(initMakerList).map(row => {
+    row.makerAddress = '0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8';
+    return row;
+});
+
+const list1 = cloneDeep(initMakerList).filter(row => row.c2ID == 14 && row.makerAddress === '0x80C67432656d59144cEFf962E8fAF8926599bCF8');
+
+const push1List = cloneDeep(list1).map(row => {
     row.makerAddress = '0xee73323912a4e3772b74ed0ca1595a152b0ef282';
     return row;
-})
-const push2List = cloneDeep(list1).map(row=> {
+});
+const push2List = cloneDeep(list1).map(row => {
     row.makerAddress = '0x0a88bc5c32b684d467b43c06d9e0899efeaf59df';
     return row;
-})
-export const makerList = [...initMakerList, ...push1List, ...push2List];
+});
+export const makerList = [...initMakerList, ...e4eList, ...push1List, ...push2List];
