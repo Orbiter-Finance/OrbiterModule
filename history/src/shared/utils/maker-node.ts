@@ -151,9 +151,9 @@ export async function statisticsProfitOld(
 
   const makerList = await getMakerList()
   for (const item of makerList) {
-    if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
-      continue
-    }
+    // if (!equalsIgnoreCase(item.makerAddress, makerNode.makerAddress)) {
+    //   continue
+    // }
 
     if (
       equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
