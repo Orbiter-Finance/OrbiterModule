@@ -173,6 +173,9 @@ export const useTransactionHistory = async (params: any = {}) => {
   const current = ref(params.current || 1)
   const total = ref(0)
   if (params.makerAddress) {
+    if ($env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]) {
+      params.makerAddress = `${params.makerAddress},${$env.starknetL1MapL2['mainnet-alpha'][params.makerAddress.toLowerCase()]}`;
+    }
     transforeDate(params)
     loading.value = true
     try {
