@@ -5338,7 +5338,7 @@ export const makerList = [
     "c1TradingFee": 0.0018,
     "c2TradingFee": 0.0012,
     "c1GasFee": 3.5,
-    "c2GasFee": 1,
+    "c2GasFee": 0.3,
     "c1AvalibleTimes": [
       {
         "startTime": 0,
@@ -5494,7 +5494,7 @@ export const makerList = [
     "c1TradingFee": 0.0012,
     "c2TradingFee": 0.0012,
     "c1GasFee": 3.5,
-    "c2GasFee": 3.5,
+    "c2GasFee": 0.5,
     "c1AvalibleTimes": [
       {
         "startTime": 0,
