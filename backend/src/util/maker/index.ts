@@ -590,7 +590,7 @@ export async function sendTxConsumeHandle(result: any) {
     amountToSend: tAmount,
     lpMemo: nonce } = params;
   const accessLogger = getLoggerService(toChainID);
-  if (response.code !== 2 && response.code !== 3) accessLogger.info(`${transactionID} sendTxConsumeHandle response = ${response}`);
+  if (response.code !== 2 && response.code !== 3) accessLogger.info(`${transactionID} sendTxConsumeHandle response = ${JSON.stringify(response)}`);
   // code 0:handle single payment 1:fail 2:store multiple transactions 3:handle multiple payments
   if (!response.code) {
     var txID = response.txid
@@ -731,7 +731,7 @@ async function handleParamsList(result) {
   paramsList = paramsList || [params];
   const accessLogger = getLoggerService(toChainID);
   const transactionIDList: string[] = paramsList.map(item => item.transactionID);
-  accessLogger.info(`${transactionIDList} sendTxConsumeHandle response = ${response}`);
+  accessLogger.info(`${transactionIDList} sendTxConsumeHandle response = ${JSON.stringify(response)}`);
   accessLogger.info(
     `update maker_node: state = 2, toTx = '${txID}' where transactionID in (${transactionIDList})`
   );
