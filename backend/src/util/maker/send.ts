@@ -1184,6 +1184,7 @@ export async function sendConsumer(value: any) {
           sms: true
         }
         nonceDic[makerAddress][chainID] = result_nonce - 1;
+        accessLogger.error(`${chainID}-${transactionID} sendSignedTransaction error rollback nonce: ${nonceDic[makerAddress][chainID]}, errmsg: ${err.message}`);
         if (chainID == 14 || chainID == 514) {
           const msg = typeof err === "object" ? (err?.message ? err.message : JSON.stringify(err)) : err;
           if (msg.indexOf('nonce too high. allowed nonce range') !== -1) {
