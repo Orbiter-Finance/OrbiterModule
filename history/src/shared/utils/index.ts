@@ -1,7 +1,7 @@
 import * as dayjs from 'dayjs'
 
 export function formateTimestamp(timestamp: number | string) {
-  return dayjs(+timestamp).format('YYYY-MM-DD HH:mm:ss')
+  return dayjs(+timestamp).utc().format('YYYY-MM-DD HH:mm:ss')
 }
 
 /**

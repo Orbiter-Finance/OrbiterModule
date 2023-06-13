@@ -121,24 +121,30 @@ export class TransactionService {
     const startTime = Number(query['startTime'] || dayjs().startOf('d').valueOf());
     const endTime = Number(query['endTime'] || dayjs().endOf('d').valueOf());
     const whreeParmas: Array<any> = [
-      dayjs(startTime).utc().format('YYYY-MM-DD HH:mm'),
-      dayjs(endTime).utc().format('YYYY-MM-DD HH:mm'),
+      dayjs(startTime).utc().format('YYYY-MM-DD HH:mm:ss'),
+      dayjs(endTime).utc().format('YYYY-MM-DD HH:mm:ss'),
     ];
-    let whereSql = ' `timestamp`>=? AND `timestamp`<=? ';
+    let whereSql = " `timestamp`>=? AND `timestamp`<=? ";
+    // let sqlLog = " `timestamp`>= '"+whreeParmas[0]+"' AND `timestamp`<= '" + whreeParmas[1] +"' ";
     let makerAddress = (query?.makerAddress || '').split(',');
     if (makerAddress.length > 0) {
       whereSql += ' and replySender in(?)';
       whreeParmas.push(makerAddress);
+      // sqlLog += ` and replySender in(${makerAddress})`;
     }
     if (query['fromChain']) {
       whereSql += ' and fromChain = ?';
       whreeParmas.push(query['fromChain']);
+      // sqlLog += ` and fromChain = ${query['fromChain']}`;
     }
     if (query['toChain']) {
       whereSql += ' and toChain = ?';
       whreeParmas.push(query['toChain']);
+      // sqlLog += ` and toChain = ${query['toChain']} `;
     }
 
+    // console.log('from', "SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + sqlLog + " GROUP BY inSymbol");
+    // console.log('to', "SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + sqlLog + " GROUP BY outSymbol,outFeeToken");
     const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
     const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
     for (const row of from) {

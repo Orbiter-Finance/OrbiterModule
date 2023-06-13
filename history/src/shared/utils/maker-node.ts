@@ -43,6 +43,8 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
 }
 
 export async function getRates(currency) {
+  // rates test
+  // return (require("./rates"))["default"];
     const cacheData = await keyv.get(`rate:${currency}`);
   if (cacheData) {
     return cacheData;
@@ -108,7 +110,7 @@ export async function exchangeToUsd(
   return value.dividedBy(rate)
 }
 
-const GAS_PRICE_PAID_RATE = { 2: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
+const GAS_PRICE_PAID_RATE = {}
 export async function statisticsProfit(
   makerNode
 ): Promise<BigNumber> {
