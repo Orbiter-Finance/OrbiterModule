@@ -25,7 +25,9 @@ export class MakerTransactionService {
 
     let more = ``;
     if (query.makerAddress) {
-      more += `and (t.replySender = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `
+      const addr = query.makerAddress.split(',').map(id => `'${id}'`).join(',')
+      more+=` and t.to in (${addr})`
+      // more += `and (t.replySender = '${query.makerAddress}' or m.replyAccount = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `;
     }
     if (query.startTime) {
       more += `and t.timestamp >= '${formateTimestamp(+query.startTime)}' `;

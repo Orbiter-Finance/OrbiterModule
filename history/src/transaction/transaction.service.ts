@@ -127,11 +127,11 @@ export class TransactionService {
     let whereSql = " `timestamp`>=? AND `timestamp`<=? ";
     // let sqlLog = " `timestamp`>= '"+whreeParmas[0]+"' AND `timestamp`<= '" + whreeParmas[1] +"' ";
     let makerAddress = (query?.makerAddress || '').split(',');
-    if (makerAddress.length > 0) {
-      whereSql += ' and replySender in(?)';
-      whreeParmas.push(makerAddress);
-      // sqlLog += ` and replySender in(${makerAddress})`;
-    }
+      if (makerAddress.length > 0) {
+          // whereSql += " and replySender in(?)";
+          whereSql += " and `to` in(?)";
+          whreeParmas.push(makerAddress);
+      }
     if (query['fromChain']) {
       whereSql += ' and fromChain = ?';
       whreeParmas.push(query['fromChain']);
@@ -143,10 +143,10 @@ export class TransactionService {
       // sqlLog += ` and toChain = ${query['toChain']} `;
     }
 
-    // console.log('from', "SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + sqlLog + " GROUP BY inSymbol");
-    // console.log('to', "SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + sqlLog + " GROUP BY outSymbol,outFeeToken");
-    const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM revenue_statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
-    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM revenue_statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
+    // console.log('from', "SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + sqlLog + " GROUP BY inSymbol");
+    // console.log('to', "SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + sqlLog + " GROUP BY outSymbol,outFeeToken");
+    const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
+    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
     for (const row of from) {
       row.value = this.divPrecision(row.symbol, row.value);
     }
