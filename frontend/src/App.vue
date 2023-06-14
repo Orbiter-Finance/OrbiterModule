@@ -58,6 +58,7 @@ import { ArrowDown } from '@element-plus/icons'
 import { provide, reactive, toRef } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import { $axios } from './plugins/axios'
+import { isSensitive } from "@/config";
 
 const route = useRoute()
 const router = useRouter()
@@ -76,7 +77,7 @@ provide('makerAddressSelected', makerAddressSelected)
 provide('exchangeRates', exchangeRates)
 
 const getGlobalInfo = async () => {
-  const resp = await $axios.get('global')
+  const resp = isSensitive ? await $axios.get('global') : await $axios.get('global_all');
   const list = resp.data.makerAddresses;
   const newList = [];
   for (const data of list) {
