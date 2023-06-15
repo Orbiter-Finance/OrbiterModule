@@ -1,4 +1,4 @@
-export const privateMakerList = [
+export const privateMakerList: any[] = [
     {
         "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
         "c1ID": 10,
