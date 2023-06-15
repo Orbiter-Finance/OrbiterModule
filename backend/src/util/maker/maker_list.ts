@@ -3963,7 +3963,7 @@ export const makerList = [
     c1TradingFee: 2,
     c2TradingFee: 15,
     c1GasFee: 0,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
@@ -3996,7 +3996,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
@@ -4029,7 +4029,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1636019587,
@@ -4062,7 +4062,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1642393801,
@@ -4095,7 +4095,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1642393801,
@@ -4128,7 +4128,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1642393801,
@@ -4161,7 +4161,7 @@ export const makerList = [
     c1TradingFee: 1.8,
     c2TradingFee: 1.8,
     c1GasFee: 0.5,
-    c2GasFee: 1,
+    c2GasFee: 2,
     c1AvalibleTimes: [
       {
         startTime: 1642393801,
