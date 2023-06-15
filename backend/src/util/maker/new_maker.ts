@@ -1,4 +1,4 @@
-import { sleep } from 'orbiter-chaincore/src/utils/core';
+import { fix0xPadStartAddress, sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
 import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
@@ -18,8 +18,9 @@ import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
 import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
+import { validateAndParseAddress } from "starknet";
 const allChainsConfig = [...mainnetChains, ...testnetChains]
-const repositoryMakerNode = (): Repository<MakerNode> => {
+export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
 export const chainQueue: { [key: number]: MessageQueue } = {};
@@ -61,7 +62,9 @@ export function checkAmount(
     return false
   }
   const rAmount = <any>realAmount.rAmount
-  const minPrice = new BigNumber(market.pool.minPrice)
+  const minPrice = new BigNumber(
+      market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+  )
     .plus(new BigNumber(market.pool.tradingFee))
     .multipliedBy(new BigNumber(10 ** market.pool.precision))
   const maxPrice = new BigNumber(market.pool.maxPrice)
@@ -131,14 +134,14 @@ export async function startNewMakerTrxPull() {
       chainQueue[insideChainId] = new MessageQueue(`chain:${insideChainId}`, sendConsumer);
       chainQueue[insideChainId].consumeQueue(async (error, result) => {
         if (error) {
-          accessLogger.error(`An error occurred while consuming messages`, error);
+          accessLogger.error(`An error occurred while consuming messages ${error}`);
           return;
         }
         await sendTxConsumeHandle(result);
         return true;
       })
     }
-    pubSub.subscribe(`${intranetId}:txlist`, (result)=> {
+    pubSub.subscribe(`${intranetId}:txlist`, (result) => {
       subscribeNewTransaction(result);
       return true;
     })
@@ -161,7 +164,7 @@ async function isWatchAddress(address: string) {
     ) != -1
   )
 }
-async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
+export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
   // Transaction received
   // accessLogger.info(`subscribeNewTransaction hash: ${JSON.stringify(newTxList.map(row=> row.hash))}`);
   const groupData = chainCoreUtil.groupBy(newTxList, 'chainId')
@@ -179,8 +182,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         // check send
         if (!fromChain) {
           errorLogger.error(
-            `transaction fromChainId ${tx.chainId} does not exist: `,
-            tx.hash
+            `transaction fromChainId ${tx.chainId} does not exist: ${tx.hash}`
           )
           continue
         }
@@ -244,8 +246,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           accessLogger.error(
             `[${transactionID}] Incorrect transaction getPTextFromTAmount: fromChain=${fromChain.name
             },fromChainId=${fromChain.internalId},hash=${tx.hash
-            },value=${tx.value.toString()}`,
-            JSON.stringify(result)
+            },value=${tx.value.toString()} ${JSON.stringify(result)}`
           )
           continue
         }
@@ -253,8 +254,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           accessLogger.error(
             `[${transactionID}] Transaction Amount Value Format Error: fromChain=${fromChain.name
             },fromChainId=${fromChain.internalId},hash=${tx.hash
-            },value=${tx.value.toString()}`,
-            JSON.stringify(result)
+            },value=${tx.value.toString()} ${JSON.stringify(result)}`
           )
           continue
         }
@@ -272,8 +272,7 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         )
         if (chainCoreUtil.isEmpty(fromTokenInfo) || !fromTokenInfo?.name) {
           accessLogger.error(
-            `[${transactionID}] Refund The query currency information does not exist: ` +
-            JSON.stringify(tx)
+            `[${transactionID}] Refund The query currency information does not exist: ${JSON.stringify(tx)}`
           )
           continue
         }
@@ -286,7 +285,8 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
               m.fromChain.tokenAddress,
               String(tx.tokenAddress)
             ) &&
-            chainCoreUtil.equals(m.toChain.symbol, tx.symbol)
+            chainCoreUtil.equals(m.toChain.symbol, tx.symbol) &&
+            chainCoreUtil.equals(m.recipient, tx.to)
         )
         if (!marketItem) {
           accessLogger.error(
@@ -310,15 +310,14 @@ async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           )
           if (!checkAmountResult) {
             accessLogger.error(
-              `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash}`,
-              JSON.stringify(tx)
+              `[${transactionID}] checkAmount Fail: fromChain=${fromChain.name},hash=${tx.hash} ${JSON.stringify(tx)}`,
             )
             continue
           }
         }
         await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
       } catch (error) {
-        errorLogger.error(`${tx.hash} startNewMakerTrxPull error:`, error)
+        errorLogger.error(`${tx.hash} startNewMakerTrxPull error: ${error}`)
       }
     }
   }
@@ -369,11 +368,11 @@ export async function confirmTransactionSendMoneyBack(
       transactionID,
     })
     if (makerNode) {
-      accessLogger.info('TransactionID was exist: ' + transactionID)
+      accessLogger.info(`TransactionID was exist: ${transactionID}`)
       return
     }
   } catch (error) {
-    errorLogger.error(`[${transactionID}] isHaveSqlError =`, error)
+    errorLogger.error(`[${transactionID}] isHaveSqlError = ${error}` )
     return
   }
 
@@ -417,7 +416,23 @@ export async function confirmTransactionSendMoneyBack(
         case '4':
         case '44':
           userAddress = tx.extra['ext'].replace('0x03', '0x')
+          try {
+            validateAndParseAddress(userAddress);
+          } catch (e) {
+            accessLogger.error(
+                `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
+            );
+            return;
+          }
           break
+      }
+      if (!userAddress ||
+          fix0xPadStartAddress(userAddress, 66).length !== 66 ||
+          fix0xPadStartAddress(userAddress, 66) === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+        accessLogger.error(
+            `Illegal user address ${userAddress} hash:${tx.hash}`
+        );
+        return;
       }
       accessLogger.info(`sendTransaction from hash: ${fromChainID}->${toChainID} ${tx.hash}`);
       await sendTransaction(
@@ -432,11 +447,13 @@ export async function confirmTransactionSendMoneyBack(
         market.pool,
         tx.nonce,
         0,
-        tx.from
+        tx.from,
+          0,
+          tx.hash
       )
     })
     .catch((error) => {
-      errorLogger.error(`[${transactionID}] newTransactionSqlError =`, error)
+      errorLogger.error(`[${transactionID}] newTransactionSqlError = ${error}`)
       return
     })
 

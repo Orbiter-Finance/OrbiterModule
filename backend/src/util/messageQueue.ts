@@ -89,13 +89,18 @@ export class MessageQueue {
             } else if (this.size() > 50 && Date.now() % 600 === 0) {
                 accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
             }
+            if (this.name == `chain:14` && this.size() >= 200 && Date.now() % 300 === 0) {
+                telegramBot.sendMessage(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`).catch(error => {
+                    accessLogger.error(`send telegram message error ${error.stack}`);
+                })
+            }
             const timeout = Date.now() - this.lastConsumeTime;
             if (timeout > 1000 * 60 * 5 && this.size() > 0) {
                 if (Date.now() - this.lastDoSMS >= 1000 * 60 * 3) {
                     const alert = `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`;
                     doSms(alert)
                     telegramBot.sendMessage(alert).catch(error => {
-                        accessLogger.error('send telegram message error', error);
+                        accessLogger.error(`send telegram message error ${error.stack}`);
                     })
                     this.lastDoSMS = Date.now();
                 }

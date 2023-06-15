@@ -4,9 +4,11 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
+  batchTxSend,
   jobBalanceAlarm,
   jobGetWealths,
-} from './jobs'
+  watchLogs,
+} from './jobs';
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
 
@@ -57,14 +59,13 @@ export async function waittingStartMaker() {
         try {
           doSms(alert)
           telegramBot.sendMessage(alert).catch(error => {
-            accessLogger.error('send telegram message error', error);
+            accessLogger.error(`send telegram message error ${error.stack}`);
           })
           accessLogger.info(
-            'sendNeedPrivateKeyMessage,   smsTimeStamp =',
-            nowTime
+            `sendNeedPrivateKeyMessage,   smsTimeStamp = ${nowTime}`
           )
         } catch (error) {
-          errorLogger.error('sendPrivateSMSError =', error)
+          errorLogger.error(`sendPrivateSMSError = ${error}`)
         }
         smsTimeStamp = nowTime
       }
@@ -114,6 +115,8 @@ export const startMasterJobs = async () => {
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     waittingStartMaker()
     startNewMakerTrxPull()
+    batchTxSend()
+    watchLogs();
   }
 }
 

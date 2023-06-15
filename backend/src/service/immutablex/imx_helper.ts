@@ -127,7 +127,7 @@ export class IMXHelper {
         balance = balance.add(item.balance)
       }
     } catch (err) {
-      errorLogger.error('IMX GetBalanceBySymbol failed: ' + err.message)
+      errorLogger.error(`IMX GetBalanceBySymbol failed: ${err.message}`)
     }
 
     return balance

@@ -27,7 +27,7 @@ AWS.config.update({
 const s3 = new AWS.S3()
 
 export default function (router: KoaRouter<DefaultState, Context>) {
-  router.get('maker', async ({ restful }) => {
+  router.get('maker', async ({ restful }: any) => {
     const chains = <{ chainId: number; chainName: string }[]>[]
     const pushChain = (chainId: number, chainName: string) => {
       const find = chains.find((item) => item.chainId == chainId)
@@ -54,7 +54,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json({ earliestTime, chains })
   })
 
-  router.get('maker/wealths', async ({ request, restful }) => {
+  router.get('maker/wealths', async ({ request, restful }: any) => {
     const makerAddress = String(request.query.makerAddress || '')
 
     // let rst = Core.memoryCache.get(
@@ -70,7 +70,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json(rst)
   })
 
-  router.get('maker/miss_private_key_addresses', async ({ restful }) => {
+  router.get('maker/miss_private_key_addresses', async ({ restful }: any) => {
     const makerAddresses = await serviceMaker.getMakerAddresses()
     const addresses: string[] = []
     for (const item of makerAddresses) {
@@ -94,7 +94,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   })
 
   // set makerConfig.privateKeys
-  router.post('maker/privatekeys', async ({ request, restful }) => {
+  router.post('maker/privatekeys', async ({ request, restful }: any) => {
     const { body } = request
 
     const makerAddresses: string[] = []
@@ -119,7 +119,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
   // set dydx's ApiKeyCredentials
   router.post(
     'maker/dydx_api_key_credentials',
-    async ({ request, restful }) => {
+    async ({ request, restful }: any) => {
       const { body } = request
 
       const makerAddresses: string[] = []
@@ -139,7 +139,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     }
   )
 
-  router.post('maker/config', async (ctx) => {
+  router.post('maker/config', async (ctx: any) => {
     const { headers, request, restful } = ctx
     try {
       if (makerConfig.s3Proof != headers.authorization) {

@@ -39,7 +39,7 @@ export class SendQueue {
           return cb1(Date.now() - SendQueue.LastConsumeTime)
         }
       } catch (error) {
-        accessLogger.error('SendQueue checkHealth error', error)
+        accessLogger.error(`SendQueue checkHealth error ${error}`)
       }
     }, 1000 * 10)
   }

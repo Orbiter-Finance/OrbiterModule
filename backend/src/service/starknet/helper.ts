@@ -1,15 +1,27 @@
 import ERC20 from './ERC20.json'
 import { utils } from 'ethers'
-import { Account, Contract, ec, Provider, uint256, stark, BigNumberish } from 'starknet';
+import { Account, Contract, ec, Provider, uint256 } from 'starknet'
+import { sortBy } from 'lodash'
+import { Uint256 } from 'starknet/dist/utils/uint256'
 import BigNumber from 'bignumber.js'
+import { BigNumberish, toBN } from 'starknet/dist/utils/number'
 import { OfflineAccount } from './account'
+import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
-import { sleep } from '../../util'
-import { chains } from 'orbiter-chaincore'
+import { readLogJson, sleep, writeLogJson } from '../../util';
+import fs from "fs";
+import path from "path";
+
 const accessLogger = getLoggerService('4')
+
+export let starknetLockMap = {};
+
+export function setStarknetLock(makerAddress: string, status: boolean) {
+  starknetLockMap[makerAddress.toLowerCase()] = status;
+}
 
 export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
 
@@ -17,13 +29,7 @@ export function getProviderV4(network: starknetNetwork | string) {
   const sequencer = {
     network: <any>network, // for testnet you can use defaultProvider
   }
-  // const chainId = network === 'georli-alpha' ? '44' : '4'
-  // const chain = chains.getAllChains().find(item => item.internalId === chainId);
-  // if (chain?.rpc && chain.rpc.length) {
-  //   return new Provider({ sequencer, rpc: { nodeUrl: chain.rpc[0] } });
-  // }
   return new Provider({ sequencer })
-  // return new Provider({ sequencer, rpc: { nodeUrl: "https://starknet-testnet.unifra.io/v1/" } });
 }
 export function parseInputAmountToUint256(
   input: string,
@@ -31,6 +37,11 @@ export function parseInputAmountToUint256(
 ) {
   return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
 }
+
+export const starknetHelpLockMap = {};
+
+const txPool: { [makerAddress: string]: any[] } = {};
+
 export class StarknetHelp {
   private cache: Keyv
   public account: Account
@@ -43,11 +54,12 @@ export class StarknetHelp {
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
         expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-        writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+        writeDelay: 0, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
         decode: JSON.parse, // deserialize function
       }),
     })
+
     const provider = getProviderV4(network)
     this.account = new Account(
       provider,
@@ -63,6 +75,70 @@ export class StarknetHelp {
 
   async getNetworkNonce() {
     return Number(await this.account.getNonce())
+  }
+  // code:0.Normal clearing 1.Abnormal clearing
+  async clearTask(taskList: any[], code: number) {
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
+          await this.clearTask(taskList, code);
+          return;
+      }
+      starknetHelpLockMap[makerAddress] = true;
+      try {
+          const allTaskList: any[] = await this.getTask();
+          const leftTaskList = allTaskList.filter(task => {
+              return !taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          const clearTaskList = allTaskList.filter(task => {
+              return !!taskList.find(item => item.params?.transactionID === task.params?.transactionID);
+          });
+          txPool[makerAddress] = leftTaskList;
+          if (clearTaskList.length && code) {
+              const cacheList: any[] = await readLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear');
+              cacheList.push(clearTaskList.map(item => {
+                  return {
+                      transactionID: item.params.transactionID,
+                      chainId: item.params.fromChainID,
+                      hash: item.params.fromHash
+                  };
+              }));
+              await writeLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear', cacheList);
+          }
+      } catch (e) {
+          accessLogger.error(`starknet clearTask error: ${e.message}`);
+      }
+      starknetHelpLockMap[makerAddress] = false;
+  }
+  async pushTask(taskList: any[]) {
+      const makerAddress = this.account.address.toLowerCase();
+      if (starknetHelpLockMap[makerAddress]) {
+          accessLogger.info('Task is lock, wait for 100 ms');
+          await sleep(100);
+          await this.pushTask(taskList);
+          return;
+      }
+      starknetHelpLockMap[makerAddress] = true;
+      try {
+          const cacheList: any[] = await this.getTask();
+          const newList: any[] = [];
+          for (const task of taskList) {
+              if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
+                  accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+              } else {
+                  task.count = (task.count || 0) + 1;
+                  newList.push(task);
+              }
+          }
+          txPool[makerAddress] = [...cacheList, ...newList];
+      } catch (e) {
+          accessLogger.error(`starknet pushTask error: ${e.message}`);
+      }
+      starknetHelpLockMap[makerAddress] = false;
+  }
+  async getTask(): Promise<any[]> {
+      return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
     let nonces = await this.getAvailableNonce()
@@ -89,8 +165,7 @@ export class StarknetHelp {
         try {
           let nonces = await this.getAvailableNonce()
           accessLogger.info(
-            `Starknet Rollback ${error.message} error fallback nonces ${nonce} available`,
-            JSON.stringify(nonces)
+            `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
           )
           nonces.push(nonce)
           //
@@ -99,8 +174,10 @@ export class StarknetHelp {
           })
           await this.cache.set(cacheKey, nonces)
         } catch (error) {
-          accessLogger.error('Starknet Rollback error:' + error.message)
+          accessLogger.error(`Starknet Rollback error: ${ error.message}`)
         }
+        await sleep(1000);
+        setStarknetLock(this.address.toLowerCase(), false);
       },
     }
   }
@@ -120,12 +197,7 @@ export class StarknetHelp {
         nonces.push(localLastNonce)
       }
       accessLogger.info(
-        'Generate starknet_getNetwork_nonce =',
-        networkLastNonce,
-        'nonces:',
-        nonces,
-        'networkLastNonce:',
-        networkLastNonce
+        `Generate starknet_getNetwork_nonce = ${networkLastNonce}, nonces: ${nonces}`
       )
       await this.cache.set(cacheKey, nonces)
       nonces.sort((a, b) => {
@@ -146,7 +218,7 @@ export class StarknetHelp {
   }) {
     const provider = getProviderV4(this.network)
     const entrypoint = 'transfer'
-    const calldata = stark.compileCalldata({
+    const calldata = compileCalldata({
       recipient: params.recipient,
       amount: getUint256CalldataFromBN(params.amount),
     })
@@ -169,15 +241,59 @@ export class StarknetHelp {
           response['status']
         )
       ) {
-        accessLogger.error('Straknet Send After status error:', response)
+        accessLogger.error(`Straknet Send After status error: ${response}`)
       }
     } catch (error) {
-      accessLogger.error(`Starknet Send After GetTransaction Erro:`, error)
+      accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`)
     }
     return {
       hash,
     }
   }
+
+    async signMultiTransfer(paramsList: {
+        tokenAddress: string
+        recipient: string
+        amount: string
+    }[], nonce: number) {
+        const provider = getProviderV4(this.network);
+        const entrypoint = 'transfer';
+        const invocationList: { contractAddress: string, entrypoint: string, calldata: any }[] = [];
+
+        for (const params of paramsList) {
+            const calldata = compileCalldata({
+                recipient: params.recipient,
+                amount: getUint256CalldataFromBN(params.amount),
+            });
+
+            invocationList.push({ contractAddress: params.tokenAddress, entrypoint, calldata });
+        }
+        const ofa = new OfflineAccount(provider, this.address, this.account.signer);
+        const trx = await ofa.signMutiTx(
+            invocationList,
+            nonce
+        );
+        if (!trx || !trx.transaction_hash) {
+            throw new Error(`Starknet Failed to send transaction hash does not exist`);
+        }
+        await sleep(1000);
+        const hash = trx.transaction_hash;
+        try {
+            const response = await provider.getTransaction(hash);
+            if (
+                !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+                    response['status']
+                )
+            ) {
+                accessLogger.error(`Straknet Send After status error: ${response}`);
+            }
+        } catch (error) {
+            accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
+        }
+        return {
+            hash,
+        };
+    }
 }
 /**
  *
@@ -197,7 +313,7 @@ export async function getErc20Balance(
   const provider = getProviderV4(network)
   const abi = ERC20['abi']
   const tokenContract = new Contract(<any>abi, contractAddress, provider)
-  const balanceSender: any = (
+  const balanceSender: Uint256 = (
     await tokenContract.balanceOf(starknetAddress)
   ).balance
   return new BigNumber(balanceSender.low.toString() || 0).toNumber()
