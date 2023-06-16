@@ -180,11 +180,14 @@ export async function batchTxSend(chainIdList = [4, 44]) {
             const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
             const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
-            const taskList = await starknet.getTask();
+            let taskList = await starknet.getTask();
             if (!taskList || !taskList.length) {
                 accessLogger.log('There are no consumable tasks in the starknet queue');
                 return { code: 1 };
             }
+            taskList = taskList.sort(function (a, b) {
+                return b.createTime - a.createTime;
+            });
             // Exceeded limit, clear task
             const clearTaskList: any[] = [];
             // Meet the limit, execute the task
