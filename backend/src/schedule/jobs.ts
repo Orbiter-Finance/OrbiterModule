@@ -279,7 +279,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 accessLogger.info('There are no consumable tasks in the starknet queue');
                 return { code: 1 };
             }
-            const { nonce, rollback } = await starknet.takeOutNonce();
+            const { nonce, rollback,commit } = await starknet.takeOutNonce();
             try {
                 await starknet.clearTask(queueList, 0);
                 accessLogger.info(`starknet_sql_nonce = ${nonce}`);
@@ -294,6 +294,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                     const res: any = await starknet.signMultiTransfer(signParamList, nonce);
                     hash = res.hash;
                 }
+                await commit(nonce);
                 await sendTxConsumeHandle({
                     code: 3,
                     txid: hash,

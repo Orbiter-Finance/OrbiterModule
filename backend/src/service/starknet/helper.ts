@@ -158,27 +158,29 @@ export class StarknetHelp {
       )}`
     )
     const cacheKey = `nonces:${this.address.toLowerCase()}`
-    await this.cache.set(cacheKey, nonces)
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
-        try {
-          let nonces = await this.getAvailableNonce()
-          accessLogger.info(
-            `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
-          )
-          nonces.push(nonce)
-          //
-          nonces.sort((a, b) => {
-            return a - b
-          })
-          await this.cache.set(cacheKey, nonces)
-        } catch (error) {
-          accessLogger.error(`Starknet Rollback error: ${ error.message}`)
-        }
+        // try {
+        //   let nonces = await this.getAvailableNonce()
+        //   accessLogger.info(
+        //     `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
+        //   )
+        //   // nonces.push(nonce)
+        //   //
+        //   nonces.sort((a, b) => {
+        //     return a - b
+        //   })
+        //   await this.cache.set(cacheKey, nonces)
+        // } catch (error) {
+        //   accessLogger.error(`Starknet Rollback error: ${ error.message}`)
+        // }
         await sleep(1000);
         setStarknetLock(this.address.toLowerCase(), false);
       },
+      commit:async(nonce:number)=> {
+        await this.cache.set(cacheKey, nonces)
+      }
     }
   }
   async getAvailableNonce(): Promise<Array<number>> {
