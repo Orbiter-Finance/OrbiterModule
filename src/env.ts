@@ -118,7 +118,7 @@ export const $env = {
     519: 'https://l2scan.scroll.io/tx/',
     520: 'https://l2explorer.a1.taiko.xyz/tx/',
     521: 'https://goerli.basescan.org/tx/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/tx/',
+    522: 'https://goerli.lineascan.build/tx/',
     523: 'https://www.okx.com/explorer/okbc-test/tx/',
     524: 'https://explorer.testnet.mantle.xyz/tx/',
     525: 'https://opbnbscan.com/tx/'
@@ -159,7 +159,7 @@ export const $env = {
     519: 'https://l2scan.scroll.io/address/',
     520: 'https://l2explorer.a1.taiko.xyz/address/',
     521: 'https://goerli.basescan.org/address/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/address/',
+    522: 'https://goerli.lineascan.build/address/',
     523: 'https://www.okx.com/explorer/okbc-test/address/',
     524: 'https://explorer.testnet.mantle.xyz/address/',
     525: 'https://opbnbscan.com/address/'
@@ -196,6 +196,6 @@ export const $env = {
     519: 'https://l2scan.scroll.io/token/',
     520: 'https://l2explorer.a1.taiko.xyz/token/',
     521: 'https://goerli.basescan.org/token/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/token/'
+    522: 'https://goerli.lineascan.build/token/'
   },
 }
