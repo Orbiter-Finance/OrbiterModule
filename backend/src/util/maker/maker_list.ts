@@ -1,16 +1,9 @@
 import chains from "../../config/chains.json";
 import makerJson from "./maker.json";
 import { privateMakerList } from "./maker_list_private";
+import { errorLogger } from "../logger";
 
-// reserved chain : reserved symbol
-const openMaker = {
-  "0x80C67432656d59144cEFf962E8fAF8926599bCF8": "*:*",
-  // "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8": "*:ETH",
-  // "0xee73323912a4e3772B74eD0ca1595a152b0ef282": "14:ETH",
-  // "0x0a88BC5c32b684D467b43C06D9e0899EfEAF59Df": "14:ETH",
-};
-
-function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[] {
+export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): IMaker[] {
   const v1makerList: any[] = [];
   const noMatchMap: any = {};
 
@@ -19,33 +12,37 @@ function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[]
       chain.tokens.push(chain.nativeCurrency);
     }
   }
-
-  for (const chainIdPair in makerMap) {
-    if (!makerMap.hasOwnProperty(chainIdPair)) continue;
-    const symbolPairMap = makerMap[chainIdPair];
-    const [fromChainId, toChainId] = chainIdPair.split("-");
-    const c1Chain = chainList.find(item => +item.internalId === +fromChainId);
-    const c2Chain = chainList.find(item => +item.internalId === +toChainId);
-    if (!c1Chain) {
-      noMatchMap[fromChainId] = {};
-      continue;
-    }
-    if (!c2Chain) {
-      noMatchMap[toChainId] = {};
-      continue;
-    }
-    for (const symbolPair in symbolPairMap) {
-      if (!symbolPairMap.hasOwnProperty(symbolPair)) continue;
-      const makerData: IMakerDataCfg = symbolPairMap[symbolPair];
-      const [fromChainSymbol, toChainSymbol] = symbolPair.split("-");
-      // handle v1makerList
-      if (fromChainSymbol === toChainSymbol) {
-        handleV1MakerList(symbolPair, fromChainSymbol, toChainId, fromChainId, c1Chain, c2Chain, makerData);
+  for (const makerAddress in makerCfg) {
+    const makerMap = makerCfg[makerAddress];
+    for (const chainIdPair in makerMap) {
+      if (!makerMap.hasOwnProperty(chainIdPair)) continue;
+      const symbolPairMap = makerMap[chainIdPair];
+      const [fromChainId, toChainId] = chainIdPair.split("-");
+      const c1Chain = chainList.find(item => +item.internalId === +fromChainId);
+      const c2Chain = chainList.find(item => +item.internalId === +toChainId);
+      if (!c1Chain) {
+        noMatchMap[fromChainId] = {};
+        continue;
+      }
+      if (!c2Chain) {
+        noMatchMap[toChainId] = {};
+        continue;
+      }
+      for (const symbolPair in symbolPairMap) {
+        if (!symbolPairMap.hasOwnProperty(symbolPair)) continue;
+        const makerData: IMakerDataCfg = symbolPairMap[symbolPair];
+        const [fromChainSymbol, toChainSymbol] = symbolPair.split("-");
+        // handle v1makerList
+        if (fromChainSymbol === toChainSymbol) {
+          makerData.makerAddress = makerAddress;
+          handleV1MakerList(makerMap, symbolPair, fromChainSymbol, toChainId, fromChainId, c1Chain, c2Chain, makerData);
+        }
       }
     }
   }
 
   function handleV1MakerList(
+      makerMap: any,
       symbolPair: string,
       symbol: string,
       toChainId: string,
@@ -71,7 +68,7 @@ function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[]
       return;
     }
     // single
-    const singleList = [4];
+    const singleList = [4, 44];
 
     // reverse chain data
     const reverseChainIdPair = `${toChainId}-${fromChainId}`;
@@ -96,6 +93,12 @@ function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[]
     }
     const c2MakerData: IMakerDataCfg = reverseSymbolPairMap[symbolPair];
     const chainNameMap = {
+      5: "goerli",
+      22: "arbitrum_test",
+      66: "polygon_test",
+      77: "optimism_test",
+
+
       1: "mainnet",
       2: "arbitrum",
       3: "zksync",
@@ -115,9 +118,9 @@ function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[]
     };
     if (!chainNameMap[+fromChainId] || !chainNameMap[+toChainId]) {
       console.error("fromChainId error", fromChainId);
-      throw new Error();
+      throw new Error(`fromChainId error ${fromChainId}`);
     }
-    if (c1MakerData.sender === c2MakerData.sender || Number(fromChainId) == 4) {
+    if (c1MakerData.sender === c2MakerData.sender || Number(fromChainId) == 4 || Number(fromChainId) == 44) {
       v1makerList.push({
         makerAddress: c1MakerData.sender.toLowerCase(),
         c1ID: +fromChainId,
@@ -156,6 +159,10 @@ function convertMakerList(chainList: IChainCfg[], makerMap: IMakerCfg): IMaker[]
     }
   }
 
+  if (Object.keys(noMatchMap).length) {
+    errorLogger.error(`Maker list convert match error ${JSON.stringify(noMatchMap)}`);
+  }
+
   return v1makerList;
 }
 
@@ -182,27 +189,7 @@ for (const maker of privateMakerList) {
   }
 }
 
-export const makerList: IMaker[] = [];
-
-for (const makerAddress in openMaker) {
-  const [chain, symbol] = openMaker[makerAddress].split(":");
-  makerList.push(...JSON.parse(JSON.stringify(baseMakerList)).map(item => {
-    if (item.tName === "ETH") {
-      item.makerAddress = (<string>makerAddress).toLowerCase();
-    }
-    return item;
-  }).filter(item => {
-    let chainFilter = true;
-    let symbolFilter = true;
-    if (chain !== "*") {
-      chainFilter = (item.c1ID === +chain || item.c2ID === +chain) && item.c1ID !== 4 && item.c2ID !== 4;
-    }
-    if (symbol !== "*") {
-      symbolFilter = item.tName === symbol;
-    }
-    return chainFilter && symbolFilter;
-  }));
-}
+export let makerList: IMaker[] = [];
 
 export interface IMaker {
   makerAddress: string;
@@ -235,9 +222,11 @@ export interface IMaker {
 }
 
 export interface IMakerCfg {
-  [chainIdPair: string]: {
-    [symbolPair: string]: IMakerDataCfg;
-  };
+  [makerAddress: string]: {
+    [chainIdPair: string]: {
+      [symbolPair: string]: IMakerDataCfg;
+    };
+  }
 }
 
 export interface IMakerDataCfg {

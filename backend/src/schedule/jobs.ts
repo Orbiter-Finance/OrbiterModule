@@ -22,7 +22,7 @@ import { doSms } from "../sms/smsSchinese";
 import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
-chains.fill(<any>[...mainnetChains, ...testnetChains])
+
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
