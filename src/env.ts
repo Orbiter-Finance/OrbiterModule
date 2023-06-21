@@ -3,7 +3,7 @@ export const $env = {
   apiBaseUrl: 'http://rinkeby_dashboard.orbiter.finance:3002/',
   credential: false,
   crossAddressTransferMap: {
-    "0x0043d60e87c5dd08c86c3123340705a1556c4719": "0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b"
+    "0x4eaf936c172b5e5511959167e8ab4f7031113ca3": "0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b"
   },
   starknetL1MapL2: {
     'mainnet-alpha': {
@@ -15,7 +15,7 @@ export const $env = {
       "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc":"0x0411c2a2a4dc7b4d3a33424af3ede7e2e3b66691e22632803e37e2e0de450940"
     },
     'goerli-alpha': {
-      '0x0043d60e87c5dd08c86c3123340705a1556c4719': '0x050e5ba067562e87b47d87542159e16a627e85b00de331a53b471cee1a4e5a4f',
+      '0x4eaf936c172b5e5511959167e8ab4f7031113ca3': '0x050e5ba067562e87b47d87542159e16a627e85b00de331a53b471cee1a4e5a4f',
       '0xe06d06887b1a5638b882f1dcb054059c9bfd63ea': '0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489',
       "0x80cead4b66a87d1f728eba116b94592b57eb0695": "0x0274ff9139350580a93a4ed390de13fdd5bb333d18344146612af4e17593e100"
     },
@@ -76,6 +76,11 @@ export const $env = {
     518: '534351',
     519: '534354',
     520: '167003',
+    521: 84531,
+    522: 59140,
+    523: 195,
+    524: 5001,
+    525: 5611
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -113,7 +118,10 @@ export const $env = {
     519: 'https://l2scan.scroll.io/tx/',
     520: 'https://l2explorer.a1.taiko.xyz/tx/',
     521: 'https://goerli.basescan.org/tx/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/tx/'
+    522: 'https://explorer.goerli.zkevm.consensys.net/tx/',
+    523: 'https://www.okx.com/explorer/okbc-test/tx/',
+    524: 'https://explorer.testnet.mantle.xyz/tx/',
+    525: 'https://opbnbscan.com/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -151,7 +159,10 @@ export const $env = {
     519: 'https://l2scan.scroll.io/address/',
     520: 'https://l2explorer.a1.taiko.xyz/address/',
     521: 'https://goerli.basescan.org/address/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/address/'
+    522: 'https://explorer.goerli.zkevm.consensys.net/address/',
+    523: 'https://www.okx.com/explorer/okbc-test/address/',
+    524: 'https://explorer.testnet.mantle.xyz/address/',
+    525: 'https://opbnbscan.com/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
