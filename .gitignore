@@ -3,5 +3,4 @@ dist/
 
 .idea
 .env
-yarn.lock
 package-lock.json
