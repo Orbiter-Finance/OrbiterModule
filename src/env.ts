@@ -1,7 +1,4 @@
 export const $env = {
-  baseUrl: '',
-  apiBaseUrl: 'http://rinkeby_dashboard.orbiter.finance:3002/',
-  credential: false,
   crossAddressTransferMap: {
     "0x4eaf936c172b5e5511959167e8ab4f7031113ca3": "0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b"
   },
@@ -19,68 +16,6 @@ export const $env = {
       '0xe06d06887b1a5638b882f1dcb054059c9bfd63ea': '0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489',
       "0x80cead4b66a87d1f728eba116b94592b57eb0695": "0x0274ff9139350580a93a4ed390de13fdd5bb333d18344146612af4e17593e100"
     },
-  },
-  localProvider: {
-    1: 'https://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
-    2: 'https://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
-    5: 'https://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // goerli
-    22: 'https://goerli-rollup.arbitrum.io/rpc/',
-    15: 'https://bsc-dataseed1.binance.org',
-    517: 'https://public.zkevm-test.net:2083',
-    518: 'https://prealpha.scroll.io/l1',
-    519: 'https://prealpha.scroll.io/l2',
-    520: 'https://l2rpc.a1.taiko.xyz'
-  },
-  localWSProvider: {
-    1: 'wss://mainnet.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad',
-    2: 'wss://arb-mainnet.g.alchemy.com/v2/ILj6pmkFfRO3KflhcnPxVFtuqZvwgkgr',
-    5: 'wss://goerli.infura.io/v3/460f40a260564ac4a4f4b3fffb032dad', // rinkeby
-    22: 'https://goerli-rollup.arbitrum.io/rpc/',
-    6: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
-    66: 'https://polygon-mumbai.g.alchemy.com/v2/akjFuzojFyDyF67GAMXV1HGqlK6SPEGp',
-    520: 'https://l2rpc.a1.taiko.xyz',
-  },
-  supportLocalNetWorksIDs: [
-    1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15, 515, 15,
-    515, 16, 516, 517, 518, 519, 520
-  ],
-  localChainID_netChainID: {
-    1: '1', // mainnet
-    2: '42161', // Arbitrum
-    3: '1', // zk
-    4: '1', // starknet
-    5: '4', // goerli
-    6: '137', // polygon
-    7: '10', // optimism
-    8: '1', // mainnet
-    9: '1', // loopring
-    10: '1088',
-    11: '1', // loopring
-    22: '421611', // arbitrum test
-    33: '4', // zktest
-    44: '5', // starknet(R)
-    66: '80001', // polygon(R)
-    77: '420', // optimism(G)
-    88: '3', // ropsten
-    99: '5', // loopring(G)
-    510: '588', // metis(G)
-    511: '3', // dydx(R)
-    13: '288', // boba
-    513: '28', // boba(R)
-    514: '280', // zk2
-    15: '56', // bsc
-    515: '97', // bsc(R)
-    16: '42170',
-    516: '421613',
-    517: '1402',
-    518: '534351',
-    519: '534354',
-    520: '167003',
-    521: 84531,
-    522: 59140,
-    523: 195,
-    524: 5001,
-    525: 5611
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/

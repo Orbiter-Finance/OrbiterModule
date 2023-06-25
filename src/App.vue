@@ -77,10 +77,12 @@ provide('makerAddressSelected', makerAddressSelected)
 provide('exchangeRates', exchangeRates)
 
 const getGlobalInfo = async () => {
-  state.exchangeRates = await http.get('/v1/dashboard/rates');
+  const { chainConfig, makerConfigs } = await config.pullNetworkConfig();
+  config.chainConfig = chainConfig;
+  config.makerConfigs = makerConfigs;
+  state.exchangeRates = await http.get('/dashboard/rates');
 
   const list: any[] = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
-  list.push("0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8");
   state.makerAddresses = list;
 
   const mk: string = router?.currentRoute?._value?.query?.makerAddress;

@@ -3,8 +3,8 @@ import { ElNotification } from 'element-plus';
 
 const config = {
     baseURL: process.env.VUE_APP_ENV == 'production' ?
-        'http://openapi.orbiter.finance/mainnet' :
-        'http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095',
+        'http://openapi.orbiter.finance/mainnet/v1/' :
+        'http://ec2-54-238-20-18.ap-northeast-1.compute.amazonaws.com:9095/v1/',
     // baseURL: 'http://localhost:9095',
 };
 

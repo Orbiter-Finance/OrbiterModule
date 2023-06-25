@@ -155,7 +155,7 @@ export const requestStatistics = async (params: any = {}) => {
     }
     loading.value = true
     try {
-      const res: any = await http.get(`/v1/dashboard/statistics`, {
+      const res: any = await http.get(`/dashboard/statistics`, {
         params: params
       });
       return res;
@@ -179,7 +179,7 @@ export const useTransactionHistory = async (params: any = {}) => {
     transforeDate(params)
     loading.value = true
     try {
-      const res: any = await http.get(`/v1/dashboard/transaction`, {
+      const res: any = await http.get(`/dashboard/transaction`, {
         params: {
           ...params,
           rangeDate: null,
@@ -230,7 +230,7 @@ export const makerWealth = {
 
     makerWealth.state.loading = true
     try {
-      const resp: any = await http.get('/v1/dashboard/wealth', {
+      const resp: any = await http.get('/dashboard/wealth', {
         params: { makerAddress },
       });
       const wealths: any[] = resp;

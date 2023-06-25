@@ -15,7 +15,7 @@ export async function useUnmatchedTradding(params: any) {
   }
   try {
     loading.value = true
-    const resp = await http.get('/v1/dashboard/unmatch', {
+    const resp = await http.get('/dashboard/unmatch', {
       params: {
         ...params,
         rangeDate: null
