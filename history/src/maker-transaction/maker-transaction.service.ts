@@ -27,15 +27,15 @@ export class MakerTransactionService {
     if (query.makerAddress) {
       const addr = query.makerAddress.split(',').map(id => `'${id}'`).join(',')
       more+=` and t.to in (${addr})`
-      // if (addr.find(item => item.toLowerCase() === "0x41d3d33156ae7c62c094aae2995003ae63f587b3")) {
-      //   more += ` and t.symbol = 'USDC'`;
-      // }
-      // if (addr.find(item => item.toLowerCase() === "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc")) {
-      //   more += ` and t.symbol = 'USDT'`;
-      // }
-      // if (addr.find(item => item.toLowerCase() === "0x095d2918b03b2e86d68551dcf11302121fb626c9")) {
-      //   more += ` and t.symbol = 'DAI'`;
-      // }
+      if (query.makerAddress.split(',').find(item => item.toLowerCase() === "0x41d3d33156ae7c62c094aae2995003ae63f587b3")) {
+        more += ` and t.symbol = 'USDC'`;
+      }
+      if (query.makerAddress.split(',').find(item => item.toLowerCase() === "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc")) {
+        more += ` and t.symbol = 'USDT'`;
+      }
+      if (query.makerAddress.split(',').find(item => item.toLowerCase() === "0x095d2918b03b2e86d68551dcf11302121fb626c9")) {
+        more += ` and t.symbol = 'DAI'`;
+      }
       // more += `and (t.replySender = '${query.makerAddress}' or m.replyAccount = '${query.makerAddress}' or t.to = '${query.makerAddress}' or t2.from = '${query.makerAddress}') `;
     }
     if (query.startTime) {
