@@ -151,4 +151,7 @@ async function pullNetworkConfig() {
   }
 }
 
-export default { pullNetworkConfig, chainConfig, makerConfigs };
+const isSensitive = window.location.host == "rinkeby_dashboard.orbiter.finance";
+// const isSensitive = window.location.host == "localhost:8080";
+
+export default { pullNetworkConfig, chainConfig, makerConfigs, isSensitive };

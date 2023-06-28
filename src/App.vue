@@ -82,7 +82,8 @@ const getGlobalInfo = async () => {
   config.makerConfigs = makerConfigs;
   state.exchangeRates = await http.get('/dashboard/rates');
 
-  const list: any[] = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44).map(item => item.sender)));
+  const list: any[] = Array.from(new Set(config.makerConfigs.filter(item => item.toChain.id !== 4 && item.toChain.id !== 44
+          && item.sender.toLocaleLowerCase() !== "0x3fbd1e8cfc71b5b8814525e7129a3f41870a238b").map(item => item.sender)));
   state.makerAddresses = list;
 
   const mk: string = router?.currentRoute?._value?.query?.makerAddress;

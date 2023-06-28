@@ -174,60 +174,62 @@
           </template>
         </el-popover>
       </div>
-      <div>
-        <el-popover placement="bottom" width="max-content" trigger="hover">
-          <template #default>
-            <div class="user-addresses">
-              <div
-                      v-for="(val, key) in statistics.summary"
-                      :key="key"
-                      @click="state.symbolSelected = val"
-              >
-                {{ key }}
-                <span style="margin:0 10px">FromAmountTotal: {{ val.fromAmount }}</span>
-                <span>ToAmountTotal: {{ val.toAmount }}</span>
+      <div v-if="!isSensitive" class="maker-header__statistics">
+        <div>
+          <el-popover placement="bottom" width="max-content" trigger="hover">
+            <template #default>
+              <div class="user-addresses">
+                <div
+                        v-for="(val, key) in statistics.summary"
+                        :key="key"
+                        @click="state.symbolSelected = val"
+                >
+                  {{ key }}
+                  <span style="margin:0 10px">FromAmountTotal: {{ val.fromAmount }}</span>
+                  <span>ToAmountTotal: {{ val.toAmount }}</span>
+                </div>
               </div>
-            </div>
-          </template>
-          <template #reference>
-            <div>
-              <span style="margin-right: 10px">FromAmountTotal: {{ state.symbolSelected.fromAmount }}</span>
-              <span>ToAmountTotal: {{ state.symbolSelected.toAmount }}</span>
-            </div>
-          </template>
-        </el-popover>
-      </div>
-      <div style="color: #67c23a; font-weight: 600">
-        +{{ statistics.profit['USD'] }} USD
-      </div>
-      <el-dropdown>
-        <div style="color: #409eff; font-weight: 600">
-          +{{ statistics.profit['ETH'] }} ETH
+            </template>
+            <template #reference>
+              <div>
+                <span style="margin-right: 10px">FromAmountTotal: {{ state.symbolSelected.fromAmount }}</span>
+                <span>ToAmountTotal: {{ state.symbolSelected.toAmount }}</span>
+              </div>
+            </template>
+          </el-popover>
         </div>
-        <template #dropdown>
-          <el-dropdown-menu>
-            <el-dropdown-item
-              v-for="(val, key) in statistics.profit"
-              :key="key"
-            >
-              <div style="color: #409eff; font-weight: 600">
-                + {{ val }} {{ key }}
-              </div>
-            </el-dropdown-item>
-          </el-dropdown-menu>
-        </template>
-      </el-dropdown>
+        <div style="color: #67c23a; font-weight: 600">
+          +{{ statistics.profit['USD'] }} USD
+        </div>
+        <el-dropdown>
+          <div style="color: #409eff; font-weight: 600">
+            +{{ statistics.profit['ETH'] }} ETH
+          </div>
+          <template #dropdown>
+            <el-dropdown-menu>
+              <el-dropdown-item
+                      v-for="(val, key) in statistics.profit"
+                      :key="key"
+              >
+                <div style="color: #409eff; font-weight: 600">
+                  + {{ val }} {{ key }}
+                </div>
+              </el-dropdown-item>
+            </el-dropdown-menu>
+          </template>
+        </el-dropdown>
 
-      <div style="color: #f56c6c; font-weight: 600">
-        +{{ statistics.profit['CNY'] }} CNY
-      </div>
-      <div style="margin-left: auto">
-        <router-link
-          :to="`/maker/history?makerAddress=${makerAddressSelected}`"
-          target="_blank"
-        >
-          <el-button size="small" round>All transactions</el-button>
-        </router-link>
+        <div style="color: #f56c6c; font-weight: 600">
+          +{{ statistics.profit['CNY'] }} CNY
+        </div>
+        <div style="margin-left: auto">
+          <router-link
+                  :to="`/maker/history?makerAddress=${makerAddressSelected}`"
+                  target="_blank"
+          >
+            <el-button size="small" round>All transactions</el-button>
+          </router-link>
+        </div>
       </div>
     </div>
     <div class="maker-block">
@@ -353,7 +355,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="240">
+          <el-table-column :width="isSensitive ? 300 : 240">
             <template #header>
               From transaction
             </template>
@@ -377,7 +379,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column width="240">
+          <el-table-column :width="isSensitive ? 300 : 240">
             <template #header>
               To transaction
             </template>
@@ -416,7 +418,7 @@
               </div>
             </template>
           </el-table-column>
-          <el-table-column label="Profit" width="150">
+          <el-table-column v-if="!isSensitive" label="Profit" width="150">
             <template #default="{ row }">
               <div v-if="row.profit > 0" class="amount-operator--plus">
                 +{{ row.profit }} USD
@@ -498,6 +500,7 @@ import { stark, uint256 } from 'orbiter-starknet';
 import { ref, computed, inject, reactive, toRef, watch, getCurrentInstance,onMounted } from 'vue';
 import Web3 from 'web3';
 import { XVM_ABI } from "../config/ABI";
+import config from "../config/index";
 import util from "../utils/util";
 import ERC20Abi from "../config/ERC20.json";
 import BigNumber from "bignumber.js";
@@ -660,6 +663,7 @@ const sendType = ref('1')
 const currentPage = ref(1)
 const pageSize = ref(100)
 const total = ref(0)
+const isSensitive = ref(config.isSensitive)
 const pagesizes = computed(() =>
   Array.from(new Set([100, 200, 300, 400, Math.ceil(total.value / 100) * 100]))
 )
