@@ -11,7 +11,7 @@ import {
 } from './jobs';
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
-import { watchConfigChanges } from "../config/consul";
+import { watchConsulConfig } from "../config/consul";
 
 let smsTimeStamp = 0
 
@@ -114,7 +114,7 @@ export const startMasterJobs = async () => {
   }
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
-    await watchConfigChanges();
+    await watchConsulConfig();
     waittingStartMaker()
     startNewMakerTrxPull()
     batchTxSend()
