@@ -4,7 +4,6 @@ import { accessLogger, errorLogger } from '../util/logger'
 import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import {
-  batchTxSend,
   jobBalanceAlarm,
   jobGetWealths, watchStarknetAlarm,
 } from './jobs';
@@ -116,7 +115,6 @@ export const startMasterJobs = async () => {
     await watchConsulConfig();
     waittingStartMaker()
     startNewMakerTrxPull()
-    batchTxSend()
     watchStarknetAlarm()
   }
 }

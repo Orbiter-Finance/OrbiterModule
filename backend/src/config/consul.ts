@@ -5,6 +5,7 @@ import { IChainCfg, IMaker, IMakerCfg, IMakerDataCfg } from "../util/maker/maker
 import mk from "../util/maker/maker_list";
 import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
+import { batchTxSend } from "../schedule/jobs";
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -143,6 +144,7 @@ function updateStarknet(config: any) {
         }
         consulConfig.starknet = config;
         accessLogger.info(`update starknet config success`);
+        batchTxSend();
     } else {
         errorLogger.error(`update starknet config fail`);
     }
@@ -294,6 +296,7 @@ export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): {
         const chainNameMap = {
             5: "goerli",
             22: "arbitrum_test",
+            44: "starknet_test",
             66: "polygon_test",
             77: "optimism_test",
 

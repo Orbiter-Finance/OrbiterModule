@@ -167,6 +167,8 @@ let cron;
 const makerJobMap: { [makerAddress: string]: MJobPessimism } = {};
 
 export async function batchTxSend(chainIdList = [4, 44]) {
+    // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
+    await sleep(5000);
     const makerSend = (makerAddress, chainId) => {
         const callback = async () => {
             const sn = async () => {
@@ -368,8 +370,6 @@ export async function batchTxSend(chainIdList = [4, 44]) {
         }
         makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol });
     }
-    // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
-    await sleep(5000);
     for (let i = 0; i < makerDataList.length; i++) {
         const maker = makerDataList[i];
         makerSend(maker.makerAddress, maker.chainId);
