@@ -47,7 +47,7 @@ class MJob {
             | schedule.RecurrenceSpecObjLit
             | Date,
         callback?: () => any,
-        jobName: string
+        jobName?: string
     ) {
         this.rule = rule;
         this.callback = callback;
@@ -56,7 +56,7 @@ class MJob {
 
     public schedule(): schedule.Job {
         accessLogger.info(`${this.jobName} ${this.rule} created`);
-        return schedule.scheduleJob(this.jobName, this.rule, async () => {
+        return schedule.scheduleJob(String(this.jobName), this.rule, async () => {
             try {
                 this.callback && (await this.callback());
             } catch (error) {
@@ -70,7 +70,7 @@ class MJob {
     }
 
     public clear() {
-        schedule.cancelJob(this.jobName);
+        schedule.cancelJob(String(this.jobName));
         accessLogger.info(`${this.jobName} ${this.rule} cancel`);
     }
 }
