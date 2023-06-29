@@ -8,7 +8,6 @@ import {
   GlobalAPI,
   UserAPI,
 } from '@loopring-web/loopring-sdk'
-import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import { In, Repository } from 'typeorm';
 import Web3 from 'web3'
@@ -19,12 +18,10 @@ import { MakerNodeTodo } from '../../model/maker_node_todo'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { Core } from '../core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
-import { makerList, makerListHistory } from './maker_list'
-import send from './send'
+import mk from './maker_list'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderV4 } from '../../service/starknet/helper';
-import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
@@ -42,11 +39,11 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 
 export async function getMakerList() {
-  return makerList
+  return mk.makerList
 }
 
 export async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
+  return mk.makerList.concat(mk.makerListHistory)
 }
 
 export function expanPool(pool) {

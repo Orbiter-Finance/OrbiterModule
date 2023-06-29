@@ -47,7 +47,7 @@ class MJob {
             | schedule.RecurrenceSpecObjLit
             | Date,
         callback?: () => any,
-        jobName?: string
+        jobName: string
     ) {
         this.rule = rule;
         this.callback = callback;

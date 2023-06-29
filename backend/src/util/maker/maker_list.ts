@@ -1,5 +1,3 @@
-export let makerList: IMaker[] = [];
-
 export interface IMaker {
   makerAddress: string;
   c1ID: number;
@@ -92,4 +90,7 @@ export interface IExplorerConfig {
   standard: string;
 }
 
-export const makerListHistory = []
+export default {
+  makerList: [],
+  makerListHistory: []
+};

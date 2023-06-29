@@ -1,7 +1,8 @@
 import Consul, { KvPair } from 'consul';
 import { chains } from "orbiter-chaincore/src/utils";
 import { errorLogger, accessLogger } from "../util/logger";
-import { IChainCfg, IMaker, IMakerCfg, IMakerDataCfg, makerList } from "../util/maker/maker_list";
+import { IChainCfg, IMaker, IMakerCfg, IMakerDataCfg } from "../util/maker/maker_list";
+import mk from "../util/maker/maker_list";
 import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
 
@@ -124,7 +125,7 @@ function refreshConfig() {
     try {
         const res = convertMakerList(consulConfig.chain, consulConfig.tradingPairs);
         if (res.code === 0) {
-            makerList = res.makerList;
+            mk.makerList = res.makerList;
         } else {
             errorLogger.error(res.msg);
         }

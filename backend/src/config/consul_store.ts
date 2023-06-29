@@ -2,6 +2,6 @@ export const consulConfig = {
     tradingPairs: {},
     chain: [],
     maker: {},
-    starknet: {},
+    starknet: <any>{},
     nonce: {}
 };
