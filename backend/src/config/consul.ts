@@ -3,6 +3,7 @@ import { chains } from "orbiter-chaincore/src/utils";
 import { errorLogger, accessLogger } from "../util/logger";
 import { IChainCfg, IMaker, IMakerCfg, IMakerDataCfg, makerList } from "../util/maker/maker_list";
 import makerConfig from './maker';
+import { consulConfig } from "./consul_store";
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -53,6 +54,9 @@ async function watchMakerConfig(key: string) {
                     if (key === "maker/rule/config/maker/maker.json") {
                         updateMaker(config);
                     }
+                    if (key === "maker/rule/config/maker/starknet.json") {
+                        updateStarknet(config);
+                    }
                     resolve(config);
                 } catch (e) {
                     errorLogger.error(`Consul watch refresh config error: ${e.message} dataValue: ${data.Value}`);
@@ -71,6 +75,12 @@ async function watchMakerConfig(key: string) {
 
 function updateMaker(config: any) {
     if (config && Object.keys(config).length) {
+        if (consulConfig.maker && Object.keys(consulConfig.maker).length) {
+            compare(consulConfig.maker, config, function (msg) {
+                accessLogger.info(msg);
+            });
+        }
+        consulConfig.maker = config;
         Object.assign(makerConfig, config);
         accessLogger.info(`update maker config success`);
     } else {
@@ -81,11 +91,12 @@ function updateMaker(config: any) {
 function updateChain(config: any) {
     if (config && config.length && config.find(item => +item.internalId === 1 || +item.internalId === 5)) {
         const configs = <any>convertChainConfig("NODE_APP", config);
-        if (chains.getAllChains() && chains.getAllChains().length) {
-            compare(chains.getAllChains(), config, function (msg) {
+        if (consulConfig.chain && consulConfig.chain.length) {
+            compare(consulConfig.chain, config, function (msg) {
                 accessLogger.info(msg);
             });
         }
+        consulConfig.chain = config;
         chains.fill(configs);
         refreshConfig();
         accessLogger.info(`update chain config success`);
@@ -96,12 +107,12 @@ function updateChain(config: any) {
 
 function updateTradingPairs(makerAddress: string, config: any) {
     if (config && Object.keys(config).length) {
-        if (allMaker[makerAddress]) {
-            compare(allMaker[makerAddress], config, function (msg) {
+        if (consulConfig.tradingPairs[makerAddress]) {
+            compare(consulConfig.tradingPairs[makerAddress], config, function (msg) {
                 accessLogger.info(msg);
             });
         }
-        allMaker[makerAddress] = config;
+        consulConfig.tradingPairs[makerAddress] = config;
         refreshConfig();
         accessLogger.info(`update ${makerAddress} trading pairs success`);
     } else {
@@ -111,14 +122,28 @@ function updateTradingPairs(makerAddress: string, config: any) {
 
 function refreshConfig() {
     try {
-        const res = convertMakerList(<any>chains.getAllChains(), allMaker);
+        const res = convertMakerList(consulConfig.chain, consulConfig.tradingPairs);
         if (res.code === 0) {
             makerList = res.makerList;
         } else {
-
+            errorLogger.error(res.msg);
         }
     } catch (e) {
         errorLogger.error(e.message);
+    }
+}
+
+function updateStarknet(config: any) {
+    if (config && Object.keys(config).length) {
+        if (consulConfig.starknet && Object.keys(consulConfig.starknet).length) {
+            compare(consulConfig.starknet, config, function (msg) {
+                accessLogger.info(msg);
+            });
+        }
+        consulConfig.starknet = config;
+        accessLogger.info(`update starknet config success`);
+    } else {
+        errorLogger.error(`update starknet config fail`);
     }
 }
 
@@ -337,5 +362,3 @@ export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): {
 
     return { code: 0, msg: 'success', makerList: v1makerList };
 }
-
-const allMaker: IMakerCfg = {};
