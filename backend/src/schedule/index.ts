@@ -113,7 +113,7 @@ export const startMasterJobs = async () => {
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     await watchConsulConfig();
-    waittingStartMaker()
+    // waittingStartMaker()
     startNewMakerTrxPull()
     watchStarknetAlarm()
   }

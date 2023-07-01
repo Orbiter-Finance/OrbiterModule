@@ -295,10 +295,7 @@ export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): {
         const c2MakerData: IMakerDataCfg = reverseSymbolPairMap[symbolPair];
         const chainNameMap = {
             5: "goerli",
-            22: "arbitrum_test",
             44: "starknet_test",
-            66: "polygon_test",
-            77: "optimism_test",
 
 
             1: "mainnet",
@@ -318,8 +315,14 @@ export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): {
             16: "arbitrum_nova",
             17: "polygon_evm",
         };
-        if (!chainNameMap[+fromChainId] || !chainNameMap[+toChainId]) {
-            throw new Error(`FromChainId error ${fromChainId}`);
+        if (!chainNameMap[+fromChainId]) {
+            // console.log(`FromChainId error ${fromChainId}`)
+            // throw new Error(`FromChainId error ${fromChainId}`);
+            return
+        }
+        if (!chainNameMap[+toChainId]) {
+            // throw new Error(`ToChainId error ${toChainId}`);
+            return
         }
         if (c1MakerData.sender === c2MakerData.sender || Number(fromChainId) == 4 || Number(fromChainId) == 44) {
             v1makerList.push({
@@ -361,7 +364,8 @@ export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): {
     }
 
     if (Object.keys(noMatchMap).length) {
-        return { code: 1, msg: `Maker list convert match error ${JSON.stringify(noMatchMap)}`, makerList: [] };
+        console.log(`Maker list convert match error ${JSON.stringify(noMatchMap)}`)
+        // return { code: 1, msg: `Maker list convert match error ${JSON.stringify(noMatchMap)}`, makerList: [] };
     }
 
     return { code: 0, msg: 'success', makerList: v1makerList };

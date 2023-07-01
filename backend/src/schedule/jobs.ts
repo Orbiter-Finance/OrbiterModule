@@ -16,7 +16,6 @@ import { getStarknetTokenBalance } from "../service/maker_wealth";
 import BigNumber from "bignumber.js";
 import { telegramBot } from "../sms/telegram";
 import { doSms } from "../sms/smsSchinese";
-import { isValidCron } from 'cron-validator';
 
 import { clearInterval } from "timers";
 import { consulConfig } from "../config/consul_store";
@@ -55,8 +54,7 @@ class MJob {
     }
 
     public schedule(): schedule.Job {
-        accessLogger.info(`${this.jobName} ${this.rule} created`);
-        return schedule.scheduleJob(String(this.jobName), this.rule, async () => {
+        return schedule.scheduleJob(this.rule, async () => {
             try {
                 this.callback && (await this.callback());
             } catch (error) {
@@ -67,11 +65,6 @@ class MJob {
                 errorLogger.error(message);
             }
         });
-    }
-
-    public clear() {
-        schedule.cancelJob(String(this.jobName));
-        accessLogger.info(`${this.jobName} ${this.rule} cancel`);
     }
 }
 
@@ -164,7 +157,7 @@ export function jobBalanceAlarm() {
 let alarmMsgMap = {};
 let balanceWaringTime = 0;
 let cron;
-const makerJobMap: { [makerAddress: string]: MJobPessimism } = {};
+const makerJobMap: { [makerAddress: string]: any } = {};
 
 export async function batchTxSend(chainIdList = [4, 44]) {
     // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
@@ -347,19 +340,21 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 }
             }
         };
-        const rule = consulConfig.starknet.cronRule || `*/20 * * * * *`;
-        if (!isValidCron(rule)) {
-            errorLogger.error(`invalid cron rule ${rule}`);
+        let sendInterval = +(consulConfig.starknet.sendInterval || 20);
+        if (!sendInterval) {
+            errorLogger.error(`sendInterval is not number ${consulConfig.starknet.sendInterval}`);
             return;
         }
+        sendInterval = Math.max(sendInterval, 5);
+
         if (makerJobMap[makerAddress]) {
-            const oldJob: MJobPessimism = makerJobMap[makerAddress];
-            oldJob.clear();
-            accessLogger.info(`old job clear`);
+            clearInterval(makerJobMap[makerAddress]);
+            accessLogger.info(`${makerAddress} old job clear`);
         }
-        const job = makerJobMap[makerAddress] = new MJobPessimism(rule, callback, makerAddress);
-        job.schedule();
-        accessLogger.info(`create new job ${makerAddress} ${rule}`);
+        makerJobMap[makerAddress] = setInterval(() => {
+            callback()
+        }, sendInterval * 1000);
+        accessLogger.info(`create new job ${makerAddress} in every ${sendInterval}s`);
     };
     const makerList = await getNewMarketList();
     const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
@@ -372,6 +367,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
     }
     for (let i = 0; i < makerDataList.length; i++) {
         const maker = makerDataList[i];
+        if (!maker.makerAddress) continue;
         makerSend(maker.makerAddress, maker.chainId);
     }
 }
