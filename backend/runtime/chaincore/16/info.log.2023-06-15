@@ -1,0 +1,5 @@
+[2023/06/15 17:28:52] info	 Arbitrum Nova RpcScan Debug: currentBlockHeight = 3271478, latestHeight:11597079,scan:true 
+[2023/06/15 17:28:57] info	 Arbitrum Nova 0xe4edb277e41dc89ab076a1f049f4a3efa700bce8 - Arbitrum Nova Matching transaction succeeded:0x80194fcbfdf0bda20330acc405b8a76b05bcf525c4d3fe24eb62e8c6e5c1450c 
+[2023/06/15 17:28:57] info	 Arbitrum Nova Transactions scanned by rpc: {"hashList":["0x80194fcbfdf0bda20330acc405b8a76b05bcf525c4d3fe24eb62e8c6e5c1450c"]}
+[2023/06/15 17:28:57] info	 Arbitrum Nova New Transaction Pushed ["0x80194fcbfdf0bda20330acc405b8a76b05bcf525c4d3fe24eb62e8c6e5c1450c"]
+[2023/06/15 17:28:58] info	 Arbitrum Nova Transactions scanned by api: {"hashList":[]}

@@ -1,0 +1,2 @@
+[2023/06/15 17:28:57] info	 Loopring Transactions scanned by api:{"start":1679328634000,"status":"processed,received","limit":100,"transferTypes":"transfer","end":1686821331473} {"hashList":[]}
+[1686821331] info	 Loopring change apiScanCursor {"blockNumber":0,"hash":"","timestamp":1686821331}

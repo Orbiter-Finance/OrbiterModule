@@ -1,0 +1,1 @@
+[2023-03-18T00:03:57.555] [ERROR] error - GetTokenBalance fail, chainId: 514, makerAddress: 0x0043d60e87c5dd08c86c3123340705a1556c4719,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  request to https://zksync2-testnet.zksync.dev/ failed, reason: socket hang up

@@ -1,0 +1,29 @@
+[2023-03-28T14:10:42.747] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:10:43.539] [ERROR] access - tokenBalanceWeiError = Error: Invalid JSON RPC response: "\n<!DOCTYPE html>\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>\r\n\r\n</title></head>\n<body>\n<form method=\"post\" action=\"./\" id=\"form1\">\n<div class=\"aspNetHidden\">\n<input type=\"hidden\" name=\"__VIEWSTATE\" id=\"__VIEWSTATE\" value=\"kCuAJ9/JNwszkuh/Z5VekZTMDtSP4Nl7yP0z2KzYuhAUUeNSq8hETf9qIDAzJYSh9x8o6bSETBa+phk9AolTqzrnbxK7yPFcw9aMGoEkXLCwVEH21Y6aZjDNA3t8WRJl\" />\n</div>\n<div class=\"aspNetHidden\">\n<input type=\"hidden\" name=\"__VIEWSTATEGENERATOR\" id=\"__VIEWSTATEGENERATOR\" value=\"CA0B0334\" />\n</div>\n<div>\ninvalid resource end point\n<br />\n<font size=\"1\">\nTest#1: <a href='/api?module=account&action=balance&address=0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae&tag=latest&apikey=YourApiKeyToken'>api?module=account&action=balance&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&tag=latest&apikey=YourApiKeyToken</a><br />\nTest#2: <a href='/api?module=account&action=txlist&address=0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=YourApiKeyToken'>api/api?module=account&action=txlist&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=YourApiKeyToken</a><br />\n</font>\n</div>\n</form>\n</body>\n</html>\n"
+    at Object.InvalidResponse (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/web3/node_modules/web3-core-helpers/lib/errors.js:43:16)
+    at XMLHttpRequest.request.onreadystatechange (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/web3/node_modules/web3-providers-http/lib/index.js:95:32)
+    at XMLHttpRequest.Object.<anonymous>.XMLHttpRequestEventTarget.dispatchEvent (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/xhr2-cookies/xml-http-request-event-target.ts:44:13)
+    at XMLHttpRequest.Object.<anonymous>.XMLHttpRequest._setReadyState (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/xhr2-cookies/xml-http-request.ts:219:8)
+    at XMLHttpRequest.Object.<anonymous>.XMLHttpRequest._onHttpResponseEnd (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/xhr2-cookies/xml-http-request.ts:345:8)
+    at IncomingMessage.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/xhr2-cookies/xml-http-request.ts:311:39)
+    at IncomingMessage.emit (node:events:539:35)
+    at endReadableNT (node:internal/streams/readable:1345:12)
+    at processTicksAndRejections (node:internal/process/task_queues:83:21)
+[2023-03-28T14:10:43.612] [ERROR] access - polygon_evm->!tokenBalanceWei Insufficient balance
+[2023-03-28T14:10:43.613] [INFO] access - tokenBalanceWei = 0
+[2023-03-28T14:12:06.339] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:13:34.554] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:16:03.624] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:17:07.464] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:17:51.135] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:18:15.460] [INFO] access - send transaction = {"gas":"0x186a0","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"}
+[2023-03-28T14:19:17.365] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:19:18.822] [INFO] access - send transaction = {"gas":"0x186a0","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"}
+[2023-03-28T14:21:49.117] [INFO] access - RPC from makerConfig polygon_evm
+[2023-03-28T14:21:50.071] [INFO] access - send transaction = {"gas":"0x186a0","gasPrice":"0x2959c8f00","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"}
+[2023-03-28T19:22:51.136] [INFO] access - process: 1905. Connecting to the database...
+[2023-03-28T19:22:51.245] [INFO] access - process: 1905. Connect to the database succeed!
+[2023-03-28T19:27:42.177] [INFO] access - process: 2004. Connecting to the database...
+[2023-03-28T19:27:42.226] [INFO] access - process: 2004. Connect to the database succeed!
+[2023-03-28T20:19:18.383] [INFO] access - process: 3092. Connecting to the database...
+[2023-03-28T20:19:18.463] [INFO] access - process: 3092. Connect to the database succeed!

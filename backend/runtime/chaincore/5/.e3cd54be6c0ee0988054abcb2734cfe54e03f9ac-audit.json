@@ -1,0 +1,20 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/5/.e3cd54be6c0ee0988054abcb2734cfe54e03f9ac-audit.json",
+    "files": [
+        {
+            "date": 1684136336963,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/5/info.log.2023-05-15",
+            "hash": "39ca9914f37448d11989e5e153b52bb2008f79baad7f7b980129134bd3897fce"
+        },
+        {
+            "date": 1684203537338,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/5/info.log.2023-05-16",
+            "hash": "d61085648df2ecc532991a0eecbeb4aa50e49d2118453f954e77e5d8d98dca03"
+        }
+    ],
+    "hashType": "sha256"
+}

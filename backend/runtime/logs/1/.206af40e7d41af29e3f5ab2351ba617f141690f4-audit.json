@@ -1,0 +1,15 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 10
+    },
+    "auditLog": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/logs/1/.206af40e7d41af29e3f5ab2351ba617f141690f4-audit.json",
+    "files": [
+        {
+            "date": 1686821336991,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/logs/1/1-info-2023-06-15.log",
+            "hash": "818a44f58913cbe40db9eb1190924293cc9d0e4d84a25f7e1ff3e625f390e903"
+        }
+    ],
+    "hashType": "sha256"
+}

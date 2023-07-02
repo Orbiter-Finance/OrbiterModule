@@ -1,0 +1,47 @@
+[2023-04-12T13:52:49.852] [ERROR] error - 0x8c095356330aa498938330ad175b7d740c39e5d9aef8ba0bdba1537c628a6b12 startNewMakerTrxPull error: TypeError: Cannot read properties of undefined (reading 'toLowerCase')
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:340:64)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:317:15)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:25:5)
+[2023-04-12T14:08:44.201] [ERROR] error - 0x8c095356330aa498938330ad175b7d740c39e5d9aef8ba0bdba1537c628a6b12 startNewMakerTrxPull error: TypeError: tx.value.lte is not a function
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:185:62)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:83:5)
+[2023-04-12T14:10:11.906] [ERROR] error - [0x8cd23453623055da8f41f3528154ffcb21d496c20005eth383] newTransactionSqlError = Error: No queue created 44
+    at sendTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:568:11)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:419:28
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:376:3)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:315:9)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:84:5)
+[2023-04-12T15:28:18.740] [INFO] error - starknet transfer failed: REJECTED, txID:0x3f7f56456b20eff75aefda0ddea5f5db046faba9cba745989af9c9dbfc93ccf, transactionID:["0x8cd23453623055da8f41f3528154ffcb21d496c20005eth383","0x8cd23453623055da8f41f3528154ffcb21d496c20005eth384","0xde9dcb0eac4dae8407b8a4867054b77dd315bfe00005eth991"] transaction_failure_reason, [Object: null prototype] {
+  code: 'INVALID_TRANSACTION_NONCE',
+  error_message: 'Invalid transaction nonce. Expected: 2030, got: 2032.'
+}
+[2023-04-12T15:55:49.985] [ERROR] error - [0x8cd23453623055da8f41f3528154ffcb21d496c20005eth383] newTransactionSqlError = Error: No queue created 44
+    at sendTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:568:11)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:419:28
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:376:3)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:315:9)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:227:5)
+[2023-04-12T15:55:50.032] [ERROR] error - [0x8cd23453623055da8f41f3528154ffcb21d496c20005eth384] newTransactionSqlError = Error: No queue created 44
+    at sendTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:568:11)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:419:28
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:376:3)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:315:9)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:227:5)
+[2023-04-12T15:55:50.041] [ERROR] error - [0xde9dcb0eac4dae8407b8a4867054b77dd315bfe00005eth991] newTransactionSqlError = Error: No queue created 44
+    at sendTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:568:11)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:419:28
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:376:3)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:315:9)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:227:5)
+[2023-04-12T18:43:10.641] [ERROR] error - [0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_nan] newTransactionSqlError = Error: No queue created 22
+    at sendTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:568:11)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:435:28
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at confirmTransactionSendMoneyBack (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:392:3)
+    at subscribeNewTransaction (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/new_maker.ts:331:9)
+    at Object.<anonymous> (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:228:5)

@@ -1,0 +1,4 @@
+[2023/06/15 17:28:52] info	 Ethereum RpcScan Debug: currentBlockHeight = 16869804, latestHeight:17484399,scan:true 
+[2023/06/15 17:28:56] info	 Ethereum 0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc - Ethereum Matching transaction succeeded:0xcb6c6cd006fe4669c24b1e61bdfe13c1fa9e3e74225128e54d1d95a9054006c6 
+[2023/06/15 17:28:56] info	 Ethereum Transactions scanned by rpc: {"hashList":["0xcb6c6cd006fe4669c24b1e61bdfe13c1fa9e3e74225128e54d1d95a9054006c6"]}
+[2023/06/15 17:28:56] info	 Ethereum New Transaction Pushed ["0xcb6c6cd006fe4669c24b1e61bdfe13c1fa9e3e74225128e54d1d95a9054006c6"]

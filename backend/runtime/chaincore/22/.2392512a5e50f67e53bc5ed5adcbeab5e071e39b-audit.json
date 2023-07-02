@@ -1,0 +1,35 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 7
+    },
+    "auditLog": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/.2392512a5e50f67e53bc5ed5adcbeab5e071e39b-audit.json",
+    "files": [
+        {
+            "date": 1681986711085,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/debug.log.2023-04-20",
+            "hash": "375d965d61020f34bb1eee3ddc1e75fe6fe2b08a723b92183020560541f4afdb"
+        },
+        {
+            "date": 1682306368091,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/debug.log.2023-04-24",
+            "hash": "a4dc7b76b080769e89fc93b2e364e341def7eef6435ee68d860a6e786fe2305e"
+        },
+        {
+            "date": 1682385592270,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/debug.log.2023-04-25",
+            "hash": "f1c5dd27e51f081e7d64bbee17dc71953c49c692caa576120de485da6159a0f8"
+        },
+        {
+            "date": 1682476401010,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/debug.log.2023-04-26",
+            "hash": "2858ac4197f3524e5401a7c17d8341d29924001734d9907e759f87364a497ad9"
+        },
+        {
+            "date": 1682584041322,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/22/debug.log.2023-04-27",
+            "hash": "7411dfb24d9c6c2b1ca5fc7c9539e43f55a8d54ed14eb0ecad3436ae67c72f95"
+        }
+    ],
+    "hashType": "sha256"
+}

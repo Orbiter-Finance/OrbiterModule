@@ -1,0 +1,14 @@
+2023/03/28 14:10:42 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:10:43 [ERROR]  tokenBalanceWeiError = - Error: Invalid JSON RPC response: "\n<!DOCTYPE html>\n<html xmlns=\"http://www.w3.org/1999/xhtml\">\n<head><title>\r\n\r\n</title></head>\n<body>\n<form method=\"post\" action=\"./\" id=\"form1\">\n<div class=\"aspNetHidden\">\n<input type=\"hidden\" name=\"__VIEWSTATE\" id=\"__VIEWSTATE\" value=\"kCuAJ9/JNwszkuh/Z5VekZTMDtSP4Nl7yP0z2KzYuhAUUeNSq8hETf9qIDAzJYSh9x8o6bSETBa+phk9AolTqzrnbxK7yPFcw9aMGoEkXLCwVEH21Y6aZjDNA3t8WRJl\" />\n</div>\n<div class=\"aspNetHidden\">\n<input type=\"hidden\" name=\"__VIEWSTATEGENERATOR\" id=\"__VIEWSTATEGENERATOR\" value=\"CA0B0334\" />\n</div>\n<div>\ninvalid resource end point\n<br />\n<font size=\"1\">\nTest#1: <a href='/api?module=account&action=balance&address=0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae&tag=latest&apikey=YourApiKeyToken'>api?module=account&action=balance&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&tag=latest&apikey=YourApiKeyToken</a><br />\nTest#2: <a href='/api?module=account&action=txlist&address=0xde0b295669a9fd93d5f28d9ec85e40f4cb697bae&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=YourApiKeyToken'>api/api?module=account&action=txlist&address=0xddbd2b932c763ba5b1b7ae3b362eac3e8d40121a&startblock=0&endblock=99999999&page=1&offset=10&sort=asc&apikey=YourApiKeyToken</a><br />\n</font>\n</div>\n</form>\n</body>\n</html>\n" 
+2023/03/28 14:10:43 [ERROR]  polygon_evm->!tokenBalanceWei Insufficient balance -  
+2023/03/28 14:10:43 [INFO]  tokenBalanceWei = - 0 
+2023/03/28 14:12:06 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:13:34 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:16:03 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:17:07 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:17:51 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:18:15 [INFO]  send transaction = - {"gas":"0x186a0","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"} 
+2023/03/28 14:19:17 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:19:18 [INFO]  send transaction = - {"gas":"0x186a0","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"} 
+2023/03/28 14:21:49 [INFO]  RPC from makerConfig polygon_evm -  
+2023/03/28 14:21:50 [INFO]  send transaction = - {"gas":"0x186a0","gasPrice":"0x2959c8f00","nonce":0,"chainId":1101,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"} 

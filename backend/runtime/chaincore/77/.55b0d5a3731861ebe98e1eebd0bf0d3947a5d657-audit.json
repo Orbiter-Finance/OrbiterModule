@@ -1,0 +1,50 @@
+{
+    "keep": {
+        "days": true,
+        "amount": 14
+    },
+    "auditLog": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/.55b0d5a3731861ebe98e1eebd0bf0d3947a5d657-audit.json",
+    "files": [
+        {
+            "date": 1681453074187,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-14",
+            "hash": "59568c39e233cb1a4c63b7d4c3ba64fa724af90934aa2243055eb103605c2b73"
+        },
+        {
+            "date": 1681714586296,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-17",
+            "hash": "2e27b215d22d848b3913bdfc47d7dffc65d5ea4755b2e95cffc11b4257f2a38f"
+        },
+        {
+            "date": 1681873252991,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-19",
+            "hash": "1fa8caaac5b5064abc624e008811dc55a2b6a07ab5d6c38e258d94610ae10ee4"
+        },
+        {
+            "date": 1681986711086,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-20",
+            "hash": "bedd9bbcd4c8baa6c7334419d3ffea2735ee773f7b6d1d648288f9558be3a34f"
+        },
+        {
+            "date": 1682306368092,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-24",
+            "hash": "476b7b72be2ad45e973d6bfa265eb1f493632b274e5a480703c2ba720225e4ea"
+        },
+        {
+            "date": 1682385592271,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-25",
+            "hash": "a27d886336ffb79ec51061b7c9bcad4862080a36c4e31df556242cad73269815"
+        },
+        {
+            "date": 1682476401012,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-26",
+            "hash": "ce9ccfb4701087415541140d3371f04bc3be5919296be1fddad57fcb6dd917f1"
+        },
+        {
+            "date": 1682584041323,
+            "name": "/Users/wzl/Desktop/code/orange/OrbitalModule/backend/runtime/chaincore/77/error.log.2023-04-27",
+            "hash": "888f416788d8d9772eeb87e602002898d9671506d4926cb81092cb4289776fe8"
+        }
+    ],
+    "hashType": "sha256"
+}

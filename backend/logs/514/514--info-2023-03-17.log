@@ -1,0 +1,89 @@
+2023/03/17 20:04:14 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:04:16 [INFO]  zk2_nonce = - 861 
+2023/03/17 20:04:16 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:04:16 [INFO]  zk2 result_nonde = - 861 
+2023/03/17 20:05:23 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:05:34 [INFO]  zk2_nonce = - 862 
+2023/03/17 20:05:35 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:05:35 [INFO]  zk2 result_nonde = - 862 
+2023/03/17 20:06:17 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:06:20 [INFO]  zk2_nonce = - 862 
+2023/03/17 20:06:20 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:06:20 [INFO]  zk2 result_nonde = - 862 
+2023/03/17 20:07:26 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:07:28 [INFO]  zk2_nonce = - 863 
+2023/03/17 20:07:28 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:07:28 [INFO]  zk2 result_nonde = - 863 
+2023/03/17 20:08:28 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:08:31 [INFO]  zk2_nonce = - 863 
+2023/03/17 20:08:31 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:08:31 [INFO]  zk2 result_nonde = - 863 
+2023/03/17 20:11:02 [INFO]  zk2_tokenBalance = - 959576249981848 
+2023/03/17 20:11:04 [INFO]  zk2_nonce = - 864 
+2023/03/17 20:11:04 [INFO]  zk2_sql_nonce = -  
+2023/03/17 20:11:04 [INFO]  zk2 result_nonde = - 864 
+2023/03/17 21:05:52 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:05:57 [INFO]  tokenBalanceWei = - 775991556250157800 
+2023/03/17 21:05:58 [INFO]  read nonce  sql_nonce:undefined, nonce:899, result_nonce:0 -  
+2023/03/17 21:05:58 [INFO]  read nonceDic - {} 
+2023/03/17 21:05:58 [INFO]  nonce = - 899 
+2023/03/17 21:05:58 [INFO]  sql_nonce = -  
+2023/03/17 21:05:58 [INFO]  result_nonde = - 899 
+2023/03/17 21:06:41 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:06:43 [INFO]  tokenBalanceWei = - 775991556250157800 
+2023/03/17 21:06:43 [INFO]  read nonce  sql_nonce:undefined, nonce:899, result_nonce:0 -  
+2023/03/17 21:06:43 [INFO]  read nonceDic - {} 
+2023/03/17 21:06:43 [INFO]  nonce = - 899 
+2023/03/17 21:06:43 [INFO]  sql_nonce = -  
+2023/03/17 21:06:43 [INFO]  result_nonde = - 899 
+2023/03/17 21:06:54 [INFO]  send transaction = - {"gas":"0x186a0","gasPrice":"0xee6b280","nonce":899,"chainId":514,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"} 
+2023/03/17 21:11:21 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:11:22 [INFO]  tokenBalanceWei = - 736375845000167200 
+2023/03/17 21:11:23 [INFO]  read nonce  sql_nonce:undefined, nonce:904, result_nonce:0 -  
+2023/03/17 21:11:23 [INFO]  read nonceDic - {} 
+2023/03/17 21:11:23 [INFO]  nonce = - 904 
+2023/03/17 21:11:23 [INFO]  sql_nonce = -  
+2023/03/17 21:11:23 [INFO]  result_nonde = - 904 
+2023/03/17 21:13:52 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:13:56 [INFO]  tokenBalanceWei = - 705810847000167200 
+2023/03/17 21:13:57 [INFO]  read nonce  sql_nonce:undefined, nonce:907, result_nonce:0 -  
+2023/03/17 21:13:57 [INFO]  read nonceDic - {} 
+2023/03/17 21:13:57 [INFO]  nonce = - 907 
+2023/03/17 21:13:57 [INFO]  sql_nonce = -  
+2023/03/17 21:13:57 [INFO]  result_nonde = - 907 
+2023/03/17 21:14:38 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:14:39 [INFO]  tokenBalanceWei = - 716810847000176600 
+2023/03/17 21:14:39 [INFO]  read nonce  sql_nonce:undefined, nonce:907, result_nonce:0 -  
+2023/03/17 21:14:39 [INFO]  read nonceDic - {} 
+2023/03/17 21:14:39 [INFO]  nonce = - 907 
+2023/03/17 21:14:39 [INFO]  sql_nonce = -  
+2023/03/17 21:14:39 [INFO]  result_nonde = - 907 
+2023/03/17 21:15:32 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:15:33 [INFO]  tokenBalanceWei = - 706696842750176600 
+2023/03/17 21:15:34 [INFO]  read nonce  sql_nonce:undefined, nonce:908, result_nonce:0 -  
+2023/03/17 21:15:34 [INFO]  read nonceDic - {} 
+2023/03/17 21:15:34 [INFO]  nonce = - 908 
+2023/03/17 21:15:34 [INFO]  sql_nonce = -  
+2023/03/17 21:15:34 [INFO]  result_nonde = - 908 
+2023/03/17 21:23:09 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:23:10 [INFO]  tokenBalanceWei = - 627059642000185600 
+2023/03/17 21:23:10 [INFO]  read nonce  sql_nonce:undefined, nonce:917, result_nonce:0 -  
+2023/03/17 21:23:10 [INFO]  read nonceDic - {} 
+2023/03/17 21:23:10 [INFO]  nonce = - 917 
+2023/03/17 21:23:10 [INFO]  sql_nonce = -  
+2023/03/17 21:23:10 [INFO]  result_nonde = - 917 
+2023/03/17 21:23:15 [INFO]  send transaction = - {"gas":"0x186a0","gasPrice":"0xee6b280","nonce":917,"chainId":514,"to":"0xA5F46D60F4F08F11a5495f8c1011537718e188Fe","value":"0x5af3107a4000"} 
+2023/03/17 21:26:34 [INFO]  RPC from makerConfig zksync2_test -  
+2023/03/17 21:26:37 [INFO]  tokenBalanceWei = - 606749138000185500 
+2023/03/17 21:26:39 [INFO]  read nonce  sql_nonce:undefined, nonce:919, result_nonce:0 -  
+2023/03/17 21:26:39 [INFO]  read nonceDic - {} 
+2023/03/17 21:26:39 [INFO]  nonce = - 919 
+2023/03/17 21:26:39 [INFO]  sql_nonce = -  
+2023/03/17 21:26:39 [INFO]  result_nonde = - 919 
+2023/03/17 23:57:30 [INFO]  transactionID = - 0xde9dcb0eac4dae8407b8a4867054b77dd315bfe00005eth727 
+2023/03/17 23:57:31 [INFO]  amountToSend = - 4800000000000727 
+2023/03/17 23:57:32 [INFO]  toChain = - zksync2 
+2023/03/17 23:57:32 [INFO]  retryCount = - 0 
+2023/03/17 23:57:42 [INFO]  0xde9dcb0eac4dae8407b8a4867054b77dd315bfe00005eth727 [8233]  Exec Send Transfer - {"makerAddress":"0x0043d60e87c5dd08c86c3123340705a1556c4719","toAddress":"0xde9dcb0eac4dae8407b8a4867054b77dd315bfe0","toChain":"zksync2","fromChainID":5,"toChainID":514,"tokenAddress":"0x0000000000000000000000000000000000000000","tAmount":"4800000000000727","result_nonce":0,"nonce":727,"tokenInfo":{"name":"Ether","symbol":"ETH","decimals":18,"address":"0x0000000000000000000000000000000000000000","mainCoin":true},"retryCount":0} 
+2023/03/17 23:57:53 [INFO]  sendConsumer [8233] = - {"makerAddress":"0x0043d60e87c5dd08c86c3123340705a1556c4719","toAddress":"0xde9dcb0eac4dae8407b8a4867054b77dd315bfe0","toChain":"zksync2","chainID":514,"tokenInfo":{"name":"Ether","symbol":"ETH","decimals":18,"address":"0x0000000000000000000000000000000000000000","mainCoin":true},"tokenAddress":"0x0000000000000000000000000000000000000000","amountToSend":"4800000000000727","result_nonce":0,"fromChainID":5,"lpMemo":727,"ownerAddress":"0xde9dcb0eac4dae8407b8a4867054b77dd315bfe0"} 
+2023/03/17 23:58:03 [INFO]  RPC from makerConfig zksync2 -  

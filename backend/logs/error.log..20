@@ -1,0 +1,2396 @@
+[2023-03-20T21:12:50.002] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:13:00.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:13:20.013] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:13:30.006] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:13:40.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:13:50.005] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:00.006] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:10.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:20.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:30.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:40.014] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:50.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:14:51.731] [ERROR] error - Error: connect ETIMEDOUT 128.121.243.75:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '128.121.243.75',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T21:15:00.010] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:15:07.298] [ERROR] error - Error: connect ETIMEDOUT 128.121.243.75:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '128.121.243.75',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T21:15:07.481] [ERROR] error - Error: No chain found matching key: internalId, value: 3
+    at Function.getChainByKeyValue (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/orbiter-chaincore/src/utils/chains.js:134:19)
+    at Function.getChainByInternalId (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/orbiter-chaincore/src/utils/chains.js:95:29)
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:221:51)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at async Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:272:27)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/controller/maker.js:78:21
+    at async bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at async cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/middleware/global.js:12:13
+[2023-03-20T21:15:10.008] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:15:20.002] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:15:40.067] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:15:50.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:00.005] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:10.002] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:20.007] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:30.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:40.006] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:50.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:16:55.445] [ERROR] error - Error: connect ETIMEDOUT 128.121.243.75:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '128.121.243.75',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T21:17:00.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:17:03.890] [ERROR] error - Error: connect ETIMEDOUT 128.121.243.75:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '128.121.243.75',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T21:17:03.986] [ERROR] error - Error: No chain found matching key: internalId, value: 3
+    at Function.getChainByKeyValue (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/orbiter-chaincore/src/utils/chains.js:134:19)
+    at Function.getChainByInternalId (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/orbiter-chaincore/src/utils/chains.js:95:29)
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/service/maker_wealth.ts:294:27)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/service/maker_wealth.ts:359:25)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/controller/maker.ts:68:17
+    at bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/middleware/global.ts:14:7
+[2023-03-20T21:17:10.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:17:20.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:17:30.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:17:40.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:17:48.070] [ERROR] error - Error: connect ETIMEDOUT 128.121.243.75:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '128.121.243.75',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T21:17:50.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:00.004] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:10.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:20.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:30.007] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:40.005] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T21:18:50.003] [ERROR] error - MJob.schedule error: No chain found matching key: internalId, value: 3, rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:02:10.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:02:20.007] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:02:30.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:02:40.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:02:50.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:03:00.010] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:03:10.012] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:03:20.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:03:40.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:03:50.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:10.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:20.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:40.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:50.014] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:04:50.666] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:05:00.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:10.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:11.130] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:05:20.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:30.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:40.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:50.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:05:50.295] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:05:56.984] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:05:57.113] [ERROR] error - TypeError: Cannot read properties of undefined (reading 'chainId')
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:222:76)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at async Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:272:27)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/controller/maker.js:78:21
+    at async bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at async cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/middleware/global.js:12:13
+[2023-03-20T23:06:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:06:10.018] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:06:20.013] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:06:50.001] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:10.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:20.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:40.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:07:50.015] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:10.013] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:20.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:30.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:37.307] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:08:40.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:08:50.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:09:00.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:09:05.377] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:09:05.563] [ERROR] error - TypeError: Cannot read properties of undefined (reading 'chainId')
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:222:76)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at async Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:272:27)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/controller/maker.js:78:21
+    at async bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at async cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/middleware/global.js:12:13
+[2023-03-20T23:09:10.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:10:10.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:10:20.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:10:30.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:10:40.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:10:50.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:11:00.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:11:10.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:11:20.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:11:40.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:11:50.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:00.001] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:10.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:20.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:40.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:50.009] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:12:53.091] [ERROR] error - Error: connect ETIMEDOUT 205.186.152.122:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '205.186.152.122',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:12:53.193] [ERROR] error - TypeError: Cannot read properties of undefined (reading 'chainId')
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:222:76)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at async Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:272:27)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/controller/maker.js:78:21
+    at async bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at async cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/middleware/global.js:12:13
+[2023-03-20T23:13:00.007] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:13:20.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:13:30.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:13:40.007] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:13:50.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:14:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:14:20.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:14:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:14:40.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:14:50.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:15:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:15:10.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:15:20.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:15:30.005] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:15:40.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:00.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:10.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:20.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:40.002] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:16:50.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:17:00.015] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:17:10.004] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:17:16.126] [ERROR] error - Error: connect ETIMEDOUT 31.13.84.2:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '31.13.84.2',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:17:20.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:17:28.736] [ERROR] error - Error: connect ETIMEDOUT 31.13.84.2:443
+    at TCPConnectWrap.afterConnect [as oncomplete] (node:net:1187:16) {
+  errno: -60,
+  code: 'ETIMEDOUT',
+  syscall: 'connect',
+  address: '31.13.84.2',
+  port: 443,
+  config: {
+    url: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    method: 'get',
+    headers: {
+      Accept: 'application/json, text/plain, */*',
+      'User-Agent': 'axios/0.21.4'
+    },
+    transformRequest: [ [Function: transformRequest] ],
+    transformResponse: [ [Function: transformResponse] ],
+    timeout: 0,
+    adapter: [Function: httpAdapter],
+    xsrfCookieName: 'XSRF-TOKEN',
+    xsrfHeaderName: 'X-XSRF-TOKEN',
+    maxContentLength: -1,
+    maxBodyLength: -1,
+    validateStatus: [Function: validateStatus],
+    transitional: {
+      silentJSONParsing: true,
+      forcedJSONParsing: true,
+      clarifyTimeoutError: false
+    },
+    data: undefined
+  },
+  request: <ref *1> Writable {
+    _writableState: WritableState {
+      objectMode: false,
+      highWaterMark: 16384,
+      finalCalled: false,
+      needDrain: false,
+      ending: false,
+      ended: false,
+      finished: false,
+      destroyed: false,
+      decodeStrings: true,
+      defaultEncoding: 'utf8',
+      length: 0,
+      writing: false,
+      corked: 0,
+      sync: true,
+      bufferProcessing: false,
+      onwrite: [Function: bound onwrite],
+      writecb: null,
+      writelen: 0,
+      afterWriteTickInfo: null,
+      buffered: [],
+      bufferedIndex: 0,
+      allBuffers: true,
+      allNoop: true,
+      pendingcb: 0,
+      constructed: true,
+      prefinished: false,
+      errorEmitted: false,
+      emitClose: true,
+      autoDestroy: true,
+      errored: null,
+      closed: false,
+      closeEmitted: false,
+      [Symbol(kOnFinished)]: []
+    },
+    _events: [Object: null prototype] {
+      response: [Function: handleResponse],
+      error: [Function: handleRequestError]
+    },
+    _eventsCount: 2,
+    _maxListeners: undefined,
+    _options: {
+      maxRedirects: 21,
+      maxBodyLength: 10485760,
+      protocol: 'https:',
+      path: '/v2/exchange-rates?currency=USD',
+      method: 'GET',
+      headers: [Object],
+      agent: undefined,
+      agents: [Object],
+      auth: undefined,
+      hostname: 'api.coinbase.com',
+      port: null,
+      nativeProtocols: [Object],
+      pathname: '/v2/exchange-rates',
+      search: '?currency=USD'
+    },
+    _ended: true,
+    _ending: true,
+    _redirectCount: 0,
+    _redirects: [],
+    _requestBodyLength: 0,
+    _requestBodyBuffers: [],
+    _onNativeResponse: [Function (anonymous)],
+    _currentRequest: ClientRequest {
+      _events: [Object: null prototype],
+      _eventsCount: 7,
+      _maxListeners: undefined,
+      outputData: [],
+      outputSize: 0,
+      writable: true,
+      destroyed: false,
+      _last: true,
+      chunkedEncoding: false,
+      shouldKeepAlive: false,
+      maxRequestsOnConnectionReached: false,
+      _defaultKeepAlive: true,
+      useChunkedEncodingByDefault: false,
+      sendDate: false,
+      _removedConnection: false,
+      _removedContLen: false,
+      _removedTE: false,
+      _contentLength: 0,
+      _hasBody: true,
+      _trailer: '',
+      finished: true,
+      _headerSent: true,
+      _closed: false,
+      socket: [TLSSocket],
+      _header: 'GET /v2/exchange-rates?currency=USD HTTP/1.1\r\n' +
+        'Accept: application/json, text/plain, */*\r\n' +
+        'User-Agent: axios/0.21.4\r\n' +
+        'Host: api.coinbase.com\r\n' +
+        'Connection: close\r\n' +
+        '\r\n',
+      _keepAliveTimeout: 0,
+      _onPendingData: [Function: nop],
+      agent: [Agent],
+      socketPath: undefined,
+      method: 'GET',
+      maxHeaderSize: undefined,
+      insecureHTTPParser: undefined,
+      path: '/v2/exchange-rates?currency=USD',
+      _ended: false,
+      res: null,
+      aborted: false,
+      timeoutCb: null,
+      upgradeOrConnect: false,
+      parser: null,
+      maxHeadersCount: null,
+      reusedSocket: false,
+      host: 'api.coinbase.com',
+      protocol: 'https:',
+      _redirectable: [Circular *1],
+      [Symbol(kCapture)]: false,
+      [Symbol(kNeedDrain)]: false,
+      [Symbol(corked)]: 0,
+      [Symbol(kOutHeaders)]: [Object: null prototype]
+    },
+    _currentUrl: 'https://api.coinbase.com/v2/exchange-rates?currency=USD',
+    [Symbol(kCapture)]: false
+  },
+  response: undefined,
+  isAxiosError: true,
+  toJSON: [Function: toJSON]
+}
+[2023-03-20T23:17:28.867] [ERROR] error - TypeError: Cannot read properties of undefined (reading 'chainId')
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:222:76)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at async Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/service/maker_wealth.js:272:27)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/controller/maker.js:78:21
+    at async bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at async cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at async /Users/wzl/Desktop/code/orange/OrbitalModule/backend/dist/middleware/global.js:12:13
+[2023-03-20T23:17:30.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:28:10.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:28:15.759] [ERROR] error - TypeError: Cannot read properties of undefined (reading 'chainId')
+    at getWealthsChains (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/service/maker_wealth.ts:138:52)
+    at processTicksAndRejections (node:internal/process/task_queues:96:5)
+    at Object.getWealths (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/service/maker_wealth.ts:202:25)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/controller/maker.ts:68:17
+    at bodyParser (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa-bodyparser/index.js:95:5)
+    at cors (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/node_modules/koa2-cors/dist/index.js:91:9)
+    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/middleware/global.ts:14:7
+[2023-03-20T23:28:20.022] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:28:30.006] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:28:40.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:28:50.008] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:29:00.003] [ERROR] error - MJob.schedule error: Cannot read properties of undefined (reading 'chainId'), rule: */10 * * * * *, jobName: jobBalanceAlarm
+[2023-03-20T23:30:40.067] [ERROR] error - GetTokenBalance fail, chainId: 4, makerAddress: undefined,tokenAddress:0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7, tokenName: ETH, error:  arg account should be a felt (string, number, BigNumber)
+[2023-03-20T23:30:40.308] [ERROR] error - GetTokenBalance fail, chainId: 9, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  read ECONNRESET
+[2023-03-20T23:30:41.198] [ERROR] error - GetTokenBalance fail, chainId: 6, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: MATIC, error:  Returned error: header not found
+[2023-03-20T23:30:41.321] [ERROR] error - GetTokenBalance fail, chainId: 13, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  (503)  no backends available for method
+[2023-03-20T23:30:41.358] [ERROR] error - GetTokenBalance fail, chainId: 12, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  invalid json response body at https://api.zkswap.info/v3/account/0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8/balances reason: Unexpected token p in JSON at position 4
+[2023-03-20T23:30:42.599] [ERROR] error - GetTokenBalance fail, chainId: 4, makerAddress: undefined,tokenAddress:0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7, tokenName: ETH, error:  arg account should be a felt (string, number, BigNumber)
+[2023-03-20T23:30:43.803] [ERROR] error - GetTokenBalance fail, chainId: 12, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  invalid json response body at https://api.zkswap.info/v3/account/0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8/balances reason: Unexpected token p in JSON at position 4
+[2023-03-20T23:30:44.614] [ERROR] error - GetTokenBalance fail, chainId: 13, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  (503)  no backends available for method
+[2023-03-20T23:31:55.071] [ERROR] error - GetTokenBalance fail, chainId: 15, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: BNB, error:  request to https://bsc-dataseed1.binance.org/ failed, reason: connect ETIMEDOUT 128.242.245.180:443
+[2023-03-20T23:31:55.072] [ERROR] error - GetTokenBalance fail, chainId: 15, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x2170ed0880ac9a755fd29b2688956bd959f933f8, tokenName: ETH, error:  request to https://bsc-dataseed1.binance.org/ failed, reason: connect ETIMEDOUT 128.242.245.180:443
+[2023-03-20T23:31:55.072] [ERROR] error - GetTokenBalance fail, chainId: 7, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  request to https://mainnet.optimism.io/ failed, reason: connect ETIMEDOUT 157.240.3.50:443
+[2023-03-20T23:31:55.857] [ERROR] error - GetTokenBalance fail, chainId: 12, makerAddress: 0x80C67432656d59144cEFf962E8fAF8926599bCF8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  invalid json response body at https://api.zkswap.info/v3/account/0x80C67432656d59144cEFf962E8fAF8926599bCF8/balances reason: Unexpected token p in JSON at position 4
+[2023-03-20T23:31:57.613] [ERROR] error - GetTokenBalance fail, chainId: 9, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  connect ETIMEDOUT 143.204.89.16:443
+[2023-03-20T23:31:57.613] [ERROR] error - GetTokenBalance fail, chainId: 15, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: BNB, error:  request to https://bsc-dataseed1.binance.org/ failed, reason: connect ETIMEDOUT 128.242.245.180:443
+[2023-03-20T23:31:57.613] [ERROR] error - GetTokenBalance fail, chainId: 15, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x2170ed0880ac9a755fd29b2688956bd959f933f8, tokenName: ETH, error:  request to https://bsc-dataseed1.binance.org/ failed, reason: connect ETIMEDOUT 128.242.245.180:443
+[2023-03-20T23:31:57.614] [ERROR] error - GetTokenBalance fail, chainId: 7, makerAddress: 0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8,tokenAddress:0x0000000000000000000000000000000000000000, tokenName: ETH, error:  request to https://mainnet.optimism.io/ failed, reason: connect ETIMEDOUT 157.240.3.50:443

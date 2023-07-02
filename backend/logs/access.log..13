@@ -1,0 +1,129 @@
+[2023-04-13T09:03:51.554] [INFO] access - TransactionID was exist: 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:04:02.401] [INFO] access - Check Queue:chain:5, Size:0, lastConsumeTime:2023-04-13 09:03:47,isProcessing:false
+[2023-04-13T09:05:21.113] [INFO] access - sendTransaction from hash: 44->22 0x057b4ac868bfc8bf2f4e1a5683eff4f6cd3b25a9c46c952812ed4dfbfafc7099#1
+[2023-04-13T09:05:21.123] [INFO] access - transactionID = 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:05:21.124] [INFO] access - amountToSend = 4990000000000001
+[2023-04-13T09:05:21.124] [INFO] access - toChain = arbitrum_test
+[2023-04-13T09:05:21.124] [INFO] access - retryCount = 0
+[2023-04-13T09:05:21.126] [INFO] access - 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1 [966] Send Queue 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:05:21.134] [INFO] access - [0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1] consume tx  {"transactionID":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1","makerAddress":"0x0043d60e87c5dd08C86C3123340705a1556C4719","toAddress":"0x8cd23453623055da8f41f3528154ffcb21d496c2","toChain":"arbitrum_test","chainID":22,"tokenInfo":{"name":"Ether","symbol":"ETH","decimals":18,"address":"0x0000000000000000000000000000000000000000","mainCoin":true},"tokenAddress":"0x0000000000000000000000000000000000000000","amountToSend":"4990000000000001","result_nonce":0,"fromChainID":44,"lpMemo":1,"ownerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489"}
+[2023-04-13T09:05:21.135] [INFO] access - RPC from makerConfig arbitrum_test
+[2023-04-13T09:05:21.843] [INFO] access - tokenBalanceWei = 307308209805995000
+[2023-04-13T09:05:22.057] [INFO] access - read nonce  sql_nonce:undefined, nonce:15845, result_nonce:0
+[2023-04-13T09:05:22.058] [INFO] access - read nonceDic:{}
+[2023-04-13T09:05:22.059] [INFO] access - nonce = 15845
+[2023-04-13T09:05:22.059] [INFO] access - sql_nonce = undefined
+[2023-04-13T09:05:22.060] [INFO] access - result_nonde = 15845
+[2023-04-13T09:05:22.821] [INFO] access - arGasLimit = 737693
+[2023-04-13T09:06:05.856] [INFO] access - send transaction = {"gas":"0xb419d","gasPrice":"0x5f5e100","nonce":15845,"chainId":22,"to":"0x8cd23453623055da8f41f3528154ffcb21d496c2","value":"0x11ba60e96de001"}
+[2023-04-13T09:07:14.470] [INFO] access - sendTransaction from hash: 44->22 0x057b4ac868bfc8bf2f4e1a5683eff4f6cd3b25a9c46c952812ed4dfbfafc7099#1
+[2023-04-13T09:07:14.481] [INFO] access - transactionID = 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:07:14.482] [INFO] access - amountToSend = 4990000000000001
+[2023-04-13T09:07:14.482] [INFO] access - toChain = arbitrum_test
+[2023-04-13T09:07:14.482] [INFO] access - retryCount = 0
+[2023-04-13T09:07:14.484] [INFO] access - 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1 [1023] Send Queue 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:07:14.496] [INFO] access - [0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1] consume tx  {"transactionID":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1","makerAddress":"0x0043d60e87c5dd08C86C3123340705a1556C4719","toAddress":"0x8cd23453623055da8f41f3528154ffcb21d496c2","toChain":"arbitrum_test","chainID":22,"tokenInfo":{"name":"Ether","symbol":"ETH","decimals":18,"address":"0x0000000000000000000000000000000000000000","mainCoin":true},"tokenAddress":"0x0000000000000000000000000000000000000000","amountToSend":"4990000000000001","result_nonce":0,"fromChainID":44,"lpMemo":1,"ownerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489"}
+[2023-04-13T09:07:14.498] [INFO] access - RPC from makerConfig arbitrum_test
+[2023-04-13T09:07:15.053] [INFO] access - tokenBalanceWei = 307308209805995000
+[2023-04-13T09:07:15.257] [INFO] access - read nonce  sql_nonce:undefined, nonce:15845, result_nonce:0
+[2023-04-13T09:07:15.258] [INFO] access - read nonceDic:{}
+[2023-04-13T09:07:15.259] [INFO] access - nonce = 15845
+[2023-04-13T09:07:15.260] [INFO] access - sql_nonce = undefined
+[2023-04-13T09:07:15.261] [INFO] access - result_nonde = 15845
+[2023-04-13T09:09:09.362] [INFO] access - sendTransaction from hash: 44->22 0x057b4ac868bfc8bf2f4e1a5683eff4f6cd3b25a9c46c952812ed4dfbfafc7099#1
+[2023-04-13T09:09:09.387] [INFO] access - transactionID = 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:09:09.388] [INFO] access - amountToSend = 4990000000000001
+[2023-04-13T09:09:09.388] [INFO] access - toChain = arbitrum_test
+[2023-04-13T09:09:09.388] [INFO] access - retryCount = 0
+[2023-04-13T09:09:09.390] [INFO] access - 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1 [1149] Send Queue 0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1
+[2023-04-13T09:09:09.399] [INFO] access - [0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1] consume tx  {"transactionID":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb84890044eth1_1","makerAddress":"0x0043d60e87c5dd08C86C3123340705a1556C4719","toAddress":"0x8cd23453623055da8f41f3528154ffcb21d496c2","toChain":"arbitrum_test","chainID":22,"tokenInfo":{"name":"Ether","symbol":"ETH","decimals":18,"address":"0x0000000000000000000000000000000000000000","mainCoin":true},"tokenAddress":"0x0000000000000000000000000000000000000000","amountToSend":"4990000000000001","result_nonce":0,"fromChainID":44,"lpMemo":1,"ownerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489"}
+[2023-04-13T09:09:09.401] [INFO] access - RPC from makerConfig arbitrum_test
+[2023-04-13T09:09:09.920] [INFO] access - tokenBalanceWei = 307308209805995000
+[2023-04-13T09:09:10.126] [INFO] access - read nonce  sql_nonce:undefined, nonce:15845, result_nonce:0
+[2023-04-13T09:09:10.127] [INFO] access - read nonceDic:{}
+[2023-04-13T09:09:10.127] [INFO] access - nonce = 15845
+[2023-04-13T09:09:10.128] [INFO] access - sql_nonce = undefined
+[2023-04-13T09:09:10.129] [INFO] access - result_nonde = 15845
+[2023-04-13T09:09:10.870] [INFO] access - arGasLimit = 656331
+[2023-04-13T09:09:15.270] [INFO] access - send transaction = {"gas":"0xa03cb","gasPrice":"0x5f5e100","nonce":15845,"chainId":22,"to":"0x8cd23453623055da8f41f3528154ffcb21d496c2","value":"0x11ba60e96de001"}
+[2023-04-13T13:03:23.107] [INFO] access - sendTransaction from hash: 5->44 0x5c5fd1bc7d91a1853fcc3bd5057fde0b3ac8116ce6884fb88c80411bfa756ba9
+[2023-04-13T13:03:23.128] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T13:03:23.129] [INFO] access - amountToSend = 5090000000000128
+[2023-04-13T13:03:23.130] [INFO] access - toChain = starknet_test
+[2023-04-13T13:03:23.131] [INFO] access - retryCount = 0
+[2023-04-13T13:03:23.137] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128 [1014] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T13:03:23.182] [INFO] access - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128] consume tx  {"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0xe88cfe577661da14db31d05cd8fdc09f189700525161c817b7d5711d3484f5","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000128","result_nonce":0,"fromChainID":5,"lpMemo":128,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}
+[2023-04-13T13:04:01.962] [INFO] access - sendTransaction from hash: 5->44 0x223b1b8ac29a2a74a4328d157b736ca13339e6ba7e868865a5e21506c52e2e7e
+[2023-04-13T13:04:01.965] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T13:04:01.972] [INFO] access - amountToSend = 5090000000000127
+[2023-04-13T13:04:01.972] [INFO] access - toChain = starknet_test
+[2023-04-13T13:04:01.973] [INFO] access - retryCount = 0
+[2023-04-13T13:04:01.974] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127 [1014] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T13:04:01.986] [INFO] access - sendTransaction from hash: 5->44 0x3ac8a7a3e962b399c2b341b245332067c90446b7940774d5ddc1ea8a554b060d
+[2023-04-13T13:04:01.987] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T13:04:01.987] [INFO] access - amountToSend = 4990000000000126
+[2023-04-13T13:04:01.989] [INFO] access - toChain = starknet_test
+[2023-04-13T13:04:01.990] [INFO] access - retryCount = 0
+[2023-04-13T13:04:01.990] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126 [1014] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T13:04:30.072] [INFO] access - Generate starknet_getNetwork_nonce = 3 nonces: [
+   3, 4,  5,  6,  7,
+   8, 9, 10, 11, 12,
+  13
+] networkLastNonce: 3
+[2023-04-13T13:04:49.598] [INFO] access - getAvailableNonce takeNonce:3,networkNonce:3 starkNet_supportNoce:[4,5,6,7,8,9,10,11,12,13]
+[2023-04-13T13:04:54.666] [INFO] access - starknet_sql_nonce = 3
+[2023-04-13T13:04:54.667] [INFO] access - result_nonde = 0
+[2023-04-13T13:04:54.671] [INFO] access - queue:chain:44, Consumption results::{"code":2,"params":{"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0xe88cfe577661da14db31d05cd8fdc09f189700525161c817b7d5711d3484f5","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000128","result_nonce":0,"fromChainID":5,"lpMemo":128,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}}
+[2023-04-13T13:04:54.682] [INFO] access - Store success toChainID: 44 tAmount: 5090000000000128
+[2023-04-13T13:04:54.688] [INFO] access - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127] consume tx  {"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000127","result_nonce":0,"fromChainID":5,"lpMemo":127,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}
+[2023-04-13T13:05:02.506] [INFO] access - getAvailableNonce takeNonce:3,networkNonce:3 starkNet_supportNoce:[4,5,6,7,8,9,10,11,12,13]
+[2023-04-13T13:05:09.861] [INFO] access - starknet_sql_nonce = 3
+[2023-04-13T13:05:25.719] [INFO] access - result_nonde = 0
+[2023-04-13T13:05:25.725] [INFO] access - queue:chain:44, Consumption results::{"code":2,"params":{"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000127","result_nonce":0,"fromChainID":5,"lpMemo":127,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}}
+[2023-04-13T13:05:25.738] [INFO] access - Store success toChainID: 44 tAmount: 5090000000000127
+[2023-04-13T13:05:25.740] [INFO] access - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126] consume tx  {"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0xe88cfe577661da14db31d05cd8fdc09f189700525161c817b7d5711d3484f5","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"4990000000000126","result_nonce":0,"fromChainID":5,"lpMemo":126,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}
+[2023-04-13T13:05:28.103] [INFO] access - getAvailableNonce takeNonce:4,networkNonce:3 starkNet_supportNoce:[5,6,7,8,9,10,11,12,13]
+[2023-04-13T13:05:31.557] [INFO] access - starknet_sql_nonce = 4
+[2023-04-13T13:05:32.842] [INFO] access - result_nonde = 0
+[2023-04-13T16:28:37.206] [INFO] access - Check Queue:chain:5, Size:0, lastConsumeTime:2023-04-13 16:28:31,isProcessing:false
+[2023-04-13T16:28:46.007] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:28:46.014] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T16:28:46.019] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T16:30:15.062] [INFO] access - sendTransaction from hash: 5->44 0x5c5fd1bc7d91a1853fcc3bd5057fde0b3ac8116ce6884fb88c80411bfa756ba9
+[2023-04-13T16:30:15.081] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:30:15.082] [INFO] access - amountToSend = 5090000000000128
+[2023-04-13T16:30:15.083] [INFO] access - toChain = starknet_test
+[2023-04-13T16:30:15.084] [INFO] access - retryCount = 0
+[2023-04-13T16:33:45.605] [INFO] access - Check Queue:chain:5, Size:0, lastConsumeTime:2023-04-13 16:33:40,isProcessing:false
+[2023-04-13T16:33:53.208] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:33:53.220] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T16:33:53.225] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T16:34:28.826] [INFO] access - Check Queue:chain:5, Size:0, lastConsumeTime:2023-04-13 16:34:25,isProcessing:false
+[2023-04-13T16:34:30.001] [INFO] access - Check Queue:chain:22, Size:0, lastConsumeTime:2023-04-13 16:34:25,isProcessing:false
+[2023-04-13T16:34:36.956] [INFO] access - sendTransaction from hash: 5->44 0x5c5fd1bc7d91a1853fcc3bd5057fde0b3ac8116ce6884fb88c80411bfa756ba9
+[2023-04-13T16:34:36.959] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:34:36.959] [INFO] access - amountToSend = 5090000000000128
+[2023-04-13T16:34:36.963] [INFO] access - toChain = starknet_test
+[2023-04-13T16:34:36.964] [INFO] access - retryCount = 0
+[2023-04-13T16:34:36.965] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128 [36999] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:34:36.976] [INFO] access - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128] consume tx  {"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0xe88cfe577661da14db31d05cd8fdc09f189700525161c817b7d5711d3484f5","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000128","result_nonce":0,"fromChainID":5,"lpMemo":128,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}
+[2023-04-13T16:34:44.124] [INFO] access - starknet_queue_count = 1
+[2023-04-13T16:34:46.535] [INFO] access - queue:chain:44, Consumption results::{"code":2,"params":{"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0xe88cfe577661da14db31d05cd8fdc09f189700525161c817b7d5711d3484f5","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000128","result_nonce":0,"fromChainID":5,"lpMemo":128,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}}
+[2023-04-13T16:34:46.634] [INFO] access - Store success toChainID: 44 tAmount: 5090000000000128
+[2023-04-13T16:34:46.682] [INFO] access - sendTransaction from hash: 5->44 0x223b1b8ac29a2a74a4328d157b736ca13339e6ba7e868865a5e21506c52e2e7e
+[2023-04-13T16:34:46.684] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T16:34:46.684] [INFO] access - amountToSend = 5090000000000127
+[2023-04-13T16:34:46.684] [INFO] access - toChain = starknet_test
+[2023-04-13T16:34:46.685] [INFO] access - retryCount = 0
+[2023-04-13T16:34:46.685] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127 [36999] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T16:34:46.699] [INFO] access - sendTransaction from hash: 5->44 0x3ac8a7a3e962b399c2b341b245332067c90446b7940774d5ddc1ea8a554b060d
+[2023-04-13T16:34:46.699] [INFO] access - transactionID = 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T16:34:46.700] [INFO] access - amountToSend = 4990000000000126
+[2023-04-13T16:34:46.700] [INFO] access - toChain = starknet_test
+[2023-04-13T16:34:46.700] [INFO] access - retryCount = 0
+[2023-04-13T16:34:46.701] [INFO] access - 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126 [36999] Send Queue 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
+[2023-04-13T16:34:46.777] [INFO] access - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127] consume tx  {"transactionID":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127","makerAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toAddress":"0x02379d9a1a1fd2c85d66457c7bc6bfd28215732cde1ba0f9a8f7a30e10bb8489","toChain":"starknet_test","chainID":44,"tokenInfo":{"id":0,"name":"Ether","symbol":"ETH","decimals":18,"address":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","mainCoin":true},"tokenAddress":"0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7","amountToSend":"5090000000000127","result_nonce":0,"fromChainID":5,"lpMemo":127,"ownerAddress":"0xa5f46d60f4f08f11a5495f8c1011537718e188fe"}
+[2023-04-13T16:58:14.404] [INFO] access - Check Queue:chain:5, Size:0, lastConsumeTime:2023-04-13 16:58:03,isProcessing:false
+[2023-04-13T16:58:17.883] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth128
+[2023-04-13T16:58:17.888] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth127
+[2023-04-13T16:58:17.892] [INFO] access - TransactionID was exist: 0xa5f46d60f4f08f11a5495f8c1011537718e188fe0005eth126
