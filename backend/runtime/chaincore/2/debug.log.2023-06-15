@@ -1,7 +1,0 @@
-[2023/06/15 17:28:52] info	 Arbitrum RpcScan Debug: currentBlockHeight = 71816482, latestHeight:101373320,scan:true 
-[2023/06/15 17:28:57] info	 Arbitrum 0xe4edb277e41dc89ab076a1f049f4a3efa700bce8 - Arbitrum Matching transaction succeeded:0x1b9431d2f9c3f1015d31a47d0291191b64107e1a958a86204ef2306f72896d10 
-[2023/06/15 17:28:57] info	 Arbitrum Transactions scanned by rpc: {"hashList":["0x1b9431d2f9c3f1015d31a47d0291191b64107e1a958a86204ef2306f72896d10"]}
-[2023/06/15 17:28:57] info	 Arbitrum New Transaction Pushed ["0x1b9431d2f9c3f1015d31a47d0291191b64107e1a958a86204ef2306f72896d10"]
-[2023/06/15 17:28:57] error	 Arbitrum AccountTokentx Fail:{"status":"0","message":"NOTOK","result":"Max rate limit reached, please use API Key for higher rate limit"} , Params:{"address":"0xe4edb277e41dc89ab076a1f049f4a3efa700bce8","sort":"asc","page":1,"offset":100,"startblock":101373334} 
-[2023/06/15 17:28:59] error	 Arbitrum AccountTxlistinternal Fail:{"status":"0","message":"NOTOK","result":"Max rate limit reached, please use API Key for higher rate limit"} , Params:{"address":"0xe4edb277e41dc89ab076a1f049f4a3efa700bce8","sort":"asc","page":1,"offset":100,"startblock":101373344} 
-[2023/06/15 17:28:59] info	 Arbitrum Transactions scanned by api: {"hashList":[]}

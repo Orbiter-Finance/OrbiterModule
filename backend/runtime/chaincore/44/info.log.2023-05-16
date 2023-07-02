@@ -1,3 +1,0 @@
-[2023/05/16 10:19:03] info	 Starknet(G) RpcScan Debug: currentBlockHeight = 805631, latestHeight:805632,scan:true 
-[2023/05/16 10:19:03] info	 Starknet(G) [Starknet(G) - Start replayBlock 805631/805632 
-[2023/05/16 10:19:06] info	 Starknet(G) 0x0274ff9139350580a93a4ed390de13fdd5bb333d18344146612af4e17593e100 - Starknet(G) Matching transaction succeeded:0x058a7f36bd6426d3b9d9a6e2b3e34b4473d73ef3054418bdbb79faee6df71025 

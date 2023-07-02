@@ -1,8 +1,0 @@
-[2023-04-14T14:32:23.944] [ERROR] error - updateError maker_node = state = 20 WHERE transactionID = '0xa5f46d60f4f08f11a5495f8c1011537718e188fe0077eth19'
-[2023-04-14T14:32:24.043] [ERROR] error - [0xa5f46d60f4f08f11a5495f8c1011537718e188fe0077eth19] updateErrorSqlError = TypeError: Right-hand side of 'instanceof' is not an object
-    at SelectQueryBuilder.Object.<anonymous>.QueryBuilder.update (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/query-builder/QueryBuilder.ts:229:17)
-    at EntityManager.Object.<anonymous>.EntityManager.update (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/entity-manager/EntityManager.ts:545:18)
-    at Repository.Object.<anonymous>.Repository.update (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/repository/Repository.ts:242:29)
-    at sendTxConsumeHandle (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/maker/index.ts:651:41)
-    at /Users/wzl/Desktop/code/orange/OrbitalModule/backend/test/transfer.test.ts:63:59
-    at Timeout._onTimeout (/Users/wzl/Desktop/code/orange/OrbitalModule/backend/src/util/messageQueue.ts:89:31)

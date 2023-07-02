@@ -1,2 +1,0 @@
-[2023/06/15 17:28:51] error	 Starknet [Starknet - rpcScan] Scan Chain Timer execution exception： Could not GET from endpoint `feeder_gateway/get_block?blockNumber=latest`: Only absolute URLs are supported 
-[2023/06/15 17:28:56] error	 Starknet [Starknet - rpcScan] Scan Chain Timer execution exception： Could not GET from endpoint `feeder_gateway/get_block?blockNumber=latest`: Only absolute URLs are supported 
