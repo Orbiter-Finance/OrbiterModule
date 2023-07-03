@@ -6,6 +6,7 @@ import mk from "../util/maker/maker_list";
 import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
 import { batchTxSend } from "../schedule/jobs";
+import { validateAndParseAddress } from "starknet";
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -46,6 +47,38 @@ async function watchMakerConfig(key: string) {
             accessLogger.info(`Configuration updated: ${data.Key}`);
             if (data.Value) {
                 try {
+                    if (key.indexOf("maker/rule/config/maker/nonce") !== -1) {
+                        const makerAddress_chain = key.split("maker/rule/config/maker/nonce/")[1];
+                        const arr = makerAddress_chain.split('/');
+                        if (arr.length !== 2) {
+                            errorLogger.error(`watch maker length error, length: ${arr.length} ${makerAddress_chain}`);
+                            resolve(null);
+                        }
+                        const makerAddress = arr[0];
+                        const chainId: any = arr[1];
+                        const nonce: any = data.Value;
+                        const isStarknetAddress = (address) => {
+                            try {
+                                validateAndParseAddress(address);
+                                return true;
+                            } catch (e) {
+                                return false;
+                            }
+                        };
+                        if (!new RegExp(/^0x[a-fA-F0-9]{40}$/).test(makerAddress) && !isStarknetAddress(makerAddress)) {
+                            errorLogger.error(`maker address is not evm address or starknet address ${makerAddress}`);
+                            resolve(null);
+                        }
+                        if (!isNaN(parseFloat(chainId)) && isFinite(chainId)) {
+                            errorLogger.error(`chainId is not number, chainId: ${nonce} ${makerAddress_chain}`);
+                            resolve(null);
+                        }
+                        if (!isNaN(parseFloat(nonce)) && isFinite(nonce)) {
+                            errorLogger.error(`nonce is not number, nonce: ${nonce} ${makerAddress_chain}`);
+                            resolve(null);
+                        }
+                        updateNonce(makerAddress, Number(nonce), data.Value);
+                    }
                     const config = JSON.parse(data.Value);
                     if (key === "maker/rule/config/common/chain.json") {
                         updateChain(config);
@@ -113,6 +146,8 @@ function updateTradingPairs(makerAddress: string, config: any) {
             compare(consulConfig.tradingPairs[makerAddress], config, function (msg) {
                 accessLogger.info(msg);
             });
+        } else {
+            accessLogger.info(`add maker address ${makerAddress}`);
         }
         consulConfig.tradingPairs[makerAddress] = config;
         refreshConfig();
@@ -147,6 +182,24 @@ function updateStarknet(config: any) {
         batchTxSend();
     } else {
         errorLogger.error(`update starknet config fail`);
+    }
+}
+
+const bootTime = new Date().valueOf();
+
+function updateNonce(makerAddress: string, chainId: number, nonce: number) {
+    consulConfig.nonce[makerAddress] = consulConfig.nonce[makerAddress] || {};
+    // ignore boot first update
+    const now = new Date().valueOf();
+    const openTime = bootTime + 1000 * 60;
+    if (now < openTime) {
+        accessLogger.info(`not yet reached updateable time ${new Date(bootTime).toTimeString()} < ${new Date(openTime).toTimeString()}`);
+        return;
+    }
+    consulConfig.nonce[makerAddress][chainId] = nonce;
+    if (chainId === 4 || chainId === 44) {
+
+        accessLogger.info(`update ${makerAddress} starknet nonce`);
     }
 }
 
