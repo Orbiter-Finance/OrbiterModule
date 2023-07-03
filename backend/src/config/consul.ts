@@ -77,7 +77,7 @@ async function watchMakerConfig(key: string) {
                             errorLogger.error(`nonce is not number, nonce: ${nonce} ${makerAddress_chain}`);
                             resolve(null);
                         }
-                        updateNonce(makerAddress, Number(nonce), data.Value);
+                        updateNonce(makerAddress.toLowerCase(), Number(nonce), data.Value);
                     }
                     const config = JSON.parse(data.Value);
                     if (key === "maker/rule/config/common/chain.json") {

@@ -14,6 +14,7 @@ import { getLoggerService } from '../../util/logger'
 import { readLogJson, sleep, writeLogJson } from '../../util';
 import fs from "fs";
 import path from "path";
+import { consulConfig } from "../../config/consul_store";
 
 const accessLogger = getLoggerService('4')
 
@@ -45,6 +46,7 @@ const txPool: { [makerAddress: string]: any[] } = {};
 export class StarknetHelp {
   private cache: Keyv
   public account: Account
+  private chainId:number
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -59,6 +61,11 @@ export class StarknetHelp {
         decode: JSON.parse, // deserialize function
       }),
     })
+      if (network === 'mainnet-alpha') {
+          this.chainId = 4;
+      } else {
+          this.chainId = 44;
+      }
 
     const provider = getProviderV4(network)
     this.account = new Account(
@@ -183,6 +190,15 @@ export class StarknetHelp {
       }
     }
   }
+    getConsulNonce(nonce) {
+        if (consulConfig.nonce[this.address.toLowerCase()] && consulConfig.nonce[this.address.toLowerCase()][this.chainId]) {
+            const consulNonce = consulConfig.nonce[this.address.toLowerCase()][this.chainId];
+            consulConfig.nonce[this.address.toLowerCase()][this.chainId] = 0;
+            accessLogger.info(`change to consul nonce ${nonce} --> ${consulNonce}`);
+            return consulNonce;
+        }
+        return nonce;
+    }
   async getAvailableNonce(): Promise<Array<number>> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
@@ -210,6 +226,9 @@ export class StarknetHelp {
     nonces.sort((a, b) => {
       return a - b
     })
+      if (nonces.length) {
+          nonces[0] = this.getConsulNonce(nonces[0]);
+      }
     return nonces
   }
   async signTransfer(params: {
