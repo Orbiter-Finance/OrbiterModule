@@ -71,15 +71,20 @@ async function watchMakerConfig(key: string) {
                             errorLogger.error(`maker address is not evm address or starknet address ${makerAddress}`);
                             resolve(null);
                         }
-                        if (!isNaN(parseFloat(chainId)) && isFinite(chainId)) {
-                            errorLogger.error(`chainId is not number, chainId: ${nonce} ${makerAddress_chain}`);
+
+                        function isNumber(o) {
+                            return !isNaN(parseFloat(o)) && isFinite(o);
+                        }
+
+                        if (!isNumber(chainId)) {
+                            errorLogger.error(`chainId is not number, chainId: ${chainId} ${makerAddress_chain}`);
                             resolve(null);
                         }
-                        if (!isNaN(parseFloat(nonce)) && isFinite(nonce)) {
+                        if (!isNumber(nonce)) {
                             errorLogger.error(`nonce is not number, nonce: ${nonce} ${makerAddress_chain}`);
                             resolve(null);
                         }
-                        updateNonce(makerAddress.toLowerCase(), Number(nonce), data.Value);
+                        updateNonce(makerAddress.toLowerCase(), Number(chainId), Number(nonce));
                     }
                     const config = JSON.parse(data.Value);
                     if (key === "maker/rule/config/common/chain.json") {
@@ -188,16 +193,13 @@ function updateNonce(makerAddress: string, chainId: number, nonce: number) {
     consulConfig.nonce[makerAddress] = consulConfig.nonce[makerAddress] || {};
     // ignore boot first update
     const now = new Date().valueOf();
-    const openTime = bootTime + 1000 * 60;
+    const openTime = bootTime + 1000 * 20;
     if (now < openTime) {
         accessLogger.info(`not yet reached updateable time ${new Date(bootTime).toTimeString()} < ${new Date(openTime).toTimeString()}`);
         return;
     }
     consulConfig.nonce[makerAddress][chainId] = nonce;
-    if (chainId === 4 || chainId === 44) {
-
-        accessLogger.info(`update ${makerAddress} starknet nonce`);
-    }
+    accessLogger.info(`update ${makerAddress} ${chainId} nonce success`);
 }
 
 function compare(obj1: any, obj2: any, cb: Function, superKey?: string) {
@@ -314,8 +316,8 @@ export function convertMakerConfig(list: IChainCfg[], makerCfgMap: IMakerCfg): I
                     makerId: "",
                     ebcId: "",
                     slippage: makerData.slippage || 0,
-                    recipient: makerData.makerAddress,
-                    sender: makerData.sender,
+                    recipient: makerAddress.toLowerCase(),
+                    sender: makerData.sender.toLowerCase(),
                     tradingFee: makerData.tradingFee,
                     gasFee: makerData.gasFee,
                     fromChain: {

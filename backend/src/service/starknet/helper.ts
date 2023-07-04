@@ -148,10 +148,10 @@ export class StarknetHelp {
       return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
-    let nonces = await this.getAvailableNonce()
+    let { nonces, isConsulNonce } = await this.getAvailableNonce();
     const takeNonce = nonces.splice(0, 1)[0]
     const networkLastNonce = await this.getNetworkNonce()
-    if (Number(takeNonce) < Number(networkLastNonce)) {
+    if (!isConsulNonce && Number(takeNonce) < Number(networkLastNonce)) {
       const cacheKey = `nonces:${this.address.toLowerCase()}`
       accessLogger.info(
         `The network nonce is inconsistent with the local, and a reset is requested ${takeNonce}<${networkLastNonce}`
@@ -168,20 +168,6 @@ export class StarknetHelp {
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
-        // try {
-        //   let nonces = await this.getAvailableNonce()
-        //   accessLogger.info(
-        //     `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
-        //   )
-        //   // nonces.push(nonce)
-        //   //
-        //   nonces.sort((a, b) => {
-        //     return a - b
-        //   })
-        //   await this.cache.set(cacheKey, nonces)
-        // } catch (error) {
-        //   accessLogger.error(`Starknet Rollback error: ${ error.message}`)
-        // }
         await sleep(1000);
         setStarknetLock(this.address.toLowerCase(), false);
       },
@@ -199,7 +185,7 @@ export class StarknetHelp {
         }
         return nonce;
     }
-  async getAvailableNonce(): Promise<Array<number>> {
+  async getAvailableNonce(): Promise<{ nonces: number[], isConsulNonce: boolean }> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
     if (nonces && nonces.length <= 5) {
@@ -227,9 +213,13 @@ export class StarknetHelp {
       return a - b
     })
       if (nonces.length) {
+          const n = nonces[0];
           nonces[0] = this.getConsulNonce(nonces[0]);
+          if (n !== nonces[0]) {
+              return { nonces, isConsulNonce: true };
+          }
       }
-    return nonces
+      return { nonces, isConsulNonce: false };
   }
   async signTransfer(params: {
     tokenAddress: string
