@@ -1,20 +1,17 @@
 import { appConfig, makerConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerList } from '../util/maker'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
-import {
-  jobBalanceAlarm,
-  jobGetWealths, watchStarknetAlarm,
-} from './jobs';
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
-import { watchConsulConfig } from "../config/consul";
+import { makerConfigs, watchConsulConfig } from "../config/consul";
 
 let smsTimeStamp = 0
 
 export async function waittingStartMaker() {
-  const makerList = await getMakerList()
+  const makerList: string[] = Array.from(new Set(
+      makerConfigs.map(item => item.sender.toLowerCase())
+  ));
   if (makerList.length === 0) {
     accessLogger.warn('none maker list')
     return
@@ -26,8 +23,7 @@ export async function waittingStartMaker() {
   while (startedIndexs.length < makerList.length) {
     const missPrivateKeyMakerAddresses: string[] = []
     for (let index = 0; index < makerList.length; index++) {
-      const item = makerList[index]
-      const makerAddress = item.makerAddress
+      const makerAddress = makerList[index]
       if (
         makerConfig.privateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
@@ -103,19 +99,11 @@ export const startMasterJobs = async () => {
 
   // pull makerList
 
-  // dashboard
-  if (['dashboard', 'all', undefined, ''].indexOf(scene) !== -1) {
-    // get wealths
-    jobGetWealths()
-
-    jobBalanceAlarm()
-  }
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     await watchConsulConfig();
-    // waittingStartMaker()
+    waittingStartMaker()
     startNewMakerTrxPull()
-    watchStarknetAlarm()
   }
 }
 

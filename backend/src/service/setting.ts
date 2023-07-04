@@ -6,8 +6,6 @@ import { SystemSetting } from '../model/system_setting'
 import { sleep } from '../util'
 import { Core } from '../util/core'
 import { accessLogger, errorLogger } from '../util/logger'
-import { getMakerAddresses } from './maker'
-import { getWealths } from './maker_wealth'
 
 type BalanceAlarm = {
   chainId: number
@@ -78,44 +76,6 @@ export async function getSettingValueJson(setting_key: string) {
   return json
 }
 
-export async function getBalanceAlarms(makerAddress: string) {
-  const wealthsChains = await getWealths(makerAddress)
-  const balanceAlarms: BalanceAlarm[] = []
-
-  const settingValue: BalanceAlarm[] | undefined = await getSettingValueJson(
-    `${BALANCE_ALARM_KEY}_${makerAddress}`
-  )
-
-  for (const item of wealthsChains) {
-    const balanceAlarm: BalanceAlarm = {
-      chainId: item.chainId,
-      chainName: item.chainName,
-      makerAddress: item.makerAddress,
-      baselines: [],
-    }
-
-    for (const item1 of item.balances) {
-      // Default use DEFAULT_BALANCE_ALARM_BASELINE, When settingValue has value, use it
-      let value = getTargetBaseline(
-        item.chainId,
-        item1.tokenAddress,
-        settingValue
-      )
-
-      balanceAlarm.baselines.push({
-        tokenAddress: item1.tokenAddress,
-        tokenName: item1.tokenName,
-        value,
-        balance: item1.value,
-      })
-    }
-
-    balanceAlarms.push(balanceAlarm)
-  }
-
-  return balanceAlarms
-}
-
 export async function saveBalanceAlarms(
   makerAddress: string,
   value: BalanceAlarm[]
@@ -157,109 +117,3 @@ type DoBalanceAlarmItem = {
   tokenName: string
   balance: number
 }
-export const doBalanceAlarm = new (class {
-  prevList: DoBalanceAlarmItem[] = []
-
-  async do() {
-    const doList: DoBalanceAlarmItem[] = []
-    const onCompared = (
-      doBalanceAlarmItem: DoBalanceAlarmItem,
-      baseline: number
-    ) => {
-      if (doBalanceAlarmItem.balance < baseline) {
-        const index = this.prevList.findIndex(
-          (item) =>
-            item.chainId == doBalanceAlarmItem.chainId &&
-            item.tokenAddress == doBalanceAlarmItem.tokenAddress
-        )
-        if (index == -1) {
-          doList.push(doBalanceAlarmItem)
-        }
-      }
-    }
-    this.prevList = await this.list(onCompared)
-
-    const alerts: any[] = []
-    for (const item of doList) {
-      alerts.push({
-        labels: {
-          alertname: 'Not enough balance',
-          instance: `${item.chainName}-${item.tokenName
-            }: ${item.balance.toFixed(6)}`,
-          serverity: 'critical',
-        },
-      })
-    }
-
-    // Post to alertmanager
-    const postToAlertmanager = async (total = 0) => {
-      if (alerts.length < 1) {
-        return
-      }
-
-      try {
-        accessLogger.info('postToAlertmanager: ', JSON.stringify(alerts))
-
-        const url = `${prometheusConfig.alertmanager.api}/api/v2/alerts`
-        await axios.post(url, alerts, {
-          headers: { 'Content-Type': 'application/json' },
-        })
-      } catch (err) {
-        errorLogger.error(`ToAlertmanager faild: ${err.message}`)
-
-        // Await some time, retry
-        if (total < 5) {
-          await sleep(5000)
-          postToAlertmanager(total + 1)
-        }
-      }
-    }
-    postToAlertmanager()
-  }
-
-  async list(
-    onCompared?: (
-      doBalanceAlarmItem: DoBalanceAlarmItem,
-      baseline: number
-    ) => void
-  ) {
-    const makerAddresses = await getMakerAddresses()
-
-    const list: DoBalanceAlarmItem[] = []
-    for (const item of makerAddresses) {
-      const wealths = await getWealths(item)
-
-      const settingValue: BalanceAlarm[] | undefined =
-        await getSettingValueJson(`${BALANCE_ALARM_KEY}_${item}`)
-
-      for (const item1 of wealths) {
-        for (const item2 of item1.balances) {
-          const baseline = getTargetBaseline(
-            item1.chainId,
-            item2.tokenAddress,
-            settingValue
-          )
-          const balance = Number(item2.value)
-          const doBalanceAlarmItem: DoBalanceAlarmItem = {
-            makerAddress: item,
-            chainId: item1.chainId,
-            chainName: item1.chainName,
-            tokenAddress: item2.tokenAddress,
-            tokenName: item2.tokenName,
-            balance,
-          }
-
-          // Call onCompared
-          onCompared && onCompared(doBalanceAlarmItem, baseline)
-
-          // When balance isNaN, invaild value, ignore it
-          if (!Number.isNaN(balance)) {
-            balance < baseline && list.push(doBalanceAlarmItem)
-          }
-        }
-      }
-    }
-
-    return list
-  }
-})()

@@ -3,9 +3,6 @@ import schedule from 'node-schedule'
 import { accessLogger, errorLogger } from '../util/logger';
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
-import * as serviceMakerWealth from '../service/maker_wealth'
-import { doBalanceAlarm } from '../service/setting'
-import { Core } from '../util/core'
 import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
 import { makerConfig } from "../config";
@@ -99,44 +96,6 @@ class MJobPessimism extends MJob {
   }
 }
 
-export function jobGetWealths() {
-  const callback = async () => {
-    const makerAddresses = await serviceMaker.getMakerAddresses()
-    for (const item of makerAddresses) {
-      const wealths = await serviceMakerWealth.getWealths(item)
-
-      Core.memoryCache.set(
-        `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${item}`,
-        wealths,
-        100000
-      )
-
-      await serviceMakerWealth.saveWealths(wealths)
-    }
-  }
-
-  new MJobPessimism('* */60 * * * *', callback, jobGetWealths.name).schedule()
-}
-
-const jobMakerNodeTodoMakerAddresses: string[] = []
-export function jobMakerNodeTodo(makerAddress: string) {
-  // Prevent multiple makerAddress
-  if (jobMakerNodeTodoMakerAddresses.indexOf(makerAddress) > -1) {
-    return
-  }
-  jobMakerNodeTodoMakerAddresses.push(makerAddress)
-
-  const callback = async () => {
-    await serviceMaker.runTodo(makerAddress)
-  }
-
-  new MJobPessimism(
-    '*/10 * * * * *',
-    callback,
-    jobMakerNodeTodo.name
-  ).schedule()
-}
-
 export function jobCacheCoinbase() {
   const callback = async () => {
     await coinbase.cacheExchangeRates()
@@ -147,14 +106,6 @@ export function jobCacheCoinbase() {
     callback,
     jobCacheCoinbase.name
   ).schedule()
-}
-
-export function jobBalanceAlarm() {
-  const callback = async () => {
-    await doBalanceAlarm.do()
-  }
-
-  new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
 
 let alarmMsgMap = {};
@@ -357,7 +308,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
-  const makerDataList: { makerAddress: string, chainId: string, symbol: string }[] = [];
+  const makerDataList: { makerAddress: string, chainId: number, symbol: string }[] = [];
   for (const data of chainMakerList) {
     if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
       continue;

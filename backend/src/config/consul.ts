@@ -1,12 +1,12 @@
 import Consul, { KvPair } from 'consul';
 import { chains } from "orbiter-chaincore/src/utils";
 import { errorLogger, accessLogger } from "../util/logger";
-import { IChainCfg, IMaker, IMakerCfg, IMakerDataCfg } from "../util/maker/maker_list";
-import mk from "../util/maker/maker_list";
 import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
 import { batchTxSend } from "../schedule/jobs";
 import { validateAndParseAddress } from "starknet";
+import { IMarket } from "../util/maker/new_maker";
+import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -18,6 +18,8 @@ export const consul = process.env["CONSUL_HOST"]
         },
     })
     : null;
+
+export let makerConfigs: IMarket[] = [];
 
 export async function watchConsulConfig() {
     console.log("======== consul config init begin ========");
@@ -159,14 +161,9 @@ function updateTradingPairs(makerAddress: string, config: any) {
 
 function refreshConfig() {
     try {
-        const res = convertMakerList(consulConfig.chain, consulConfig.tradingPairs);
-        if (res.code === 0) {
-            mk.makerList = res.makerList;
-        } else {
-            errorLogger.error(res.msg);
-        }
+        makerConfigs = convertMakerConfig(consulConfig.chain, consulConfig.tradingPairs);
     } catch (e) {
-        errorLogger.error(e.message);
+        errorLogger.error(`refreshConfig error ${e.message}`);
     }
 }
 
@@ -257,169 +254,90 @@ export function convertChainConfig(env_prefix: string, chainList: any[]): any[] 
     return JSON.parse(JSON.stringify(chainList));
 }
 
-export function convertMakerList(chainList: IChainCfg[], makerCfg: IMakerCfg): { code: number, msg: string, makerList: IMaker[] } {
-    const v1makerList: any[] = [];
-    const noMatchMap: any = {};
-
-    for (const chain of chainList) {
-        if (chain.tokens && chain.nativeCurrency) {
-            chain.tokens.push(chain.nativeCurrency);
-        }
-    }
-    for (const makerAddress in makerCfg) {
-        const makerMap = makerCfg[makerAddress];
+export function convertMakerConfig(list: IChainCfg[], makerCfgMap: IMakerCfg): IMarket[] {
+    const chainList: IChainCfg[] = JSON.parse(JSON.stringify(list));
+    const configs: IMarket[] = [];
+    for (const makerAddress in makerCfgMap) {
+        const makerMap = makerCfgMap[makerAddress];
         for (const chainIdPair in makerMap) {
             if (!makerMap.hasOwnProperty(chainIdPair)) continue;
             const symbolPairMap = makerMap[chainIdPair];
             const [fromChainId, toChainId] = chainIdPair.split("-");
             const c1Chain = chainList.find(item => +item.internalId === +fromChainId);
             const c2Chain = chainList.find(item => +item.internalId === +toChainId);
-            if (!c1Chain) {
-                noMatchMap[fromChainId] = {};
-                continue;
-            }
-            if (!c2Chain) {
-                noMatchMap[toChainId] = {};
-                continue;
-            }
+            if (!c1Chain || !c2Chain) continue;
             for (const symbolPair in symbolPairMap) {
                 if (!symbolPairMap.hasOwnProperty(symbolPair)) continue;
                 const makerData: IMakerDataCfg = symbolPairMap[symbolPair];
                 const [fromChainSymbol, toChainSymbol] = symbolPair.split("-");
-                // handle v1makerList
-                if (fromChainSymbol === toChainSymbol) {
-                    makerData.makerAddress = makerAddress;
-                    handleV1MakerList(makerMap, symbolPair, fromChainSymbol, toChainId, fromChainId, c1Chain, c2Chain, makerData);
+                const fromTokenList = c1Chain.nativeCurrency ? [c1Chain.nativeCurrency, ...c1Chain.tokens] : [...c1Chain.tokens];
+                const toTokenList = c2Chain.nativeCurrency ? [c2Chain.nativeCurrency, ...c2Chain.tokens] : [...c2Chain.tokens];
+                const fromToken = fromTokenList.find(item => item.symbol === fromChainSymbol);
+                const toToken = toTokenList.find(item => item.symbol === toChainSymbol);
+                if (!fromToken || !toToken) continue;
+                // verify xvm
+                if (fromToken.symbol !== toToken.symbol && (!c1Chain.xvmList || !c1Chain.xvmList.length)) {
+                    console.log(
+                        `${c1Chain.internalId}-${fromToken.symbol}:${c2Chain.internalId}-${toToken.symbol} not support xvm`,
+                    );
                 }
-            }
-        }
-    }
-
-    function handleV1MakerList(
-        makerMap: any,
-        symbolPair: string,
-        symbol: string,
-        toChainId: string,
-        fromChainId: string,
-        c1Chain: IChainCfg,
-        c2Chain: IChainCfg,
-        c1MakerData: IMakerDataCfg,
-    ) {
-        // duplicate removal
-        if (v1makerList.find(item => item.c1ID === +toChainId && item.c2ID === +fromChainId && item.tName === symbol)) {
-            return;
-        }
-        const c1Token = c1Chain.tokens.find(item => item.symbol === symbol);
-        const c2Token = c2Chain.tokens.find(item => item.symbol === symbol);
-        if (!c1Token) {
-            noMatchMap[fromChainId] = noMatchMap[fromChainId] || {};
-            noMatchMap[fromChainId][symbol] = 1;
-            return;
-        }
-        if (!c2Token) {
-            noMatchMap[toChainId] = noMatchMap[toChainId] || {};
-            noMatchMap[toChainId][symbol] = 1;
-            return;
-        }
-        // single
-        const singleList = [4, 44];
-
-        // reverse chain data
-        const reverseChainIdPair = `${toChainId}-${fromChainId}`;
-        if (!makerMap.hasOwnProperty(reverseChainIdPair)) {
-            if (singleList.find(item => +item === +toChainId || +item === +fromChainId)) {
-                makerMap[reverseChainIdPair] = makerMap[reverseChainIdPair] || {};
-                makerMap[reverseChainIdPair][symbolPair] = JSON.parse(JSON.stringify(c1MakerData));
-                // console.log("single --->", reverseChainIdPair, symbolPair);
-            } else {
-                return;
-            }
-        }
-        const reverseSymbolPairMap = makerMap[reverseChainIdPair];
-        if (!reverseSymbolPairMap.hasOwnProperty(symbolPair)) {
-            if (singleList.find(item => +item === +toChainId || +item === +fromChainId)) {
-                makerMap[reverseChainIdPair] = makerMap[reverseChainIdPair] || {};
-                makerMap[reverseChainIdPair][symbolPair] = JSON.parse(JSON.stringify(c1MakerData));
-                // console.log("single --->", reverseChainIdPair, symbolPair);
-            } else {
-                return;
-            }
-        }
-        const c2MakerData: IMakerDataCfg = reverseSymbolPairMap[symbolPair];
-        const chainNameMap = {
-            5: "goerli",
-            44: "starknet_test",
+                const chainNameMap = {
+                    5: "goerli",
+                    44: "starknet_test",
 
 
-            1: "mainnet",
-            2: "arbitrum",
-            3: "zksync",
-            4: "starknet",
-            6: "polygon",
-            7: "optimism",
-            8: "immutableX",
-            9: "loopring",
-            10: "metis",
-            11: "dydx",
-            12: "zkspace",
-            13: "boba",
-            14: "zksync2",
-            15: "bnbchain",
-            16: "arbitrum_nova",
-            17: "polygon_evm",
-        };
-        if (!chainNameMap[+fromChainId]) {
-            // console.log(`FromChainId error ${fromChainId}`)
-            // throw new Error(`FromChainId error ${fromChainId}`);
-            return
-        }
-        if (!chainNameMap[+toChainId]) {
-            // throw new Error(`ToChainId error ${toChainId}`);
-            return
-        }
-        if (c1MakerData.sender === c2MakerData.sender || Number(fromChainId) == 4 || Number(fromChainId) == 44) {
-            v1makerList.push({
-                makerAddress: c1MakerData.sender.toLowerCase(),
-                c1ID: +fromChainId,
-                c2ID: +toChainId,
-                c1Name: chainNameMap[+fromChainId],
-                c2Name: chainNameMap[+toChainId],
-                // c1Name: c1Chain.name,
-                // c2Name: c2Chain.name,
-                t1Address: c1Token.address.toLowerCase(),
-                t2Address: c2Token.address.toLowerCase(),
-                tName: symbol,
-                c1MinPrice: c1MakerData.minPrice,
-                c1MaxPrice: c1MakerData.maxPrice,
-                c2MinPrice: c2MakerData.minPrice,
-                c2MaxPrice: c2MakerData.maxPrice,
-                precision: c1Token.decimals,
-                c1TradingFee: c1MakerData.tradingFee,
-                c2TradingFee: c2MakerData.tradingFee,
-                c1GasFee: c1MakerData.gasFee,
-                c2GasFee: c2MakerData.gasFee,
-                c1AvalibleDeposit: 1000,
-                c2AvalibleDeposit: 1000,
-                c1AvalibleTimes: [
-                    {
-                        startTime: c1MakerData.startTime,
-                        endTime: c1MakerData.endTime,
+                    1: "mainnet",
+                    2: "arbitrum",
+                    3: "zksync",
+                    4: "starknet",
+                    6: "polygon",
+                    7: "optimism",
+                    8: "immutableX",
+                    9: "loopring",
+                    10: "metis",
+                    11: "dydx",
+                    12: "zkspace",
+                    13: "boba",
+                    14: "zksync2",
+                    15: "bnbchain",
+                    16: "arbitrum_nova",
+                    17: "polygon_evm",
+                };
+                if (!chainNameMap[+fromChainId] || !chainNameMap[+toChainId]) {
+                    console.log(`convertMakerConfig chainId error ${fromChainId} ${toChainId}`)
+                    // throw new Error(`FromChainId error ${fromChainId}`);
+                    continue
+                }
+                // handle makerConfigs
+                configs.push({
+                    id: "",
+                    makerId: "",
+                    ebcId: "",
+                    slippage: makerData.slippage || 0,
+                    recipient: makerData.makerAddress,
+                    sender: makerData.sender,
+                    tradingFee: makerData.tradingFee,
+                    gasFee: makerData.gasFee,
+                    fromChain: {
+                        id: +fromChainId,
+                        name: chainNameMap[+fromChainId],
+                        tokenAddress: fromToken.address,
+                        symbol: fromChainSymbol,
+                        decimals: fromToken.decimals,
+                        minPrice: makerData.minPrice,
+                        maxPrice: makerData.maxPrice,
                     },
-                ],
-                c2AvalibleTimes: [
-                    {
-                        startTime: c2MakerData.startTime,
-                        endTime: c2MakerData.endTime,
+                    toChain: {
+                        id: +toChainId,
+                        name: chainNameMap[+toChainId],
+                        tokenAddress: toToken.address,
+                        symbol: toChainSymbol,
+                        decimals: toToken.decimals,
                     },
-                ],
-            });
+                    times: [makerData.startTime, makerData.endTime]
+                });
+            }
         }
     }
-
-    if (Object.keys(noMatchMap).length) {
-        console.log(`Maker list convert match error ${JSON.stringify(noMatchMap)}`)
-        // return { code: 1, msg: `Maker list convert match error ${JSON.stringify(noMatchMap)}`, makerList: [] };
-    }
-
-    return { code: 0, msg: 'success', makerList: v1makerList };
+    return configs;
 }
