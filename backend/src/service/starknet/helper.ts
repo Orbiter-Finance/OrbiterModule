@@ -216,7 +216,8 @@ export class StarknetHelp {
           const n = nonces[0];
           nonces[0] = this.getConsulNonce(nonces[0]);
           if (n !== nonces[0]) {
-              return { nonces, isConsulNonce: true };
+              const newNonce = nonces[0];
+              return { nonces: [newNonce, newNonce + 1, newNonce + 2, newNonce + 3, newNonce + 4, newNonce + 5], isConsulNonce: true };
           }
       }
       return { nonces, isConsulNonce: false };
