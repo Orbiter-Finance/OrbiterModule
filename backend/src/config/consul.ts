@@ -7,6 +7,7 @@ import { batchTxSend } from "../schedule/jobs";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
+import replySender from './reply_sender.ts'
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -148,6 +149,10 @@ function updateChain(config: any) {
 }
 
 function updateTradingPairs(makerAddress: string, config: any) {
+    if (!replySender.find(item => item.toLowerCase() === makerAddress.toLowerCase())) {
+        accessLogger.info(`${makerAddress} maker does not belong to this server`);
+        return;
+    }
     if (config && Object.keys(config).length) {
         if (consulConfig.tradingPairs[makerAddress]) {
             compare(consulConfig.tradingPairs[makerAddress], config, function (msg) {
