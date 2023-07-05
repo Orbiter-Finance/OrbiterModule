@@ -148,10 +148,10 @@ export class StarknetHelp {
       return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
-    let { nonces, isConsulNonce } = await this.getAvailableNonce();
+    let nonces = await this.getAvailableNonce();
     const takeNonce = nonces.splice(0, 1)[0]
     const networkLastNonce = await this.getNetworkNonce()
-    if (!isConsulNonce && Number(takeNonce) < Number(networkLastNonce)) {
+    if (Number(takeNonce) < Number(networkLastNonce)) {
       const cacheKey = `nonces:${this.address.toLowerCase()}`
       accessLogger.info(
         `The network nonce is inconsistent with the local, and a reset is requested ${takeNonce}<${networkLastNonce}`
@@ -185,7 +185,7 @@ export class StarknetHelp {
         }
         return nonce;
     }
-  async getAvailableNonce(): Promise<{ nonces: number[], isConsulNonce: boolean }> {
+  async getAvailableNonce(): Promise<number[]> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
     if (nonces && nonces.length <= 5) {
@@ -217,10 +217,12 @@ export class StarknetHelp {
           nonces[0] = this.getConsulNonce(nonces[0]);
           if (n !== nonces[0]) {
               const newNonce = nonces[0];
-              return { nonces: [newNonce, newNonce + 1, newNonce + 2, newNonce + 3, newNonce + 4, newNonce + 5], isConsulNonce: true };
+              const newNonceList = [newNonce, newNonce + 1, newNonce + 2, newNonce + 3, newNonce + 4, newNonce + 5];
+              accessLogger.info(`new nonce list ${JSON.stringify(newNonceList)}`);
+              return newNonceList;
           }
       }
-      return { nonces, isConsulNonce: false };
+      return nonces;
   }
   async signTransfer(params: {
     tokenAddress: string

@@ -7,7 +7,7 @@ import { batchTxSend } from "../schedule/jobs";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
-import replySender from './reply_sender.ts'
+import replySender from './reply_sender'
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
@@ -204,7 +204,7 @@ function updateNonce(makerAddress: string, chainId: number, nonce: number) {
         return;
     }
     consulConfig.nonce[makerAddress][chainId] = nonce;
-    accessLogger.info(`update ${makerAddress} ${chainId} nonce success`);
+    accessLogger.info(`update ${makerAddress} ${chainId} nonce success, new nonce: ${nonce}`);
 }
 
 function compare(obj1: any, obj2: any, cb: Function, superKey?: string) {
