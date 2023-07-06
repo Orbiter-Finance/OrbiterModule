@@ -25,8 +25,8 @@ export let makerConfigs: IMarket[] = [];
 export async function watchConsulConfig() {
     console.log("======== consul config init begin ========");
     const keys = [
-        ...(await consul.kv.keys("maker/rule/config/common")),
-        ...(await consul.kv.keys("maker/rule/config/maker")),
+        ...(await consul.kv.keys("common")),
+        ...(await consul.kv.keys("maker")),
     ];
     for (const key of keys) {
         try {
@@ -50,8 +50,8 @@ async function watchMakerConfig(key: string) {
             accessLogger.info(`Configuration updated: ${data.Key}`);
             if (data.Value) {
                 try {
-                    if (key.indexOf("maker/rule/config/maker/nonce") !== -1) {
-                        const makerAddress_chain = key.split("maker/rule/config/maker/nonce/")[1];
+                    if (key.indexOf("maker/nonce") !== -1) {
+                        const makerAddress_chain = key.split("maker/nonce/")[1];
                         const arr = makerAddress_chain.split('/');
                         if (arr.length !== 2) {
                             errorLogger.error(`watch maker length error, length: ${arr.length} ${makerAddress_chain}`);
@@ -88,16 +88,16 @@ async function watchMakerConfig(key: string) {
                         updateNonce(makerAddress.toLowerCase(), Number(chainId), Number(nonce));
                     }
                     const config = JSON.parse(data.Value);
-                    if (key === "maker/rule/config/common/chain.json") {
+                    if (key === "common/chain.json") {
                         updateChain(config);
                     }
-                    if (key.indexOf("maker/rule/config/common/trading-pairs") !== -1) {
-                        updateTradingPairs(key.split("maker/rule/config/common/trading-pairs/")[1], config);
+                    if (key.indexOf("common/trading-pairs") !== -1) {
+                        updateTradingPairs(key.split("common/trading-pairs/")[1], config);
                     }
-                    if (key === "maker/rule/config/maker/maker.json") {
+                    if (key === "maker/maker.json") {
                         updateMaker(config);
                     }
-                    if (key === "maker/rule/config/maker/starknet.json") {
+                    if (key === "maker/starknet.json") {
                         updateStarknet(config);
                     }
                     resolve(config);
