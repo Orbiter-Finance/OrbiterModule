@@ -1,4 +1,3 @@
-import maker from "../src/util/maker/maker.json";
 import chains from "./chain.json";
 import { IMakerDataCfg } from "../src/util/interface";
 import { v2MakerList } from "./makerList";
