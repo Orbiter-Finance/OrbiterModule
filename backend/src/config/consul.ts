@@ -23,6 +23,27 @@ export const consul = process.env["CONSUL_HOST"]
 export let makerConfigs: IMarket[] = [];
 
 export async function watchConsulConfig() {
+    const consulServerName = `Maker-${replySender.length ?
+        (replySender.find(item => new RegExp(/^0x[a-fA-F0-9]{40}$/).test(item)) || replySender[0]) : 'ALL'}`;
+    await consul.agent.check.register({
+        name: consulServerName,
+        ttl: "60s",
+        notes: consulServerName,
+    });
+
+    async function checkConsul() {
+        try {
+            consul.agent.check.pass(consulServerName);
+        } catch (e) {
+            errorLogger.error(`consul agent check pass error ${e.message}`);
+        }
+    }
+
+    await checkConsul();
+
+    setInterval(async () => {
+        await checkConsul();
+    }, 50000);
     console.log("======== consul config init begin ========");
     const keys = [
         ...(await consul.kv.keys("common")),
@@ -92,7 +113,7 @@ async function watchMakerConfig(key: string) {
                         updateChain(config);
                     }
                     if (key.indexOf("common/trading-pairs") !== -1) {
-                        updateTradingPairs(key.split("common/trading-pairs/")[1], config);
+                        updateTradingPairs(key.split("common/trading-pairs/")[1].trim(), config);
                     }
                     if (key === "maker/maker.json") {
                         updateMaker(config);
