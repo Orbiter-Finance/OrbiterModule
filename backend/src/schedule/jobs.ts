@@ -22,6 +22,7 @@ import { doSms } from "../sms/smsSchinese";
 import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
+import { EVMAccount } from "../service/evmAccount";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -156,7 +157,7 @@ export function jobBalanceAlarm() {
   new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
 }
 
-let alarmMsgMap = {};
+export let alarmMsgMap = {};
 let balanceWaringTime = 0;
 // Alarm interval duration(second)
 let waringInterval = 180;
@@ -168,7 +169,7 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 let cron;
 
-export async function batchTxSend(chainIdList = [4, 44]) {
+export async function batchTxSend(chainIdList = [4, 44, 22, 522]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         const sn = async () => {
@@ -349,19 +350,26 @@ export async function batchTxSend(chainIdList = [4, 44]) {
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
-  const makerDataList: { makerAddress: string, chainId: string, symbol: string }[] = [];
+  const makerDataList: { makerAddress: string, chainId: string, symbol: string, tokenAddress: string }[] = [];
   for (const data of chainMakerList) {
     if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
       continue;
     }
-    makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol });
+    makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol, tokenAddress: data.toChain.tokenAddress });
   }
   // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
   await sleep(5000);
-  for (let i = 0; i < makerDataList.length; i++) {
-    const maker = makerDataList[i];
-    makerSend(maker.makerAddress, maker.chainId);
-  }
+    for (let i = 0; i < makerDataList.length; i++) {
+        const maker = makerDataList[i];
+        const chainId = maker.chainId;
+        if (Number(chainId) === 4 || Number(chainId) === 44) {
+            makerSend(maker.makerAddress, maker.chainId);
+        } else if (Number(chainId) === 22 || Number(chainId) === 522) {
+            const privateKey = makerConfig.privateKeys[maker.makerAddress.toLowerCase()];
+            const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
+            await evmAccount.startJob()
+        }
+    }
   watchStarknetAlarm();
 }
 
