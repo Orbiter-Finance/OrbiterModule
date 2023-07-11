@@ -20,7 +20,9 @@ const MAX_BITS: any = {
   arbitrum_nova: 256,
   polygon_zkevm: 256,
   scroll_l1_test: 256,
-  scroll_l2_test: 256
+  scroll_l2_test: 256,
+  linea: 23,
+  linea_test: 523,
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
@@ -57,6 +59,8 @@ export const CHAIN_INDEX: any = {
   517: "polygon_zkevm",
   518: "scroll_l1_test",
   519: "scroll_l2_test",
+  23: 'linea',
+  523: "linea_test",
   599: "orbiter",
 };
 

@@ -169,7 +169,7 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 let cron;
 
-export async function batchTxSend(chainIdList = [4, 44, 22, 522]) {
+export async function batchTxSend(chainIdList = [4, 44, 23, 523]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         const sn = async () => {
@@ -364,7 +364,7 @@ export async function batchTxSend(chainIdList = [4, 44, 22, 522]) {
         const chainId = maker.chainId;
         if (Number(chainId) === 4 || Number(chainId) === 44) {
             makerSend(maker.makerAddress, maker.chainId);
-        } else if (Number(chainId) === 22 || Number(chainId) === 522) {
+        } else if (Number(chainId) === 23 || Number(chainId) === 523) {
             const privateKey = makerConfig.privateKeys[maker.makerAddress.toLowerCase()];
             const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
             await evmAccount.startJob()

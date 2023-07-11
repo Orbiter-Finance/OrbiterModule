@@ -327,7 +327,7 @@ export async function sendConsumer(value: any) {
   }
 
   // linea
-  if (chainID == 22 || chainID == 522) {
+  if (chainID == 23 || chainID == 523) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
     const evmAccount = new EVMAccount(chainID, tokenAddress, privateKey);
     const queueList = await evmAccount.getTask();

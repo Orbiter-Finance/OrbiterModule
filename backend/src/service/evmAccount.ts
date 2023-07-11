@@ -79,7 +79,7 @@ export class EVMAccount {
                 decode: JSON.parse, // deserialize function
             }),
         });
-        const isErc20 = this.chainConfig.nativeCurrency.tokenAddress.toLowerCase() !== tokenAddress.toLowerCase();
+        const isErc20 = this.chainConfig.nativeCurrency.address.toLowerCase() !== tokenAddress.toLowerCase();
         this.lockKey = this.address;
         this.txKey = `${this.address}_${this.chainConfig.internalId}_${isErc20 ? 'ERC20' : 'Main'}`;
     }
@@ -420,7 +420,7 @@ export class EVMAccount {
         const chainId = this.chainConfig.internalId;
         let taskList = await this.getTask();
         if (!taskList || !taskList.length) {
-            this.logger.log(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
+            this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
             return { code: 1 };
         }
 
@@ -600,9 +600,7 @@ export class EVMAccount {
 
         // watch send interval
         async function watchCron() {
-            const data: IJobParams = await readLogJson(`limit.json`, `evm/${_this.chainConfig.internalId}/limit`, {
-                waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount, sendInterval
-            });
+            const data: IJobParams = await _this.getVariableConfig();
             if (sendInterval !== data.sendInterval) {
                 if (cronMap[txKey]) {
                     clearInterval(cronMap[txKey]);
