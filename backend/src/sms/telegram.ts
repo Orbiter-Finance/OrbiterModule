@@ -28,7 +28,7 @@ export default class Telegram {
             const result = await axios.post(url,requestData, { timeout: 30000 })
             return result;
         } catch (error) {
-            console.error("Error sending to Telegram", error);
+            console.error("Error sending to Telegram", error.message);
             throw error;
         }
     }

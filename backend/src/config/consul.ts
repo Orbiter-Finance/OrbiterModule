@@ -1,6 +1,6 @@
 import Consul, { KvPair } from 'consul';
 import { chains } from "orbiter-chaincore/src/utils";
-import { errorLogger, accessLogger } from "../util/logger";
+import { LoggerService } from "../util/logger";
 import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
 import { batchTxSend } from "../schedule/jobs";
@@ -8,7 +8,9 @@ import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
 import replySender from './reply_sender'
-
+const logger = LoggerService.getLogger("config")
+const accessLogger = logger
+const errorLogger = logger
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
         host: process.env["CONSUL_HOST"],

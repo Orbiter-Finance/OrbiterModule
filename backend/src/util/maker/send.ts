@@ -25,7 +25,7 @@ import { getMarket } from '../../service/maker';
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
-import { accessLogger, errorLogger, getLoggerService } from '../logger'
+import { accessLogger, errorLogger, LoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, IMarket, transfers } from './new_maker';
@@ -109,7 +109,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       }
       return gasPrice
     } catch (error) {
-      getLoggerService(toChain).info(`gasPrice error ${error.message}`)
+      LoggerService.getLogger(toChain).info(`gasPrice error ${error.message}`)
       if (toChain == "polygon" || toChain == "polygon_test") {
         return Web3.utils.toHex(200000000000);
       }
@@ -137,7 +137,7 @@ export async function sendConsumer(value: any) {
     ownerAddress,
     transactionID
   } = value;
-  const accessLogger = getLoggerService(chainID)
+  const accessLogger = LoggerService.getLogger(fromChainID, makerAddress, transactionID)
   const chainTransferMap = transfers.get(String(fromChainID))
   if (
     chainTransferMap?.has(transactionID)
@@ -1255,7 +1255,7 @@ async function send(
       lpMemo,
       ownerAddress,
     }
-    const accessLogger = getLoggerService(chainID)
+    const accessLogger = LoggerService.getLogger(makerAddress, toAddress, ownerAddress)
     sendQueue.produce(chainID, {
       value,
       callback: (error, result) => {

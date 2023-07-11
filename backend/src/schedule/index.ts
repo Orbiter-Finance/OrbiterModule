@@ -5,6 +5,7 @@ import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
 import { makerConfigs, watchConsulConfig } from "../config/consul";
+import {extractMessageInAxiosError } from "../util/tools";
 
 let smsTimeStamp = 0
 
@@ -54,7 +55,7 @@ export async function waittingStartMaker() {
         try {
           doSms(alert)
           telegramBot.sendMessage(alert).catch(error => {
-            accessLogger.error(`send telegram message error ${error.stack}`);
+            accessLogger.error(`waittingStartMaker send telegram message error message:${extractMessageInAxiosError(error)} stack ${error.stack}`);
           })
           accessLogger.info(
             `sendNeedPrivateKeyMessage,   smsTimeStamp = ${nowTime}`
@@ -77,8 +78,7 @@ export async function waittingStartMaker() {
       }
 
       accessLogger.warn(
-        `Miss private keys!`,
-        `Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
+        `Miss private keys! Please run [curl -i -X POST -H 'Content-type':'application/json' -d '${JSON.stringify(
           curlBody
         )}' http://${appConfig.options.host}:${appConfig.options.port
         }/maker/privatekeys] set it`

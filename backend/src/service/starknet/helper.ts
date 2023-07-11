@@ -10,15 +10,14 @@ import { compileCalldata } from 'starknet/dist/utils/stark'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
-import { getLoggerService } from '../../util/logger'
+import { LoggerService } from '../../util/logger'
 import { readLogJson, sleep, writeLogJson } from '../../util';
 import fs from "fs";
 import path from "path";
 import { consulConfig } from "../../config/consul_store";
 
-const accessLogger = getLoggerService('4')
 
-export let starknetLockMap = {};
+export const starknetLockMap = {};
 
 export function setStarknetLock(makerAddress: string, status: boolean) {
   starknetLockMap[makerAddress.toLowerCase()] = status;
@@ -47,6 +46,7 @@ export class StarknetHelp {
   private cache: Keyv
   public account: Account
   private chainId:number
+  public accessLogger: LoggerService
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -73,6 +73,7 @@ export class StarknetHelp {
       address,
       ec.getKeyPair(this.privateKey)
     )
+    this.accessLogger = LoggerService.getLogger('StarknetHelp', address)
   }
   async transfer(tokenAddress: string, recipient: String, amount: string) {
     const abi = ERC20['abi']
@@ -87,7 +88,7 @@ export class StarknetHelp {
   async clearTask(taskList: any[], code: number) {
       const makerAddress = this.account.address.toLowerCase();
       if (starknetHelpLockMap[makerAddress]) {
-          accessLogger.info('Task is lock, wait for 100 ms');
+          this.accessLogger.info('Task is lock, wait for 100 ms');
           await sleep(100);
           await this.clearTask(taskList, code);
           return;
@@ -114,14 +115,14 @@ export class StarknetHelp {
               await writeLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear', cacheList);
           }
       } catch (e) {
-          accessLogger.error(`starknet clearTask error: ${e.message}`);
+          this.accessLogger.error(`starknet clearTask error: ${e.message}`);
       }
       starknetHelpLockMap[makerAddress] = false;
   }
   async pushTask(taskList: any[]) {
       const makerAddress = this.account.address.toLowerCase();
       if (starknetHelpLockMap[makerAddress]) {
-          accessLogger.info('Task is lock, wait for 100 ms');
+          this.accessLogger.info('Task is lock, wait for 100 ms');
           await sleep(100);
           await this.pushTask(taskList);
           return;
@@ -132,7 +133,7 @@ export class StarknetHelp {
           const newList: any[] = [];
           for (const task of taskList) {
               if (cacheList.find(item => item.params?.transactionID === task.params?.transactionID)) {
-                  accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
+                  this.accessLogger.error(`TransactionID already exists ${task.params.transactionID}`);
               } else {
                   task.count = (task.count || 0) + 1;
                   newList.push(task);
@@ -140,7 +141,7 @@ export class StarknetHelp {
           }
           txPool[makerAddress] = [...cacheList, ...newList];
       } catch (e) {
-          accessLogger.error(`starknet pushTask error: ${e.message}`);
+          this.accessLogger.error(`starknet pushTask error: ${e.message}`);
       }
       starknetHelpLockMap[makerAddress] = false;
   }
@@ -153,13 +154,13 @@ export class StarknetHelp {
     const networkLastNonce = await this.getNetworkNonce()
     if (Number(takeNonce) < Number(networkLastNonce)) {
       const cacheKey = `nonces:${this.address.toLowerCase()}`
-      accessLogger.info(
+      this.accessLogger.info(
         `The network nonce is inconsistent with the local, and a reset is requested ${takeNonce}<${networkLastNonce}`
       )
       await this.cache.set(cacheKey, [])
       return await this.takeOutNonce()
     }
-    accessLogger.info(
+    this.accessLogger.info(
       `getAvailableNonce takeNonce:${takeNonce},networkNonce:${networkLastNonce} starkNet_supportNoce:${JSON.stringify(
         nonces
       )}`
@@ -180,7 +181,7 @@ export class StarknetHelp {
         if (consulConfig.nonce[this.address.toLowerCase()] && consulConfig.nonce[this.address.toLowerCase()][this.chainId]) {
             const consulNonce = consulConfig.nonce[this.address.toLowerCase()][this.chainId];
             consulConfig.nonce[this.address.toLowerCase()][this.chainId] = 0;
-            accessLogger.info(`change to consul nonce ${nonce} --> ${consulNonce}`);
+            this.accessLogger.info(`change to consul nonce ${nonce} --> ${consulNonce}`);
             return consulNonce;
         }
         return nonce;
@@ -200,7 +201,7 @@ export class StarknetHelp {
         localLastNonce++
         nonces.push(localLastNonce)
       }
-      accessLogger.info(
+      this.accessLogger.info(
         `Generate starknet_getNetwork_nonce = ${networkLastNonce}, nonces: ${nonces}`
       )
       await this.cache.set(cacheKey, nonces)
@@ -218,7 +219,7 @@ export class StarknetHelp {
           if (n !== nonces[0]) {
               const newNonce = nonces[0];
               const newNonceList = [newNonce, newNonce + 1, newNonce + 2, newNonce + 3, newNonce + 4, newNonce + 5];
-              accessLogger.info(`new nonce list ${JSON.stringify(newNonceList)}`);
+              this.accessLogger.info(`new nonce list ${JSON.stringify(newNonceList)}`);
               return newNonceList;
           }
       }
@@ -255,10 +256,10 @@ export class StarknetHelp {
           response['status']
         )
       ) {
-        accessLogger.error(`Straknet Send After status error: ${response}`)
+        this.accessLogger.error(`Straknet Send After status error: ${response}`)
       }
     } catch (error) {
-      accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`)
+      this.accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`)
     }
     return {
       hash,
@@ -299,10 +300,10 @@ export class StarknetHelp {
                     response['status']
                 )
             ) {
-                accessLogger.error(`Straknet Send After status error: ${response}`);
+                this.accessLogger.error(`Straknet Send After status error: ${response}`);
             }
         } catch (error) {
-            accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
+            this.accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
         }
         return {
             hash,

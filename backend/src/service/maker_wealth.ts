@@ -7,7 +7,7 @@ import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerWealth } from '../model/maker_wealth'
 import { isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { LoggerService } from '../util/logger'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
 import ZKSpaceHelper from './zkspace/zkspace_help'
@@ -37,6 +37,7 @@ export async function getTokenBalance(
   tokenName: string
 ): Promise<string | undefined> {
   let value: string | undefined
+  const logger = LoggerService.getLogger(makerAddress, tokenAddress)
   try {
     switch (chainId) {
       case 3:
@@ -200,7 +201,7 @@ export async function getTokenBalance(
         break
     }
   } catch (error) {
-    errorLogger.error(
+    logger.error(
       `GetTokenBalance fail, chainId: ${chainId}, makerAddress: ${makerAddress},tokenAddress:${tokenAddress}, tokenName: ${tokenName}, error: ${error.message}`
       
     )

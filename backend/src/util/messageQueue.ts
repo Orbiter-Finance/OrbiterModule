@@ -3,6 +3,7 @@ import { accessLogger } from './logger';
 import dayjs from 'dayjs';
 import { doSms } from "../sms/smsSchinese";
 import { telegramBot } from "../sms/telegram";
+import {extractMessageInAxiosError} from '../util/tools'
 
 type Message = {
     id: string;
@@ -91,7 +92,7 @@ export class MessageQueue {
             }
             if (this.name == `chain:14` && this.size() >= 200 && Date.now() % 300 === 0) {
                 telegramBot.sendMessage(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`).catch(error => {
-                    accessLogger.error(`send telegram message error ${error.stack}`);
+                    accessLogger.error(`consumeQueue0 send telegram message error message:${extractMessageInAxiosError(error)} stack ${error.stack}`);
                 })
             }
             const timeout = Date.now() - this.lastConsumeTime;
@@ -100,7 +101,7 @@ export class MessageQueue {
                     const alert = `Warning:To ${this.name} last consumption ${(timeout / 1000).toFixed(0)} seconds, count:${this.size()}`;
                     doSms(alert)
                     telegramBot.sendMessage(alert).catch(error => {
-                        accessLogger.error(`send telegram message error ${error.stack}`);
+                        accessLogger.error(`consumeQueue1 send telegram message error message:${extractMessageInAxiosError(error)} stack ${error.stack}`);
                     })
                     this.lastDoSMS = Date.now();
                 }

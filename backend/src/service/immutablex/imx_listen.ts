@@ -1,6 +1,6 @@
 
 import { equalsIgnoreCase, sleep } from '../../util'
-import { accessLogger, errorLogger } from '../../util/logger'
+import { errorLogger, LoggerService } from '../../util/logger'
 import { IMXHelper, Transaction } from './imx_helper'
 type Filter = {
   from?: string
@@ -143,7 +143,8 @@ class IMXListen {
         this.transferConfirmationedHashs[transaction.hash] === undefined &&
         isConfirmed
       ) {
-        accessLogger.info(`Transaction [${transaction.hash}] was confirmed.`)
+        const logger = LoggerService.getLogger(transaction.hash)
+        logger.info(`Transaction [${transaction.hash}] was confirmed.`)
         callbacks &&
           callbacks.onConfirmation &&
           callbacks.onConfirmation(transaction)

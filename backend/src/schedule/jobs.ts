@@ -1,6 +1,6 @@
 import { chains } from 'orbiter-chaincore/src/utils';
 import schedule from 'node-schedule'
-import { accessLogger, errorLogger } from '../util/logger';
+import { LoggerService, accessLogger, errorLogger } from '../util/logger';
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
 import mainnetChains from '../config/chains.json'
@@ -20,6 +20,8 @@ import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
 import { consulConfig } from "../config/consul_store";
+import {extractMessageInAxiosError } from "../util/tools";
+
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -115,6 +117,7 @@ const sendCronMap = {};
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
+    const accessLogger = LoggerService.getLogger(makerAddress);
     const snCallback = async () => {
         const sn = async () => {
             if (starknetLockMap[makerAddress.toLowerCase()]) {
@@ -217,7 +220,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                         const alert: string = `starknet ${makerAddress} ${market.toChain.symbol} insufficient balance, ${needPay.toString()} > ${makerBalance.toString()}`;
                         doSms(alert);
                         telegramBot.sendMessage(alert).catch(error => {
-                            accessLogger.error(`send telegram message error ${error.stack}`);
+                            accessLogger.error(`batchTxSend send telegram message error message:${extractMessageInAxiosError(error)} stack ${error.stack}`);
                         });
                         balanceWaringTime = new Date().valueOf();
                     }
@@ -332,7 +335,7 @@ function watchStarknetAlarm() {
     cron = setInterval(() => {
         for (const key in alarmMsgMap) {
             telegramBot.sendMessage(`${key} ${(<string[]>alarmMsgMap[key]).join(',')}`).catch(error => {
-                accessLogger.error(`send telegram message error ${error.stack}`);
+                accessLogger.error(`watchStarknetAlarm send telegram message error message:${extractMessageInAxiosError(error)} stack ${error.stack}`);
             });
             doSms(`${key} count ${alarmMsgMap[key].length}`);
             delete alarmMsgMap[key];

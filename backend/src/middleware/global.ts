@@ -1,6 +1,6 @@
 import { Context, Next } from 'koa'
 import { ServiceError } from '../error/service'
-import { accessLogger } from '../util/logger'
+import { accessLogger, LoggerService } from '../util/logger'
 import { Restful } from '../util/restful'
 
 export default function () {
@@ -9,7 +9,7 @@ export default function () {
 
     // restful bind
     ctx.restful = new Restful(ctx)
-
+    ctx.logger = LoggerService.getLogger(ctx.path)
     try {
       await next()
     } catch (err) {
