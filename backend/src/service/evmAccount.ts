@@ -18,8 +18,10 @@ import { alarmMsgMap } from "../schedule/jobs";
 import { clearInterval } from "timers";
 import { Orbiter_Router_ABI } from "../config/ABI";
 
+// Ensure that cached data is not manipulated at the same time
+const taskLockMap = {};
 // To ensure that the same maker cannot send two transactions at the same time
-const evmLockMap = {};
+const jobLockMap = {};
 // Categorize trading pools according to transaction type
 const txPool: { [makerAddress_chainId: string]: any[] } = {};
 // Each transaction pool corresponds to a timer
@@ -153,15 +155,14 @@ export class EVMAccount {
 
     // code:0.Normal clearing 1.Abnormal clearing
     async clearTask(taskList: any[], code: number) {
-        const lockKey = this.lockKey;
         const txKey = this.txKey;
-        if (evmLockMap[lockKey]) {
-            this.logger.info(`${lockKey} task is lock, wait for 100 ms`);
+        if (taskLockMap[txKey]) {
+            this.logger.info(`${txKey} task is lock, wait for 100 ms`);
             await sleep(100);
             await this.clearTask(taskList, code);
             return;
         }
-        evmLockMap[lockKey] = true;
+        taskLockMap[txKey] = true;
         try {
             const allTaskList: any[] = await this.getTask();
             const leftTaskList = allTaskList.filter(task => {
@@ -185,19 +186,18 @@ export class EVMAccount {
         } catch (e) {
             this.logger.error(`clearTask error: ${e.message}`);
         }
-        evmLockMap[lockKey] = false;
+        taskLockMap[txKey] = false;
     }
 
     async pushTask(taskList: any[]) {
-        const lockKey = this.lockKey;
         const txKey = this.txKey;
-        if (evmLockMap[lockKey]) {
-            this.logger.info(`${lockKey} task is lock, wait for 100 ms`);
+        if (taskLockMap[txKey]) {
+            this.logger.info(`${txKey} task is lock, wait for 100 ms`);
             await sleep(100);
             await this.pushTask(taskList);
             return;
         }
-        evmLockMap[lockKey] = true;
+        taskLockMap[txKey] = true;
         try {
             const cacheList: any[] = await this.getTask();
             const newList: any[] = [];
@@ -213,7 +213,7 @@ export class EVMAccount {
         } catch (e) {
             this.logger.error(`pushTask error: ${e.message}`);
         }
-        evmLockMap[lockKey] = false;
+        taskLockMap[txKey] = false;
     }
 
     async getVariableConfig(): Promise<{
@@ -412,11 +412,11 @@ export class EVMAccount {
     private async job() {
         const makerAddress = this.address;
         const lockKey = this.lockKey;
-        if (evmLockMap[lockKey]) {
+        if (jobLockMap[lockKey]) {
             console.log(`${this.chainConfig.name} is lock, waiting for the end of the previous transaction`);
             return { code: 0 };
         }
-        evmLockMap[lockKey] = true;
+        jobLockMap[lockKey] = true;
         const chainId = this.chainConfig.internalId;
         let taskList = await this.getTask();
         if (!taskList || !taskList.length) {
@@ -559,7 +559,7 @@ export class EVMAccount {
                 params: paramsList[0],
                 paramsList
             });
-            evmLockMap[lockKey] = false;
+            jobLockMap[lockKey] = false;
         } catch (error) {
             this.logger.error(`${this.chainConfig.name} transfer fail: ${queueList.map(item => item.params?.transactionID)}`);
             await sendTxConsumeHandle({
@@ -588,10 +588,10 @@ export class EVMAccount {
                     const rs = await _this.job();
                     // code 0.complete or wait 1.interrupt
                     if (rs.code === 1) {
-                        evmLockMap[lockKey] = false;
+                        jobLockMap[lockKey] = false;
                     }
                 } catch (e) {
-                    evmLockMap[lockKey] = false;
+                    jobLockMap[lockKey] = false;
                     _this.logger.error(`${_this.chainConfig.name} job error: ${e.message}`);
                 }
                 await watchCron();
