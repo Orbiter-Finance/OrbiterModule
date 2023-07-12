@@ -80,9 +80,8 @@ export class EVMAccount {
                 decode: JSON.parse, // deserialize function
             }),
         });
-        const isErc20 = this.chainConfig.nativeCurrency.address.toLowerCase() !== tokenAddress.toLowerCase();
         this.lockKey = this.address;
-        this.txKey = `${this.address}_${this.chainConfig.internalId}_${isErc20 ? 'ERC20' : 'Main'}`;
+        this.txKey = `${this.address}_${this.chainConfig.internalId}_${tokenAddress.toLowerCase()}`;
     }
 
     refreshProvider() {
@@ -301,19 +300,24 @@ export class EVMAccount {
         }
     }
 
-    async send(toList: string[], valueList: string[], tokenAddressList: string[], preSend?: Function): Promise<ethers.providers.TransactionResponse | undefined> {
+    async send(toList: string[], valueList: string[], tokenAddress: string, preSend?: Function): Promise<ethers.providers.TransactionResponse | undefined> {
+        const isErc20Tx = tokenAddress.toLowerCase() !== this.chainConfig.nativeCurrency.address.toLowerCase();
         if (toList.length > 1) {
             // Erc20
-            const isErc20Tx = !!tokenAddressList.find(item => item.toLowerCase() !== this.chainConfig.nativeCurrency.address.toLowerCase());
             if (!isErc20Tx) {
                 this.logger.info(`${this.chainConfig.name} sent multi ====`);
                 return await this.transferMulti(toList, valueList, preSend);
+            } else {
+                this.logger.info(`${this.chainConfig.name} sent token multi ====`);
+                return await this.transferTokenMulti(toList, valueList, tokenAddress, preSend);
             }
         } else if (toList.length === 1) {
-            const isErc20Tx = tokenAddressList[0].toLowerCase() !== this.chainConfig.nativeCurrency.address.toLowerCase();
             if (!isErc20Tx) {
                 this.logger.info(`${this.chainConfig.name} sent one ====`);
                 return await this.transfer(toList[0], valueList[0], preSend);
+            } else {
+                this.logger.info(`${this.chainConfig.name} sent token one ====`);
+                return await this.transferToken(toList[0], valueList[0], tokenAddress, preSend);
             }
         }
         return undefined;
@@ -347,6 +351,66 @@ export class EVMAccount {
         const response = await this.provider.sendTransaction(signedTx);
         this.logger.info(`transfer sendTransaction txHash`, txHash);
         // this.logger.info(`transfer sendTransaction response`, JSON.stringify(response));
+        commit(nonce);
+        return response;
+    }
+
+    async transferToken(to: string, value: string, tokenAddress: string, preSend?: Function): Promise<ethers.providers.TransactionResponse | undefined> {
+        const ifa = new ethers.utils.Interface(Orbiter_Router_ABI);
+        const calldata = ifa.encodeFunctionData("transferToken", [
+            tokenAddress,
+            to,
+            value,
+        ]);
+
+        let contractAddress = '';
+        for (const address in this.chainConfig.router) {
+            if (this.chainConfig.router[address] === 'OrbiterRouterV3') {
+                contractAddress = address;
+                break;
+            }
+        }
+        if (!contractAddress) {
+            throw new Error(`${this.chainConfig.name} contractAddress unconfigured`);
+        }
+        const transactionRequest: ethers.providers.TransactionRequest = {
+            from: this.wallet.address,
+            to: contractAddress,
+            value: ethers.BigNumber.from(value.toString()),
+            chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
+            data: calldata,
+        };
+        try {
+            transactionRequest.gasLimit = await this.provider.estimateGas({
+                from: transactionRequest.from,
+                to: transactionRequest.to,
+                value: transactionRequest.value,
+                data: transactionRequest.data,
+            });
+        } catch (error) {
+            this.logger.error(`transfer token estimateGas error`, error);
+            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+        }
+        await this.getGasPrice(transactionRequest);
+        const { nonce, commit } = await this.takeOutNonce();
+        const lastNonce = await this.wallet.getTransactionCount();
+        // Alarm triggered by too much pending data in the memory pool
+        if (nonce - 20 > lastNonce) {
+            const alert = `${this.address} last nonce ${lastNonce}, use nonce ${nonce}`;
+            this.logger.error(alert);
+            telegramBot.sendMessage(alert).catch(error => {
+                this.logger.error(`send telegram message error ${error.stack}`);
+            });
+        }
+        if (preSend) await preSend();
+        this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
+        transactionRequest.nonce = nonce;
+        this.logger.info(`transfer token transaction request`, JSON.stringify({ ...transactionRequest, data: undefined }));
+        const signedTx = await this.wallet.signTransaction(transactionRequest);
+        const txHash = ethers.utils.keccak256(signedTx);
+        const response = await this.provider.sendTransaction(signedTx);
+        this.logger.info(`transfer token sendTransaction txHash`, txHash);
+        // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
     }
@@ -416,6 +480,77 @@ export class EVMAccount {
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
         this.logger.info(`swap sendTransaction txHash`, txHash);
+        // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
+        commit(nonce);
+        return response;
+    }
+
+    async transferTokenMulti(toList: string[], valueList: string[], tokenAddress: string, preSend?: Function): Promise<ethers.providers.TransactionResponse | undefined> {
+        if (toList.length !== valueList.length) {
+            this.logger.error("length error", `t: ${toList.join(",")}`, `v: ${valueList.join(",")}`);
+            throw new Error('length error');
+        }
+        let totalValue = new BigNumber(0);
+        for (let i = 0; i < valueList.length; i++) {
+            const value: any = valueList[i];
+            totalValue = totalValue.plus(value);
+        }
+        this.logger.info("swap token total value", totalValue.toString());
+
+        const ifa = new ethers.utils.Interface(Orbiter_Router_ABI);
+        const calldata = ifa.encodeFunctionData("transferTokens", [
+            tokenAddress,
+            toList,
+            valueList,
+        ]);
+
+        let contractAddress = '';
+        for (const address in this.chainConfig.router) {
+            if (this.chainConfig.router[address] === 'OrbiterRouterV3') {
+                contractAddress = address;
+                break;
+            }
+        }
+        if (!contractAddress) {
+            throw new Error(`${this.chainConfig.name} contractAddress unconfigured`);
+        }
+        const transactionRequest: ethers.providers.TransactionRequest = {
+            from: this.wallet.address,
+            to: contractAddress,
+            value: ethers.BigNumber.from(totalValue.toString()),
+            chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
+            data: calldata,
+        };
+        try {
+            transactionRequest.gasLimit = await this.provider.estimateGas({
+                from: transactionRequest.from,
+                to: transactionRequest.to,
+                value: transactionRequest.value,
+                data: transactionRequest.data,
+            });
+        } catch (error) {
+            this.logger.error(`swap token estimateGas error`, error);
+            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+        }
+        await this.getGasPrice(transactionRequest);
+        const { nonce, commit } = await this.takeOutNonce();
+        const lastNonce = await this.wallet.getTransactionCount();
+        // Alarm triggered by too much pending data in the memory pool
+        if (nonce - 20 > lastNonce) {
+            const alert = `${this.address} last nonce ${lastNonce}, use nonce ${nonce}`;
+            this.logger.error(alert);
+            telegramBot.sendMessage(alert).catch(error => {
+                this.logger.error(`send telegram message error ${error.stack}`);
+            });
+        }
+        if (preSend) await preSend();
+        this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
+        transactionRequest.nonce = nonce;
+        this.logger.info(`swap token transaction request`, JSON.stringify({ ...transactionRequest, data: undefined }));
+        const signedTx = await this.wallet.signTransaction(transactionRequest);
+        const txHash = ethers.utils.keccak256(signedTx);
+        const response = await this.provider.sendTransaction(signedTx);
+        this.logger.info(`swap token sendTransaction txHash`, txHash);
         // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
@@ -559,7 +694,7 @@ export class EVMAccount {
             chainIdHashList.push(`(${fromChainId}) ${fromHash}`);
         }
         try {
-            const res: ethers.providers.TransactionResponse | undefined = await this.send(toList, valueList, tokenAddressList, async () => {
+            const res: ethers.providers.TransactionResponse | undefined = await this.send(toList, valueList, tokenAddressList[0], async () => {
                 await this.clearTask(queueList, 0);
                 this.logger.info(`${this.chainConfig.name}_consume_count = ${queueList.length}`);
             });
