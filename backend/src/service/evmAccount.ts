@@ -729,7 +729,7 @@ export class EVMAccount {
         cronMap[txKey] = createCron(this.sendInterval);
 
         function createCron(interval: number) {
-            _this.logger.info(`${_this.chainConfig.name} create cron: interval ${interval}s`);
+            _this.logger.info(`${txKey} create cron: interval ${interval}s`);
             return setInterval(async () => {
                 try {
                     const rs = await _this.job();

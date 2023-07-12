@@ -352,21 +352,13 @@ export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523]) {
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
   const makerDataList: { makerAddress: string, chainId: string, symbol: string, tokenAddress: string }[] = [];
   for (const data of chainMakerList) {
-      // starknet one maker one timer, different coins can send the same batch of transactions
-      if (Number(data.toChain.id) === 4 || Number(data.toChain.id) === 44) {
-          if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
-              continue;
-          }
-      } else {
-          // evm one maker one coin one timer, one coin sends a batch of transactions
-          if (makerDataList.find(item => item.chainId === data.toChain.id)) {
-              continue;
-          }
+      if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
+          continue;
       }
 
     makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol, tokenAddress: data.toChain.tokenAddress });
   }
-  this.logger.info(`Preparing to execute a timed task ${JSON.stringify(makerDataList)}`);
+  accessLogger.info(`Preparing to execute a timed task ${JSON.stringify(makerDataList)}`);
   // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
   await sleep(3000);
     for (let i = 0; i < makerDataList.length; i++) {
