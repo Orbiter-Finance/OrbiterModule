@@ -24,7 +24,7 @@ const configure: Configuration = {
       port: Number(process.env.logstashPort) || 5044,
       retry: {
         interval: 5000,   
-        count: -1,
+        count: 50,
       },
     },
   },
