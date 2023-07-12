@@ -40,8 +40,6 @@ let maxTryCount: number = 180;
 let gasMulti: number = 1.2;
 let gasMaxPrice: number = 0.0001 * 10 ** 18;
 
-let sendInterval = 20;
-
 interface IJobParams {
     waringInterval: number;
     execTaskCount: number;
@@ -59,6 +57,7 @@ export class EVMAccount {
     public logger: any;
     private makerWeb3: MakerWeb3;
     public address: string;
+    private sendInterval: number = 20;
     private readonly lockKey: string;
     private readonly txKey: string;
 
@@ -227,7 +226,10 @@ export class EVMAccount {
         gasMaxPrice: number
     }> {
         return await readLogJson(`limit.json`, `evm/${this.chainConfig.internalId}/limit`, {
-            waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount, sendInterval, gasMulti, gasMaxPrice
+            waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount,
+            sendInterval: this.sendInterval,
+            gasMulti,
+            gasMaxPrice
         });
     }
 
@@ -585,11 +587,11 @@ export class EVMAccount {
     async startJob() {
         const _this = this;
         const variableConfig = await this.getVariableConfig();
-        sendInterval = variableConfig.sendInterval;
+        this.sendInterval = variableConfig.sendInterval;
 
         const txKey = this.txKey;
         const lockKey = this.lockKey;
-        cronMap[txKey] = createCron(sendInterval);
+        cronMap[txKey] = createCron(this.sendInterval);
 
         function createCron(interval: number) {
             _this.logger.info(`${_this.chainConfig.name} create cron: interval ${interval}s`);
@@ -611,12 +613,12 @@ export class EVMAccount {
         // watch send interval
         async function watchCron() {
             const data: IJobParams = await _this.getVariableConfig();
-            if (sendInterval !== data.sendInterval) {
+            if (this.sendInterval !== data.sendInterval) {
                 if (cronMap[txKey]) {
                     clearInterval(cronMap[txKey]);
                 }
-                sendInterval = data.sendInterval;
-                cronMap[txKey] = createCron(sendInterval);
+                this.sendInterval = data.sendInterval;
+                cronMap[txKey] = createCron(this.sendInterval);
             }
         }
     }
