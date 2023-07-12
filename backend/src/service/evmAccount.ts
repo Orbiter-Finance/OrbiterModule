@@ -613,12 +613,12 @@ export class EVMAccount {
         // watch send interval
         async function watchCron() {
             const data: IJobParams = await _this.getVariableConfig();
-            if (this.sendInterval !== data.sendInterval) {
+            if (_this.sendInterval !== data.sendInterval) {
                 if (cronMap[txKey]) {
                     clearInterval(cronMap[txKey]);
                 }
-                this.sendInterval = data.sendInterval;
-                cronMap[txKey] = createCron(this.sendInterval);
+                _this.sendInterval = data.sendInterval;
+                cronMap[txKey] = createCron(_this.sendInterval);
             }
         }
     }

@@ -21,8 +21,8 @@ const MAX_BITS: any = {
   polygon_zkevm: 256,
   scroll_l1_test: 256,
   scroll_l2_test: 256,
-  linea: 23,
-  linea_test: 523,
+  linea: 256,
+  linea_test: 256,
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
