@@ -367,9 +367,19 @@ export class EVMAccount {
             valueList,
         ]);
 
+        let contractAddress = '';
+        for (const address in this.chainConfig.router) {
+            if (this.chainConfig.router[address] === 'OrbiterRouterV3') {
+                contractAddress = address;
+                break;
+            }
+        }
+        if (!contractAddress) {
+            throw new Error(`${this.chainConfig.name} contractAddress unconfigured`);
+        }
         const transactionRequest: ethers.providers.TransactionRequest = {
             from: this.wallet.address,
-            to: "0xa14113c142e1b3f33f1da3ee43eccb9e0471ff2d", // TODO
+            to: contractAddress,
             value: ethers.BigNumber.from(totalValue.toString()),
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,

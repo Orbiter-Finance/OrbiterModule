@@ -169,7 +169,7 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 let cron;
 
-export async function batchTxSend(chainIdList = [4, 44, 23, 523]) {
+export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         const sn = async () => {
@@ -358,16 +358,17 @@ export async function batchTxSend(chainIdList = [4, 44, 23, 523]) {
     makerDataList.push({ makerAddress: data.sender, chainId: data.toChain.id, symbol: data.toChain.symbol, tokenAddress: data.toChain.tokenAddress });
   }
   // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
-  await sleep(5000);
+  await sleep(3000);
     for (let i = 0; i < makerDataList.length; i++) {
         const maker = makerDataList[i];
         const chainId = maker.chainId;
+        const chainConfig: any = chains.getChainByInternalId(String(chainId));
         if (Number(chainId) === 4 || Number(chainId) === 44) {
             makerSend(maker.makerAddress, maker.chainId);
-        } else if (Number(chainId) === 23 || Number(chainId) === 523) {
+        } else if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
             const privateKey = makerConfig.privateKeys[maker.makerAddress.toLowerCase()];
             const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
-            await evmAccount.startJob()
+            await evmAccount.startJob();
         }
         await sleep(1000);
     }

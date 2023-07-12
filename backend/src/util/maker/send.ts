@@ -326,8 +326,9 @@ export async function sendConsumer(value: any) {
     }
   }
 
+  const chainConfig: any = chains.getChainByInternalId(String(chainID));
   // linea
-  if (chainID == 23 || chainID == 523) {
+  if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
     const evmAccount = new EVMAccount(chainID, tokenAddress, privateKey);
     const queueList = await evmAccount.getTask();
