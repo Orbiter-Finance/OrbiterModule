@@ -343,7 +343,7 @@ export async function sendConsumer(value: any) {
         createTime: new Date().valueOf(),
         params: value,
         signParam: {
-          fromChainId: chainID,
+          fromChainId: fromChainID,
           fromHash,
           recipient: toAddress,
           tokenAddress,
