@@ -1,6 +1,6 @@
 import { chains } from 'orbiter-chaincore/src/utils';
 import schedule from 'node-schedule'
-import { errorLogger } from '../util/logger'
+import { errorLogger } from '../util/logger';
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
 import * as serviceMakerWealth from '../service/maker_wealth'
@@ -86,17 +86,21 @@ class MJobPessimism extends MJob {
 
 export function jobGetWealths() {
   const callback = async () => {
-    const makerAddresses = await serviceMaker.getMakerAddresses()
-    for (const item of makerAddresses) {
-      const wealths = await serviceMakerWealth.getWealths(item)
+    try {
+      const makerAddresses = await serviceMaker.getMakerAddresses();
+      for (const item of makerAddresses) {
+        const wealths = await serviceMakerWealth.getWealths(item);
 
-      Core.memoryCache.set(
-        `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${item}`,
-        wealths,
-        100000
-      )
+        Core.memoryCache.set(
+            `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${item}`,
+            wealths,
+            100000
+        );
 
-      await serviceMakerWealth.saveWealths(wealths)
+        await serviceMakerWealth.saveWealths(wealths);
+      }
+    } catch (e) {
+      errorLogger.error('job error', e);
     }
   }
 
