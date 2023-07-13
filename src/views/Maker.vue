@@ -499,7 +499,7 @@ import { getStarknet, connect as getStarknetWallet } from 'orbiter-get-starknet'
 import { stark, uint256 } from 'orbiter-starknet';
 import { ref, computed, inject, reactive, toRef, watch, getCurrentInstance,onMounted } from 'vue';
 import Web3 from 'web3';
-import { XVM_ABI } from "../config/ABI";
+import { Orbiter_V3_ABI, XVM_ABI } from "../config/ABI";
 import config from "../config/index";
 import util from "../utils/util";
 import ERC20Abi from "../config/ERC20.json";
@@ -766,7 +766,7 @@ const selectable = (row) => {
   if (row.status === 95 || row.status === 99) {
     return false;
   }
-  if (!(util.isSupportXVMContract(row.toChainId) || Number(row.toChainId) === 4 || Number(row.toChainId) === 44)) {
+  if (!(util.isSupportXVMContract(row.toChainId) || util.getOrbiterRouterV3Address(row.toChainId) || Number(row.toChainId) === 4 || Number(row.toChainId) === 44)) {
     return false;
   }
   if (!selectChainId.value) {
@@ -929,7 +929,44 @@ const confirmSend = async ()=>{
   }
   const v3Address = util.getOrbiterRouterV3Address(fromChainId);
   if (dataList.length > 1 && v3Address) {
-
+    const mainTokenAddress = chainInfo.nativeCurrency.address;
+    let totalMainValue = new BigNumber(0);
+    const values = [];
+    const tos = [];
+    for (const data of dataList) {
+      const tokenAddress = data?.tokenAddress;
+      const value: any = data?.amount;
+      tos.push(data?.toAddress);
+      values.push(value);
+      if (utils.equalsIgnoreCase(mainTokenAddress, tokenAddress)) {
+        totalMainValue = totalMainValue.plus(new BigNumber(value));
+      }else{
+        ElNotification({
+          title: 'Transfer Fail',
+          message:
+                  'Batch payback is only supported in the same currency',
+          type: 'error',
+        });
+        return;
+      }
+    }
+    const web3 = new Web3(ethereum);
+    const contractInstance = new web3.eth.Contract(Orbiter_V3_ABI, v3Address);
+    const { transactionHash } = await contractInstance.methods.transfers(tos, values).send({
+      from: walletAccount, value: totalMainValue.toString()
+    });
+    console.log(transactionHash);
+    ElNotification({
+      title: 'Transfer Succeed',
+      message:
+              'The transfer was successful! Dashboard will update data list in 15 minutes!',
+      type: 'success',
+    });
+    for (const dt of dataList) {
+      const node = makerNodes.value.find(item => item.id == dt.id);
+      node.state = 21;
+    }
+    return;
   }
   if (sendData.source === 'xvm' && util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
@@ -1127,7 +1164,7 @@ const onClickStateTag = async (item: MakerNode) => {
       }
     }
 
-    if (util.isSupportXVMContract(fromChainId) || isStarknet) {
+    if (util.isSupportXVMContract(fromChainId) || isStarknet || util.getOrbiterRouterV3Address(fromChainId)) {
       if (!selectShow.value) {
         selectShow.value = true;
         return;
