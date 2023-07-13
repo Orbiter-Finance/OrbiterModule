@@ -86,6 +86,24 @@ export class MakerWeb3 {
         }
     }
 
+    async Contract(ABI: any, tokenAddress: string) {
+        try {
+            return new this.web3.eth.Contract(ABI, tokenAddress);
+        } catch (e) {
+            // await this.refreshWeb3(this.getNewRpc('Contract'));
+            throw new Error(e);
+        }
+    }
+
+    async toHex(value: any) {
+        try {
+            return await this.web3.utils.toHex(value);
+        } catch (e) {
+            // await this.refreshWeb3(this.getNewRpc('toHex'));
+            throw new Error(e);
+        }
+    }
+
     async getBalance(chainId: number, address: string, tokenAddress: string) {
         try {
             const chainService = new ChainServiceTokenBalance(String(chainId));

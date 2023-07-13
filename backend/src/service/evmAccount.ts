@@ -3,7 +3,7 @@ import BigNumber from "bignumber.js";
 import { chains } from "orbiter-chaincore";
 import { telegramBot } from "../sms/telegram";
 import { MakerWeb3 } from "../util/web3";
-import { accessLogger, getLoggerService } from "../util/logger";
+import { getLoggerService } from "../util/logger";
 import { IChainConfig } from "orbiter-chaincore/src/types";
 import { readLogJson, sleep, writeLogJson } from "../util";
 import Keyv from "keyv";
@@ -16,7 +16,7 @@ import { sendTxConsumeHandle } from "../util/maker";
 import { max } from 'lodash';
 import { alarmMsgMap } from "../schedule/jobs";
 import { clearInterval } from "timers";
-import { Orbiter_Router_ABI } from "../config/ABI";
+import { Orbiter_Router_ABI, ERC20_ABI } from "../config/ABI";
 
 // Ensure that cached data is not manipulated at the same time
 const taskLockMap = {};
@@ -356,29 +356,16 @@ export class EVMAccount {
     }
 
     async transferToken(to: string, value: string, tokenAddress: string, preSend?: Function): Promise<ethers.providers.TransactionResponse | undefined> {
-        const ifa = new ethers.utils.Interface(Orbiter_Router_ABI);
-        const calldata = ifa.encodeFunctionData("transferToken", [
-            tokenAddress,
-            to,
-            value,
-        ]);
-
-        let contractAddress = '';
-        for (const address in this.chainConfig.router) {
-            if (this.chainConfig.router[address] === 'OrbiterRouterV3') {
-                contractAddress = address;
-                break;
-            }
-        }
-        if (!contractAddress) {
-            throw new Error(`${this.chainConfig.name} contractAddress unconfigured`);
-        }
+        value = await this.makerWeb3.toHex(value);
+        const tokenContract = await this.makerWeb3.Contract(ERC20_ABI, tokenAddress)
         const transactionRequest: ethers.providers.TransactionRequest = {
             from: this.wallet.address,
-            to: contractAddress,
+            to: tokenAddress,
             value: '0x0',
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
-            data: calldata,
+            data: tokenContract.methods
+                .transfer(to, value)
+                .encodeABI(),
         };
         try {
             transactionRequest.gasLimit = await this.provider.estimateGas({
@@ -405,7 +392,10 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`transfer token transaction request`, JSON.stringify({ ...transactionRequest, data: undefined }));
+        this.logger.info(`transfer token transaction request`, JSON.stringify({
+            ...transactionRequest,
+            data: undefined
+        }));
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
@@ -561,7 +551,7 @@ export class EVMAccount {
         const chainId = this.chainConfig.internalId;
         let taskList = await this.getTask();
         if (!taskList || !taskList.length) {
-            this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
+            this.logger.info(`There are no consumable tasks in the ${this.txKey} queue`);
             return { code: 1 };
         }
 
