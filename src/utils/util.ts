@@ -23,6 +23,17 @@ export default {
     if (!info) return null;
     return JSON.parse(JSON.stringify(info));
   },
+  getOrbiterRouterV3Address(fromChainId) {
+    const chainInfo = this.getChainInfoByChainId(fromChainId);
+    if (chainInfo?.router) {
+      for (const address in chainInfo.router) {
+        if (chainInfo.router[address] === "OrbiterRouterV3") {
+          return address;
+        }
+      }
+    }
+    return '';
+  },
   isSupportXVMContract(fromChainId) {
     const chainInfo = this.getChainInfoByChainId(fromChainId);
     return chainInfo?.xvmList && chainInfo.xvmList.length;

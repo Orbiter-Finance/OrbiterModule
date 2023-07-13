@@ -927,6 +927,10 @@ const confirmSend = async ()=>{
     }
     return;
   }
+  const v3Address = util.getOrbiterRouterV3Address(fromChainId);
+  if (dataList.length > 1 && v3Address) {
+
+  }
   if (sendData.source === 'xvm' && util.isSupportXVMContract(fromChainId)) {
     if (!selectShow.value) {
       selectShow.value = true;
