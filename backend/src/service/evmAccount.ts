@@ -376,7 +376,7 @@ export class EVMAccount {
         const transactionRequest: ethers.providers.TransactionRequest = {
             from: this.wallet.address,
             to: contractAddress,
-            value: ethers.BigNumber.from(value.toString()),
+            value: '0x0',
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,
         };
@@ -490,12 +490,6 @@ export class EVMAccount {
             this.logger.error("length error", `t: ${toList.join(",")}`, `v: ${valueList.join(",")}`);
             throw new Error('length error');
         }
-        let totalValue = new BigNumber(0);
-        for (let i = 0; i < valueList.length; i++) {
-            const value: any = valueList[i];
-            totalValue = totalValue.plus(value);
-        }
-        this.logger.info("swap token total value", totalValue.toString());
 
         const ifa = new ethers.utils.Interface(Orbiter_Router_ABI);
         const calldata = ifa.encodeFunctionData("transferTokens", [
@@ -517,7 +511,7 @@ export class EVMAccount {
         const transactionRequest: ethers.providers.TransactionRequest = {
             from: this.wallet.address,
             to: contractAddress,
-            value: ethers.BigNumber.from(totalValue.toString()),
+            value: '0x0',
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,
         };
@@ -706,7 +700,6 @@ export class EVMAccount {
                 params: paramsList[0],
                 paramsList
             });
-            jobLockMap[lockKey] = false;
         } catch (error) {
             this.logger.error(`${this.chainConfig.name} transfer fail: ${queueList.map(item => item.params?.transactionID)}`);
             await sendTxConsumeHandle({
@@ -716,7 +709,7 @@ export class EVMAccount {
                 paramsList
             });
         }
-        return { code: 0 };
+        return { code: 1 };
     }
 
     async startJob() {
