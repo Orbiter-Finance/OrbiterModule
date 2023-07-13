@@ -372,7 +372,7 @@ export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523]) {
             const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
             await evmAccount.startJob();
         }
-        await sleep(1000);
+        await sleep(2000);
     }
   watchStarknetAlarm();
 }

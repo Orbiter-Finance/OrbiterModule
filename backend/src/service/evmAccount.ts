@@ -80,7 +80,7 @@ export class EVMAccount {
                 decode: JSON.parse, // deserialize function
             }),
         });
-        this.lockKey = this.address;
+        this.lockKey = `${this.address}_${this.chainConfig.internalId}`;
         this.txKey = `${this.address}_${this.chainConfig.internalId}_${tokenAddress.toLowerCase()}`;
     }
 
@@ -272,7 +272,7 @@ export class EVMAccount {
                     this.logger.info(`maxPriorityFeePerGas exceeding the maximum set gas fee ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()} > ${gasMaxPrice}`);
                     transactionRequest.maxPriorityFeePerGas = ethers.BigNumber.from(gasMaxPrice);
                 }
-                this.logger.info(`EIP1559 use maxFeePerGas: ${transactionRequest.maxFeePerGas.toString()}, maxPriorityFeePerGas: ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()}`);
+                this.logger.info(`EIP1559 use maxFeePerGas: ${transactionRequest.maxFeePerGas.toString()}, maxPriorityFeePerGas: ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()}, multi: ${multi}`);
             } else {
                 // const networkGasPrice = await this.provider.getGasPrice();
                 const networkGasPrice = feeData.gasPrice;
@@ -554,7 +554,7 @@ export class EVMAccount {
         const makerAddress = this.address;
         const lockKey = this.lockKey;
         if (jobLockMap[lockKey]) {
-            console.log(`${this.chainConfig.name} is lock, waiting for the end of the previous transaction`);
+            console.log(`${lockKey} is lock, waiting for the end of the previous transaction`);
             return { code: 0 };
         }
         jobLockMap[lockKey] = true;
