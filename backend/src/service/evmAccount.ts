@@ -342,6 +342,7 @@ export class EVMAccount {
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
+        await this.checkNonce(nonce);
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
@@ -380,15 +381,7 @@ export class EVMAccount {
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
-        const lastNonce = await this.wallet.getTransactionCount();
-        // Alarm triggered by too much pending data in the memory pool
-        if (nonce - 20 > lastNonce) {
-            const alert = `${this.address} last nonce ${lastNonce}, use nonce ${nonce}`;
-            this.logger.error(alert);
-            telegramBot.sendMessage(alert).catch(error => {
-                this.logger.error(`send telegram message error ${error.stack}`);
-            });
-        }
+        await this.checkNonce(nonce);
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
@@ -453,15 +446,7 @@ export class EVMAccount {
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
-        const lastNonce = await this.wallet.getTransactionCount();
-        // Alarm triggered by too much pending data in the memory pool
-        if (nonce - 20 > lastNonce) {
-            const alert = `${this.address} last nonce ${lastNonce}, use nonce ${nonce}`;
-            this.logger.error(alert);
-            telegramBot.sendMessage(alert).catch(error => {
-                this.logger.error(`send telegram message error ${error.stack}`);
-            });
-        }
+        await this.checkNonce(nonce);
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
@@ -518,15 +503,7 @@ export class EVMAccount {
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
-        const lastNonce = await this.wallet.getTransactionCount();
-        // Alarm triggered by too much pending data in the memory pool
-        if (nonce - 20 > lastNonce) {
-            const alert = `${this.address} last nonce ${lastNonce}, use nonce ${nonce}`;
-            this.logger.error(alert);
-            telegramBot.sendMessage(alert).catch(error => {
-                this.logger.error(`send telegram message error ${error.stack}`);
-            });
-        }
+        await this.checkNonce(nonce);
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
@@ -538,6 +515,18 @@ export class EVMAccount {
         // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
+    }
+
+    async checkNonce(nonce: number) {
+        const lastNonce = await this.wallet.getTransactionCount();
+        // Alarm triggered by too much pending data in the memory pool
+        if (nonce - 20 > lastNonce) {
+            const alert = `${this.txKey} last nonce ${lastNonce}, use nonce ${nonce}`;
+            this.logger.error(alert);
+            telegramBot.sendMessage(alert).catch(error => {
+                this.logger.error(`send telegram message error ${error.stack}`);
+            });
+        }
     }
 
     private async job() {
