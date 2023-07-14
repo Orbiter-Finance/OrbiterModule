@@ -23,6 +23,8 @@ const MAX_BITS: any = {
   scroll_l2_test: 256,
   linea: 256,
   linea_test: 256,
+  mantle: 256,
+  mantle_test: 256
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
@@ -61,6 +63,8 @@ export const CHAIN_INDEX: any = {
   519: "scroll_l2_test",
   23: 'linea',
   523: "linea_test",
+  24: 'mantle',
+  524: "mantle_test",
   599: "orbiter",
 };
 

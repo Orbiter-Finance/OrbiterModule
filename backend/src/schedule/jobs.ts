@@ -169,7 +169,7 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 let cron;
 
-export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523]) {
+export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523, 24, 524]) {
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         const sn = async () => {
