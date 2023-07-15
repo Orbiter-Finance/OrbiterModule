@@ -286,7 +286,7 @@ export class EVMAccount {
                 blockGasPrice = blockGasPrice.dividedBy(count) || new BigNumber(0);
                 this.logger.info(`Legacy block gasPrice: ${blockGasPrice.toFixed(0)}`);
                 this.logger.info(`Legacy network gasPrice: ${networkGasPrice && networkGasPrice.toString()}`);
-                transactionRequest.gasPrice = blockGasPrice.gt((transactionRequest?.gasPrice || 0).toString()) ?
+                transactionRequest.gasPrice = blockGasPrice.gt((networkGasPrice || 0).toString()) ?
                     ethers.BigNumber.from(blockGasPrice.toFixed(0)) :
                     ethers.BigNumber.from((networkGasPrice || 0).toString());
                 if (transactionRequest.gasPrice.gt(gasMaxPrice)) {
