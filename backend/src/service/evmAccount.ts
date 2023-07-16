@@ -244,7 +244,7 @@ export class EVMAccount {
             const variableConfig = await this.getVariableConfig();
             const multi: number = variableConfig.gasMulti;
             const gasMaxPrice: number = variableConfig.gasMaxPrice;
-            const transactionList = block.transactions;
+            const transactionList = block?.transactions || [];
             if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
                 transactionRequest.type = 2;
                 const networkMaxFeePerGas = feeData.maxFeePerGas;
@@ -258,8 +258,10 @@ export class EVMAccount {
                     blockMaxPriorityFeePerGas = blockMaxPriorityFeePerGas.plus(String(tx.maxPriorityFeePerGas));
                     count++;
                 }
-                blockMaxFeePerGas = blockMaxFeePerGas.dividedBy(count) || new BigNumber(0);
-                blockMaxPriorityFeePerGas = blockMaxPriorityFeePerGas.dividedBy(count);
+                if (count) {
+                    blockMaxFeePerGas = blockMaxFeePerGas.dividedBy(count) || new BigNumber(0);
+                    blockMaxPriorityFeePerGas = blockMaxPriorityFeePerGas.dividedBy(count);
+                }
                 this.logger.info(`EIP1559 block ${count} maxFeePerGas: ${blockMaxFeePerGas.toFixed(0)}, maxPriorityFeePerGas: ${blockMaxPriorityFeePerGas.toFixed(0)}`);
                 this.logger.info(`EIP1559 network maxFeePerGas: ${networkMaxFeePerGas.toString()}, maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas.toString()}`);
 
@@ -283,7 +285,9 @@ export class EVMAccount {
                     blockGasPrice = blockGasPrice.plus(String(tx.gasPrice));
                     count++;
                 }
-                blockGasPrice = blockGasPrice.dividedBy(count) || new BigNumber(0);
+                if (count) {
+                    blockGasPrice = blockGasPrice.dividedBy(count) || new BigNumber(0);
+                }
                 this.logger.info(`Legacy block gasPrice: ${blockGasPrice.toFixed(0)}`);
                 this.logger.info(`Legacy network gasPrice: ${networkGasPrice && networkGasPrice.toString()}`);
                 transactionRequest.gasPrice = blockGasPrice.gt((networkGasPrice || 0).toString()) ?
