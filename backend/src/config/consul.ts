@@ -7,7 +7,7 @@ import { batchTxSend } from "../schedule/jobs";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
-import replySender from './reply_sender'
+const replySender = String(process.env['MAKER_ADDR'] || '').split(',');
 
 export const consul = process.env["CONSUL_HOST"]
     ? new Consul({
