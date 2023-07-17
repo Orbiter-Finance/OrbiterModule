@@ -3,9 +3,6 @@ import schedule from 'node-schedule'
 import { accessLogger, errorLogger } from '../util/logger';
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
-import * as serviceMakerWealth from '../service/maker_wealth'
-import { doBalanceAlarm } from '../service/setting'
-import { Core } from '../util/core'
 import mainnetChains from '../config/chains.json'
 import testnetChains from '../config/testnet.json'
 import { makerConfig } from "../config";
@@ -22,6 +19,7 @@ import { doSms } from "../sms/smsSchinese";
 import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
+import { consulConfig } from "../config/consul_store";
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -98,44 +96,6 @@ class MJobPessimism extends MJob {
   }
 }
 
-export function jobGetWealths() {
-  const callback = async () => {
-    const makerAddresses = await serviceMaker.getMakerAddresses()
-    for (const item of makerAddresses) {
-      const wealths = await serviceMakerWealth.getWealths(item)
-
-      Core.memoryCache.set(
-        `${serviceMakerWealth.CACHE_KEY_GET_WEALTHS}:${item}`,
-        wealths,
-        100000
-      )
-
-      await serviceMakerWealth.saveWealths(wealths)
-    }
-  }
-
-  new MJobPessimism('* */60 * * * *', callback, jobGetWealths.name).schedule()
-}
-
-const jobMakerNodeTodoMakerAddresses: string[] = []
-export function jobMakerNodeTodo(makerAddress: string) {
-  // Prevent multiple makerAddress
-  if (jobMakerNodeTodoMakerAddresses.indexOf(makerAddress) > -1) {
-    return
-  }
-  jobMakerNodeTodoMakerAddresses.push(makerAddress)
-
-  const callback = async () => {
-    await serviceMaker.runTodo(makerAddress)
-  }
-
-  new MJobPessimism(
-    '*/10 * * * * *',
-    callback,
-    jobMakerNodeTodo.name
-  ).schedule()
-}
-
 export function jobCacheCoinbase() {
   const callback = async () => {
     await coinbase.cacheExchangeRates()
@@ -148,35 +108,29 @@ export function jobCacheCoinbase() {
   ).schedule()
 }
 
-export function jobBalanceAlarm() {
-  const callback = async () => {
-    await doBalanceAlarm.do()
-  }
-
-  new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
-}
-
 let alarmMsgMap = {};
 let balanceWaringTime = 0;
-// Alarm interval duration(second)
-let waringInterval = 180;
-// Execute several transactions at once
-let execTaskCount = 50;
-// Maximum number of transactions to be stacked in the memory pool
-let maxTaskCount: number = 200;
-let expireTime: number = 30 * 60;
-let maxTryCount: number = 180;
 let cron;
+const sendCronMap = {};
 
 export async function batchTxSend(chainIdList = [4, 44]) {
   const makerSend = (makerAddress, chainId) => {
-    const callback = async () => {
+    const snCallback = async () => {
         const sn = async () => {
             if (starknetLockMap[makerAddress.toLowerCase()]) {
                 console.log('Starknet is lock, waiting for the end of the previous transaction');
                 return { code: 0 };
             }
             setStarknetLock(makerAddress, true);
+            // Alarm interval duration(second)
+            const waringInterval = consulConfig.starknet.waringInterval ? Number(consulConfig.starknet.waringInterval) : 180;
+            // Execute several transactions at once
+            const execTaskCount = consulConfig.starknet.execTaskCount ? Number(consulConfig.starknet.execTaskCount) : 50;
+            // Maximum number of transactions to be stacked in the memory pool
+            const maxTaskCount: number = consulConfig.starknet.maxTaskCount ? Number(consulConfig.starknet.maxTaskCount) : 200;
+            const expireTime: number = consulConfig.starknet.expireTime ? Number(consulConfig.starknet.expireTime) : 1800;
+            const maxTryCount: number = consulConfig.starknet.maxTryCount ? Number(consulConfig.starknet.maxTryCount) : 10;
+
             const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
             const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
@@ -279,7 +233,7 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 accessLogger.info('There are no consumable tasks in the starknet queue');
                 return { code: 1 };
             }
-            const { nonce, rollback,commit } = await starknet.takeOutNonce();
+            const { nonce, rollback, commit } = await starknet.takeOutNonce();
             try {
                 await starknet.clearTask(queueList, 0);
                 accessLogger.info(`starknet_sql_nonce = ${nonce}`);
@@ -339,15 +293,20 @@ export async function batchTxSend(chainIdList = [4, 44]) {
                 accessLogger.error(`sn job error: ${e.message}`);
             }
         }
-
     };
 
-    new MJobPessimism('*/15 * * * * *', callback, batchTxSend.name).schedule();
-    // new MJobPessimism(`0 */2 * * * *`, callback, batchTxSend.name).schedule();
+      const interval = consulConfig.starknet.sendInterval ? Number(consulConfig.starknet.sendInterval) : 15;
+      if (sendCronMap[`${makerAddress}_${chainId}`]) {
+          clearInterval(sendCronMap[`${makerAddress}_${chainId}`]);
+          accessLogger.info(`${makerAddress}-${chainId} cron interval change to ${interval}s`);
+      }
+      sendCronMap[`${makerAddress}_${chainId}`] = setInterval(() => {
+          snCallback();
+      }, interval * 1000);
   };
   const makerList = await getNewMarketList();
   const chainMakerList = makerList.filter(item => !!chainIdList.find(chainId => Number(item.toChain.id) === Number(chainId)));
-  const makerDataList: { makerAddress: string, chainId: string, symbol: string }[] = [];
+  const makerDataList: { makerAddress: string, chainId: number, symbol: string }[] = [];
   for (const data of chainMakerList) {
     if (makerDataList.find(item => item.chainId === data.toChain.id && item.symbol === data.toChain.symbol)) {
       continue;
@@ -363,73 +322,11 @@ export async function batchTxSend(chainIdList = [4, 44]) {
   watchStarknetAlarm();
 }
 
-export async function watchHttpEndPoint() {
-    const chainList = ["mainnet", "arbitrum", "optimism", "polygon"];
-
-    for (const chain of chainList) {
-        if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
-            const data: { current?, httpEndPoint?, httpEndPointInfura? } = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
-            data.httpEndPoint = makerConfig[chain]?.httpEndPoint;
-            data.httpEndPointInfura = makerConfig[chain]?.httpEndPointInfura;
-            await writeLogJson(`${chain}.json`, 'endPoint', data);
-        }
-    }
-
-    const callback = async () => {
-        for (const chain of chainList) {
-            if (makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
-                const data: { current?, httpEndPoint?, httpEndPointInfura? } = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
-                if (data.current === 1 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPoint) {
-                    makerConfig[chain].httpEndPointInfura = data.httpEndPoint;
-                    accessLogger.log(`${chain} switch to httpEndPoint ${data.httpEndPoint}`);
-                }
-                if (data.current === 2 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPointInfura) {
-                    makerConfig[chain].httpEndPointInfura = data.httpEndPointInfura;
-                    accessLogger.log(`${chain} switch to httpEndPointInfura ${data.httpEndPointInfura}`);
-                }
-            }
-        }
-    };
-
-    new MJobPessimism('*/10 * * * * *', callback, watchHttpEndPoint.name).schedule();
-}
-
-export async function watchStarknetLimit() {
-    const callback = async () => {
-        const data: { waringInterval: number, execTaskCount: number, maxTaskCount: number, expireTime: number, maxTryCount: number } =
-            await readLogJson(`limit.json`, 'starknetTx/limit', {
-                waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount
-            });
-        if (waringInterval !== data.waringInterval) {
-            waringInterval = data.waringInterval;
-            watchStarknetAlarm();
-            accessLogger.log(`waringInterval change to ${waringInterval}s`);
-        }
-        if (execTaskCount !== data.execTaskCount) {
-            execTaskCount = data.execTaskCount;
-            accessLogger.log(`execTaskCount change to ${execTaskCount}`);
-        }
-        if (maxTaskCount !== data.maxTaskCount) {
-            maxTaskCount = data.maxTaskCount;
-            accessLogger.log(`maxTaskCount change to ${maxTaskCount}`);
-        }
-        if (expireTime !== data.expireTime) {
-            expireTime = data.expireTime;
-            accessLogger.log(`expireTime change to ${expireTime}s`);
-        }
-        if (maxTryCount !== data.maxTryCount) {
-            maxTryCount = data.maxTryCount;
-            accessLogger.log(`maxTryCount change to ${maxTryCount}`);
-        }
-    };
-
-    new MJobPessimism('*/30 * * * * *', callback, watchStarknetLimit.name).schedule();
-}
-
 function watchStarknetAlarm() {
     if (cron) {
         clearInterval(cron);
     }
+    const waringInterval = consulConfig.starknet.waringInterval ? Number(consulConfig.starknet.waringInterval) : 180;
     cron = setInterval(() => {
         for (const key in alarmMsgMap) {
             telegramBot.sendMessage(`${key} ${(<string[]>alarmMsgMap[key]).join(',')}`).catch(error => {
@@ -439,9 +336,4 @@ function watchStarknetAlarm() {
             delete alarmMsgMap[key];
         }
     }, waringInterval * 1000);
-}
-
-export async function watchLogs() {
-    watchHttpEndPoint();
-    watchStarknetLimit();
 }

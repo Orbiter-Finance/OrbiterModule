@@ -23,6 +23,10 @@ services:
       DB_NAME: '${DB_NAME}'
       logstashHost: '${logstashHost}'
       logstashPort: '${logstashPort}'
+      CONSUL_HOST: '${CONSUL_HOST}'
+      CONSUL_PORT: '${CONSUL_PORT}'
+      CONSUL_TOKEN: '${CONSUL_TOKEN}'
+      MAKER_ADDR: '${MAKER_ADDR}'
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'

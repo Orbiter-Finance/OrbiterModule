@@ -8,7 +8,6 @@ import {
   GlobalAPI,
   UserAPI,
 } from '@loopring-web/loopring-sdk'
-import BigNumber from 'bignumber.js'
 import dayjs from 'dayjs'
 import { In, Repository } from 'typeorm';
 import Web3 from 'web3'
@@ -19,12 +18,9 @@ import { MakerNodeTodo } from '../../model/maker_node_todo'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { Core } from '../core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
-import { makerList, makerListHistory } from './maker_list'
-import send from './send'
 import { equals } from 'orbiter-chaincore/src/utils/core'
 import { chains } from 'orbiter-chaincore/src/utils'
 import { getProviderV4 } from '../../service/starknet/helper';
-import { IChainConfig } from 'orbiter-chaincore/src/types'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
@@ -39,53 +35,6 @@ const repositoryMakerNode = (): Repository<MakerNode> => {
 }
 const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
   return Core.db.getRepository(MakerNodeTodo)
-}
-
-export async function getMakerList() {
-  return makerList
-}
-
-export async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
-}
-
-export function expanPool(pool) {
-  return {
-    pool1: {
-      makerAddress: pool.makerAddress,
-      c1ID: pool.c1ID,
-      c2ID: pool.c2ID,
-      c1Name: pool.c1Name,
-      c2Name: pool.c2Name,
-      t1Address: pool.t1Address,
-      t2Address: pool.t2Address,
-      tName: pool.tName,
-      minPrice: pool.c1MinPrice,
-      maxPrice: pool.c1MaxPrice,
-      precision: pool.precision,
-      avalibleDeposit: pool.c1AvalibleDeposit,
-      tradingFee: pool.c1TradingFee,
-      gasFee: pool.c1GasFee,
-      avalibleTimes: pool.c1AvalibleTimes,
-    },
-    pool2: {
-      makerAddress: pool.makerAddress,
-      c1ID: pool.c1ID,
-      c2ID: pool.c2ID,
-      c1Name: pool.c1Name,
-      c2Name: pool.c2Name,
-      t1Address: pool.t1Address,
-      t2Address: pool.t2Address,
-      tName: pool.tName,
-      minPrice: pool.c2MinPrice,
-      maxPrice: pool.c2MaxPrice,
-      precision: pool.precision,
-      avalibleDeposit: pool.c2AvalibleDeposit,
-      tradingFee: pool.c2TradingFee,
-      gasFee: pool.c2GasFee,
-      avalibleTimes: pool.c2AvalibleTimes,
-    },
-  }
 }
 
 async function checkLoopringAccountKey(makerAddress, fromChainID) {
@@ -495,7 +444,7 @@ function getTime() {
  * @param tokenAddress
  * @param amountStr
  * @param toAddress
- * @param pool
+ * @param market
  * @param nonce
  * @param result_nonce
  * @param ownerAddress // Cross address ownerAddress
@@ -510,7 +459,7 @@ export async function sendTransaction(
   tokenAddress,
   amountStr,
   toAddress,
-  pool,
+  market,
   nonce,
   result_nonce = 0,
   ownerAddress = '',
@@ -522,7 +471,7 @@ export async function sendTransaction(
     fromChainID,
     toChainID,
     amountStr,
-    pool,
+    market,
     nonce
   )
   if (!amountToSend) {

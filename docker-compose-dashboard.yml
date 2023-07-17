@@ -16,6 +16,9 @@ services:
       DB_USER: '${DB_USER2}'
       DB_PASS: '${DB_PASS2}'
       DB_NAME: '${DB_NAME2}'
+      CONSUL_HOST: '${CONSUL_HOST}'
+      CONSUL_PORT: '${CONSUL_PORT}'
+      CONSUL_TOKEN: '${CONSUL_TOKEN}'
     # volumes:
     #   - './history/logs:/app/logs'
     ports:

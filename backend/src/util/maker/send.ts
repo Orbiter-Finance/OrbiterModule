@@ -21,14 +21,14 @@ import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
 import { sign_musig } from 'zksync-crypto'
-import { getTargetMakerPool } from '../../service/maker'
+import { getMarket } from '../../service/maker';
 import { SendQueue } from './send_queue'
 import { StarknetHelp } from '../../service/starknet/helper'
 import { equals, isEmpty } from 'orbiter-chaincore/src/utils/core'
 import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
-import { chainQueue, transfers } from './new_maker'
+import { chainQueue, IMarket, transfers } from './new_maker';
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -355,17 +355,25 @@ export async function sendConsumer(value: any) {
         },
       }
       if (!isEthTokenAddress(tokenAddress)) {
-        const makerPool = await getTargetMakerPool(
+        const market: IMarket | undefined = await getMarket(
           makerAddress,
           tokenAddress,
           fromChainID,
           chainID
         )
+        if (!market) {
+          return {
+            code: 1,
+            error: `can't find market makerAddress: ${makerAddress}, tokenAddress: ${tokenAddress}, fromChainID: ${fromChainID}, chainID: ${chainID}`,
+            result_nonce,
+            params: value
+          }
+        }
         imxTokenInfo = {
           type: ERC20TokenType.ERC20,
           data: {
-            symbol: makerPool?.tName,
-            decimals: makerPool?.precision,
+            symbol: market.toChain.symbol,
+            decimals: market.toChain.decimals,
             tokenAddress: tokenAddress,
           },
         }

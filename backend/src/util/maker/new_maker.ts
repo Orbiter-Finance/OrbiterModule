@@ -1,7 +1,7 @@
 import { fix0xPadStartAddress, sleep } from 'orbiter-chaincore/src/utils/core';
 import { ScanChainMain, pubSub, chains } from 'orbiter-chaincore'
 import { core as chainCoreUtil } from 'orbiter-chaincore/src/utils'
-import { getMakerList, sendTransaction, sendTxConsumeHandle } from '.'
+import { sendTransaction, sendTxConsumeHandle } from '.'
 import * as orbiterCore from './core'
 import BigNumber from 'bignumber.js'
 import { TransactionIDV2 } from '../../service/maker'
@@ -19,6 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
+import { makerConfigs } from "../../config/consul";
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -26,21 +27,31 @@ export const repositoryMakerNode = (): Repository<MakerNode> => {
 export const chainQueue: { [key: number]: MessageQueue } = {};
 const LastPullTxMap: Map<String, Number> = new Map()
 export interface IMarket {
-  recipient: string
-  sender: string
+  id: string;
+  makerId: string;
+  ebcId: string;
+  recipient: string;
+  sender: string;
+  slippage: number;
+  tradingFee: number;
+  gasFee: number;
   fromChain: {
-    id: string
-    name: string
-    tokenAddress: string
-    symbol: string
-  }
+    id: number;
+    name: string;
+    tokenAddress: string;
+    symbol: string;
+    decimals: number;
+    maxPrice: number;
+    minPrice: number;
+  };
   toChain: {
-    id: string
-    name: string
-    tokenAddress: string
-    symbol: string
-  }
-  pool: any
+    id: number;
+    name: string;
+    tokenAddress: string;
+    symbol: string;
+    decimals: number;
+  };
+  times: number[];
 }
 // checkData
 export function checkAmount(
@@ -63,13 +74,13 @@ export function checkAmount(
   }
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(
-      market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+      market.fromChain.symbol === "ETH" ? 0.001 : market.fromChain.minPrice
   )
-    .plus(new BigNumber(market.pool.tradingFee))
-    .multipliedBy(new BigNumber(10 ** market.pool.precision))
-  const maxPrice = new BigNumber(market.pool.maxPrice)
-    .plus(new BigNumber(market.pool.tradingFee))
-    .multipliedBy(new BigNumber(10 ** market.pool.precision))
+    .plus(new BigNumber(market.tradingFee))
+    .multipliedBy(new BigNumber(10 ** market.fromChain.decimals))
+  const maxPrice = new BigNumber(market.fromChain.maxPrice)
+    .plus(new BigNumber(market.tradingFee))
+    .multipliedBy(new BigNumber(10 ** market.fromChain.decimals))
   if (pText !== validPText) {
     accessLogger.error(
       `Payment checkAmount inconsistent: ${pText}!=${validPText}`
@@ -80,8 +91,8 @@ export function checkAmount(
     accessLogger.error(
       `Payment checkAmount Amount exceeds maximum limit: ${new BigNumber(
         rAmount
-      ).dividedBy(10 ** market.pool.precision)} > ${maxPrice.dividedBy(
-        10 ** market.pool.precision
+      ).dividedBy(10 ** market.fromChain.decimals)} > ${maxPrice.dividedBy(
+        10 ** market.fromChain.decimals
       )}`
     )
     return false
@@ -89,8 +100,8 @@ export function checkAmount(
     accessLogger.error(
       `Payment checkAmount The amount is below the minimum limit: ${new BigNumber(
         rAmount
-      ).dividedBy(10 ** market.pool.precision)} < ${minPrice.dividedBy(
-        10 ** market.pool.precision
+      ).dividedBy(10 ** market.fromChain.decimals)} < ${minPrice.dividedBy(
+        10 ** market.fromChain.decimals
       )}`
     )
     return false
@@ -276,8 +287,8 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           )
           continue
         }
-        const newMakerList = await getNewMarketList()
-        const marketItem = newMakerList.find(
+        const newMakerList: IMarket[] = await getNewMarketList()
+        const marketItem: IMarket | undefined = newMakerList.find(
           (m) =>
             chainCoreUtil.equals(String(m.fromChain.id), fromChain.internalId) &&
             chainCoreUtil.equals(String(m.toChain.id), toChain.internalId) &&
@@ -444,7 +455,7 @@ export async function confirmTransactionSendMoneyBack(
         toTokenAddress,
         tx.value.toString(),
         userAddress,
-        market.pool,
+        market,
         tx.nonce,
         0,
         tx.from,
@@ -459,13 +470,8 @@ export async function confirmTransactionSendMoneyBack(
 
 }
 
-export async function getNewMarketList(): Promise<Array<IMarket>> {
-  const makerList = await getMakerList()
-  return chainCoreUtil.flatten(
-    makerList.map((row) => {
-      return newExpanPool(row)
-    })
-  )
+export async function getNewMarketList(): Promise<IMarket[]> {
+  return JSON.parse(JSON.stringify(makerConfigs))
 }
 export function groupWatchAddressByChain(makerList: Array<IMarket>): {
   [key: string]: Array<string>
@@ -486,104 +492,4 @@ export function groupWatchAddressByChain(makerList: Array<IMarket>): {
     chain[id] = chainCoreUtil.uniq([...senderAddress, ...recipientAddress])
   }
   return chain
-}
-// getNewMarketList().then((result) => {
-//   console.log(groupWatchAddressByChain(result), '===result')
-// })
-export function newExpanPool(pool): Array<IMarket> {
-  return [
-    {
-      recipient: pool.makerAddress,
-      sender: pool.makerAddress,
-      fromChain: {
-        id: String(pool.c1ID),
-        name: pool.c1Name,
-        tokenAddress: pool.t1Address,
-        symbol: pool.tName,
-      },
-      toChain: {
-        id: String(pool.c2ID),
-        name: pool.c2Name,
-        tokenAddress: pool.t2Address,
-        symbol: pool.tName,
-      },
-      // minPrice: pool.c1MinPrice,
-      // maxPrice: pool.c1MaxPrice,
-      // precision: pool.precision,
-      // avalibleDeposit: pool.c1AvalibleDeposit,
-      // tradingFee: pool.c1TradingFee,
-      // gasFee: pool.c1GasFee,
-      // avalibleTimes: pool.c1AvalibleTimes,
-      pool: {
-        //Subsequent versions will modify the structure
-        makerAddress: pool.makerAddress,
-        c1ID: pool.c1ID,
-        c2ID: pool.c2ID,
-        c1Name: pool.c1Name,
-        c2Name: pool.c2Name,
-        t1Address: pool.t1Address,
-        t2Address: pool.t2Address,
-        tName: pool.tName,
-        minPrice: pool.c1MinPrice,
-        maxPrice: pool.c1MaxPrice,
-        precision: pool.precision,
-        avalibleDeposit: pool.c1AvalibleDeposit,
-        tradingFee: pool.c1TradingFee,
-        gasFee: pool.c1GasFee,
-        avalibleTimes: pool.c1AvalibleTimes,
-      },
-    },
-    {
-      recipient: pool.makerAddress,
-      sender: pool.makerAddress,
-      fromChain: {
-        id: String(pool.c2ID),
-        name: pool.c2Name,
-        tokenAddress: pool.t2Address,
-        symbol: pool.tName,
-      },
-      toChain: {
-        id: String(pool.c1ID),
-        name: pool.c1Name,
-        tokenAddress: pool.t1Address,
-        symbol: pool.tName,
-      },
-      // minPrice: pool.c2MinPrice,
-      // maxPrice: pool.c2MaxPrice,
-      // precision: pool.precision,
-      // avalibleDeposit: pool.c2AvalibleDeposit,
-      // tradingFee: pool.c2TradingFee,
-      // gasFee: pool.c2GasFee,
-      // avalibleTimes: pool.c2AvalibleTimes,
-      pool: {
-        //Subsequent versions will modify the structure
-        makerAddress: pool.makerAddress,
-        c1ID: pool.c1ID,
-        c2ID: pool.c2ID,
-        c1Name: pool.c1Name,
-        c2Name: pool.c2Name,
-        t1Address: pool.t1Address,
-        t2Address: pool.t2Address,
-        tName: pool.tName,
-        minPrice: pool.c2MinPrice,
-        maxPrice: pool.c2MaxPrice,
-        precision: pool.precision,
-        avalibleDeposit: pool.c2AvalibleDeposit,
-        tradingFee: pool.c2TradingFee,
-        gasFee: pool.c2GasFee,
-        avalibleTimes: pool.c2AvalibleTimes,
-      },
-    },
-  ].map((row) => {
-    const L1L2Maping = makerConfig.starknetAddress
-    if (['4', '44'].includes(row.toChain.id)) {
-      // starknet mapping
-      row.sender = L1L2Maping[row.sender.toLowerCase()]
-    }
-    if (['4', '44'].includes(row.fromChain.id)) {
-      // starknet mapping
-      row.recipient = L1L2Maping[row.recipient.toLowerCase()]
-    }
-    return row
-  })
 }

@@ -14,6 +14,7 @@ import { getLoggerService } from '../../util/logger'
 import { readLogJson, sleep, writeLogJson } from '../../util';
 import fs from "fs";
 import path from "path";
+import { consulConfig } from "../../config/consul_store";
 
 const accessLogger = getLoggerService('4')
 
@@ -45,6 +46,7 @@ const txPool: { [makerAddress: string]: any[] } = {};
 export class StarknetHelp {
   private cache: Keyv
   public account: Account
+  private chainId:number
   constructor(
     public readonly network: starknetNetwork,
     public readonly privateKey: string,
@@ -59,6 +61,11 @@ export class StarknetHelp {
         decode: JSON.parse, // deserialize function
       }),
     })
+      if (network === 'mainnet-alpha') {
+          this.chainId = 4;
+      } else {
+          this.chainId = 44;
+      }
 
     const provider = getProviderV4(network)
     this.account = new Account(
@@ -141,7 +148,7 @@ export class StarknetHelp {
       return JSON.parse(JSON.stringify(txPool[this.address.toLowerCase()] || []));
   }
   async takeOutNonce() {
-    let nonces = await this.getAvailableNonce()
+    let nonces = await this.getAvailableNonce();
     const takeNonce = nonces.splice(0, 1)[0]
     const networkLastNonce = await this.getNetworkNonce()
     if (Number(takeNonce) < Number(networkLastNonce)) {
@@ -161,20 +168,6 @@ export class StarknetHelp {
     return {
       nonce: takeNonce,
       rollback: async (error: any, nonce: number) => {
-        // try {
-        //   let nonces = await this.getAvailableNonce()
-        //   accessLogger.info(
-        //     `Starknet Rollback ${error.message} error fallback nonces ${nonce} available ${JSON.stringify(nonces)}`
-        //   )
-        //   // nonces.push(nonce)
-        //   //
-        //   nonces.sort((a, b) => {
-        //     return a - b
-        //   })
-        //   await this.cache.set(cacheKey, nonces)
-        // } catch (error) {
-        //   accessLogger.error(`Starknet Rollback error: ${ error.message}`)
-        // }
         await sleep(1000);
         setStarknetLock(this.address.toLowerCase(), false);
       },
@@ -183,7 +176,16 @@ export class StarknetHelp {
       }
     }
   }
-  async getAvailableNonce(): Promise<Array<number>> {
+    getConsulNonce(nonce) {
+        if (consulConfig.nonce[this.address.toLowerCase()] && consulConfig.nonce[this.address.toLowerCase()][this.chainId]) {
+            const consulNonce = consulConfig.nonce[this.address.toLowerCase()][this.chainId];
+            consulConfig.nonce[this.address.toLowerCase()][this.chainId] = 0;
+            accessLogger.info(`change to consul nonce ${nonce} --> ${consulNonce}`);
+            return consulNonce;
+        }
+        return nonce;
+    }
+  async getAvailableNonce(): Promise<number[]> {
     const cacheKey = `nonces:${this.address.toLowerCase()}`
     let nonces: any = (await this.cache.get(cacheKey)) || []
     if (nonces && nonces.length <= 5) {
@@ -210,7 +212,17 @@ export class StarknetHelp {
     nonces.sort((a, b) => {
       return a - b
     })
-    return nonces
+      if (nonces.length) {
+          const n = nonces[0];
+          nonces[0] = this.getConsulNonce(nonces[0]);
+          if (n !== nonces[0]) {
+              const newNonce = nonces[0];
+              const newNonceList = [newNonce, newNonce + 1, newNonce + 2, newNonce + 3, newNonce + 4, newNonce + 5];
+              accessLogger.info(`new nonce list ${JSON.stringify(newNonceList)}`);
+              return newNonceList;
+          }
+      }
+      return nonces;
   }
   async signTransfer(params: {
     tokenAddress: string
