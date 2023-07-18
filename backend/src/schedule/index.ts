@@ -5,7 +5,6 @@ import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
 import { makerConfigs, watchConsulConfig } from "../config/consul";
-import { initAWS } from "../controller/maker";
 import { consulConfig } from "../config/consul_store";
 import { batchTxSend } from "./jobs";
 
@@ -106,7 +105,6 @@ export const startMasterJobs = async () => {
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     await watchConsulConfig();
     batchTxSend(consulConfig.maker);
-    initAWS(consulConfig.maker)
     waittingStartMaker(consulConfig.maker)
     startNewMakerTrxPull(consulConfig.chain)
   }
