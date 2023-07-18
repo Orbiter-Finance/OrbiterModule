@@ -5,6 +5,8 @@ import { consulConfig } from "./consul_store";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
+import Diff from 'diff';
+require('colors');
 
 const replySender = String(process.env['MAKER_ADDR'] || '').split(',');
 
@@ -230,38 +232,16 @@ function updateNonce(makerAddress: string, chainId: number, nonce: number) {
     accessLogger.info(`update ${makerAddress} ${chainId} nonce success, new nonce: ${nonce}`);
 }
 
-function compare(obj1: any, obj2: any, cb: Function, superKey?: string) {
-    if (obj1 instanceof Array && obj2 instanceof Array) {
-        compareList(obj1, obj2, cb, superKey);
-    } else if (typeof obj1 === "object" && typeof obj2 === "object") {
-        compareObj(obj1, obj2, cb, superKey);
-    }
-}
-
-function compareObj(obj1: any, obj2: any, cb: Function, superKey?: string) {
-    for (const key in obj1) {
-        if (obj1[key] instanceof Array) {
-            compareList(obj1[key], obj2[key], cb, superKey ? `${superKey} ${key}` : key);
-        } else if (typeof obj1[key] === "object") {
-            compareObj(obj1[key], obj2[key], cb, superKey ? `${superKey} ${key}` : key);
-        } else if (obj1[key] !== obj2[key]) {
-            cb(`${superKey ? (superKey + " ") : ""}${key}:${obj1[key]} ==> ${obj2[key]}`);
+function compare(obj1: any, obj2: any, cb: Function) {
+    let str = '';
+    Diff.diffJson(expected, actual).forEach(part => {
+        if (part.added) {
+            str += ("++" + part.value['green'].replace(/.+/g, '$&'));
+        } else if (part.removed) {
+            str += ("--" + part.value['red'].replace(/.+/g, '$&'));
         }
-    }
-}
-
-function compareList(arr1: any[], arr2: any[], cb: Function, superKey?: string) {
-    if (arr1.length !== arr2.length) {
-        cb(`${superKey ? (superKey + " ") : ""}count:${arr1.length} ==> ${arr2.length}`);
-        return;
-    }
-    for (let i = 0; i < arr1.length; i++) {
-        if (typeof arr1[i] === "object") {
-            compareObj(arr1[i], arr2[i], cb, superKey);
-        } else if (arr1[i] !== arr2[i]) {
-            cb(`${superKey ? (superKey + " ") : ""}${arr1[i]} ==> ${arr2[i]}`);
-        }
-    }
+    });
+    cb(str);
 }
 
 export function convertChainConfig(env_prefix: string, chainList: any[]): any[] {
