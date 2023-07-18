@@ -27,6 +27,20 @@ services:
       CONSUL_PORT: '${CONSUL_PORT}'
       CONSUL_TOKEN: '${CONSUL_TOKEN}'
       MAKER_ADDR: '${MAKER_ADDR}'
+      NODE_APP_CHAIN_API_KEY_1: "${NODE_APP_CHAIN_API_KEY_1}"
+      NODE_APP_CHAIN_API_KEY_2: "${NODE_APP_CHAIN_API_KEY_2}"
+      NODE_APP_CHAIN_API_KEY_6: "${NODE_APP_CHAIN_API_KEY_6}"
+      NODE_APP_CHAIN_API_KEY_7: "${NODE_APP_CHAIN_API_KEY_7}"
+      NODE_APP_CHAIN_API_KEY_9: "${NODE_APP_CHAIN_API_KEY_9}"
+      NODE_APP_CHAIN_API_KEY_15: "${NODE_APP_CHAIN_API_KEY_15}"
+
+      NODE_APP_HP_1: "${NODE_APP_HP_1}"
+      NODE_APP_HP_2: "${NODE_APP_HP_1}"
+      NODE_APP_HP_6: "${NODE_APP_HP_6}"
+      NODE_APP_HP_7: "${NODE_APP_HP_7}"
+      NODE_APP_HP_15: "${NODE_APP_HP_15}"
+      NODE_APP_HP_17: "${NODE_APP_HP_17}"
+
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'
