@@ -1,18 +1,18 @@
 import BigNumber from 'bignumber.js'
-import { makerConfig } from '../../config'
 import axios from 'axios'
 import * as ethers from 'ethers'
 import { sleep } from '../../util'
 import { private_key_to_pubkey_hash } from 'zksync-crypto'
 import { getExchangeRates } from '../coinbase'
+import { consulConfig } from "../../config/consul_store";
 
 export default {
   getZKSBalance: function (req): Promise<any> {
     return new Promise((resolve, reject) => {
       const url =
         (req.localChainID === 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint) +
+          ? consulConfig.maker.zkspace_test.api.endPoint
+          : consulConfig.maker.zkspace.api.endPoint) +
         '/account/' +
         req.account +
         '/' +
@@ -48,8 +48,8 @@ export default {
     //get gasfee width eth
     const url = `${
       localChainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint
+        ? consulConfig.maker.zkspace_test.api.endPoint
+        : consulConfig.maker.zkspace.api.endPoint
     }/account/${account}/fee`
     const response = await axios.get(url)
     if (response.status === 200 && response.statusText == 'OK') {
@@ -152,8 +152,8 @@ Only sign this message for a trusted client!`
       }
       const url = `${
         fromChainID == 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint
+          ? consulConfig.maker.zkspace_test.api.endPoint
+          : consulConfig.maker.zkspace.api.endPoint
       }/tx`
       let transferResult: any = await axios.post(
         url,
@@ -216,8 +216,8 @@ Only sign this message for a trusted client!`
     return new Promise((resolve, reject) => {
       const url =
         (localChainID === 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint) +
+          ? consulConfig.maker.zkspace_test.api.endPoint
+          : consulConfig.maker.zkspace.api.endPoint) +
         '/account/' +
         account +
         '/' +
@@ -247,8 +247,8 @@ Only sign this message for a trusted client!`
     }
     const url =
       (localChainID === 512
-        ? makerConfig.zkspace_test.api.endPoint
-        : makerConfig.zkspace.api.endPoint) +
+        ? consulConfig.maker.zkspace_test.api.endPoint
+        : consulConfig.maker.zkspace.api.endPoint) +
       '/tx/' +
       txHash
     const response = await axios.get(url)

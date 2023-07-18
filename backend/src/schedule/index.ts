@@ -1,14 +1,16 @@
-import { appConfig, makerConfig } from '../config'
+import { appConfig } from '../config'
 import { sleep } from '../util'
 import { accessLogger, errorLogger } from '../util/logger'
 import { startNewMakerTrxPull } from '../util/maker/new_maker'
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
 import { makerConfigs, watchConsulConfig } from "../config/consul";
+import { consulConfig } from "../config/consul_store";
+import { batchTxSend } from "./jobs";
 
 let smsTimeStamp = 0
 
-export async function waittingStartMaker() {
+export async function waittingStartMaker(makerConfig: any) {
   const makerList: string[] = Array.from(new Set(
       makerConfigs.map(item => item.sender.toLowerCase())
   ));
@@ -102,8 +104,9 @@ export const startMasterJobs = async () => {
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
     await watchConsulConfig();
-    waittingStartMaker()
-    startNewMakerTrxPull()
+    batchTxSend(consulConfig.maker);
+    waittingStartMaker(consulConfig.maker)
+    startNewMakerTrxPull(consulConfig.chain)
   }
 }
 
