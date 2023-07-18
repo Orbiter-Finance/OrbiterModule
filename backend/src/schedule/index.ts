@@ -7,6 +7,7 @@ import { telegramBot } from '../sms/telegram'
 import { makerConfigs, watchConsulConfig } from "../config/consul";
 import { consulConfig } from "../config/consul_store";
 import { batchTxSend } from "./jobs";
+import { PrivateKeys } from "../config/private_key";
 
 let smsTimeStamp = 0
 
@@ -18,7 +19,7 @@ export async function waittingStartMaker(makerConfig: any) {
     accessLogger.warn('none maker list')
     return
   }
-  // wait makerConfig.privateKeys
+  // wait PrivateKeys
   const startedIndexs: number[] = []
   let isPrivateKeysChanged = true
 
@@ -27,7 +28,7 @@ export async function waittingStartMaker(makerConfig: any) {
     for (let index = 0; index < makerList.length; index++) {
       const makerAddress = makerList[index]
       if (
-        makerConfig.privateKeys[makerAddress.toLowerCase()] &&
+          PrivateKeys[makerAddress.toLowerCase()] &&
         startedIndexs.indexOf(index) === -1
       ) {
         // jobMakerNodeTodo(item.makerAddress)
@@ -71,7 +72,7 @@ export async function waittingStartMaker(makerConfig: any) {
       }
     }
 
-    // Only first waiting or privateKeys changed
+    // Only first waiting or PrivateKeys changed
     if (isPrivateKeysChanged && missPrivateKeyMakerAddresses.length > 0) {
       const curlBody = {}
       for (const item of missPrivateKeyMakerAddresses) {

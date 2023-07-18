@@ -5,7 +5,8 @@ import { consulConfig } from "./consul_store";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
-import Diff from 'diff';
+import { PrivateKeys } from "./private_key";
+const Diff = require('diff');
 require('colors');
 
 const replySender = String(process.env['MAKER_ADDR'] || '').split(',');
@@ -60,7 +61,7 @@ export async function watchConsulConfig() {
     }
     const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
     if (omp) {
-        consulConfig.maker.privateKeys = JSON.parse(omp)
+        PrivateKeys = JSON.parse(omp)
     }
 
     console.log("======== consul config init end ========");
@@ -234,7 +235,7 @@ function updateNonce(makerAddress: string, chainId: number, nonce: number) {
 
 function compare(obj1: any, obj2: any, cb: Function) {
     let str = '';
-    Diff.diffJson(expected, actual).forEach(part => {
+    Diff.diffJson(obj1, obj2).forEach(part => {
         if (part.added) {
             str += ("++" + part.value['green'].replace(/.+/g, '$&'));
         } else if (part.removed) {

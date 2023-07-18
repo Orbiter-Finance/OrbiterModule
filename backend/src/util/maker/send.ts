@@ -29,6 +29,7 @@ import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, IMarket, transfers } from './new_maker';
 import { consulConfig } from "../../config/consul_store";
+import { PrivateKeys } from "../../config/private_key";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -170,7 +171,7 @@ export async function sendConsumer(value: any) {
         )
       }
       const ethWallet = new ethers.Wallet(
-          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
+          PrivateKeys[makerAddress.toLowerCase()]
       ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
@@ -292,7 +293,7 @@ export async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
-      const privateKey = consulConfig.maker.privateKeys[makerAddress.toLowerCase()];
+      const privateKey = PrivateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
     const queueList = await starknet.getTask();
@@ -420,7 +421,7 @@ export async function sendConsumer(value: any) {
 
   if (chainID == 9 || chainID == 99) {
     const provider = new PrivateKeyProvider(
-        consulConfig.maker.privateKeys[makerAddress.toLowerCase()],
+        PrivateKeys[makerAddress.toLowerCase()],
       chainID == 9
         ? consulConfig.maker['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
@@ -563,7 +564,7 @@ export async function sendConsumer(value: any) {
     try {
       const dydxWeb3 = new Web3()
       dydxWeb3.eth.accounts.wallet.add(
-          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
+          PrivateKeys[makerAddress.toLowerCase()]
       )
       const dydxHelper = new DydxHelper(chainID, dydxWeb3)
       const dydxClient = await dydxHelper.getDydxClient(
@@ -654,7 +655,7 @@ export async function sendConsumer(value: any) {
   if (chainID == 12 || chainID == 512) {
     try {
       const wallet = new ethers.Wallet(
-          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
+          PrivateKeys[makerAddress.toLowerCase()]
       )
       const msg =
         'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
@@ -1110,7 +1111,7 @@ export async function sendConsumer(value: any) {
       details['gasLimit'] = web3.utils.toHex(gasLimit)
       details['type'] = 2
       const wallet = new ethers.Wallet(
-        Buffer.from(consulConfig.maker.privateKeys[makerAddress.toLowerCase()], 'hex')
+        Buffer.from(PrivateKeys[makerAddress.toLowerCase()], 'hex')
       )
       const signedTx = await wallet.signTransaction(details)
       const resp = await httpsProvider.sendTransaction(signedTx)
@@ -1152,7 +1153,7 @@ export async function sendConsumer(value: any) {
    * The private key is what unlocks your wallet.
    */
   transaction.sign(
-    Buffer.from(consulConfig.maker.privateKeys[makerAddress.toLowerCase()], 'hex')
+    Buffer.from(PrivateKeys[makerAddress.toLowerCase()], 'hex')
   )
   accessLogger.info(`send transaction = ${JSON.stringify(details)}`)
   /**

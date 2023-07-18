@@ -6,6 +6,7 @@ import KoaRouter from 'koa-router'
 import { DydxHelper } from '../service/dydx/dydx_helper'
 import { makerConfigs } from "../config/consul";
 import { consulConfig } from "../config/consul_store";
+import { PrivateKeys } from "../config/private_key";
 // extend relativeTime
 dayjs.extend(relativeTime)
 
@@ -17,7 +18,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     ));
     const addresses: string[] = []
     for (const item of makerAddresses) {
-      if (consulConfig.maker?.privateKeys[item.toLowerCase()]) {
+      if (PrivateKeys[item.toLowerCase()]) {
         continue
       }
 
@@ -27,7 +28,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     if (starknetAddress) {
       for (const L1 in starknetAddress) {
         const address = starknetAddress[L1].toLowerCase();
-        if (consulConfig.maker?.privateKeys[address]) {
+        if (PrivateKeys[address]) {
           continue
         };
         addresses.push(address)
@@ -36,7 +37,7 @@ export default function (router: KoaRouter<DefaultState, Context>) {
     restful.json(addresses)
   })
 
-  // set privateKeys
+  // set PrivateKeys
   router.post('maker/privatekeys', async ({ request, restful }: any) => {
     const { body } = request
 
@@ -45,14 +46,14 @@ export default function (router: KoaRouter<DefaultState, Context>) {
       if (Object.prototype.hasOwnProperty.call(body, makerAddress)) {
         if (
           !body[makerAddress] ||
-            consulConfig.maker?.privateKeys[makerAddress.toLowerCase()]
+            PrivateKeys[makerAddress.toLowerCase()]
         ) {
           continue
         }
 
         makerAddresses.push(makerAddress)
 
-        consulConfig.maker.privateKeys[makerAddress.toLowerCase()] = body[makerAddress]
+        PrivateKeys[makerAddress.toLowerCase()] = body[makerAddress]
       }
     }
 

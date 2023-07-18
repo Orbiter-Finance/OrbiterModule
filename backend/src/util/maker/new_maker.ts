@@ -18,6 +18,7 @@ import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
 import { makerConfigs } from "../../config/consul";
 import { consulConfig } from "../../config/consul_store";
+import { PrivateKeys } from "../../config/private_key";
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -346,7 +347,7 @@ export async function confirmTransactionSendMoneyBack(
   const toChainName = market.toChain.name
   const makerAddress = market.sender
   if (
-    chainCoreUtil.isEmpty(consulConfig.maker.privateKeys[makerAddress.toLowerCase()])
+    chainCoreUtil.isEmpty(PrivateKeys[makerAddress.toLowerCase()])
   ) {
     accessLogger.error(
       `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${makerAddress}`
