@@ -166,7 +166,7 @@ function updateChain(config: any) {
         consulConfig.chain = config;
         chains.fill(configs);
         refreshConfig();
-        accessLogger.info(`update chain config success, chain count: ${consulConfig.chain && consulConfig.chain.length}`);
+        accessLogger.info(`update chain config success, chain count: ${configs.length}`);
     } else {
         errorLogger.error(`update chain config fail`);
     }
