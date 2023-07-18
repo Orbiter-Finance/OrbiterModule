@@ -1,1 +1,1 @@
-export let PrivateKeys: any = {};
+export const PrivateKeys: any = {};

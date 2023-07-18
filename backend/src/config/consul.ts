@@ -5,7 +5,6 @@ import { consulConfig } from "./consul_store";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
-import { PrivateKeys } from "./private_key";
 const Diff = require('diff');
 require('colors');
 
@@ -58,10 +57,6 @@ export async function watchConsulConfig() {
             // TODO TG
             errorLogger.error(e);
         }
-    }
-    const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
-    if (omp) {
-        PrivateKeys = JSON.parse(omp)
     }
 
     console.log("======== consul config init end ========");
@@ -161,13 +156,14 @@ function updateMaker(config: any) {
 function updateChain(config: any) {
     if (config && config.length && config.find(item => +item.internalId === 1 || +item.internalId === 5)) {
         const configs = <any>convertChainConfig("NODE_APP", config);
-        if (consulConfig.chain && consulConfig.chain.length) {
-            compare(consulConfig.chain, config, function (msg) {
+        const oldChains = JSON.parse(JSON.stringify(chains.getAllChains()));
+        chains.fill(configs);
+        if (oldChains && oldChains.length) {
+            compare(oldChains, chains.getAllChains(), function (msg) {
                 accessLogger.info(msg);
             });
         }
-        consulConfig.chain = config;
-        chains.fill(configs);
+        consulConfig.chain = chains.getAllChains();
         refreshConfig();
         accessLogger.info(`update chain config success, chain count: ${configs.length}`);
     } else {
