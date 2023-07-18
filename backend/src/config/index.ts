@@ -4,15 +4,8 @@ dotenv.config({ path: path.resolve(__dirname, '..', '..', '..', '.env') })
 
 import { ListenOptions } from 'net'
 import * as logConfig from './log'
-import makerConfig from './maker'
 import * as ormConfig from './orm'
 import * as prometheusConfig from './prometheus'
-
-// cover private keys
-const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
-if (omp) {
-  makerConfig.privateKeys = JSON.parse(omp)
-}
 
 const appConfig = {
   options: <ListenOptions>{
@@ -21,4 +14,4 @@ const appConfig = {
   },
 }
 
-export { appConfig, ormConfig, logConfig, makerConfig, prometheusConfig }
+export { appConfig, ormConfig, logConfig, prometheusConfig }

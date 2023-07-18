@@ -1,6 +1,5 @@
 import axios from 'axios'
 import { Repository } from 'typeorm'
-import { prometheusConfig } from '../config'
 import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { SystemSetting } from '../model/system_setting'
 import { sleep } from '../util'

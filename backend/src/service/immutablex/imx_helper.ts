@@ -1,7 +1,7 @@
 import { ETHTokenType, ImmutableXClient } from '@imtbl/imx-sdk'
 import { ethers, providers, Wallet } from 'ethers'
-import { makerConfig } from '../../config'
 import { errorLogger } from '../../util/logger'
+import { consulConfig } from "../../config/consul_store";
 
 export type Transaction = {
   blockNumber?: number
@@ -44,13 +44,13 @@ export class IMXHelper {
 
   constructor(chainId: number) {
     if (chainId == 8) {
-      this.publicApiUrl = makerConfig.immutableX.api.endPoint
+      this.publicApiUrl = consulConfig.maker.immutableX.api.endPoint
       this.starkContractAddress = CONTRACTS.mainnet.starkContractAddress
       this.registrationContractAddress =
         CONTRACTS.mainnet.registrationContractAddress
     }
     if (chainId == 88) {
-      this.publicApiUrl = makerConfig.immutableX_test.api.endPoint
+      this.publicApiUrl = consulConfig.maker.immutableX_test.api.endPoint
       this.starkContractAddress = CONTRACTS.ropsten.starkContractAddress
       this.registrationContractAddress =
         CONTRACTS.ropsten.registrationContractAddress
@@ -82,7 +82,7 @@ export class IMXHelper {
     let signer: ethers.Wallet | undefined = undefined
     if (addressOrIndex) {
       const provider = new providers.AlchemyProvider('ropsten')
-      signer = new Wallet(makerConfig.privateKeys[String(addressOrIndex).toLowerCase()]).connect(
+      signer = new Wallet(consulConfig.maker.privateKeys[String(addressOrIndex).toLowerCase()]).connect(
         provider
       )
     }

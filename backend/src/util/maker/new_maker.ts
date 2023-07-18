@@ -9,9 +9,6 @@ import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { Core } from '../core'
 import { Repository } from 'typeorm'
 import { MakerNode } from '../../model/maker_node'
-import { makerConfig } from '../../config'
-import mainnetChains from '../../config/chains.json'
-import testnetChains from '../../config/testnet.json'
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { ITransaction, TransactionStatus } from 'orbiter-chaincore/src/types'
@@ -20,7 +17,7 @@ import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
 import { makerConfigs } from "../../config/consul";
-const allChainsConfig = [...mainnetChains, ...testnetChains]
+import { consulConfig } from "../../config/consul_store";
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
 }
@@ -127,7 +124,7 @@ function getCacheClient(chainId: string) {
   return cache
 }
 
-export async function startNewMakerTrxPull() {
+export async function startNewMakerTrxPull(allChainsConfig) {
   const makerList = await getNewMarketList()
   const convertMakerList = groupWatchAddressByChain(makerList)
   const scanChain = new ScanChainMain(<any>allChainsConfig)
@@ -349,7 +346,7 @@ export async function confirmTransactionSendMoneyBack(
   const toChainName = market.toChain.name
   const makerAddress = market.sender
   if (
-    chainCoreUtil.isEmpty(makerConfig.privateKeys[makerAddress.toLowerCase()])
+    chainCoreUtil.isEmpty(consulConfig.maker.privateKeys[makerAddress.toLowerCase()])
   ) {
     accessLogger.error(
       `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${makerAddress}`

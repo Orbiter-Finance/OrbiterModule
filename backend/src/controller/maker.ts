@@ -4,7 +4,6 @@ import dayjs from 'dayjs'
 import relativeTime from 'dayjs/plugin/relativeTime'
 import { Context, DefaultState } from 'koa'
 import KoaRouter from 'koa-router'
-import { makerConfig } from '../config'
 import { DydxHelper } from '../service/dydx/dydx_helper'
 import * as serviceMaker from '../service/maker'
 import * as serviceMakerWealth from '../service/maker_wealth'
@@ -12,15 +11,21 @@ import { makerConfigs } from "../config/consul";
 // extend relativeTime
 dayjs.extend(relativeTime)
 
-AWS.config.update({
-  maxRetries: 3,
-  httpOptions: { timeout: 30000, connectTimeout: 5000 },
-  region: 'ap-northeast-1',
-  accessKeyId: makerConfig.s3AccessKeyId,
-  secretAccessKey: makerConfig.s3SecretAccessKey,
-})
+let s3;
+let makerConfig
 
-const s3 = new AWS.S3()
+export function initAWS(consulMakerConfig: any) {
+  makerConfig = consulMakerConfig;
+
+  AWS.config.update({
+    maxRetries: 3,
+    httpOptions: { timeout: 30000, connectTimeout: 5000 },
+    region: 'ap-northeast-1',
+    accessKeyId: makerConfig.s3AccessKeyId,
+    secretAccessKey: makerConfig.s3SecretAccessKey,
+  });
+  s3 = new AWS.S3();
+}
 
 export default function (router: KoaRouter<DefaultState, Context>) {
   router.get('maker/miss_private_key_addresses', async ({ restful }: any) => {

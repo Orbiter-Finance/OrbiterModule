@@ -3,9 +3,6 @@ import schedule from 'node-schedule'
 import { accessLogger, errorLogger } from '../util/logger';
 import * as coinbase from '../service/coinbase'
 import * as serviceMaker from '../service/maker'
-import mainnetChains from '../config/chains.json'
-import testnetChains from '../config/testnet.json'
-import { makerConfig } from "../config";
 import { equals } from "orbiter-chaincore/src/utils/core";
 import { setStarknetLock, StarknetHelp, starknetLockMap } from "../service/starknet/helper";
 import { getNewMarketList, repositoryMakerNode } from "../util/maker/new_maker";
@@ -20,7 +17,6 @@ import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
 import { consulConfig } from "../config/consul_store";
-chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -113,7 +109,8 @@ let balanceWaringTime = 0;
 let cron;
 const sendCronMap = {};
 
-export async function batchTxSend(chainIdList = [4, 44]) {
+export async function batchTxSend(makerConfig: any) {
+  const chainIdList = [4, 44];
   const makerSend = (makerAddress, chainId) => {
     const snCallback = async () => {
         const sn = async () => {

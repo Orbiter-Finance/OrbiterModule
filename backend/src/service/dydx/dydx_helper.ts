@@ -8,9 +8,8 @@ import {
 import { getAccountId } from '@dydxprotocol/v3-client/build/src/lib/db'
 import BigNumber from 'bignumber.js'
 import { ethers, utils } from 'ethers'
-import Web3 from 'web3'
-import { makerConfig } from '../../config'
 import { equalsIgnoreCase } from '../../util'
+import { consulConfig } from "../../config/consul_store";
 
 const DYDX_MAKERS = {
   // Testnet
@@ -52,11 +51,11 @@ export class DydxHelper {
   ) {
     if (chainId == 11) {
       this.networkId = 1
-      this.host = makerConfig.dydx.api.endPoint
+      this.host = consulConfig.maker.dydx.api.endPoint
     }
     if (chainId == 511) {
       this.networkId = 3
-      this.host = makerConfig.dydx_test.api.endPoint
+      this.host = consulConfig.maker.dydx_test.api.endPoint
     }
 
     this.chainId = chainId

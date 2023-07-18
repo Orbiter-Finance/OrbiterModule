@@ -16,7 +16,6 @@ import * as zksync2 from 'zksync-web3'
 import Web3 from 'web3'
 import * as zksync from 'zksync'
 import { isEthTokenAddress, sleep } from '..'
-import { makerConfig } from '../../config'
 import { DydxHelper } from '../../service/dydx/dydx_helper'
 import { IMXHelper } from '../../service/immutablex/imx_helper'
 import zkspace_help from '../../service/zkspace/zkspace_help'
@@ -29,16 +28,17 @@ import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, IMarket, transfers } from './new_maker';
+import { consulConfig } from "../../config/consul_store";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
 const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
-  if (toChain === 'mainnet' && !makerConfig[toChain].gasPrice) {
+  if (toChain === 'mainnet' && !consulConfig.maker[toChain].gasPrice) {
     try {
-      const httpEndPoint = makerConfig[toChain].api.endPoint
-      const apiKey = makerConfig[toChain].gasKey
-        ? makerConfig[toChain].gasKey
-        : makerConfig[toChain].api.key
+      const httpEndPoint = consulConfig.maker[toChain].api.endPoint
+      const apiKey = consulConfig.maker[toChain].gasKey
+        ? consulConfig.maker[toChain].gasKey
+        : consulConfig.maker[toChain].api.key
       const url =
         httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
       const response = await axios.get(url)
@@ -66,7 +66,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
     }
   } else {
     try {
-      const response = await axios.post(makerConfig[toChain].httpEndPoint, {
+      const response = await axios.post(consulConfig.maker[toChain].httpEndPoint, {
         jsonrpc: '2.0',
         method: 'eth_gasPrice',
         params: [],
@@ -114,7 +114,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         return Web3.utils.toHex(200000000000);
       }
       return Web3.utils.toHex(
-        Web3.utils.toWei(makerConfig[toChain].gasPrice + '', 'gwei')
+        Web3.utils.toWei(consulConfig.maker[toChain].gasPrice + '', 'gwei')
       )
     }
   }
@@ -170,7 +170,7 @@ export async function sendConsumer(value: any) {
         )
       }
       const ethWallet = new ethers.Wallet(
-        makerConfig.privateKeys[makerAddress.toLowerCase()]
+          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
       ).connect(ethProvider)
       const syncWallet = await zksync.Wallet.fromEthSigner(
         ethWallet,
@@ -292,7 +292,7 @@ export async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
-      const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+      const privateKey = consulConfig.maker.privateKeys[makerAddress.toLowerCase()];
       const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
     const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
     const queueList = await starknet.getTask();
@@ -420,9 +420,9 @@ export async function sendConsumer(value: any) {
 
   if (chainID == 9 || chainID == 99) {
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress.toLowerCase()],
+        consulConfig.maker.privateKeys[makerAddress.toLowerCase()],
       chainID == 9
-        ? makerConfig['mainnet'].httpEndPoint
+        ? consulConfig.maker['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
     try {
@@ -563,7 +563,7 @@ export async function sendConsumer(value: any) {
     try {
       const dydxWeb3 = new Web3()
       dydxWeb3.eth.accounts.wallet.add(
-        makerConfig.privateKeys[makerAddress.toLowerCase()]
+          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
       )
       const dydxHelper = new DydxHelper(chainID, dydxWeb3)
       const dydxClient = await dydxHelper.getDydxClient(
@@ -654,7 +654,7 @@ export async function sendConsumer(value: any) {
   if (chainID == 12 || chainID == 512) {
     try {
       const wallet = new ethers.Wallet(
-        makerConfig.privateKeys[makerAddress.toLowerCase()]
+          consulConfig.maker.privateKeys[makerAddress.toLowerCase()]
       )
       const msg =
         'Access ZKSwap account.\n\nOnly sign this message for a trusted client!'
@@ -715,8 +715,8 @@ export async function sendConsumer(value: any) {
       const feeTokenId = 0
       const zksNetworkID =
         chainID === 512
-          ? makerConfig.zkspace_test.api.chainID
-          : makerConfig.zkspace.api.chainID
+          ? consulConfig.maker.zkspace_test.api.chainID
+          : consulConfig.maker.zkspace.api.chainID
       let fee = await zkspace_help.getZKSTransferGasFee(chainID, makerAddress)
       const transferFee = zksync.utils.closestPackableTransactionFee(
         ethers.utils.parseUnits(fee.toString(), 18)
@@ -808,8 +808,8 @@ export async function sendConsumer(value: any) {
       }
       let transferResult = await axios.post(
         (chainID === 512
-          ? makerConfig.zkspace_test.api.endPoint
-          : makerConfig.zkspace.api.endPoint) + '/tx',
+          ? consulConfig.maker.zkspace_test.api.endPoint
+          : consulConfig.maker.zkspace.api.endPoint) + '/tx',
         {
           signature: req.signature,
           fastProcessing: req.fastProcessing,
@@ -836,10 +836,10 @@ export async function sendConsumer(value: any) {
     }
   }
   let web3Net = ''
-  if (makerConfig[toChain]) {
+  if (consulConfig.maker[toChain]) {
     web3Net =
-      makerConfig[toChain].httpEndPointInfura ||
-      makerConfig[toChain].httpEndPoint
+        consulConfig.maker[toChain].httpEndPointInfura ||
+        consulConfig.maker[toChain].httpEndPoint
     accessLogger.info(`RPC from makerConfig ${toChain}`)
   } else {
     //
@@ -861,7 +861,7 @@ export async function sendConsumer(value: any) {
       tokenBalanceWei =
         Number(await web3.eth.getBalance(<any>web3.eth.defaultAccount)) || 0
     } else {
-      tokenContract = new web3.eth.Contract(<any>makerConfig.ABI, tokenAddress)
+      tokenContract = new web3.eth.Contract(<any>consulConfig.maker.ABI, tokenAddress)
       tokenBalanceWei = await tokenContract.methods
         .balanceOf(web3.eth.defaultAccount)
         .call({
@@ -1064,7 +1064,7 @@ export async function sendConsumer(value: any) {
   if ([1, 5,7,77].includes(chainID)) {
    try {
       // eip 1559 send
-      const networkId = makerConfig[toChain]?.customChainId
+      const networkId = consulConfig.maker[toChain]?.customChainId
       details['chainId'] = networkId;
       const config = chains.getChainInfo(Number(chainID));
       if (config && config.rpc.length <= 0) {
@@ -1110,7 +1110,7 @@ export async function sendConsumer(value: any) {
       details['gasLimit'] = web3.utils.toHex(gasLimit)
       details['type'] = 2
       const wallet = new ethers.Wallet(
-        Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+        Buffer.from(consulConfig.maker.privateKeys[makerAddress.toLowerCase()], 'hex')
       )
       const signedTx = await wallet.signTransaction(details)
       const resp = await httpsProvider.sendTransaction(signedTx)
@@ -1131,8 +1131,8 @@ export async function sendConsumer(value: any) {
     }
   }
   let transaction: EthereumTx
-  if (makerConfig[toChain]?.customChainId) {
-    const networkId = makerConfig[toChain]?.customChainId
+  if (consulConfig.maker[toChain]?.customChainId) {
+    const networkId = consulConfig.maker[toChain]?.customChainId
     const customCommon = Common.forCustomChain(
       'mainnet',
       {
@@ -1152,7 +1152,7 @@ export async function sendConsumer(value: any) {
    * The private key is what unlocks your wallet.
    */
   transaction.sign(
-    Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
+    Buffer.from(consulConfig.maker.privateKeys[makerAddress.toLowerCase()], 'hex')
   )
   accessLogger.info(`send transaction = ${JSON.stringify(details)}`)
   /**

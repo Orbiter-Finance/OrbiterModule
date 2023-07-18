@@ -1,12 +1,11 @@
 import Consul, { KvPair } from 'consul';
 import { chains } from "orbiter-chaincore/src/utils";
 import { errorLogger, accessLogger } from "../util/logger";
-import makerConfig from './maker';
 import { consulConfig } from "./consul_store";
-import { batchTxSend } from "../schedule/jobs";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
+
 const replySender = String(process.env['MAKER_ADDR'] || '').split(',');
 
 export const consul = process.env["CONSUL_HOST"]
@@ -57,6 +56,11 @@ export async function watchConsulConfig() {
             errorLogger.error(e);
         }
     }
+    const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
+    if (omp) {
+        consulConfig.maker.privateKeys = JSON.parse(omp)
+    }
+
     console.log("======== consul config init end ========");
 }
 
@@ -145,7 +149,6 @@ function updateMaker(config: any) {
             });
         }
         consulConfig.maker = config;
-        Object.assign(makerConfig, config);
         accessLogger.info(`update maker config success`);
     } else {
         errorLogger.error(`update maker config fail`);
@@ -163,7 +166,7 @@ function updateChain(config: any) {
         consulConfig.chain = config;
         chains.fill(configs);
         refreshConfig();
-        accessLogger.info(`update chain config success`);
+        accessLogger.info(`update chain config success, chain count: ${consulConfig.chain && consulConfig.chain.length}`);
     } else {
         errorLogger.error(`update chain config fail`);
     }
@@ -184,7 +187,7 @@ function updateTradingPairs(makerAddress: string, config: any) {
         }
         consulConfig.tradingPairs[makerAddress] = config;
         refreshConfig();
-        accessLogger.info(`update ${makerAddress} trading pairs success`);
+        accessLogger.info(`update ${makerAddress} trading pairs success, config count: ${Object.keys(config).length}`);
     } else {
         errorLogger.error(`update trading pairs fail, format error`);
     }
@@ -207,7 +210,6 @@ function updateStarknet(config: any) {
         }
         consulConfig.starknet = config;
         accessLogger.info(`update starknet config success`);
-        batchTxSend();
     } else {
         errorLogger.error(`update starknet config fail`);
     }

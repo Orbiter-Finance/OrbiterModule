@@ -12,7 +12,6 @@ import dayjs from 'dayjs'
 import { In, Repository } from 'typeorm';
 import Web3 from 'web3'
 import { sleep } from '..'
-import { makerConfig } from '../../config'
 import { MakerNode } from '../../model/maker_node'
 import { MakerNodeTodo } from '../../model/maker_node_todo'
 import zkspace_help from '../../service/zkspace/zkspace_help'
@@ -26,6 +25,7 @@ import { doSms } from '../../sms/smsSchinese'
 import { getAmountToSend } from './core'
 import { chainQueue } from './new_maker'
 import { telegramBot } from '../../sms/telegram'
+import { consulConfig } from "../../config/consul_store";
 
 let accountInfo: AccountInfo
 let lpKey: string
@@ -56,9 +56,9 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
   if (!lpKey) {
     const { exchangeInfo } = await exchangeApi.getExchangeInfo()
     const provider = new PrivateKeyProvider(
-      makerConfig.privateKeys[makerAddress.toLowerCase()],
+        consulConfig.maker.privateKeys[makerAddress.toLowerCase()],
       fromChainID == 9
-        ? makerConfig['mainnet'].httpEndPoint
+        ? consulConfig.maker['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'
     )
     try {
@@ -131,9 +131,9 @@ function confirmToTransaction(
           Chain === 'zksync2_test'
         ) {
           //no use alchemy provider
-          toWeb3 = new Web3(makerConfig[Chain].httpEndPoint)
+          toWeb3 = new Web3(consulConfig.maker[Chain].httpEndPoint)
         } else {
-          toWeb3 = createAlchemyWeb3(makerConfig[Chain].httpEndPoint)
+          toWeb3 = createAlchemyWeb3(consulConfig.maker[Chain].httpEndPoint)
         }
 
         info = await toWeb3.eth.getBlock(trxConfirmations.trx.blockNumber)
@@ -411,9 +411,9 @@ async function getConfirmations(fromChain, txHash): Promise<any> {
       fromChain === 'zksync2_test'
     ) {
       //no use alchemy provider
-      web3 = new Web3(makerConfig[fromChain].httpEndPoint)
+      web3 = new Web3(consulConfig.maker[fromChain].httpEndPoint)
     } else {
-      web3 = createAlchemyWeb3(makerConfig[fromChain].httpEndPoint)
+      web3 = createAlchemyWeb3(consulConfig.maker[fromChain].httpEndPoint)
     }
     const trx = await web3.eth.getTransaction(txHash)
     const currentBlock = await web3.eth.getBlockNumber()
