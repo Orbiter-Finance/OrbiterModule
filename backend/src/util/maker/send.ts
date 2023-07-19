@@ -996,6 +996,10 @@ export async function sendConsumer(value: any) {
     if (chainID == 1 || chainID == 5) {
       maxPrice = 260;
     }
+    if (fromChainID==23&&chainID == 1) {
+      maxPrice = 180;
+    }
+
   }
   if (tokenInfo && tokenInfo.symbol === 'USDC') {
     if (chainID == 1 || chainID == 5) {

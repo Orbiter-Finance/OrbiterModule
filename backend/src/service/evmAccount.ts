@@ -38,7 +38,7 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 
 let gasMulti: number = 1.2;
-let gasMaxPrice: number = 0.0001 * 10 ** 18;
+let gasMaxPrice: number = 200000000000;
 
 interface IJobParams {
     waringInterval: number;
@@ -239,66 +239,30 @@ export class EVMAccount {
     async getGasPrice(transactionRequest: ethers.providers.TransactionRequest = {}) {
         try {
             const feeData = await this.provider.getFeeData();
-            const height = await this.makerWeb3.getBlockNumber();
-            const block = await this.makerWeb3.getBlock(height, true);
             const variableConfig = await this.getVariableConfig();
             const multi: number = variableConfig.gasMulti;
             const gasMaxPrice: number = variableConfig.gasMaxPrice;
-            const transactionList = block?.transactions || [];
             if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
                 transactionRequest.type = 2;
-                const networkMaxFeePerGas = feeData.maxFeePerGas;
-                const networkMaxPriorityFeePerGas = feeData.maxPriorityFeePerGas;
-                let blockMaxFeePerGas = new BigNumber(0);
-                let blockMaxPriorityFeePerGas = new BigNumber(0);
-                let count = 0;
-                for (const tx of transactionList) {
-                    if (!tx.maxFeePerGas || !tx.maxPriorityFeePerGas) continue;
-                    blockMaxFeePerGas = blockMaxFeePerGas.plus(String(tx.maxFeePerGas));
-                    blockMaxPriorityFeePerGas = blockMaxPriorityFeePerGas.plus(String(tx.maxPriorityFeePerGas));
-                    count++;
+                const rpc = this.makerWeb3.getNewRpc()
+                let maxPriorityFeePerGas = 3000000000
+                try {
+                    const provider = new ethers.providers.JsonRpcProvider(rpc);
+                    const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
+                    if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
+                      maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(1.5).toNumber();
+                    }
+                    transactionRequest.maxFeePerGas =  this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
+                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice * 10 ** 9)
+                    delete transactionRequest.gasPrice;
+                } catch (error) {
+                  this.logger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
+                  throw new Error(`eth_maxPriorityFeePerGas error:${error.message}`);
                 }
-                if (count) {
-                    blockMaxFeePerGas = blockMaxFeePerGas.dividedBy(count) || new BigNumber(0);
-                    blockMaxPriorityFeePerGas = blockMaxPriorityFeePerGas.dividedBy(count);
-                }
-                this.logger.info(`EIP1559 block ${count} maxFeePerGas: ${blockMaxFeePerGas.toFixed(0)}, maxPriorityFeePerGas: ${blockMaxPriorityFeePerGas.toFixed(0)}`);
-                this.logger.info(`EIP1559 network maxFeePerGas: ${networkMaxFeePerGas.toString()}, maxPriorityFeePerGas: ${networkMaxPriorityFeePerGas.toString()}`);
-
-                transactionRequest.maxFeePerGas = ethers.BigNumber.from(blockMaxFeePerGas.plus(networkMaxFeePerGas.toString()).multipliedBy(multi).toFixed(0));
-                transactionRequest.maxPriorityFeePerGas = blockMaxPriorityFeePerGas.gt(networkMaxPriorityFeePerGas.toString()) ?
-                    ethers.BigNumber.from(blockMaxPriorityFeePerGas.multipliedBy(multi).toFixed(0)) :
-                    ethers.BigNumber.from(new BigNumber(networkMaxPriorityFeePerGas.toString()).multipliedBy(multi).toFixed(0));
-                delete transactionRequest.gasPrice;
-                if (transactionRequest.maxPriorityFeePerGas.gt(gasMaxPrice)) {
-                    this.logger.info(`maxPriorityFeePerGas exceeding the maximum set gas fee ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()} > ${gasMaxPrice}`);
-                    transactionRequest.maxPriorityFeePerGas = ethers.BigNumber.from(gasMaxPrice);
-                }
-                this.logger.info(`EIP1559 use maxFeePerGas: ${transactionRequest.maxFeePerGas.toString()}, maxPriorityFeePerGas: ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()}, multi: ${multi}`);
-            } else {
-                // const networkGasPrice = await this.provider.getGasPrice();
-                const networkGasPrice = feeData.gasPrice;
-                let blockGasPrice = new BigNumber(0);
-                let count = 0;
-                for (const tx of transactionList) {
-                    if (!tx.gasPrice) continue;
-                    blockGasPrice = blockGasPrice.plus(String(tx.gasPrice));
-                    count++;
-                }
-                if (count) {
-                    blockGasPrice = blockGasPrice.dividedBy(count) || new BigNumber(0);
-                }
-                this.logger.info(`Legacy block gasPrice: ${blockGasPrice.toFixed(0)}`);
-                this.logger.info(`Legacy network gasPrice: ${networkGasPrice && networkGasPrice.toString()}`);
-                transactionRequest.gasPrice = blockGasPrice.gt((networkGasPrice || 0).toString()) ?
-                    ethers.BigNumber.from(blockGasPrice.toFixed(0)) :
-                    ethers.BigNumber.from((networkGasPrice || 0).toString());
-                if (transactionRequest.gasPrice.gt(gasMaxPrice)) {
-                    this.logger.info(`gasPrice exceeding the maximum set gas fee ${transactionRequest.maxPriorityFeePerGas && transactionRequest.maxPriorityFeePerGas.toString()} > ${gasMaxPrice}`);
-                    transactionRequest.gasPrice = ethers.BigNumber.from(gasMaxPrice);
-                }
-                this.logger.info(`Legacy use gasPrice: ${transactionRequest.gasPrice.toString()}`);
+            
+             
             }
+          
         } catch (e) {
             this.logger.error("get gas price error:", e);
         }
