@@ -38,6 +38,10 @@ export class MakerWeb3 {
         return newRpc;
     }
 
+    getRpc() {
+        return this.rpcList[this.rpcIndex];
+    }
+
     async getTransaction(transactionHash: string) {
         try {
             return await this.web3.eth.getTransaction(transactionHash);

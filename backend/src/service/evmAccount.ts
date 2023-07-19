@@ -244,7 +244,7 @@ export class EVMAccount {
             const gasMaxPrice: number = variableConfig.gasMaxPrice;
             if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
                 transactionRequest.type = 2;
-                const rpc = this.makerWeb3.getNewRpc()
+                const rpc = this.makerWeb3.getRpc()
                 let maxPriorityFeePerGas = 3000000000
                 try {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
