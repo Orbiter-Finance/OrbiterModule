@@ -50,14 +50,36 @@ export async function watchConsulConfig() {
         ...(await consul.kv.keys("common")),
         ...(await consul.kv.keys("maker")),
     ];
+    const keyMap = {};
     for (const key of keys) {
         try {
-            await watchMakerConfig(key);
+            keyMap[key] = await watchMakerConfig(key);
         } catch (e) {
             // TODO TG
             errorLogger.error(e);
         }
     }
+
+    setInterval(async () => {
+        try {
+            const currentKeys = [...(await consul.kv.keys("common")), ...(await consul.kv.keys("maker"))];
+            for (const key of currentKeys) {
+                if (!keyMap[key]) {
+                    accessLogger.info(`add consul config ${key}`);
+                    keyMap[key] = await watchMakerConfig(key);
+                }
+            }
+            for (const key in keyMap) {
+                if (!currentKeys.find(item => item === key)) {
+                    accessLogger.info(`delete consul config ${key}`);
+                    keyMap[key].end();
+                    delete keyMap[key];
+                }
+            }
+        } catch (e) {
+            errorLogger.error('watch new config error', e);
+        }
+    }, 30000);
 
     console.log("======== consul config init end ========");
 }
@@ -78,7 +100,7 @@ async function watchMakerConfig(key: string) {
                         const arr = makerAddress_chain.split('/');
                         if (arr.length !== 2) {
                             errorLogger.error(`watch maker length error, length: ${arr.length} ${makerAddress_chain}`);
-                            resolve(null);
+                            resolve(watcher);
                         }
                         const makerAddress = arr[0];
                         const chainId: any = arr[1];
@@ -93,7 +115,7 @@ async function watchMakerConfig(key: string) {
                         };
                         if (!new RegExp(/^0x[a-fA-F0-9]{40}$/).test(makerAddress) && !isStarknetAddress(makerAddress)) {
                             errorLogger.error(`maker address is not evm address or starknet address ${makerAddress}`);
-                            resolve(null);
+                            resolve(watcher);
                         }
 
                         function isNumber(o) {
@@ -102,11 +124,11 @@ async function watchMakerConfig(key: string) {
 
                         if (!isNumber(chainId)) {
                             errorLogger.error(`chainId is not number, chainId: ${chainId} ${makerAddress_chain}`);
-                            resolve(null);
+                            resolve(watcher);
                         }
                         if (!isNumber(nonce)) {
                             errorLogger.error(`nonce is not number, nonce: ${nonce} ${makerAddress_chain}`);
-                            resolve(null);
+                            resolve(watcher);
                         }
                         updateNonce(makerAddress.toLowerCase(), Number(chainId), Number(nonce));
                     }
@@ -123,18 +145,15 @@ async function watchMakerConfig(key: string) {
                     if (key === "maker/starknet.json") {
                         updateStarknet(config);
                     }
-                    resolve(config);
                 } catch (e) {
                     errorLogger.error(`Consul watch refresh config error: ${e.message} dataValue: ${data.Value}`);
-                    resolve(null);
                 }
-            } else {
-                resolve(null);
             }
+            resolve(watcher);
         });
         watcher.on("error", (err: Error) => {
             errorLogger.error(`Consul watch ${key} error: `, err);
-            resolve(null);
+            resolve(watcher);
         });
     });
 }
