@@ -1141,9 +1141,9 @@ const onClickStateTag = async (item: MakerNode) => {
     if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
       selectShow.value = false;
       sendTypeShow.value = false;
-      throw new Error(
-              `Please switch the address to ${fromAddress} in the wallet!`
-      );
+      // throw new Error(
+      //         `Please switch the address to ${fromAddress} in the wallet!`
+      // );
     }
     sendTypeShow.value = true;
 
