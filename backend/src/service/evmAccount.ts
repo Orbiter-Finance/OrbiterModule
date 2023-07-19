@@ -626,15 +626,15 @@ export class EVMAccount {
             }
         }
 
+        if (queueList.length < 10) {
+            queueList = [queueList[0]];
+        }
+
         // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
         const paramsList = queueList.map(item => item.params);
         if (!queueList.length) {
             this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
             return { code: 1 };
-        }
-
-        if (queueList.length < 3) {
-            queueList = [queueList[0]];
         }
 
         this.logger.info(`queue check over ========`);
