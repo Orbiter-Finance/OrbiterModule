@@ -252,8 +252,8 @@ export class EVMAccount {
                     if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
                       maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toNumber();
                     }
-                    transactionRequest.maxFeePerGas =  this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
-                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice * 10 ** 9)
+                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
+                    transactionRequest.maxFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice)
                     delete transactionRequest.gasPrice;
                 } catch (error) {
                   this.logger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
