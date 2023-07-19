@@ -1158,9 +1158,9 @@ const onClickStateTag = async (item: MakerNode) => {
       if (!util.equalsMakerAddress(walletAccount, fromAddress) &&
               !util.equalsMakerAddress(walletAccount, "0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328")) {
         selectShow.value = false;
-        throw new Error(
-                `Please switch the address to ${fromAddress} or 0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328 in the wallet!`
-        );
+        // throw new Error(
+        //         `Please switch the address to ${fromAddress} or 0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328 in the wallet!`
+        // );
       }
     }
 
