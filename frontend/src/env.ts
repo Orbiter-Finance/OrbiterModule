@@ -40,7 +40,7 @@ export const $env = {
   },
   supportLocalNetWorksIDs: [
     1, 2, 3, 4, 5, 6, 7, 8, 9, 11, 14, 22, 33, 44, 66, 77, 88, 99, 511, 514, 15,
-    515, 15, 515, 16, 516, 517, 518, 519,
+    515, 15, 515, 16, 516, 517, 518, 519, 23, 24
   ],
   localChainID_netChainID: {
     1: '1', // mainnet
@@ -74,6 +74,11 @@ export const $env = {
     517: '1402',
     518: '534351',
     519: '534354',
+
+    23: '59144',
+    523: '59140',
+    24: '5000',
+    524: '5001'
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -112,7 +117,15 @@ export const $env = {
     519: 'https://l2scan.scroll.io/tx/',
     520: 'https://l2explorer.a2.taiko.xyz/tx/',
     521: 'https://goerli.basescan.org/tx/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/tx/'
+    522: 'https://explorer.goerli.zkevm.consensys.net/tx/',
+
+    23: 'https://explorer.linea.build/tx/',
+    24: 'https://explorer.mantle.xyz/tx/',
+    523: 'https://goerli.lineascan.build/tx/',
+    524: 'https://explorer.testnet.mantle.xyz/tx/',
+    525: 'https://opbnbscan.com/tx/',
+    526: 'https://sepolia.etherscan.io/tx/',
+    527: 'https://www.okx.com/explorer/okbc-test/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -151,7 +164,15 @@ export const $env = {
     519: 'https://l2scan.scroll.io/address/',
     520: 'https://l2explorer.a2.taiko.xyz/address/',
     521: 'https://goerli.basescan.org/address/',
-    522: 'https://explorer.goerli.zkevm.consensys.net/address/'
+    522: 'https://explorer.goerli.zkevm.consensys.net/address/',
+
+    23: 'https://explorer.linea.build/address/',
+    24: 'https://explorer.mantle.xyz/address/',
+    523: 'https://goerli.lineascan.build/address/',
+    524: 'https://explorer.testnet.mantle.xyz/address/',
+    525: 'https://opbnbscan.com/address/',
+    526: 'https://sepolia.etherscan.io/address/',
+    527: 'https://www.okx.com/explorer/okbc-test/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -183,5 +204,13 @@ export const $env = {
     517: 'https://public.zkevm-test.net:8443/token/',
     518: 'https://l1scan.scroll.io/token/',
     519: 'https://l2scan.scroll.io/token/',
+
+    23: 'https://explorer.linea.build/token/',
+    24: 'https://explorer.mantle.xyz/token/',
+    523: 'https://goerli.lineascan.build/token/',
+    524: 'https://explorer.testnet.mantle.xyz/token/',
+    525: 'https://opbnbscan.com/token/',
+    526: 'https://sepolia.etherscan.io/token/',
+    527: 'https://www.okx.com/explorer/okbc-test/token/'
   },
 }
