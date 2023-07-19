@@ -250,9 +250,10 @@ export class EVMAccount {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
                     const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
                     if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-                      maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toNumber();
+                        maxPriorityFeePerGas = Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed(0));
                     }
-                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
+                    
+                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(Number(maxPriorityFeePerGas).toFixed(0))
                     transactionRequest.maxFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice)
                     delete transactionRequest.gasPrice;
                 } catch (error) {
@@ -263,10 +264,12 @@ export class EVMAccount {
              
             } else {
                 // type = 0 not eip 1559
+                this.logger.error(`${this.chainConfig.name} Normal transaction sending is not implemented`)
             }
           
         } catch (e) {
             this.logger.error("get gas price error:", e);
+            throw e;
         }
     }
 

@@ -15,6 +15,7 @@ export default class Telegram {
     async sendMessage(messageText: string) {
         if (!process.env["TELEGRAM_TOKEN"] || !process.env["CHAT_ID"]) {
             accessLogger.error('Telegram Token null');
+            return;
         }
         const requestData = {
             chat_id: this.opts?.chatId,
