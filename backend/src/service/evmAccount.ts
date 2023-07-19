@@ -514,6 +514,8 @@ export class EVMAccount {
             return { code: 1 };
         }
 
+        this.logger.info(`start job ========`);
+
         const variableConfig = await this.getVariableConfig();
         waringInterval = variableConfig.waringInterval;
         execTaskCount = variableConfig.execTaskCount;
@@ -531,6 +533,7 @@ export class EVMAccount {
         const execTaskList: any[] = [];
         // Error message
         const errorMsgList: string[] = [];
+        this.logger.info(`check task ========`);
         for (let i = 0; i < taskList.length; i++) {
             const task = taskList[i];
             // max length limit
@@ -563,6 +566,8 @@ export class EVMAccount {
             await this.clearTask(clearTaskList, 1);
         }
 
+        this.logger.info(`clear check over ========`);
+
         const queueList: any[] = [];
         for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
             const task = execTaskList[i];
@@ -581,6 +586,7 @@ export class EVMAccount {
         for (const queue of queueList) {
             tokenPay[queue.signParam.tokenAddress] = new BigNumber(tokenPay[queue.signParam.tokenAddress] || 0).plus(queue.signParam.amount);
         }
+        this.logger.info(`balance check ========`);
         const makerList = await getNewMarketList();
         for (const tokenAddress in tokenPay) {
             const market = makerList.find(item => equals(item.toChain.id, chainId) && equals(item.toChain.tokenAddress, tokenAddress));
@@ -624,6 +630,8 @@ export class EVMAccount {
             this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
             return { code: 1 };
         }
+
+        this.logger.info(`queue check over ========`);
         // signParam: {recipient: toAddress,tokenAddress,amount: String(amountToSend)}
         const toList: string[] = [];
         const valueList: string[] = [];
@@ -637,6 +645,7 @@ export class EVMAccount {
             chainIdHashList.push(`(${fromChainId}) ${fromHash}`);
         }
         try {
+            this.logger.info(`prepare send ========`);
             const res: ethers.providers.TransactionResponse | undefined = await this.send(toList, valueList, tokenAddressList[0], async () => {
                 await this.clearTask(queueList, 0);
                 this.logger.info(`${this.chainConfig.name}_consume_count = ${queueList.length}`);
