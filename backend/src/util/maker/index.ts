@@ -153,9 +153,14 @@ function confirmToTransaction(
   Chain,
   txHash,
   transactionID,
-  confirmations = 3
+  confirmations = 3,
+  inspectCount:number = 0
 ) {
   accessLogger.info(`[${transactionID}] confirmToTransaction = ${getTime()}` )
+  if (inspectCount>=50) {
+    return;
+  }
+  inspectCount++;
   setTimeout(async () => {
     const trxConfirmations = await getConfirmations(Chain, txHash)
     if (!trxConfirmations) {
@@ -164,7 +169,8 @@ function confirmToTransaction(
         Chain,
         txHash,
         transactionID,
-        confirmations
+        confirmations,
+        inspectCount
       )
     }
     accessLogger.info(
@@ -202,7 +208,8 @@ function confirmToTransaction(
       Chain,
       txHash,
       transactionID,
-      confirmations
+      confirmations,
+      inspectCount
     )
   }, 8 * 1000)
 }
