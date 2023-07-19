@@ -366,19 +366,23 @@ export async function batchTxSend() {
   }
   accessLogger.info(`Preparing to execute a timed task ${JSON.stringify(makerDataList)}`);
   // Prevent the existence of unlinked transactions before the restart and the existence of nonce occupancy
-  await sleep(3000);
+  await sleep(20000);
     for (let i = 0; i < makerDataList.length; i++) {
-        const maker = makerDataList[i];
-        const chainId = maker.chainId;
-        const chainConfig: any = chains.getChainByInternalId(String(chainId));
-        if (Number(chainId) === 4 || Number(chainId) === 44) {
-            makerSend(maker.makerAddress, maker.chainId);
-        } else if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
-            const privateKey = makerConfig.privateKeys[maker.makerAddress.toLowerCase()];
-            const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
-            await evmAccount.startJob();
+        try {
+            const maker = makerDataList[i];
+            const chainId = maker.chainId;
+            const chainConfig: any = chains.getChainByInternalId(String(chainId));
+            if (Number(chainId) === 4 || Number(chainId) === 44) {
+                makerSend(maker.makerAddress, maker.chainId);
+            } else if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
+                const privateKey = makerConfig.privateKeys[maker.makerAddress.toLowerCase()];
+                const evmAccount = new EVMAccount(Number(chainId), maker.tokenAddress, privateKey);
+                await evmAccount.startJob();
+            }
+            await sleep(2000);
+        } catch (e) {
+            errorLogger.error('job =====', e);
         }
-        await sleep(2000);
     }
   watchStarknetAlarm();
 }
