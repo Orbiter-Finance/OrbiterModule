@@ -169,7 +169,13 @@ let expireTime: number = 30 * 60;
 let maxTryCount: number = 180;
 let cron;
 
-export async function batchTxSend(chainIdList = [5, 4, 44, 23, 523, 24, 524]) {
+export async function batchTxSend() {
+  const allChains = chains.getAllChains();
+  const chainIdList = [
+      ...allChains.filter(item => item?.router && Object.values(item.router).includes("OrbiterRouterV3")).map(item => +item.internalId),
+      44, 4
+  ];
+  console.log('batch tx send list', chainIdList);
   const makerSend = (makerAddress, chainId) => {
     const callback = async () => {
         const sn = async () => {

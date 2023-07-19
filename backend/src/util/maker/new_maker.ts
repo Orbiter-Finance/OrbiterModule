@@ -417,7 +417,7 @@ export async function confirmTransactionSendMoneyBack(
         case '44':
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           try {
-            validateAndParseAddress(userAddress);
+            validateAndParseAddress(fix0xPadStartAddress(userAddress, 66));
           } catch (e) {
             accessLogger.error(
                 `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
