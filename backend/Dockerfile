@@ -1,5 +1,5 @@
 # For @imtbl/imx-sdk, lts-alpine to 14-alpine
-FROM node:14-alpine
+FROM node:16-alpine
 
 # For @dydxprotocol/starkex-lib
 RUN apk add g++ make python3
