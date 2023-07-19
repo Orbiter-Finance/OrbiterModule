@@ -17,6 +17,7 @@ import fs from "fs";
 import path from "path";
 import { clearInterval } from "timers";
 import { consulConfig } from "../config/consul_store";
+import { PrivateKeys } from "../config/private_key";
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
   protected rule:
@@ -128,7 +129,7 @@ export async function batchTxSend(makerConfig: any) {
             const expireTime: number = consulConfig.starknet.expireTime ? Number(consulConfig.starknet.expireTime) : 1800;
             const maxTryCount: number = consulConfig.starknet.maxTryCount ? Number(consulConfig.starknet.maxTryCount) : 10;
 
-            const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+            const privateKey = PrivateKeys[makerAddress.toLowerCase()];
             const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
             const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
             let taskList = await starknet.getTask();

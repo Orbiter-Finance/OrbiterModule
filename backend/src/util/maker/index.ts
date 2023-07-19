@@ -26,6 +26,7 @@ import { getAmountToSend } from './core'
 import { chainQueue } from './new_maker'
 import { telegramBot } from '../../sms/telegram'
 import { consulConfig } from "../../config/consul_store";
+import { PrivateKeys } from "../../config/private_key";
 
 let accountInfo: AccountInfo
 let lpKey: string
@@ -56,7 +57,7 @@ async function checkLoopringAccountKey(makerAddress, fromChainID) {
   if (!lpKey) {
     const { exchangeInfo } = await exchangeApi.getExchangeInfo()
     const provider = new PrivateKeyProvider(
-        consulConfig.maker.privateKeys[makerAddress.toLowerCase()],
+        PrivateKeys[makerAddress.toLowerCase()],
       fromChainID == 9
         ? consulConfig.maker['mainnet'].httpEndPoint
         : 'https://eth-goerli.alchemyapi.io/v2/fXI4wf4tOxNXZynELm9FIC_LXDuMGEfc'

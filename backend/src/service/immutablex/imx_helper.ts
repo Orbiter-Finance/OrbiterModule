@@ -2,6 +2,7 @@ import { ETHTokenType, ImmutableXClient } from '@imtbl/imx-sdk'
 import { ethers, providers, Wallet } from 'ethers'
 import { errorLogger } from '../../util/logger'
 import { consulConfig } from "../../config/consul_store";
+import { PrivateKeys } from "../../config/private_key";
 
 export type Transaction = {
   blockNumber?: number
@@ -82,7 +83,7 @@ export class IMXHelper {
     let signer: ethers.Wallet | undefined = undefined
     if (addressOrIndex) {
       const provider = new providers.AlchemyProvider('ropsten')
-      signer = new Wallet(consulConfig.maker.privateKeys[String(addressOrIndex).toLowerCase()]).connect(
+      signer = new Wallet(PrivateKeys[String(addressOrIndex).toLowerCase()]).connect(
         provider
       )
     }

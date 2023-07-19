@@ -5,6 +5,8 @@ import { consulConfig } from "./consul_store";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
+const Diff = require('diff');
+require('colors');
 
 const replySender = String(process.env['MAKER_ADDR'] || '').split(',');
 
@@ -55,10 +57,6 @@ export async function watchConsulConfig() {
             // TODO TG
             errorLogger.error(e);
         }
-    }
-    const omp = process.env.ORBITER_MAKER_PRIVATE_KEYS
-    if (omp) {
-        consulConfig.maker.privateKeys = JSON.parse(omp)
     }
 
     console.log("======== consul config init end ========");
@@ -158,15 +156,16 @@ function updateMaker(config: any) {
 function updateChain(config: any) {
     if (config && config.length && config.find(item => +item.internalId === 1 || +item.internalId === 5)) {
         const configs = <any>convertChainConfig("NODE_APP", config);
-        if (consulConfig.chain && consulConfig.chain.length) {
-            compare(consulConfig.chain, config, function (msg) {
+        const oldChains = JSON.parse(JSON.stringify(chains.getAllChains()));
+        chains.fill(configs);
+        if (oldChains && oldChains.length) {
+            compare(oldChains, chains.getAllChains(), function (msg) {
                 accessLogger.info(msg);
             });
         }
-        consulConfig.chain = config;
-        chains.fill(configs);
+        consulConfig.chain = chains.getAllChains();
         refreshConfig();
-        accessLogger.info(`update chain config success, chain count: ${consulConfig.chain && consulConfig.chain.length}`);
+        accessLogger.info(`update chain config success, chain count: ${configs.length}`);
     } else {
         errorLogger.error(`update chain config fail`);
     }
@@ -230,38 +229,16 @@ function updateNonce(makerAddress: string, chainId: number, nonce: number) {
     accessLogger.info(`update ${makerAddress} ${chainId} nonce success, new nonce: ${nonce}`);
 }
 
-function compare(obj1: any, obj2: any, cb: Function, superKey?: string) {
-    if (obj1 instanceof Array && obj2 instanceof Array) {
-        compareList(obj1, obj2, cb, superKey);
-    } else if (typeof obj1 === "object" && typeof obj2 === "object") {
-        compareObj(obj1, obj2, cb, superKey);
-    }
-}
-
-function compareObj(obj1: any, obj2: any, cb: Function, superKey?: string) {
-    for (const key in obj1) {
-        if (obj1[key] instanceof Array) {
-            compareList(obj1[key], obj2[key], cb, superKey ? `${superKey} ${key}` : key);
-        } else if (typeof obj1[key] === "object") {
-            compareObj(obj1[key], obj2[key], cb, superKey ? `${superKey} ${key}` : key);
-        } else if (obj1[key] !== obj2[key]) {
-            cb(`${superKey ? (superKey + " ") : ""}${key}:${obj1[key]} ==> ${obj2[key]}`);
+function compare(obj1: any, obj2: any, cb: Function) {
+    let str = '';
+    Diff.diffJson(obj1, obj2).forEach(part => {
+        if (part.added) {
+            str += ("++" + part.value['green'].replace(/.+/g, '$&'));
+        } else if (part.removed) {
+            str += ("--" + part.value['red'].replace(/.+/g, '$&'));
         }
-    }
-}
-
-function compareList(arr1: any[], arr2: any[], cb: Function, superKey?: string) {
-    if (arr1.length !== arr2.length) {
-        cb(`${superKey ? (superKey + " ") : ""}count:${arr1.length} ==> ${arr2.length}`);
-        return;
-    }
-    for (let i = 0; i < arr1.length; i++) {
-        if (typeof arr1[i] === "object") {
-            compareObj(arr1[i], arr2[i], cb, superKey);
-        } else if (arr1[i] !== arr2[i]) {
-            cb(`${superKey ? (superKey + " ") : ""}${arr1[i]} ==> ${arr2[i]}`);
-        }
-    }
+    });
+    cb(str);
 }
 
 export function convertChainConfig(env_prefix: string, chainList: any[]): any[] {
