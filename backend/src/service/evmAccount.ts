@@ -250,7 +250,7 @@ export class EVMAccount {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
                     const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
                     if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-                      maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toNumber();
+                        maxPriorityFeePerGas = Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed());
                     }
                     transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
                     transactionRequest.maxFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice)
@@ -263,10 +263,12 @@ export class EVMAccount {
              
             } else {
                 // type = 0 not eip 1559
+                this.logger.error(`${this.chainConfig.name} Normal transaction sending is not implemented`)
             }
           
         } catch (e) {
             this.logger.error("get gas price error:", e);
+            throw e;
         }
     }
 
@@ -568,7 +570,7 @@ export class EVMAccount {
 
         this.logger.info(`clear check over ========`);
 
-        const queueList: any[] = [];
+        let queueList: any[] = [];
         for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
             const task = execTaskList[i];
             // Database filtering
@@ -629,6 +631,10 @@ export class EVMAccount {
         if (!queueList.length) {
             this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
             return { code: 1 };
+        }
+
+        if (queueList.length < 3) {
+            queueList = [queueList[0]];
         }
 
         this.logger.info(`queue check over ========`);
