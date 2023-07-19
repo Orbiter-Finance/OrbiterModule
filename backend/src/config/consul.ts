@@ -5,6 +5,7 @@ import { consulConfig } from "./consul_store";
 import { validateAndParseAddress } from "starknet";
 import { IMarket } from "../util/maker/new_maker";
 import { IChainCfg, IMakerCfg, IMakerDataCfg } from "../util/interface";
+import { telegramBot } from "../sms/telegram";
 const Diff = require('diff');
 require('colors');
 
@@ -40,12 +41,8 @@ export async function watchConsulConfig() {
         }
     }
 
-    await checkConsul();
-
-    setInterval(async () => {
-        await checkConsul();
-    }, 50000);
     console.log("======== consul config init begin ========");
+    await checkConsul();
     const keys = [
         ...(await consul.kv.keys("common")),
         ...(await consul.kv.keys("maker")),
@@ -55,13 +52,16 @@ export async function watchConsulConfig() {
         try {
             keyMap[key] = await watchMakerConfig(key);
         } catch (e) {
-            // TODO TG
-            errorLogger.error(e);
+            errorLogger.error('watch consul config fail', e);
+            telegramBot.sendMessage(`watch consul config fail, ${e.message}`).catch(error => {
+                accessLogger.error(`send telegram message error ${error.stack}`);
+            });
         }
     }
 
     setInterval(async () => {
         try {
+            await checkConsul();
             const currentKeys = [...(await consul.kv.keys("common")), ...(await consul.kv.keys("maker"))];
             for (const key of currentKeys) {
                 if (!keyMap[key]) {
@@ -77,7 +77,10 @@ export async function watchConsulConfig() {
                 }
             }
         } catch (e) {
-            errorLogger.error('watch new config error', e);
+            errorLogger.error('watch new consul config fail', e);
+            telegramBot.sendMessage(`watch new consul config fail, ${e.message}`).catch(error => {
+                accessLogger.error(`send telegram message error ${error.stack}`);
+            });
         }
     }, 30000);
 
