@@ -29,6 +29,7 @@ import { accessLogger, errorLogger, getLoggerService } from '../logger'
 import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, transfers } from './new_maker'
+import { EVMAccount } from "../../service/evmAccount";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -135,7 +136,8 @@ export async function sendConsumer(value: any) {
     fromChainID,
     lpMemo,
     ownerAddress,
-    transactionID
+    transactionID,
+    fromHash
   } = value;
   const accessLogger = getLoggerService(chainID)
   const chainTransferMap = transfers.get(String(fromChainID))
@@ -318,6 +320,42 @@ export async function sendConsumer(value: any) {
     }
     accessLogger.info(`result_nonde = ${result_nonce}`);
     accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+    return {
+      code: 2,
+      params: value
+    }
+  }
+
+  const chainConfig: any = chains.getChainByInternalId(String(chainID));
+  // linea
+  if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
+    const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+    const evmAccount = new EVMAccount(chainID, tokenAddress, privateKey);
+    const queueList = await evmAccount.getTask();
+    if (queueList.find(item => item.params?.transactionID === transactionID)) {
+      accessLogger.info(`TransactionID was exist: ${transactionID}`);
+      return {
+        code: 1,
+        error: `${evmAccount.chainConfig.name} transfer error: TransactionID was exist ${transactionID}`,
+        params: value
+      };
+    } else {
+      const queue = {
+        createTime: new Date().valueOf(),
+        params: value,
+        signParam: {
+          fromChainId: fromChainID,
+          fromHash,
+          recipient: toAddress,
+          tokenAddress,
+          amount: String(amountToSend)
+        }
+      };
+      queueList.push(queue);
+      await evmAccount.pushTask([queue]);
+    }
+    accessLogger.info(`result_nonde = ${result_nonce}`);
+    accessLogger.info(`${evmAccount.chainConfig.name}_queue_count = ${queueList.length}`);
     return {
       code: 2,
       params: value
