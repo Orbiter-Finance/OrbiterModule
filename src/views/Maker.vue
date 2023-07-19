@@ -1138,17 +1138,18 @@ const onClickStateTag = async (item: MakerNode) => {
     const fromChainId: number = needTo.chainId;
     const isStarknet = fromChainId === 4 || fromChainId === 44;
 
-    if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
-      selectShow.value = false;
-      sendTypeShow.value = false;
-      // throw new Error(
-      //         `Please switch the address to ${fromAddress} in the wallet!`
-      // );
-    }
+    // if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
+    // //   selectShow.value = false;
+    // //   sendTypeShow.value = false;
+    // //   // throw new Error(
+    // //   //         `Please switch the address to ${fromAddress} in the wallet!`
+    // //   // );
+    // // }
     sendTypeShow.value = true;
-
+    console.log('step 0')
     if (!isStarknet) await switchNetwork(fromChainId);
 
+    console.log('step 1')
     if (isStarknet) {
       selectShow.value = true;
       if (!getStarknet().account?.address) {
@@ -1165,6 +1166,7 @@ const onClickStateTag = async (item: MakerNode) => {
     }
 
     if (util.isSupportXVMContract(fromChainId) || isStarknet || util.getOrbiterRouterV3Address(fromChainId)) {
+      console.log('step 3')
       if (!selectShow.value) {
         selectShow.value = true;
         return;
