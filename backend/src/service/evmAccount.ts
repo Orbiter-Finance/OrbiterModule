@@ -250,7 +250,7 @@ export class EVMAccount {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
                     const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
                     if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-                      maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(1.5).toNumber();
+                      maxPriorityFeePerGas = new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toNumber();
                     }
                     transactionRequest.maxFeePerGas =  this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
                     transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice * 10 ** 9)
@@ -261,6 +261,8 @@ export class EVMAccount {
                 }
             
              
+            } else {
+                // type = 0 not eip 1559
             }
           
         } catch (e) {
