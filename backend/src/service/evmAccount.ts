@@ -250,9 +250,10 @@ export class EVMAccount {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
                     const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
                     if (Number(alchemyMaxPriorityFeePerGas) > maxPriorityFeePerGas) {
-                        maxPriorityFeePerGas = Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed());
+                        maxPriorityFeePerGas = Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed(0));
                     }
-                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(maxPriorityFeePerGas)
+                    
+                    transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(Number(maxPriorityFeePerGas).toFixed(0))
                     transactionRequest.maxFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice)
                     delete transactionRequest.gasPrice;
                 } catch (error) {
