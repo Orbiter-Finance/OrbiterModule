@@ -519,7 +519,7 @@ export class EVMAccount {
         const chainId = this.chainConfig.internalId;
         let taskList = await this.getTask();
 
-        aggregateLog(this.txKey, `${this.txKey.split("_").map(item => item.substr(0, 4)).join("_")} count ${taskList.length}`);
+        aggregateLog(this.txKey, `${this.txKey.split("_").map(item => item.substr(0, 4)).join("_")} ${taskList.length}`);
         if (!taskList || !taskList.length) {
             return { code: 1 };
         }

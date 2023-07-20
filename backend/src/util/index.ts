@@ -120,7 +120,7 @@ export function aggregateLog(key: string, msg: string, time: number = 60) {
   try {
     logMap[key] = logMap[key] || { t: 0, v: [] };
     if (new Date().valueOf() - logMap[key].t >= time * 1000) {
-      accessLogger.info(`${logMap[key].v.join(', ')}`);
+      accessLogger.info(`${key} ${logMap[key].v.join(', ')}`);
       logMap[key].t = new Date().valueOf();
       logMap[key].v = [];
     } else {
