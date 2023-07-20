@@ -143,6 +143,19 @@ export class TransactionService {
       // sqlLog += ` and toChain = ${query['toChain']} `;
     }
 
+    if (makerAddress.find(item => item.toLowerCase() === "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc")) {
+      whereSql += ' and inSymbol = ?';
+      whreeParmas.push("USDT");
+    }
+    if (makerAddress.find(item => item.toLowerCase() === "0x41d3d33156ae7c62c094aae2995003ae63f587b3")) {
+      whereSql += ' and inSymbol = ?';
+      whreeParmas.push("USDC");
+    }
+    if (makerAddress.find(item => item.toLowerCase() === "0x095d2918b03b2e86d68551dcf11302121fb626c9")) {
+      whereSql += ' and inSymbol = ?';
+      whreeParmas.push("DAI");
+    }
+
     // console.log('from', "SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + sqlLog + " GROUP BY inSymbol");
     // console.log('to', "SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + sqlLog + " GROUP BY outSymbol,outFeeToken");
     const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
