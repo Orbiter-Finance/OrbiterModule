@@ -222,13 +222,17 @@ export class EVMAccount {
         maxTryCount: number,
         sendInterval: number,
         gasMulti: number,
-        gasMaxPrice: number
+        gasMaxPrice: number,
+        floorMaxPriorityFeePerGas: number,
+        minAggregatesCount: number
     }> {
         return await readLogJson(`limit.json`, `evm/${this.chainConfig.internalId}/limit`, {
             waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount,
             sendInterval: this.sendInterval,
             gasMulti,
-            gasMaxPrice
+            gasMaxPrice,
+            floorMaxPriorityFeePerGas: 5000000000,
+            minAggregatesCount: 10
         });
     }
 
@@ -245,7 +249,7 @@ export class EVMAccount {
             if (feeData.maxFeePerGas && feeData.maxPriorityFeePerGas) {
                 transactionRequest.type = 2;
                 const rpc = this.makerWeb3.getRpc()
-                let maxPriorityFeePerGas = 5000000000
+                let maxPriorityFeePerGas = variableConfig.floorMaxPriorityFeePerGas || 5000000000;
                 try {
                     const provider = new ethers.providers.JsonRpcProvider(rpc);
                     const alchemyMaxPriorityFeePerGas = await provider.send("eth_maxPriorityFeePerGas", []);
@@ -630,7 +634,7 @@ export class EVMAccount {
             this.logger.info(`There are no consumable tasks in the ${this.chainConfig.name} queue`);
             return { code: 1 };
         }
-        if (queueList.length < 10) {
+        if (queueList.length < (variableConfig.minAggregatesCount || 10)) {
             queueList = [queueList[0]];
         }
 
