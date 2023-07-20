@@ -40,6 +40,8 @@ let maxTryCount: number = 180;
 let gasMulti: number = 1.2;
 let gasMaxPrice: number = 200000000000;
 
+const lastLogTimeMap: any = {};
+
 interface IJobParams {
     waringInterval: number;
     execTaskCount: number;
@@ -510,7 +512,10 @@ export class EVMAccount {
         const makerAddress = this.address;
         const lockKey = this.lockKey;
         if (jobLockMap[lockKey]) {
-            console.log(`${lockKey} is lock, waiting for the end of the previous transaction`);
+            lastLogTimeMap[lockKey] = lastLogTimeMap[lockKey] || 0;
+            if (new Date().valueOf() - lastLogTimeMap[lockKey] > 60000) {
+                console.log(`${lockKey} is lock, waiting for the end of the previous transaction`);
+            }
             return { code: 0 };
         }
         jobLockMap[lockKey] = true;
@@ -520,8 +525,6 @@ export class EVMAccount {
             this.logger.info(`There are no consumable tasks in the ${this.txKey} queue`);
             return { code: 1 };
         }
-
-        this.logger.info(`start job ========`);
 
         const variableConfig = await this.getVariableConfig();
         waringInterval = variableConfig.waringInterval;
@@ -540,7 +543,6 @@ export class EVMAccount {
         const execTaskList: any[] = [];
         // Error message
         const errorMsgList: string[] = [];
-        this.logger.info(`check task ========`);
         for (let i = 0; i < taskList.length; i++) {
             const task = taskList[i];
             // max length limit
@@ -573,8 +575,6 @@ export class EVMAccount {
             await this.clearTask(clearTaskList, 1);
         }
 
-        this.logger.info(`clear check over ========`);
-
         let queueList: any[] = [];
         for (let i = 0; i < Math.min(execTaskList.length, execTaskCount); i++) {
             const task = execTaskList[i];
@@ -593,7 +593,6 @@ export class EVMAccount {
         for (const queue of queueList) {
             tokenPay[queue.signParam.tokenAddress] = new BigNumber(tokenPay[queue.signParam.tokenAddress] || 0).plus(queue.signParam.amount);
         }
-        this.logger.info(`balance check ========`);
         const makerList = await getNewMarketList();
         for (const tokenAddress in tokenPay) {
             const market = makerList.find(item => equals(item.toChain.id, chainId) && equals(item.toChain.tokenAddress, tokenAddress));
@@ -640,9 +639,7 @@ export class EVMAccount {
 
         // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
         const paramsList = queueList.map(item => item.params);
-     
 
-        this.logger.info(`queue check over ========`);
         // signParam: {recipient: toAddress,tokenAddress,amount: String(amountToSend)}
         const toList: string[] = [];
         const valueList: string[] = [];
@@ -656,7 +653,6 @@ export class EVMAccount {
             chainIdHashList.push(`(${fromChainId}) ${fromHash}`);
         }
         try {
-            this.logger.info(`prepare send ========`);
             const res: ethers.providers.TransactionResponse | undefined = await this.send(toList, valueList, tokenAddressList[0], async () => {
                 await this.clearTask(queueList, 0);
                 this.logger.info(`${this.chainConfig.name}_consume_count = ${queueList.length}`);
