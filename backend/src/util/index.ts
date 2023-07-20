@@ -73,6 +73,7 @@ export function isSupportEVM(chainId: number) {
 import { mkdirp } from 'mkdirp';
 import fs from "fs";
 import path from "path";
+import { accessLogger } from "./logger";
 
 const dirRecord = {};
 
@@ -110,5 +111,18 @@ export async function readLogJson(name: string, dir: string, defaultValue?: any)
   } catch (e) {
     await writeLogJson(name, dir, defaultValue);
     return JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString()) || defaultValue;
+  }
+}
+
+const logMap: any = {};
+
+export function aggregateLog(key: string, msg: string, time: number = 60) {
+  logMap[key] = logMap[key] || { t: 0, v: [] };
+  if (new Date().valueOf() - logMap[key].t > time * 1000) {
+    accessLogger.info(`${logMap[key].v.join(',')}`);
+    logMap[key].t = new Date().valueOf();
+    logMap[key].v = [];
+  } else {
+    logMap[key].v.push(`${new Date().toTimeString().substr(3, 5)} ${msg}`);
   }
 }

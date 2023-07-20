@@ -5,7 +5,7 @@ import { telegramBot } from "../sms/telegram";
 import { MakerWeb3 } from "../util/web3";
 import { getLoggerService } from "../util/logger";
 import { IChainConfig } from "orbiter-chaincore/src/types";
-import { readLogJson, sleep, writeLogJson } from "../util";
+import { aggregateLog, readLogJson, sleep, writeLogJson } from "../util";
 import Keyv from "keyv";
 import KeyvFile from "orbiter-chaincore/src/utils/keyvFile";
 import { equals } from "orbiter-chaincore/src/utils/core";
@@ -512,17 +512,15 @@ export class EVMAccount {
         const makerAddress = this.address;
         const lockKey = this.lockKey;
         if (jobLockMap[lockKey]) {
-            lastLogTimeMap[lockKey] = lastLogTimeMap[lockKey] || 0;
-            if (new Date().valueOf() - lastLogTimeMap[lockKey] > 60000) {
-                console.log(`${lockKey} is lock, waiting for the end of the previous transaction`);
-            }
+            console.log(`${lockKey} is lock, waiting for the end of the previous transaction`);
             return { code: 0 };
         }
         jobLockMap[lockKey] = true;
         const chainId = this.chainConfig.internalId;
         let taskList = await this.getTask();
+
+        aggregateLog(this.txKey, `${this.txKey} count ${taskList.length}`);
         if (!taskList || !taskList.length) {
-            this.logger.info(`There are no consumable tasks in the ${this.txKey} queue`);
             return { code: 1 };
         }
 
