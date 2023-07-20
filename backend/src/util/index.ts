@@ -117,12 +117,16 @@ export async function readLogJson(name: string, dir: string, defaultValue?: any)
 const logMap: any = {};
 
 export function aggregateLog(key: string, msg: string, time: number = 60) {
-  logMap[key] = logMap[key] || { t: 0, v: [] };
-  if (new Date().valueOf() - logMap[key].t > time * 1000) {
-    accessLogger.info(`${logMap[key].v.join(',')}`);
-    logMap[key].t = new Date().valueOf();
-    logMap[key].v = [];
-  } else {
-    logMap[key].v.push(`${new Date().toTimeString().substr(3, 5)} ${msg}`);
+  try {
+    logMap[key] = logMap[key] || { t: 0, v: [] };
+    if (new Date().valueOf() - logMap[key].t >= time * 1000) {
+      accessLogger.info(`${logMap[key].v.join(', ')}`);
+      logMap[key].t = new Date().valueOf();
+      logMap[key].v = [];
+    } else {
+      logMap[key].v.push(`${new Date().toTimeString().substr(3, 5)} ${msg}`);
+    }
+  } catch (e) {
+    console.log('aggregateLog', e.message);
   }
 }
