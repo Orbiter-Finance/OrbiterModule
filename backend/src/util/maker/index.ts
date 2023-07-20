@@ -681,12 +681,13 @@ export async function sendTxConsumeHandle(result: any) {
           response.txid.indexOf('Bad Gateway') !== -1) {
         return;
       } else if (response.txid.indexOf('Invalid transaction nonce. Expected:') !== -1 && response.txid.indexOf('got:') !== -1) {
-        const arr: string[] = response.txid.split(', got: ');
-        const nonce1 = arr[0].replace(/[^0-9]/g, "");
-        const nonce2 = arr[1].replace(/[^0-9]/g, "");
-        if (Number(response.result_nonce) !== Number(nonce1) && Number(response.result_nonce) !== Number(nonce2)) {
-          return;
-        }
+        // const arr: string[] = response.txid.split(', got: ');
+        // const nonce1 = arr[0].replace(/[^0-9]/g, "");
+        // const nonce2 = arr[1].replace(/[^0-9]/g, "");
+        // if (Number(response.result_nonce) !== Number(nonce1) && Number(response.result_nonce) !== Number(nonce2)) {
+        //   return;
+        // }
+        return;
       }
     }
     telegramBot.sendMessage(`Send Transaction Error ${makerAddress} toChain: ${toChainID}, transactionID: ${transactionIDList}, errmsg: ${response.txid}`).catch(error => {
