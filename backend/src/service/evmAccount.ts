@@ -632,7 +632,7 @@ export class EVMAccount {
             return { code: 1 };
         }
         if (queueList.length < (variableConfig.minAggregatesCount || 10)) {
-            queueList = [queueList[0]];
+            queueList = [queueList[queueList.length - 1]];
         }
 
         // params: {makerAddress,toAddress,toChain,chainID,tokenInfo,tokenAddress,amountToSend,result_nonce,fromChainID,lpMemo,ownerAddress,transactionID}
