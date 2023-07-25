@@ -464,7 +464,6 @@ export async function watchConfig() {
         await readLogJson(`attacker.json`, 'config', {
           attackerList: ["0x76379eb32da594860b6e1ef6d330c818df9ea5ae", "0xf1d076c9be4533086f967e14ee6aff204d5ece7a"]
         });
-    console.log('current', attackerList);
     if (JSON.stringify(attackerList) !== JSON.stringify(data.attackerList)) {
       attackerList = data.attackerList;
       accessLogger.log(`attacker change to ${data.attackerList}`);
