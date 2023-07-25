@@ -19,6 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
+import { attackerList } from "./attacker_addres";
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -178,8 +179,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           // )
           continue
         }
-        if (!!["0x76379eb32da594860b6e1ef6d330c818df9ea5ae", "0xf1d076c9be4533086f967e14ee6aff204d5ece7a"]
-            .find(item => item.toLowerCase() === tx?.from.toLowerCase())) {
+        if (!!attackerList.find(item => item.toLowerCase() === tx?.from.toLowerCase())) {
           errorLogger.error(`attacker address: ${tx.from} ${tx.hash}`);
           continue;
         }
