@@ -456,6 +456,24 @@ export async function watchStarknetLimit() {
   new MJobPessimism('*/30 * * * * *', callback, watchStarknetLimit.name).schedule();
 }
 
+export let attackerList = ["0x76379eb32da594860b6e1ef6d330c818df9ea5ae", "0xf1d076c9be4533086f967e14ee6aff204d5ece7a"];
+
+export async function watchConfig() {
+  const callback = async () => {
+    const data: { attackerList: string[] } =
+        await readLogJson(`attacker.json`, 'config', {
+          attackerList: ["0x76379eb32da594860b6e1ef6d330c818df9ea5ae", "0xf1d076c9be4533086f967e14ee6aff204d5ece7a"]
+        });
+    console.log('current', attackerList);
+    if (JSON.stringify(attackerList) !== JSON.stringify(data.attackerList)) {
+      attackerList = data.attackerList;
+      accessLogger.log(`attacker change to ${data.attackerList}`);
+    }
+  };
+
+  new MJobPessimism('*/30 * * * * *', callback, watchConfig.name).schedule();
+}
+
 function watchStarknetAlarm() {
   if (cron) {
     clearInterval(cron);
@@ -474,4 +492,5 @@ function watchStarknetAlarm() {
 export async function watchLogs() {
   watchHttpEndPoint();
   watchStarknetLimit();
+  watchConfig();
 }
