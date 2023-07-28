@@ -268,8 +268,12 @@ export class EVMAccount {
                 }
             } else {
                 try {
-                    transactionRequest.type = 0;
-                    transactionRequest.gasPrice = this.makerWeb3.web3.utils.toHex(new BigNumber(feeData.gasPrice.toString()).multipliedBy(multi).toFixed(0));
+                    if (feeData.gasPrice) {
+                        transactionRequest.type = 0;
+                        transactionRequest.gasPrice = this.makerWeb3.web3.utils.toHex(new BigNumber(feeData.gasPrice.toString()).multipliedBy(multi).toFixed(0));
+                    } else {
+                        this.logger.error(`gasPrice is null`);
+                    }
                 } catch (error) {
                     this.logger.error(`gasPrice error ${error.message}`);
                     throw new Error(`gasPrice error:${error.message}`);
