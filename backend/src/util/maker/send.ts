@@ -91,7 +91,7 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
       }
       // polygon zk_evm  gasPrice * 1.5
       if (toChain == 'polygon_evm') {
-        gasPrice = Web3.utils.toHex((parseInt(gasPrice, 16) * 1.2).toFixed())
+        gasPrice = Web3.utils.toHex((parseInt(gasPrice, 16) * 1.5).toFixed())
       }
 
       if (toChain == 'rinkeby') {
