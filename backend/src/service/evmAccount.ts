@@ -266,11 +266,14 @@ export class EVMAccount {
                   this.logger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
                   throw new Error(`eth_maxPriorityFeePerGas error:${error.message}`);
                 }
-            
-             
             } else {
-                // type = 0 not eip 1559
-                this.logger.error(`${this.chainConfig.name} Normal transaction sending is not implemented`)
+                try {
+                    transactionRequest.type = 0;
+                    transactionRequest.gasPrice = this.makerWeb3.web3.utils.toHex((feeData || new BigNumber(50000000)).gasPrice.multipliedBy(multi).toFixed(0));
+                } catch (error) {
+                    this.logger.error(`gasPrice error ${error.message}`);
+                    throw new Error(`gasPrice error:${error.message}`);
+                }
             }
           
         } catch (e) {
