@@ -502,9 +502,11 @@ export class EVMAccount {
         if (nonce - 20 > lastNonce) {
             const alert = `${this.txKey} last nonce ${lastNonce}, use nonce ${nonce}`;
             this.logger.error(alert);
-            telegramBot.sendMessage(alert).catch(error => {
-                this.logger.error(`send telegram message error ${error.stack}`);
-            });
+            if (nonce % 10 === 1) {
+                telegramBot.sendMessage(alert).catch(error => {
+                    this.logger.error(`send telegram message error ${error.stack}`);
+                });
+            }
         }
     }
 

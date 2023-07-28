@@ -30,6 +30,7 @@ import { chains } from 'orbiter-chaincore'
 import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, transfers } from './new_maker'
 import { EVMAccount } from "../../service/evmAccount";
+import { telegramBot } from "../../sms/telegram";
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -986,6 +987,33 @@ export async function sendConsumer(value: any) {
     accessLogger.info(`nonce = ${nonce}`)
     accessLogger.info(`sql_nonce = ${sql_nonce}`)
     accessLogger.info(`result_nonde = ${result_nonce}`)
+  }
+
+  async function checkNonce() {
+    const lastNonce = await web3.eth.getTransactionCount(
+        <any>web3.eth.defaultAccount,
+        "latest"
+    );
+    if (result_nonce - 20 > lastNonce) {
+      const alert = `${makerAddress} ${toChain} last nonce ${lastNonce}, use nonce ${result_nonce}`;
+      errorLogger.error(alert);
+      if (result_nonce % 10 === 1) {
+        telegramBot.sendMessage(alert).catch(error => {
+          this.logger.error(`send telegram message error ${error.stack}`);
+        });
+      }
+    } else {
+      accessLogger.info(`${makerAddress} ${toChain} last nonce ${lastNonce}`);
+    }
+  }
+
+  if (toChain === 'mainnet' || toChain === 'optimism' || toChain === 'arbitrum' || toChain === 'zksync2' ||
+      toChain === 'polygon' || toChain === 'polygon_evm' || toChain === 'bnbchain' || toChain === 'arbitrum_nova') {
+    try {
+      checkNonce();
+    } catch (e) {
+      errorLogger.error(`check nonce error ${e.message}`);
+    }
   }
 
   /**
