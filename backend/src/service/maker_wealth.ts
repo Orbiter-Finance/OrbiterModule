@@ -132,6 +132,8 @@ async function getTokenBalance(
       case 519:
       case 523:
       case 524:
+      case 21:
+      case 521:
       case 23:
       case 24:
         // const balanceService = 
