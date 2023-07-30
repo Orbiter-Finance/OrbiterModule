@@ -196,9 +196,12 @@ export const doBalanceAlarm = new (class {
       }
 
       try {
-        accessLogger.info('postToAlertmanager: ', JSON.stringify(alerts))
+        accessLogger.info('postToAlertmanager: ', alerts.join(' '))
 
-        telegramBot.sendMessage('Insufficient', alerts.join(' '));
+        telegramBot.sendMessage('Insufficient', alerts.join(' ')).catch((e) => {
+          console.error(e);
+          errorLogger.error(`telegramBot send msg error ${e.message}`);
+        });
         doSms(alerts.join(' '), true);
       } catch (err) {
         errorLogger.error('ToAlertmanager faild: ', err.message)
