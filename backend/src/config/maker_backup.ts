@@ -13,6 +13,12 @@ export default {
     "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc":
         "0x0411c2a2a4dc7b4d3a33424af3ede7e2e3b66691e22632803e37e2e0de450940"
   },
+  "21": {
+    "rpc": [
+      "https://base.blockpi.network/v1/rpc/public",
+      "https://developer-access-mainnet.base.org"
+    ]
+  },
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',
