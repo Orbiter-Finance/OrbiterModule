@@ -146,7 +146,7 @@ export async function sendConsumer(value: any) {
     chainTransferMap?.has(transactionID)
   ) {
      accessLogger.error(
-      `sendConsumer ${transactionID} transfer exists!`
+      `${transactionID} sendConsumer ${transactionID} transfer exists!`
     )
     return {
       code: 1,
@@ -230,9 +230,9 @@ export async function sendConsumer(value: any) {
             result_nonce = zk_sql_nonce + 1
           }
         }
-        accessLogger.info(`zk_nonce =${zk_nonce}`)
-        accessLogger.info(`zk_sql_nonce = ${zk_sql_nonce}`)
-        accessLogger.info(`result_nonde = ${result_nonce}`)
+        accessLogger.info(`${transactionID} zk_nonce =${zk_nonce}`)
+        accessLogger.info(`${transactionID} zk_sql_nonce = ${zk_sql_nonce}`)
+        accessLogger.info(`${transactionID} result_nonde = ${result_nonce}`)
       }
 
       // let zk_fee: string | undefined
@@ -319,8 +319,8 @@ export async function sendConsumer(value: any) {
       queueList.push(queue);
       await starknet.pushTask([queue]);
     }
-    accessLogger.info(`result_nonde = ${result_nonce}`);
-    accessLogger.info(`starknet_queue_count = ${queueList.length}`);
+    accessLogger.info(`${transactionID} result_nonde = ${result_nonce}`);
+    accessLogger.info(`${transactionID} starknet_queue_count = ${queueList.length}`);
     return {
       code: 2,
       params: value
@@ -355,8 +355,8 @@ export async function sendConsumer(value: any) {
       queueList.push(queue);
       await evmAccount.pushTask([queue]);
     }
-    accessLogger.info(`result_nonde = ${result_nonce}`);
-    accessLogger.info(`${evmAccount.chainConfig.name}_queue_count = ${queueList.length}`);
+    accessLogger.info(`${transactionID} result_nonde = ${result_nonce}`);
+    accessLogger.info(`${transactionID} ${evmAccount.chainConfig.name}_queue_count = ${queueList.length}`);
     return {
       code: 2,
       params: value
@@ -383,9 +383,9 @@ export async function sendConsumer(value: any) {
             result_nonce = imx_sql_nonce + 1
           }
         }
-        accessLogger.info(`imx_nonce = ${imx_nonce}`)
-        accessLogger.info(`imx_sql_nonce = ${imx_sql_nonce}`)
-        accessLogger.info(`result_nonde = ${result_nonce}`)
+        accessLogger.info(`${transactionID} imx_nonce = ${imx_nonce}`)
+        accessLogger.info(`${transactionID} imx_sql_nonce = ${imx_sql_nonce}`)
+        accessLogger.info(`${transactionID} result_nonde = ${result_nonce}`)
       }
       let imxTokenInfo: any = {
         type: ETHTokenType.ETH,
@@ -518,9 +518,9 @@ export async function sendConsumer(value: any) {
             result_nonce = lp_sql_nonce + 2
           }
         }
-        accessLogger.info(`lp_nonce = ${lp_nonce}`)
-        accessLogger.info(`lp_sql_nonce = ${lp_sql_nonce}`)
-        accessLogger.info(`result_nonce = ${result_nonce}`)
+        accessLogger.info(`${transactionID} lp_nonce = ${lp_nonce}`)
+        accessLogger.info(`${transactionID} lp_sql_nonce = ${lp_sql_nonce}`)
+        accessLogger.info(`${transactionID} result_nonce = ${result_nonce}`)
       }
       const ts = Math.round(new Date().getTime() / 1000) + 30 * 86400
       // step 4 transfer
@@ -769,9 +769,9 @@ export async function sendConsumer(value: any) {
         nonceDic[makerAddress] = {}
       }
       nonceDic[makerAddress][chainID] = result_nonce
-      accessLogger.info(`zks_nonce = ${accountInfo.nonce}`)
-      accessLogger.info(`zks_sql_nonce = ${sql_nonce}`)
-      accessLogger.info(`zks_result_nonce = ${result_nonce}`)
+      accessLogger.info(`${transactionID} zks_nonce = ${accountInfo.nonce}`)
+      accessLogger.info(`${transactionID} zks_sql_nonce = ${sql_nonce}`)
+      accessLogger.info(`${transactionID} zks_result_nonce = ${result_nonce}`)
 
       const msgBytes = ethers.utils.concat([
         '0x05',
@@ -871,13 +871,13 @@ export async function sendConsumer(value: any) {
     web3Net =
       makerConfig[toChain].httpEndPointInfura ||
       makerConfig[toChain].httpEndPoint
-    accessLogger.info(`RPC from makerConfig ${toChain}`)
+    accessLogger.info(`${transactionID} RPC from makerConfig ${toChain}`)
   } else {
     //
-    accessLogger.info(`RPC from ChainCore ${toChain}`)
+    accessLogger.info(`${transactionID} RPC from ChainCore ${toChain}`)
   }
   if (isEmpty(web3Net)) {
-    accessLogger.error(`RPC not obtained ToChain ${toChain}`)
+    accessLogger.error(`${transactionID} RPC not obtained ToChain ${toChain}`)
     return
   }
 
@@ -900,7 +900,7 @@ export async function sendConsumer(value: any) {
         })
     }
   } catch (error) {
-    accessLogger.error(`tokenBalanceWeiError = ${error}`)
+    accessLogger.error(`${transactionID} tokenBalanceWeiError = ${error}`)
   }
 
   if (!tokenBalanceWei) {
@@ -943,9 +943,9 @@ export async function sendConsumer(value: any) {
      */
     let sql_nonce = nonceDic[makerAddress]?.[chainID]
     accessLogger.info(
-      `read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
+      `${transactionID} read nonce  sql_nonce:${sql_nonce}, nonce:${nonce}, result_nonce:${result_nonce}`
     )
-    accessLogger.info(`read nonceDic:${JSON.stringify(nonceDic)}`)
+    accessLogger.info(`${transactionID} read nonceDic:${JSON.stringify(nonceDic)}`)
     if (!sql_nonce) {
       result_nonce = nonce
     } else {
@@ -984,9 +984,9 @@ export async function sendConsumer(value: any) {
       nonceDic[makerAddress] = {}
     }
     nonceDic[makerAddress][chainID] = result_nonce
-    accessLogger.info(`nonce = ${nonce}`)
-    accessLogger.info(`sql_nonce = ${sql_nonce}`)
-    accessLogger.info(`result_nonde = ${result_nonce}`)
+    accessLogger.info(`${transactionID} nonce = ${nonce}`)
+    accessLogger.info(`${transactionID} sql_nonce = ${sql_nonce}`)
+    accessLogger.info(`${transactionID} result_nonde = ${result_nonce}`)
   }
 
   async function checkNonce() {
@@ -999,11 +999,11 @@ export async function sendConsumer(value: any) {
       errorLogger.error(alert);
       if (result_nonce % 10 === 1) {
         telegramBot.sendMessage(alert).catch(error => {
-          this.logger.error(`send telegram message error ${error.stack}`);
+          this.logger.error(`${transactionID} send telegram message error ${error.stack}`);
         });
       }
     } else {
-      accessLogger.info(`${makerAddress} ${toChain} last nonce ${lastNonce}`);
+      accessLogger.info(`${transactionID} ${makerAddress} ${toChain} last nonce ${lastNonce}`);
     }
   }
 
@@ -1012,7 +1012,7 @@ export async function sendConsumer(value: any) {
     try {
       checkNonce();
     } catch (e) {
-      errorLogger.error(`check nonce error ${e.message}`);
+      errorLogger.error(`${transactionID} check nonce error ${e.message}`);
     }
   }
 
@@ -1080,7 +1080,7 @@ export async function sendConsumer(value: any) {
     } catch (error) {
       gasLimit = 1000000
     }
-    accessLogger.info(`arGasLimit = ${gasLimit}`)
+    accessLogger.info(`${transactionID} arGasLimit = ${gasLimit}`)
   }
   if (toChain === 'zksync2_test' || toChain === 'zksync2') {
     try {
@@ -1100,7 +1100,7 @@ export async function sendConsumer(value: any) {
     } catch (error) {
       gasLimit = 1000000
     }
-    accessLogger.info(`arGasLimit = ${gasLimit}`)
+    accessLogger.info(`${transactionID} arGasLimit = ${gasLimit}`)
   }
 
   /**
@@ -1216,7 +1216,7 @@ export async function sendConsumer(value: any) {
   transaction.sign(
     Buffer.from(makerConfig.privateKeys[makerAddress.toLowerCase()], 'hex')
   )
-  accessLogger.info(`send transaction = ${JSON.stringify(details)}`)
+  accessLogger.info(`${transactionID} send transaction = ${JSON.stringify(details)}`)
   /**
    * Now, we'll compress the transaction info down into a transportable object.
    */
@@ -1242,7 +1242,7 @@ export async function sendConsumer(value: any) {
         })
       })
       .on('receipt', (tx: any) => {
-        accessLogger.info(`send transaction receipt= ${JSON.stringify(tx)}`)
+        accessLogger.info(`${transactionID} send transaction receipt= ${JSON.stringify(tx)}`)
       })
       .on('error', async (err: any) => {
         const result = {
@@ -1265,7 +1265,7 @@ export async function sendConsumer(value: any) {
             chainTransferMap?.delete(transactionID);
             //
             chainQueue[Number(chainID)].enqueue(transactionID, value).catch(error => {
-              errorLogger.warn(`retry enqueue error: ${error}`);
+              errorLogger.warn(`${transactionID} retry enqueue error: ${error}`);
             });
           }
         }
