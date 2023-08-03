@@ -332,11 +332,11 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`transfer transaction request`, JSON.stringify(transactionRequest));
+        this.logger.info(`transfer transaction request ${JSON.stringify(transactionRequest)}`);
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
-        this.logger.info(`transfer sendTransaction txHash`, txHash);
+        this.logger.info(`transfer sendTransaction txHash ${txHash}`);
         // this.logger.info(`transfer sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
@@ -371,14 +371,14 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`transfer token transaction request`, JSON.stringify({
+        this.logger.info(`transfer token transaction request ${JSON.stringify({
             ...transactionRequest,
             data: undefined
-        }));
+        })}`);
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
-        this.logger.info(`transfer token sendTransaction txHash`, txHash);
+        this.logger.info(`transfer token sendTransaction txHash ${txHash}`);
         // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
@@ -436,11 +436,11 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`swap transaction request`, JSON.stringify({ ...transactionRequest, data: undefined }));
+        this.logger.info(`swap transaction request ${JSON.stringify({ ...transactionRequest, data: undefined })}`);
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
-        this.logger.info(`swap sendTransaction txHash`, txHash);
+        this.logger.info(`swap sendTransaction txHash ${txHash}`);
         // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
@@ -493,11 +493,11 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`swap token transaction request`, JSON.stringify({ ...transactionRequest, data: undefined }));
+        this.logger.info(`swap token transaction request ${JSON.stringify({ ...transactionRequest, data: undefined }))}`;
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
-        this.logger.info(`swap token sendTransaction txHash`, txHash);
+        this.logger.info(`swap token sendTransaction txHash ${txHash}`);
         // this.logger.info(`swap sendTransaction response`, JSON.stringify(response));
         commit(nonce);
         return response;
