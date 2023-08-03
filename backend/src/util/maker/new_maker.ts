@@ -328,6 +328,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           accessLogger.error(
             `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
           )
+          chainTransferMap?.set(transactionID, 'ok');
           // TAG:  rinkeby close
           continue
         }
