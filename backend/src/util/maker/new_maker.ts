@@ -202,7 +202,16 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
 
-
+        const startTimeTimeStamp = LastPullTxMap.get(
+          `${fromChain.internalId}:${tx.to.toLowerCase()}`
+        )
+        if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
+          accessLogger.error(
+            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
+          )
+          // TAG:  rinkeby close
+          continue
+        }
         let ext = '';
         if ([8, 88].includes(Number(fromChain.internalId))) {
           ext = dayjs(tx.timestamp).unix().toString();
@@ -313,28 +322,8 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
             continue
           }
         }
-
-        const formChainID = String(marketItem.fromChain.id);
-        const chainTransferMap = transfers.get(formChainID)
-        if (chainTransferMap?.has(transactionID)) {
-          // accessLogger.error(
-          //   `confirmTransaction ${tx.hash} ${transactionID} transfer exists!`
-          // )
-          return;
-        }
-
-        const startTimeTimeStamp = LastPullTxMap.get(
-          `${formChainID}:${tx.to.toLowerCase()}`
-        )
-        if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
-          accessLogger.error(
-            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
-          )
-          chainTransferMap?.set(transactionID, 'ok');
-          // TAG:  rinkeby close
-          continue
-        }
-
+       
+        
         await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
       } catch (error) {
         errorLogger.error(`${tx.hash} startNewMakerTrxPull error: ${error}`)
@@ -349,17 +338,33 @@ export async function confirmTransactionSendMoneyBack(
   tx: ITransaction
 ) {
   const fromChainID = Number(market.fromChain.id)
-
   if (
     Number(fromChainID) === 4 && tx.status != 1
   ) {
     return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
   }
   const toChainID = Number(market.toChain.id)
+  if (fromChainID == 21 && toChainID!==1) {
+    telegramBot.sendMessage(`[${tx.hash}] break from base to chain not mainnet`).catch(error => {
+      accessLogger.error(`send telegram message error ${error.stack}`);
+    })
+    errorLogger.error(`[${tx.hash}] break from base to chain not mainnet`);
+    const chainTransferMap = transfers.get(String(fromChainID))
+    chainTransferMap?.set(transactionID, 'ok');
+    return;
+  }
+
 
   const toChainName = market.toChain.name
   const makerAddress = market.sender
-
+  if (
+    chainCoreUtil.isEmpty(makerConfig.privateKeys[makerAddress.toLowerCase()])
+  ) {
+    accessLogger.error(
+      `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${makerAddress}`
+    )
+    return
+  }
   const cache = getCacheClient(String(fromChainID))
   const chainTransferMap = transfers.get(String(fromChainID))
   if (
@@ -371,28 +376,11 @@ export async function confirmTransactionSendMoneyBack(
     // )
     return;
   }
-  if (
-    chainCoreUtil.isEmpty(makerConfig.privateKeys[makerAddress.toLowerCase()])
-  ) {
-    accessLogger.error(
-      `[${transactionID}] Your private key is not injected into the coin dealer address,makerAddress =${makerAddress}`
-    )
-    return
-  }
-
   if (Number(chainTransferMap?.size) >= 5000) {
     chainTransferMap?.clear()
   }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
   LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
-  if (fromChainID == 21 && toChainID!==1) {
-    chainTransferMap?.set(transactionID, "ok");
-    telegramBot.sendMessage(`[${tx.hash}] break from base to chain not mainnet`).catch(error => {
-      accessLogger.error(`send telegram message error ${error.stack}`);
-    })
-    errorLogger.error(`[${tx.hash}] break from base to chain not mainnet`);
-    return;
-  }
   // check send
   // valid is exits
   try {
