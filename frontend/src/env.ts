@@ -74,6 +74,8 @@ export const $env = {
     517: '1402',
     518: '534351',
     519: '534354',
+    21: '8453',
+    521: '84531',
 
     23: '59144',
     523: '59140',
@@ -116,6 +118,7 @@ export const $env = {
     518: 'https://l1scan.scroll.io/tx/',
     519: 'https://l2scan.scroll.io/tx/',
     520: 'https://l2explorer.a2.taiko.xyz/tx/',
+    21: 'https://basescan.org/tx/',
     521: 'https://goerli.basescan.org/tx/',
     522: 'https://explorer.goerli.zkevm.consensys.net/tx/',
 
@@ -163,6 +166,7 @@ export const $env = {
     518: 'https://l1scan.scroll.io/address/',
     519: 'https://l2scan.scroll.io/address/',
     520: 'https://l2explorer.a2.taiko.xyz/address/',
+    21: 'https://basescan.org/address/',
     521: 'https://goerli.basescan.org/address/',
     522: 'https://explorer.goerli.zkevm.consensys.net/address/',
 
@@ -204,6 +208,7 @@ export const $env = {
     517: 'https://public.zkevm-test.net:8443/token/',
     518: 'https://l1scan.scroll.io/token/',
     519: 'https://l2scan.scroll.io/token/',
+    21: 'https://basescan.org/token/',
 
     23: 'https://explorer.linea.build/token/',
     24: 'https://explorer.mantle.xyz/token/',
