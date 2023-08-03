@@ -493,7 +493,7 @@ export class EVMAccount {
         if (preSend) await preSend();
         this.logger.info(`${this.chainConfig.name}_sql_nonce = ${nonce}`);
         transactionRequest.nonce = nonce;
-        this.logger.info(`swap token transaction request ${JSON.stringify({ ...transactionRequest, data: undefined }))}`;
+        this.logger.info(`swap token transaction request ${JSON.stringify({ ...transactionRequest, data: undefined })}`);
         const signedTx = await this.wallet.signTransaction(transactionRequest);
         const txHash = ethers.utils.keccak256(signedTx);
         const response = await this.provider.sendTransaction(signedTx);
