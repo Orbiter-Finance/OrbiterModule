@@ -20,6 +20,8 @@ import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
 import { attackerList } from "../../schedule/jobs";
+import { telegramBot } from '../../sms/telegram'
+
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -347,12 +349,21 @@ export async function confirmTransactionSendMoneyBack(
   tx: ITransaction
 ) {
   const fromChainID = Number(market.fromChain.id)
+
   if (
     Number(fromChainID) === 4 && tx.status != 1
   ) {
     return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
   }
   const toChainID = Number(market.toChain.id)
+  if (fromChainID == 21 && toChainID!==1) {
+    telegramBot.sendMessage(`[${tx.hash}] break from base to chain not mainnet`).catch(error => {
+      accessLogger.error(`send telegram message error ${error.stack}`);
+    })
+    errorLogger.error(`[${tx.hash}] break from base to chain not mainnet`);
+    
+    return;
+  }
   const toChainName = market.toChain.name
   const makerAddress = market.sender
   if (
