@@ -344,16 +344,15 @@ export async function confirmTransactionSendMoneyBack(
     return errorLogger.error(`[${tx.hash}] Intercept the transaction and do not collect the payment`)
   }
   const toChainID = Number(market.toChain.id)
-  if (fromChainID == 21 && toChainID!==1) {
-    telegramBot.sendMessage(`[${tx.hash}] break from base to chain not mainnet`).catch(error => {
-      accessLogger.error(`send telegram message error ${error.stack}`);
-    })
-    errorLogger.error(`[${tx.hash}] break from base to chain not mainnet`);
-    const chainTransferMap = transfers.get(String(fromChainID))
-    chainTransferMap?.set(transactionID, 'ok');
-    return;
-  }
-
+  // if (fromChainID == 21 && toChainID!==1) {
+  //   telegramBot.sendMessage(`[${tx.hash}] break from base to chain not mainnet`).catch(error => {
+  //     accessLogger.error(`send telegram message error ${error.stack}`);
+  //   })
+  //   errorLogger.error(`[${tx.hash}] break from base to chain not mainnet`);
+  //   const chainTransferMap = transfers.get(String(fromChainID))
+  //   chainTransferMap?.set(transactionID, 'ok');
+  //   return;
+  // }
 
   const toChainName = market.toChain.name
   const makerAddress = market.sender
