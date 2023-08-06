@@ -595,7 +595,7 @@
         "name": "USDC",
         "symbol": "USDC",
         "decimals": 6,
-        "address": ""
+        "address": "0x176211869ca2b568f2a7d4ee941e073a821ee1ff"
       }
     ],
     "infoURL": "https://explorer.linea.build"
