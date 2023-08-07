@@ -103,11 +103,28 @@ export async function writeLogJson(name: string, dir: string, data: any) {
   fs.writeFileSync(path.join(fileDir, name), JSON.stringify(data));
 }
 
-export async function readLogJson(name: string, dir: string, defaultValue?: any) {
+export async function readLogArr(name: string, dir: string, defaultValue?: any) {
   const fileDir: string = await mkLogDir(dir);
   defaultValue = defaultValue || [];
   try {
+    return JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString());
+  } catch (e) {
+    await writeLogJson(name, dir, defaultValue);
     return JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString()) || defaultValue;
+  }
+}
+
+export async function readLogJson(name: string, dir: string, defaultValue?: any) {
+  const fileDir: string = await mkLogDir(dir);
+  defaultValue = defaultValue || {};
+  try {
+    const obj = JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString());
+    if (Object.keys(obj).length < Object.keys(defaultValue).length) {
+      await writeLogJson(name, dir, Object.assign(defaultValue, obj));
+      return JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString());
+    } else {
+      return obj;
+    }
   } catch (e) {
     await writeLogJson(name, dir, defaultValue);
     return JSON.parse(fs.readFileSync(path.join(fileDir, name)).toString()) || defaultValue;

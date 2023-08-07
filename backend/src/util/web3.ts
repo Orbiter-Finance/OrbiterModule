@@ -7,7 +7,7 @@ import { ChainServiceTokenBalance } from "orbiter-chaincore/src/packages/token-b
 export class MakerWeb3 {
     public web3: Web3;
     public rpcList: string[];
-    private rpcIndex: number = 0;
+    public rpcIndex: number = 0;
     public stableRpc: string;
 
     constructor(chainId: number) {

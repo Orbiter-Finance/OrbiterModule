@@ -11,7 +11,7 @@ import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
-import { readLogJson, sleep, writeLogJson } from '../../util';
+import { readLogArr, readLogJson, sleep, writeLogJson } from '../../util';
 import fs from "fs";
 import path from "path";
 
@@ -96,7 +96,7 @@ export class StarknetHelp {
           });
           txPool[makerAddress] = leftTaskList;
           if (clearTaskList.length && code) {
-              const cacheList: any[] = await readLogJson(`${makerAddress}_clear.json`, 'starknetTx/clear');
+              const cacheList: any[] = await readLogArr(`${makerAddress}_clear.json`, 'starknetTx/clear');
               cacheList.push(clearTaskList.map(item => {
                   return {
                       transactionID: item.params.transactionID,

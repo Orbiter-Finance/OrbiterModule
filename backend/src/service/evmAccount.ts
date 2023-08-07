@@ -5,7 +5,7 @@ import { telegramBot } from "../sms/telegram";
 import { MakerWeb3 } from "../util/web3";
 import { getLoggerService } from "../util/logger";
 import { IChainConfig } from "orbiter-chaincore/src/types";
-import { aggregateLog, readLogJson, sleep, writeLogJson } from "../util";
+import { aggregateLog, readLogArr, readLogJson, sleep, writeLogJson } from "../util";
 import Keyv from "keyv";
 import KeyvFile from "orbiter-chaincore/src/utils/keyvFile";
 import { equals } from "orbiter-chaincore/src/utils/core";
@@ -14,7 +14,6 @@ import { In } from "typeorm";
 import { doSms } from "../sms/smsSchinese";
 import { sendTxConsumeHandle } from "../util/maker";
 import { max } from 'lodash';
-import { alarmMsgMap } from "../schedule/jobs";
 import { clearInterval } from "timers";
 import { Orbiter_Router_ABI, ERC20_ABI } from "../config/ABI";
 
@@ -40,8 +39,6 @@ let maxTryCount: number = 180;
 let gasMulti: number = 1.2;
 let gasMaxPrice: number = 200000000000;
 
-const lastLogTimeMap: any = {};
-
 interface IJobParams {
     waringInterval: number;
     execTaskCount: number;
@@ -49,6 +46,13 @@ interface IJobParams {
     expireTime: number;
     maxTryCount: number;
     sendInterval: number;
+    gasMulti: number;
+    gasMaxPrice: number;
+    floorMaxPriorityFeePerGas: number;
+    minAggregatesCount: number;
+    rpcIndex: number;
+    banFromChainId: (number | "*")[];
+    clearTaskAlarmInterval: number;
 }
 
 export class EVMAccount {
@@ -60,6 +64,8 @@ export class EVMAccount {
     private makerWeb3: MakerWeb3;
     public address: string;
     private sendInterval: number = 20;
+    private alarmMsgList: string[] = [];
+    private alarmTime: number = new Date().valueOf();
     private readonly lockKey: string;
     private readonly txKey: string;
 
@@ -173,7 +179,7 @@ export class EVMAccount {
             });
             txPool[txKey] = leftTaskList;
             if (clearTaskList.length && code) {
-                const cacheList: any[] = await readLogJson(`${this.address}`, `evm/${this.chainConfig.internalId}/clear`);
+                const cacheList: any[] = await readLogArr(`${this.address}`, `evm/${this.chainConfig.internalId}/clear`);
                 cacheList.push(clearTaskList.map(item => {
                     return {
                         transactionID: item.params.transactionID,
@@ -216,25 +222,17 @@ export class EVMAccount {
         taskLockMap[txKey] = false;
     }
 
-    async getVariableConfig(): Promise<{
-        waringInterval: number,
-        execTaskCount: number,
-        maxTaskCount: number,
-        expireTime: number,
-        maxTryCount: number,
-        sendInterval: number,
-        gasMulti: number,
-        gasMaxPrice: number,
-        floorMaxPriorityFeePerGas: number,
-        minAggregatesCount: number
-    }> {
+    async getVariableConfig(): Promise<IJobParams> {
         return await readLogJson(`limit.json`, `evm/${this.chainConfig.internalId}/limit`, {
             waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount,
             sendInterval: this.sendInterval,
             gasMulti,
             gasMaxPrice,
             floorMaxPriorityFeePerGas: 5000000000,
-            minAggregatesCount: 10
+            minAggregatesCount: 10,
+            rpcIndex: 0,
+            banFromChainId: [],
+            clearTaskAlarmInterval: 0
         });
     }
 
@@ -517,6 +515,22 @@ export class EVMAccount {
         }
     }
 
+    alarm(interval) {
+        if (interval > 10) {
+            if (this.alarmTime < new Date().valueOf() - interval * 1000) {
+                if (this.alarmMsgList.length) {
+                    const alert: string = `${this.chainConfig.name} ${this.alarmMsgList.join(',')}`;
+                    // doSms(alert);
+                    telegramBot.sendMessage(alert).catch(error => {
+                        this.logger.error(`send telegram message error ${error.stack}`);
+                    });
+                }
+            }
+        }
+        this.alarmMsgList = [];
+        this.alarmTime = new Date().valueOf();
+    }
+
     private async job() {
         const makerAddress = this.address;
         const lockKey = this.lockKey;
@@ -539,7 +553,7 @@ export class EVMAccount {
         maxTaskCount = variableConfig.maxTaskCount;
         expireTime = variableConfig.expireTime;
         maxTryCount = variableConfig.maxTryCount;
-
+        const banFromChainId = variableConfig.banFromChainId;
 
         taskList = taskList.sort(function (a, b) {
             return b.createTime - a.createTime;
@@ -555,7 +569,7 @@ export class EVMAccount {
             // max length limit
             if (i < taskList.length - maxTaskCount) {
                 clearTaskList.push(task);
-                errorMsgList.push(`${this.chainConfig.name}_max_count_limit ${taskList.length} > ${maxTaskCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                errorMsgList.push(`${this.chainConfig.name}_max_count_limit ${taskList.length} > ${maxTaskCount}, transactionID: ${task.params?.transactionID}`);
                 continue;
             }
             // expire time limit
@@ -564,21 +578,26 @@ export class EVMAccount {
                 const formatDate = (timestamp: number) => {
                     return new Date(timestamp).toDateString() + " " + new Date(timestamp).toLocaleTimeString();
                 };
-                errorMsgList.push(`${this.chainConfig.name}_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime * 1000)}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                errorMsgList.push(`${this.chainConfig.name}_expire_time_limit ${formatDate(task.createTime)} < ${formatDate(new Date().valueOf() - expireTime * 1000)}, transactionID: ${task.params?.transactionID}`);
                 continue;
             }
             // retry count limit
             if (task.count > maxTryCount) {
                 clearTaskList.push(task);
-                errorMsgList.push(`${this.chainConfig.name}_retry_count_limit ${task.count} > ${maxTryCount}, ownerAddress: ${task.params.ownerAddress}, value: ${task.signParam.amount}, fromChainID: ${task.params.fromChainID}`);
+                errorMsgList.push(`${this.chainConfig.name}_retry_count_limit ${task.count} > ${maxTryCount}, transactionID: ${task.params?.transactionID}`);
+                continue;
+            }
+            // ban
+            if(banFromChainId.find(chainId => Number(chainId) === Number(task.signParam.fromChainId))){
+                clearTaskList.push(task);
+                errorMsgList.push(`${this.chainConfig.name}_ban ${task.signParam.fromChainId}, transactionID: ${task.params?.transactionID}`);
                 continue;
             }
             execTaskList.push(task);
         }
         if (clearTaskList.length) {
             this.logger.error(`${this.chainConfig.name}_task_clear ${clearTaskList.length}, ${JSON.stringify(errorMsgList)}`);
-            alarmMsgMap[`${this.chainConfig.name}_task_clear`] = alarmMsgMap[`${this.chainConfig.name}_task_clear`] || [];
-            alarmMsgMap[`${this.chainConfig.name}_task_clear`].push(...clearTaskList.map(item => item.params?.transactionID));
+            this.alarmMsgList.push(...clearTaskList.map(item => item.params?.transactionID));
             await this.clearTask(clearTaskList, 1);
         }
 
@@ -720,6 +739,14 @@ export class EVMAccount {
                 _this.sendInterval = data.sendInterval;
                 cronMap[txKey] = createCron(_this.sendInterval);
             }
+            if (_this.makerWeb3.rpcIndex !== data.rpcIndex) {
+                const index = Math.min(_this.makerWeb3.rpcList.length - 1, data.rpcIndex);
+                const rpc = _this.makerWeb3.rpcList[index];
+                _this.makerWeb3.refreshWeb3(rpc);
+                _this.refreshProvider();
+                _this.makerWeb3.rpcIndex = index;
+            }
+            _this.alarm(data.clearTaskAlarmInterval);
         }
     }
 }
