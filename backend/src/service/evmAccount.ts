@@ -50,6 +50,7 @@ interface IJobParams {
     gasMaxPrice: number;
     floorMaxPriorityFeePerGas: number;
     minAggregatesCount: number;
+    rpcManualSwitch: number;
     rpcIndex: number;
     banFromChainId: (number | "*")[];
     clearTaskAlarmInterval: number;
@@ -230,6 +231,7 @@ export class EVMAccount {
             gasMaxPrice,
             floorMaxPriorityFeePerGas: 5000000000,
             minAggregatesCount: 10,
+            rpcManualSwitch: 0,
             rpcIndex: 0,
             banFromChainId: [],
             clearTaskAlarmInterval: 0
@@ -739,7 +741,7 @@ export class EVMAccount {
                 _this.sendInterval = data.sendInterval;
                 cronMap[txKey] = createCron(_this.sendInterval);
             }
-            if (_this.makerWeb3.rpcIndex !== data.rpcIndex) {
+            if (data.rpcManualSwitch && _this.makerWeb3.rpcIndex !== data.rpcIndex) {
                 const index = Math.min(_this.makerWeb3.rpcList.length - 1, data.rpcIndex);
                 const oldRpc = _this.makerWeb3.stableRpc;
                 const rpc = _this.makerWeb3.rpcList[index];
