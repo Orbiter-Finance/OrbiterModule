@@ -519,7 +519,7 @@ export class EVMAccount {
         if (interval > 10) {
             if (this.alarmTime < new Date().valueOf() - interval * 1000) {
                 if (this.alarmMsgList.length) {
-                    const alert: string = `${this.chainConfig.name} ${this.alarmMsgList.join(',')}`;
+                    const alert: string = `${this.chainConfig.name} clear task ${this.alarmMsgList.join(',')}`;
                     // doSms(alert);
                     telegramBot.sendMessage(alert).catch(error => {
                         this.logger.error(`send telegram message error ${error.stack}`);
@@ -741,10 +741,12 @@ export class EVMAccount {
             }
             if (_this.makerWeb3.rpcIndex !== data.rpcIndex) {
                 const index = Math.min(_this.makerWeb3.rpcList.length - 1, data.rpcIndex);
+                const oldRpc = _this.makerWeb3.stableRpc;
                 const rpc = _this.makerWeb3.rpcList[index];
                 _this.makerWeb3.refreshWeb3(rpc);
                 _this.refreshProvider();
                 _this.makerWeb3.rpcIndex = index;
+                _this.logger.info(`change rpc ${oldRpc.substr(0, 20)} --> ${_this.makerWeb3.stableRpc.substr(0, 20)}`);
             }
             _this.alarm(data.clearTaskAlarmInterval);
         }

@@ -26,6 +26,7 @@ services:
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'
+      - './backend/src/config/chains.json:/app/src/config/chains.json'
 
     #   - './backend:/app'
     ports:

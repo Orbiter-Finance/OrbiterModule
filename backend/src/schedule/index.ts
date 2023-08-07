@@ -11,6 +11,7 @@ import {
 } from './jobs';
 import { doSms } from '../sms/smsSchinese'
 import { telegramBot } from '../sms/telegram'
+import { chains } from "orbiter-chaincore/src/utils";
 
 let smsTimeStamp = 0
 
@@ -113,6 +114,7 @@ export const startMasterJobs = async () => {
   }
   // maker
   if (['maker', 'all', undefined, ''].indexOf(scene) !== -1) {
+    chains.setWatchFile(0,'../../../../src/config/chains.json')
     waittingStartMaker()
     startNewMakerTrxPull()
     batchTxSend()
