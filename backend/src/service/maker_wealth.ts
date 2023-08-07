@@ -7,7 +7,7 @@ import { ServiceError, ServiceErrorCodes } from '../error/service'
 import { MakerWealth } from '../model/maker_wealth'
 import { isEthTokenAddress } from '../util'
 import { Core } from '../util/core'
-import { errorLogger } from '../util/logger'
+import { accessLogger, errorLogger } from '../util/logger';
 import { getMakerList } from '../util/maker'
 import { DydxHelper } from './dydx/dydx_helper'
 import { IMXHelper } from './immutablex/imx_helper'
@@ -328,6 +328,7 @@ export async function getWealthsChains(makerAddress: string) {
 export async function getWealths(
   makerAddress: string
 ): Promise<WealthsChain[]> {
+  const consumeTimeList = [];
   const wealthsChains = await getWealthsChains(makerAddress)
   // get tokan balance
   const promises: Promise<void>[] = []
@@ -340,6 +341,7 @@ export async function getWealths(
           makerAddress =
             makerConfig.starknetAddress[item.makerAddress.toLowerCase()]
         }
+        const beginTime = new Date().valueOf();
         let value = await getTokenBalance(
           makerAddress,
           item.chainId,
@@ -347,6 +349,10 @@ export async function getWealths(
           item2.tokenAddress,
           item2.tokenName
         )
+        const consumeTime = Math.floor((new Date().valueOf() - beginTime) / 1000);
+        if (consumeTime > 1) {
+          consumeTimeList.push(`${item.chainId} ${item2.tokenName} ${consumeTime}s`);
+        }
         // When value!='' && > 0, format it
         if (value) {
           value = new BigNumber(value)
@@ -360,6 +366,9 @@ export async function getWealths(
     }
   }
   await Promise.all(promises)
+  if (consumeTimeList.length) {
+    accessLogger.info(consumeTimeList.join(','));
+  }
   return wealthsChains
 }
 
