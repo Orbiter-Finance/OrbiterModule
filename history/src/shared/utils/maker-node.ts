@@ -110,6 +110,7 @@ export async function convertMakerList(): Promise<IMaker[]> {
   if (cacheData) {
     return cacheData;
   }
+  await new Promise(resolve => setTimeout(resolve, 1500));
   const chainList: IChainCfg[] = await getChainList();
   const makerCfgMap: IMakerCfg[] = await getMakerCfgMap();
   const v1makerList: IMaker[] = [];
