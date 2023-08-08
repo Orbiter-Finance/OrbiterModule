@@ -35,7 +35,7 @@
     "fs-extra": "^10.1.0",
     "graphql": "^16.3.0",
     "graphql-request": "^4.2.0",
-    "keyv": "^4.2.8",
+    "keyv": "^4.4.1",
     "koa": "^2.13.3",
     "koa-bodyparser": "^4.3.0",
     "koa-router": "^10.1.1",

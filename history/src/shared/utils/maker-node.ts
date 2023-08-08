@@ -4,15 +4,228 @@ import { BigNumber } from 'bignumber.js'
 import dayjs from './dayFormat'
 import dayjs2 from './dayWithRelativeFormat'
 import axios from 'axios'
-import { makerListHistory, makerList } from '../configs'
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
+// import { makerList } from "../configs";
 const keyv = new Keyv();
+
 async function getAllMakerList() {
-  return makerList.concat(makerListHistory)
+  return await convertMakerList();
 }
 async function getMakerList() {
-  return makerList
+  return await convertMakerList();
+}
+
+export interface IChainCfg {
+  name: string;
+  chainId: string;
+  internalId: string;
+  networkId?: string;
+  rpc: string[];
+  api?: {
+    url: string;
+    key?: string;
+    intervalTime?: number;
+  };
+  debug?: boolean;
+  nativeCurrency: IToken;
+  watch?: string[];
+  explorers?: any[];
+  tokens: IToken[];
+  contracts?: string[];
+  xvmList?: string[];
+  workingStatus?: any;
+  infoURL?: string;
+}
+
+export interface IToken {
+  id?: number;
+  name: string;
+  symbol: string;
+  decimals: 18;
+  address: string;
+  mainCoin?: boolean;
+}
+
+export interface IMakerCfg {
+  [makerAddress: string]: {
+    [chainIdPair: string]: {
+      [symbolPair: string]: IMakerDataCfg;
+    };
+  };
+}
+
+export interface IMakerDataCfg {
+  makerAddress: string;
+  sender: string;
+  gasFee: number;
+  tradingFee: number;
+  maxPrice: number;
+  minPrice: number;
+  slippage: number;
+  startTime: number;
+  endTime: number;
+  crossAddress?: {
+    makerAddress: string;
+    sender: string;
+    gasFee: number;
+    tradingFee: number;
+  };
+}
+
+export interface IMaker {
+  makerAddress: string;
+  c1ID: number;
+  c2ID: number;
+  c1Name: string;
+  c2Name: string;
+  t1Address: string;
+  t2Address: string;
+  tName: string;
+  c1MinPrice: number;
+  c1MaxPrice: number;
+  c2MinPrice: number;
+  c2MaxPrice: number;
+  precision: number;
+  c1TradingFee: number;
+  c2TradingFee: number;
+  c1GasFee: number;
+  c2GasFee: number;
+  c1AvalibleTimes: [
+    {
+      startTime: number;
+      endTime: number;
+    },
+  ];
+  c2AvalibleTimes: [
+    {
+      startTime: number;
+      endTime: number;
+    },
+  ];
+}
+
+export async function convertMakerList(): Promise<IMaker[]> {
+  const cacheData = await keyv.get(`maker`);
+  if (cacheData) {
+    return cacheData;
+  }
+  const chainList: IChainCfg[] = await getChainList();
+  const makerCfgMap: IMakerCfg[] = await getMakerCfgMap();
+  const v1makerList: IMaker[] = [];
+
+  for (const chain of chainList) {
+    if (chain.tokens && chain.nativeCurrency) {
+      chain.tokens.push(chain.nativeCurrency);
+    }
+  }
+
+  for (const makerAddress in makerCfgMap) {
+    const makerMap = makerCfgMap[makerAddress];
+    for (const chainIdPair in makerMap) {
+      if (!makerMap.hasOwnProperty(chainIdPair)) continue;
+      const symbolPairMap = makerMap[chainIdPair];
+      const [fromChainId, toChainId] = chainIdPair.split("-");
+      const c1Chain = chainList.find(item => +item.internalId === +fromChainId);
+      const c2Chain = chainList.find(item => +item.internalId === +toChainId);
+      if (!c1Chain) {
+        continue;
+      }
+      if (!c2Chain) {
+        continue;
+      }
+      for (const symbolPair in symbolPairMap) {
+        if (!symbolPairMap.hasOwnProperty(symbolPair)) continue;
+        const makerData: any = symbolPairMap[symbolPair];
+        const [fromChainSymbol, toChainSymbol] = symbolPair.split("-");
+        // handle v1makerList
+        if (fromChainSymbol === toChainSymbol) {
+          handleV1MakerList(symbolPair, fromChainSymbol, toChainId, fromChainId, c1Chain, c2Chain, makerData);
+        }
+      }
+    }
+
+    function handleV1MakerList(symbolPair: string, symbol: string,
+                               toChainId: string, fromChainId: string,
+                               c1Chain: IChainCfg, c2Chain: IChainCfg,
+                               c1MakerData: IMakerDataCfg) {
+      // duplicate removal
+      if (v1makerList.find(item =>
+          item.c1ID === +toChainId && item.c2ID === +fromChainId &&
+          item.tName === symbol)) {
+        return;
+      }
+      const c1Token = c1Chain.tokens.find(item => item.symbol === symbol);
+      const c2Token = c2Chain.tokens.find(item => item.symbol === symbol);
+      if (!c1Token) {
+        return;
+      }
+      if (!c2Token) {
+        return;
+      }
+      // reverse chain data
+      let reverseSymbolPairMap: any = {};
+      const reverseChainIdPair = `${toChainId}-${fromChainId}`;
+      if (!makerMap.hasOwnProperty(reverseChainIdPair)) {
+        reverseSymbolPairMap = makerMap[`${fromChainId}-${toChainId}`];
+      } else {
+        reverseSymbolPairMap = makerMap[reverseChainIdPair];
+      }
+      if (!reverseSymbolPairMap.hasOwnProperty(symbolPair)) return;
+      const c2MakerData: IMakerDataCfg = reverseSymbolPairMap[symbolPair];
+      c1MakerData.makerAddress = c2MakerData.makerAddress = makerAddress;
+      if (c1MakerData.makerAddress === c2MakerData.makerAddress) {
+        v1makerList.push({
+          makerAddress: c1MakerData.makerAddress,
+          c1ID: +fromChainId,
+          c2ID: +toChainId,
+          c1Name: c1Chain.name,
+          c2Name: c2Chain.name,
+          t1Address: c1Token.address,
+          t2Address: c2Token.address,
+          tName: symbol,
+          c1MinPrice: c1MakerData.minPrice,
+          c1MaxPrice: c1MakerData.maxPrice,
+          c2MinPrice: c2MakerData.minPrice,
+          c2MaxPrice: c2MakerData.maxPrice,
+          precision: c1Token.decimals,
+          c1TradingFee: c1MakerData.tradingFee,
+          c2TradingFee: c2MakerData.tradingFee,
+          c1GasFee: c1MakerData.gasFee,
+          c2GasFee: c2MakerData.gasFee,
+          c1AvalibleTimes: [
+            {
+              startTime: c1MakerData.startTime,
+              endTime: c1MakerData.endTime,
+            },
+          ],
+          c2AvalibleTimes: [
+            {
+              startTime: c2MakerData.startTime,
+              endTime: c2MakerData.endTime,
+            },
+          ],
+        });
+      }
+    }
+  }
+
+  await keyv.set(`maker`, v1makerList, 1000 * 60 * 60);
+  return v1makerList;
+}
+
+async function getChainList() {
+  const resp = await axios.get(
+      `http://openapi.orbiter.finance/mainnet/v1/config/chain`,
+  );
+  return resp.data?.result;
+}
+
+async function getMakerCfgMap() {
+  const resp = await axios.get(
+      `http://openapi.orbiter.finance/mainnet/v1/config/maker`,
+  );
+  return resp.data?.result;
 }
 
 // ETH:18  USDC:6  USDT:6
