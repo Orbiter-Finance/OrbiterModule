@@ -42,13 +42,11 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 
 export async function getMakerList() {
-  return makerList
-  // return await convertMakerList()
+  return await convertMakerList();
 }
 
 export async function getAllMakerList() {
-  return makerList
-  // return await convertMakerList();
+  return await convertMakerList();
 }
 
 export interface IChainCfg {
@@ -245,8 +243,18 @@ export async function convertMakerList(): Promise<IMaker[]> {
     }
   }
 
-  await keyv.set(`maker`, v1makerList, 1000 * 60 * 60);
-  return v1makerList;
+  const allMakerList: IMaker[] = JSON.parse(JSON.stringify(makerList));
+  for (const maker of v1makerList) {
+    if (!(<IMaker[]>makerList).find(item =>
+        (Number(item.c1ID) === Number(maker.c1ID) && Number(item.c2ID) === Number(maker.c2ID) && item.tName === maker.tName) ||
+        (Number(item.c2ID) === Number(maker.c1ID) && Number(item.c1ID) === Number(maker.c2ID) && item.tName === maker.tName))
+    ) {
+      allMakerList.push(maker);
+    }
+  }
+
+  await keyv.set(`maker`, allMakerList, 1000 * 60 * 60);
+  return allMakerList;
 }
 
 async function getChainList() {
