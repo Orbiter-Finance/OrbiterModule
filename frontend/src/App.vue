@@ -81,8 +81,12 @@ const getGlobalInfo = async () => {
   const list = resp.data.makerAddresses;
   const newList = [];
   for (const data of list) {
+    const reg = new RegExp(/^0x[a-fA-F0-9]{40}$/);
+    const isAddress = reg.test(data);
     // if (data.toLowerCase() !== '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8'.toLowerCase()) {
+    if (isAddress) {
       newList.push(data);
+    }
     // }
   }
 
