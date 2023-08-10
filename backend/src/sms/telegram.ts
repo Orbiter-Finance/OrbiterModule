@@ -10,18 +10,12 @@ export interface TelegramOption {
 }
 
 export class Telegram {
-    private lastSendTimeRecord = {};
     constructor(private readonly opts?: TelegramOption) {}
 
     async sendMessage(type: string, messageText: string) {
         if (!process.env["TELEGRAM_TOKEN"] || !process.env["CHAT_ID"]) {
             accessLogger.error("Telegram Token null");
         }
-        const now = new Date().valueOf();
-        if (now - (this.lastSendTimeRecord[type] || 0) < 10 * 60 * 1000) {
-            return;
-        }
-        this.lastSendTimeRecord[type] = now;
         const requestData = {
             chat_id: this.opts?.chatId,
             text: `[Dashboard] ${messageText}`,
