@@ -29,10 +29,10 @@ export class MakerWeb3 {
 
     getNewRpc(fn?: string) {
         const oldRpc = this.rpcList[this.rpcIndex];
-        const index = this.rpcIndex + 1 >= this.rpcList.length ? 0 : this.rpcIndex;
+        const index = this.rpcIndex + 1 >= this.rpcList.length ? 0 : (this.rpcIndex + 1);
         this.rpcIndex = index;
         const newRpc: string = this.rpcList[index];
-        const msg = `request ${fn} fail, change rpc ${oldRpc.substr(0, 20)} --> ${newRpc.substr(0, 20)}`;
+        const msg = `request ${fn} fail, change rpc ${oldRpc.substr(0, oldRpc.lastIndexOf("/"))} --> ${newRpc.substr(0, newRpc.lastIndexOf("/"))}`;
         errorLogger.error(msg);
         telegramBot.sendMessage(msg);
         return newRpc;
