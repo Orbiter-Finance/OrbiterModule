@@ -48,7 +48,15 @@ export function getTargetBaseline(
 ) {
   // Default use DEFAULT_BALANCE_ALARM_BASELINE, When settingValue has value, use it
   if (balanceAlarms) {
+    if(!(balanceAlarms instanceof Array)){
+      console.log('balanceAlarms ===', balanceAlarms);
+      return DEFAULT_BALANCE_ALARM_BASELINE
+    }
     for (const item of balanceAlarms) {
+      if (!item.baselines) {
+        console.log(`not find balanceAlarms`, item);
+        continue;
+      }
       for (const item1 of item.baselines) {
         if (item.chainId == chainId && item1.tokenAddress == tokenAddress) {
           return item1.value
