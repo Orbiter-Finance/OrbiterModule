@@ -139,9 +139,10 @@ const refreshChainIdAndTokenAddress = () => {
     (item) => item.tokenAddress == state.tokenAddress
   )
 
-  if (!targetBaselines) {
-    state.tokenAddress = nvItem.baselines[0].tokenAddress
-  }
+  // if (!targetBaselines) {
+  //   state.tokenAddress = nvItem.baselines[0].tokenAddress
+  // }
+  state.tokenAddress = nvItem.baselines[0].tokenAddress
 }
 
 // watchs
