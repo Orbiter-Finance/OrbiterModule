@@ -42,11 +42,13 @@ const repositoryMakerNodeTodo = (): Repository<MakerNodeTodo> => {
 }
 
 export async function getMakerList() {
-  return await convertMakerList();
+  return makerList;
+  // return await convertMakerList();
 }
 
 export async function getAllMakerList() {
-  return await convertMakerList();
+  return makerList;
+  // return await convertMakerList();
 }
 
 export interface IChainCfg {

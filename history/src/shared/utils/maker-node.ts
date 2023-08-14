@@ -10,10 +10,12 @@ import { makerList } from "../configs";
 const keyv = new Keyv();
 
 async function getAllMakerList() {
-  return await convertMakerList();
+  return makerList;
+  // return await convertMakerList();
 }
 async function getMakerList() {
-  return await convertMakerList();
+  return makerList;
+  // return await convertMakerList();
 }
 
 export interface IChainCfg {
