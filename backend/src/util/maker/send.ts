@@ -1024,7 +1024,7 @@ export async function sendConsumer(value: any) {
     if (chainID == 1 || chainID == 5) {
       maxPrice = 260;
     }
-    if (fromChainID==23&&chainID == 1) {
+    if ((fromChainID == 21 || fromChainID == 23 || fromChainID == 30) && chainID == 1) {
       maxPrice = 180;
     }
 
