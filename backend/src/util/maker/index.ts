@@ -170,6 +170,9 @@ export async function convertMakerList(): Promise<IMaker[]> {
       for (const symbolPair in symbolPairMap) {
         if (!symbolPairMap.hasOwnProperty(symbolPair)) continue;
         const makerData: any = symbolPairMap[symbolPair];
+        if (!new RegExp(/^0x[a-fA-F0-9]{40}$/).test(makerAddress) || !new RegExp(/^0x[a-fA-F0-9]{40}$/).test(makerData.sender)) {
+          continue;
+        }
         const [fromChainSymbol, toChainSymbol] = symbolPair.split("-");
         // handle v1makerList
         if (fromChainSymbol === toChainSymbol) {
