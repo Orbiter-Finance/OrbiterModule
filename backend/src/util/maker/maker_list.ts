@@ -16,7 +16,7 @@ export const makerList = [
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1TradingFee": 0.005,
-    "c2TradingFee": 0.0015,
+    "c2TradingFee": 0.001,
     "c1GasFee": 10,
     "c2GasFee": 0,
     "c1AvalibleTimes": [
@@ -231,6 +231,70 @@ export const makerList = [
   {
     "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
     "c1ID": 30,
+    "c2ID": 23,
+    "c1Name": "zora",
+    "c2Name": "linea",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "tName": "ETH",
+    "c1MinPrice": 0.005,
+    "c1MaxPrice": 5,
+    "c2MinPrice": 0.005,
+    "c2MaxPrice": 2,
+    "precision": 18,
+    "c1TradingFee": 0.0015,
+    "c2TradingFee": 0.001,
+    "c1GasFee": 10,
+    "c2GasFee": 0,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
+    "c1ID": 30,
+    "c2ID": 15,
+    "c1Name": "zora",
+    "c2Name": "bnbchain",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+    "tName": "ETH",
+    "c1MinPrice": 0.005,
+    "c1MaxPrice": 2,
+    "c2MinPrice": 0.005,
+    "c2MaxPrice": 5,
+    "precision": 18,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1TradingFee": 0.0015,
+    "c2TradingFee": 0.001,
+    "c1GasFee": 10,
+    "c2GasFee": 0,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
+    "c1ID": 30,
     "c2ID": 6,
     "c1Name": "zora",
     "c2Name": "polygon",
@@ -295,19 +359,17 @@ export const makerList = [
   {
     "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
     "c1ID": 30,
-    "c2ID": 15,
+    "c2ID": 24,
     "c1Name": "zora",
-    "c2Name": "bnbchain",
+    "c2Name": "mantle",
     "t1Address": "0x0000000000000000000000000000000000000000",
-    "t2Address": "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+    "t2Address": "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
     "tName": "ETH",
     "c1MinPrice": 0.005,
     "c1MaxPrice": 2,
     "c2MinPrice": 0.005,
     "c2MaxPrice": 5,
     "precision": 18,
-    "c1AvalibleDeposit": 1000,
-    "c2AvalibleDeposit": 1000,
     "c1TradingFee": 0.0015,
     "c2TradingFee": 0.001,
     "c1GasFee": 10,
@@ -327,79 +389,17 @@ export const makerList = [
   },
   {
     "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
-    "c1ID": 23,
-    "c2ID": 30,
-    "c1Name": "linea",
-    "c2Name": "zora",
+    "c1ID": 30,
+    "c2ID": 21,
+    "c1Name": "zora",
+    "c2Name": "base",
     "t1Address": "0x0000000000000000000000000000000000000000",
     "t2Address": "0x0000000000000000000000000000000000000000",
     "tName": "ETH",
     "c1MinPrice": 0.005,
-    "c1MaxPrice": 5,
+    "c1MaxPrice": 2,
     "c2MinPrice": 0.005,
-    "c2MaxPrice": 2,
-    "precision": 18,
-    "c1TradingFee": 0.0015,
-    "c2TradingFee": 0.001,
-    "c1GasFee": 10,
-    "c2GasFee": 0,
-    "c1AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ],
-    "c2AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ]
-  },
-  {
-    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
-    "c1ID": 21,
-    "c2ID": 30,
-    "c1Name": "base",
-    "c2Name": "zora",
-    "t1Address": "0x0000000000000000000000000000000000000000",
-    "t2Address": "0x0000000000000000000000000000000000000000",
-    "tName": "ETH",
-    "c1MinPrice": 0.005,
-    "c1MaxPrice": 5,
-    "c2MinPrice": 0.005,
-    "c2MaxPrice": 2,
-    "precision": 18,
-    "c1TradingFee": 0.0015,
-    "c2TradingFee": 0.001,
-    "c1GasFee": 10,
-    "c2GasFee": 0,
-    "c1AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ],
-    "c2AvalibleTimes": [
-      {
-        "startTime": 0,
-        "endTime": 99999999999999
-      }
-    ]
-  },
-  {
-    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
-    "c1ID": 24,
-    "c2ID": 30,
-    "c1Name": "mantle",
-    "c2Name": "zora",
-    "t1Address": "0xdEAddEaDdeadDEadDEADDEAddEADDEAddead1111",
-    "t2Address": "0x0000000000000000000000000000000000000000",
-    "tName": "ETH",
-    "c1MinPrice": 0.005,
-    "c1MaxPrice": 5,
-    "c2MinPrice": 0.005,
-    "c2MaxPrice": 2,
+    "c2MaxPrice": 5,
     "precision": 18,
     "c1TradingFee": 0.0015,
     "c2TradingFee": 0.001,
