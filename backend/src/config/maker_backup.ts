@@ -19,6 +19,11 @@ export default {
       "https://developer-access-mainnet.base.org"
     ]
   },
+  "30": {
+    "rpc": [
+      "https://rpc.zora.energy"
+    ]
+  },
   mainnet: {
     wsEndPoint: 'wss://eth-mainnet.alchemyapi.io/v2/Your Key',
     httpEndPoint: 'https://eth-mainnet.alchemyapi.io/v2/Your Key',

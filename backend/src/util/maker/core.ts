@@ -26,7 +26,9 @@ const MAX_BITS: any = {
   linea: 256,
   linea_test: 256,
   mantle: 256,
-  mantle_test: 256
+  mantle_test: 256,
+  zora: 256,
+  zora_test: 256
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
@@ -69,6 +71,8 @@ export const CHAIN_INDEX: any = {
   523: "linea_test",
   24: 'mantle',
   524: "mantle_test",
+  30: "zora",
+  530: "zora_test",
   599: "orbiter",
 };
 
