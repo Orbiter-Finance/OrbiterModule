@@ -253,7 +253,7 @@ export async function convertMakerList(): Promise<IMaker[]> {
     }
   }
 
-  await keyv.set(`maker`, allMakerList, 1000 * 60 * 60);
+  await keyv.set(`maker`, allMakerList, 1000 * 60 * 10);
   return allMakerList;
 }
 
