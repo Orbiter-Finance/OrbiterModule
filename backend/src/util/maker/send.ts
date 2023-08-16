@@ -156,6 +156,14 @@ export async function sendConsumer(value: any) {
     }
   }
   chainTransferMap?.set(transactionID, 'ok');
+  if (+fromChainID === 25 && +chainID === 15) {
+    return {
+      code: 1,
+      error: `sendConsumer ${transactionID} forbidden ${fromChainID}-${chainID}`,
+      result_nonce,
+      params: value
+    };
+  }
   accessLogger.info(`[${transactionID}] consume tx ${JSON.stringify(value)}`)
   // zk || zk_test
   if (chainID === 3 || chainID === 33) {
