@@ -136,6 +136,7 @@ async function getTokenBalance(
       case 521:
       case 23:
       case 24:
+      case 25:
       case 30:
         // const balanceService = 
         // value = await balanceService.getBalance(makerAddress, tokenAddress);
