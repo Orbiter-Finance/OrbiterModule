@@ -168,7 +168,7 @@ export class TransactionService {
       row.fee = this.divPrecision(row.feeToken, row.fee);
     }
     const profit: any = {};
-    for (const symbol of ['USD', 'CNY', 'ETH', 'USDC', 'USDT', 'BTC', 'DAI']) {
+    for (const symbol of ['USD', 'CNY', 'ETH', 'USDC', 'USDT', 'BTC', 'DAI', 'BNB']) {
       try {
         profit[symbol] = Number(await this.calcProfit(symbol, from, to)).toFixed(6);
       } catch (err) {
