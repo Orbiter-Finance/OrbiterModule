@@ -243,6 +243,7 @@ async function getMakerCfgMap() {
 
 // ETH:18  USDC:6  USDT:6
 const token2Decimals = {
+  'BNB': 18,
   'ETH': 18,
   'USDC': 6,
   'USDT': 6,
