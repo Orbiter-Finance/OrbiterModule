@@ -3,7 +3,7 @@ import { TransactionEntity } from './entities/transaction.entity';
 import { Injectable } from '@nestjs/common';
 import { EntityManager, getRepository } from 'typeorm';
 import { PaginationResRO, CommonResRO, PaginationReqRO } from '../shared/interfaces';
-import { logger, formateTimestamp, transforeUnmatchedTradding } from '../shared/utils';
+import { logger, formateTimestamp, transforeUnmatchedTradding, cacheExchangeRates } from '../shared/utils';
 import { groupBy, sumBy } from 'lodash';
 import * as dayjs from 'dayjs';
 import * as utc from 'dayjs/plugin/utc';
@@ -228,12 +228,12 @@ export class TransactionService {
     return amount.toString();
   }
   public async convertRate(from: string, to: string, value: string): Promise<number> {
-    const ratesbyTo = await getRates(to);
+    const ratesbyTo = await cacheExchangeRates(to);
     if (ratesbyTo[from]) {
       return new BigNumber(value).dividedBy(ratesbyTo[from]).toNumber();
     }
     // 
-    const ratesbyFrom = await getRates(from);
+    const ratesbyFrom = await cacheExchangeRates(from);
     if (ratesbyFrom[to]) {
       return new BigNumber(value).multipliedBy(ratesbyTo[to]).toNumber();
     }
