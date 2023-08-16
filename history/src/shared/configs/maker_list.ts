@@ -10,7 +10,7 @@ const initMakerList = [
     "c2Name": "opbnb",
     "t1Address": "0x0000000000000000000000000000000000000000",
     "t2Address": "0x0000000000000000000000000000000000000000",
-    "tName": "ETH",
+    "tName": "BNB",
     "c1MinPrice": 0.005,
     "c1MaxPrice": 2,
     "c2MinPrice": 0.005,
