@@ -37,8 +37,6 @@ if (process.env.logstashHost) {
     },
   }
   configure.categories['access'].appenders.push("logstash");
-  configure.categories['error'].appenders.push("logstash");
-  
 }
 
 export { configure }
