@@ -7,7 +7,6 @@ import axios from 'axios'
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 import { makerList } from "../configs";
-import { errorLogger } from "../../../../backend/src/util/logger";
 const keyv = new Keyv();
 
 async function getAllMakerList() {
@@ -259,11 +258,6 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
       let toMetis = 1 / Number(metisExchangeRates[currency]);
       exchangeRates["METIS"] = String(toMetis);
     }
-    try {
-      exchangeRates["BNB"] = String(getBNBRate(exchangeRates));
-    } catch (e) {
-      errorLogger.error('get BNB rates fail');
-    }
 
     return exchangeRates;
   } else {
@@ -278,13 +272,15 @@ async function getBNBRate(coinRates) {
   if (!BNBToUSD) {
     res = await axios.get('https://vip-api.changenow.io/v1.3/exchange/estimate?fromCurrency=bnb&fromNetwork=bnb&fromAmount=1&toCurrency=usdc&toNetwork=eth');
     BNBToUSD = res?.data?.summary?.estimatedAmount;
+    if (BNBToUSD) {
+      await keyv.set(`USD_BNB_rate`, BNBToUSD, 1000 * 60 * 5);
+    }
   }
   if (!BNBToUSD) {
-    errorLogger.error('get BNB rate fail', res);
+    console.error('get BNB rate fail', res);
     return 1;
   }
-  await keyv.set(`USD_BNB_rate`, BNBToUSD, 1000 * 60 * 5);
-  return uRate / BNBToUSD;
+  return (uRate / BNBToUSD).toFixed(6);
 }
 
 export async function getRates(currency) {
@@ -292,6 +288,11 @@ export async function getRates(currency) {
   // return (require("./rates"))["default"];
     const cacheData = await keyv.get(`rate:${currency}`);
   if (cacheData) {
+    try {
+      cacheData["BNB"] = String(await getBNBRate(cacheData));
+    } catch (e) {
+      console.error('get BNB rates fail');
+    }
     return cacheData;
   }
   const resp = await axios.get(
@@ -301,6 +302,11 @@ export async function getRates(currency) {
   // check
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
+  }
+  try {
+    data.rates["BNB"] = String(await getBNBRate(data.rates));
+  } catch (e) {
+    console.error('get BNB rates fail');
   }
   await keyv.set(`rate:${currency}`, data.rates, 1000 * 60 * 5); // true
   return data.rates
