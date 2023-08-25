@@ -7,6 +7,7 @@ import axios from 'axios'
 import { utils } from 'ethers'
 import * as Keyv from 'keyv';
 import { makerList } from "../configs";
+import { errorLogger } from "../../../../backend/src/util/logger";
 const keyv = new Keyv();
 
 async function getAllMakerList() {
@@ -258,15 +259,32 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
       let toMetis = 1 / Number(metisExchangeRates[currency]);
       exchangeRates["METIS"] = String(toMetis);
     }
-    let bnbExchangeRates = await getRates("bnb");
-    if (bnbExchangeRates?.[currency]) {
-      let toBNB = 1 / Number(bnbExchangeRates[currency]);
-      exchangeRates["BNB"] = String(toBNB);
+    try {
+      exchangeRates["BNB"] = String(getBNBRate(exchangeRates));
+    } catch (e) {
+      errorLogger.error('get BNB rates fail');
     }
+
     return exchangeRates;
   } else {
     return null;
   }
+}
+
+async function getBNBRate(coinRates) {
+  let res;
+  let BNBToUSD = await keyv.get(`USD_BNB_rate`);
+  const uRate = coinRates['USD'];
+  if (!BNBToUSD) {
+    res = await axios.get('https://vip-api.changenow.io/v1.3/exchange/estimate?fromCurrency=bnb&fromNetwork=bnb&fromAmount=1&toCurrency=usdc&toNetwork=eth');
+    BNBToUSD = res?.data?.summary?.estimatedAmount;
+  }
+  if (!BNBToUSD) {
+    errorLogger.error('get BNB rate fail', res);
+    return 1;
+  }
+  await keyv.set(`USD_BNB_rate`, BNBToUSD, 1000 * 60 * 5);
+  return uRate / BNBToUSD;
 }
 
 export async function getRates(currency) {
