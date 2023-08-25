@@ -2,6 +2,8 @@ import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { equalsIgnoreCase } from '../util'
 import { errorLogger } from '../util/logger'
+import * as Keyv from 'keyv';
+const keyv = new Keyv();
 
 let exchangeRates: { [key: string]: string } | undefined
 
@@ -72,7 +74,56 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
     return undefined
   }
 }
+
+async function getBNBToUSD() {
+  let BNBToUSD = await keyv.get(`USD_BNB_rate`);
+  if (!BNBToUSD) {
+    const res = await axios.get('https://www.binance.com/api/v3/depth?symbol=BNBUSDT&limit=1');
+    BNBToUSD = Number(res?.data.bids[0][0]);
+    if (BNBToUSD) {
+      await keyv.set(`USD_BNB_rate`, BNBToUSD, 1000 * 60 * 5);
+    }
+  }
+  if (!BNBToUSD) {
+    console.error('get BNB rate fail');
+    return 1;
+  }
+  return BNBToUSD;
+}
+
+async function getBNBRate(coinRates) {
+  const BNBToUSD = await getBNBToUSD();
+  const uRate = coinRates['USD'];
+  return (uRate / BNBToUSD).toFixed(6);
+}
+
+async function getBNBRates() {
+  const cache = await keyv.get(`BNB_rates`);
+  if (cache) return cache;
+  const resp = await axios.get(`https://api.coinbase.com/v2/exchange-rates?currency=USD`);
+  const data = resp.data?.data;
+  const rates = data.rates;
+  let metisExchangeRates = await getRates("metis");
+  if (metisExchangeRates?.["USD"]) {
+    let toMetis = 1 / Number(metisExchangeRates["USD"]);
+    rates["METIS"] = String(toMetis);
+  }
+  const BNBToUSD = await getBNBToUSD();
+  for (const symbol in rates) {
+    try {
+      rates[symbol] = (+rates[symbol] * BNBToUSD).toFixed(6);
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
+  await keyv.set(`BNB_rates`, rates, 1000 * 60 * 5);
+  return rates;
+}
+
 async function getRates(currency) {
+  if (currency === "BNB") {
+    return await getBNBRates();
+  }
   const resp = await axios.get(
     `https://api.coinbase.com/v2/exchange-rates?currency=${currency}`
   )
@@ -81,6 +132,12 @@ async function getRates(currency) {
   if (!data || !equalsIgnoreCase(data.currency, currency) || !data.rates) {
     return undefined
   }
+  try {
+    data.rates["BNB"] = String(await getBNBRate(data.rates));
+  } catch (e) {
+    console.error('get BNB rates fail');
+  }
+  await keyv.set(`rate:${currency}`, data.rates, 1000 * 60 * 5); // true
   return data.rates
 }
 /**

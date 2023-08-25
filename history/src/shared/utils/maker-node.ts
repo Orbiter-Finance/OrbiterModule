@@ -265,25 +265,55 @@ export async function cacheExchangeRates(currency = 'USD'): Promise<any> {
   }
 }
 
-async function getBNBRate(coinRates) {
-  let res;
+async function getBNBToUSD() {
   let BNBToUSD = await keyv.get(`USD_BNB_rate`);
-  const uRate = coinRates['USD'];
   if (!BNBToUSD) {
-    res = await axios.get('https://vip-api.changenow.io/v1.3/exchange/estimate?fromCurrency=bnb&fromNetwork=bnb&fromAmount=1&toCurrency=usdc&toNetwork=eth');
-    BNBToUSD = res?.data?.summary?.estimatedAmount;
+    const res = await axios.get('https://www.binance.com/api/v3/depth?symbol=BNBUSDT&limit=1');
+    BNBToUSD = Number(res?.data.bids[0][0]);
     if (BNBToUSD) {
       await keyv.set(`USD_BNB_rate`, BNBToUSD, 1000 * 60 * 5);
     }
   }
   if (!BNBToUSD) {
-    console.error('get BNB rate fail', res);
+    console.error('get BNB rate fail');
     return 1;
   }
+  return BNBToUSD;
+}
+
+async function getBNBRate(coinRates) {
+  const BNBToUSD = await getBNBToUSD();
+  const uRate = coinRates['USD'];
   return (uRate / BNBToUSD).toFixed(6);
 }
 
+async function getBNBRates() {
+  const cache = await keyv.get(`BNB_rates`);
+  if (cache) return cache;
+  const resp = await axios.get(`https://api.coinbase.com/v2/exchange-rates?currency=USD`);
+  const data = resp.data?.data;
+  const rates = data.rates;
+  let metisExchangeRates = await getRates("metis");
+  if (metisExchangeRates?.["USD"]) {
+    let toMetis = 1 / Number(metisExchangeRates["USD"]);
+    rates["METIS"] = String(toMetis);
+  }
+  const BNBToUSD = await getBNBToUSD();
+  for (const symbol in rates) {
+    try {
+      rates[symbol] = (+rates[symbol] * BNBToUSD).toFixed(6);
+    } catch (e) {
+      console.log(e.message);
+    }
+  }
+  await keyv.set(`BNB_rates`, rates, 1000 * 60 * 5);
+  return rates;
+}
+
 export async function getRates(currency) {
+  if (currency === "BNB") {
+    return await getBNBRates();
+  }
   // rates test
   // return (require("./rates"))["default"];
     const cacheData = await keyv.get(`rate:${currency}`);
