@@ -2,7 +2,7 @@ import axios from 'axios'
 import { BigNumber } from 'bignumber.js'
 import { equalsIgnoreCase } from '../util'
 import { errorLogger } from '../util/logger'
-import * as Keyv from 'keyv';
+import Keyv from 'keyv';
 const keyv = new Keyv();
 
 let exchangeRates: { [key: string]: string } | undefined
