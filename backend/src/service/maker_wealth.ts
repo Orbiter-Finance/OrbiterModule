@@ -216,6 +216,7 @@ type WealthsChain = {
     tokenName: string
     value?: string // When can't get balance(e: Network fail), it is undefined
     decimals: number // for format
+    time?: string
   }[]
 }
 export async function getWealthsChains(makerAddress: string) {
@@ -363,6 +364,7 @@ export async function getWealths(
         }
 
         item2.value = value
+        item2.time = new Date().toTimeString();
       }
       promises.push(promiseItem())
     }

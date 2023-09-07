@@ -166,6 +166,7 @@ type DoBalanceAlarmItem = {
   tokenAddress: string
   tokenName: string
   balance: number
+  time: string
 }
 let alertTime = 0;
 export const doBalanceAlarm = new (class {
@@ -194,7 +195,7 @@ export const doBalanceAlarm = new (class {
     const alerts: string[] = [];
     for (const item of doList) {
       alerts.push(`Insufficient balance ${item.makerAddress} - ${item.chainName}-${item.tokenName
-      }: ${item.balance.toFixed(6)}`)
+      }: ${item.balance.toFixed(6)} ${item.time || ''}`)
     }
 
     // Post to alertmanager
@@ -256,6 +257,7 @@ export const doBalanceAlarm = new (class {
             tokenAddress: item2.tokenAddress,
             tokenName: item2.tokenName,
             balance,
+            time: item2.time
           }
 
           // Call onCompared
