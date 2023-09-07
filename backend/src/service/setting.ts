@@ -195,7 +195,7 @@ export const doBalanceAlarm = new (class {
     const alerts: string[] = [];
     for (const item of doList) {
       alerts.push(`Insufficient balance ${item.makerAddress} - ${item.chainName}-${item.tokenName
-      }: ${item.balance.toFixed(6)} ${item.time || ''}`)
+      }: ${item.balance.toFixed(6)}`)
     }
 
     // Post to alertmanager
