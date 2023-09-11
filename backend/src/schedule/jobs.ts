@@ -394,7 +394,7 @@ export async function startEVMJob(chainId: string, makerAddr: string, tokenAddre
   }
 }
 export async function watchHttpEndPoint() {
-  const chainList = ["mainnet", "arbitrum", "optimism", "polygon"];
+  const chainList = ["mainnet", "arbitrum", "optimism", "polygon", "polygon_evm"];
 
   for (const chain of chainList) {
     if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
