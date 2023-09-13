@@ -45,8 +45,8 @@ export class StarknetHelp {
     this.account = new Account(
       provider,
       address,
-      ec.getKeyPair(this.privateKey),
-      String(cairoVersion)
+      privateKey,
+      <any>String(cairoVersion)
     )
   }
 
@@ -204,9 +204,9 @@ export class StarknetHelp {
         if (!nonce && nonce != 0) {
             throw new Error('Not Find Nonce Params');
         }
-        let maxFee = 0.009 * 10 ** 18;
+        let maxFee = BigInt(0.009 * 10 ** 18);
         const { suggestedMaxFee } = await this.account.estimateFee(invocationList);
-        if (suggestedMaxFee.gt(maxFee)) {
+        if (suggestedMaxFee > maxFee) {
             maxFee = suggestedMaxFee;
         }
         const transactionDetail = {

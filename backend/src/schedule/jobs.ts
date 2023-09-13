@@ -289,7 +289,7 @@ export async function batchTxSend() {
           accessLogger.info(`starknet_sql_nonce = ${nonce}`);
           accessLogger.info(`starknet_consume_count = ${queueList.length}`);
           accessLogger.info(`starknet sent ${signParamList.length} ====`);
-          const res: any = await starknet.signMultiTransfer(signParamList, nonce);
+          const res: any = await starknet.signTransfer(signParamList, nonce);
           await commit(nonce);
           await sendTxConsumeHandle({
             code: 3,
