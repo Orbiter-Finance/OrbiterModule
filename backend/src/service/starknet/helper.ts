@@ -1,19 +1,10 @@
-import ERC20 from './ERC20.json'
-import { utils } from 'ethers'
-import { Account, Contract, ec, Provider, uint256 } from 'starknet'
-import { sortBy } from 'lodash'
-import { Uint256 } from 'starknet/dist/utils/uint256'
-import BigNumber from 'bignumber.js'
-import { BigNumberish, toBN } from 'starknet/dist/utils/number'
-import { OfflineAccount } from './account'
-import { compileCalldata } from 'starknet/dist/utils/stark'
+import { Account, cairo, Contract, ec, Provider, RpcProvider, uint256 } from 'starknet';
 import Keyv from 'keyv'
 import KeyvFile from 'orbiter-chaincore/src/utils/keyvFile'
 import { max } from 'lodash'
 import { getLoggerService } from '../../util/logger'
-import { readLogArr, readLogJson, sleep, writeLogJson } from '../../util';
-import fs from "fs";
-import path from "path";
+import { readLogArr, sleep, writeLogJson } from '../../util';
+import ERC20Abi from './ERC20.json'
 
 const accessLogger = getLoggerService('4')
 
@@ -23,19 +14,8 @@ export function setStarknetLock(makerAddress: string, status: boolean) {
   starknetLockMap[makerAddress.toLowerCase()] = status;
 }
 
-export type starknetNetwork = 'mainnet-alpha' | 'georli-alpha'
-
-export function getProviderV4(network: starknetNetwork | string) {
-  const sequencer = {
-    network: <any>network, // for testnet you can use defaultProvider
-  }
-  return new Provider({ sequencer })
-}
-export function parseInputAmountToUint256(
-  input: string,
-  decimals: number = 18
-) {
-  return getUint256CalldataFromBN(utils.parseUnits(input, decimals).toString())
+export function getProviderV4(nodeUrl: string) {
+    return new RpcProvider({ nodeUrl });
 }
 
 export const starknetHelpLockMap = {};
@@ -46,9 +26,10 @@ export class StarknetHelp {
   private cache: Keyv
   public account: Account
   constructor(
-    public readonly network: starknetNetwork,
+    public readonly rpc: string,
     public readonly privateKey: string,
-    public readonly address: string
+    public readonly address: string,
+    public readonly cairoVersion: string = '0',
   ) {
     this.cache = new Keyv({
       store: new KeyvFile({
@@ -60,17 +41,13 @@ export class StarknetHelp {
       }),
     })
 
-    const provider = getProviderV4(network)
+    const provider = getProviderV4(rpc);
     this.account = new Account(
       provider,
       address,
-      ec.getKeyPair(this.privateKey)
+      ec.getKeyPair(this.privateKey),
+      String(cairoVersion)
     )
-  }
-  async transfer(tokenAddress: string, recipient: String, amount: string) {
-    const abi = ERC20['abi']
-    const erc20Contract = new Contract(abi as any, tokenAddress, this.account)
-    return erc20Contract.transfer(recipient, parseInputAmountToUint256(amount))
   }
 
   async getNetworkNonce() {
@@ -212,69 +189,31 @@ export class StarknetHelp {
     })
     return nonces
   }
-  async signTransfer(params: {
-    tokenAddress: string
-    recipient: string
-    amount: string
-    nonce: number
-  }) {
-    const provider = getProviderV4(this.network)
-    const entrypoint = 'transfer'
-    const calldata = compileCalldata({
-      recipient: params.recipient,
-      amount: getUint256CalldataFromBN(params.amount),
-    })
-    const ofa = new OfflineAccount(provider, this.address, this.account.signer)
-    const trx = await ofa.signTx(
-      params.tokenAddress,
-      entrypoint,
-      calldata,
-      params.nonce
-    )
-    if (!trx || !trx.transaction_hash) {
-      throw new Error(`Starknet Failed to send transaction hash does not exist`)
-    }
-    await sleep(1000)
-    const hash = trx.transaction_hash
-    try {
-      const response = await provider.getTransaction(hash)
-      if (
-        !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
-          response['status']
-        )
-      ) {
-        accessLogger.error(`Straknet Send After status error: ${response}`)
-      }
-    } catch (error) {
-      accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`)
-    }
-    return {
-      hash,
-    }
-  }
 
-    async signMultiTransfer(paramsList: {
+    async signTransfer(paramsList: {
         tokenAddress: string
         recipient: string
         amount: string
     }[], nonce: number) {
-        const provider = getProviderV4(this.network);
-        const entrypoint = 'transfer';
-        const invocationList: { contractAddress: string, entrypoint: string, calldata: any }[] = [];
-
+        const provider = getProviderV4(this.rpc);
+        const invocationList: any[] = [];
         for (const params of paramsList) {
-            const calldata = compileCalldata({
-                recipient: params.recipient,
-                amount: getUint256CalldataFromBN(params.amount),
-            });
-
-            invocationList.push({ contractAddress: params.tokenAddress, entrypoint, calldata });
+            const ethContract = new Contract(ERC20Abi, params.tokenAddress, provider);
+            invocationList.push(ethContract.populateTransaction.transfer(params.recipient, cairo.uint256(params.amount)));
         }
-        const ofa = new OfflineAccount(provider, this.address, this.account.signer);
-        const trx = await ofa.signMutiTx(
-            invocationList,
-            nonce
-        );
+        if (!nonce && nonce != 0) {
+            throw new Error('Not Find Nonce Params');
+        }
+        let maxFee = 0.009 * 10 ** 18;
+        const { suggestedMaxFee } = await this.account.estimateFee(invocationList);
+        if (suggestedMaxFee.gt(maxFee)) {
+            maxFee = suggestedMaxFee;
+        }
+        const transactionDetail = {
+            nonce: nonce,
+            maxFee,
+        };
+        const trx = await this.account.execute(invocationList, undefined, transactionDetail);
         if (!trx || !trx.transaction_hash) {
             throw new Error(`Starknet Failed to send transaction hash does not exist`);
         }
@@ -296,31 +235,4 @@ export class StarknetHelp {
             hash,
         };
     }
-}
-/**
- *
- * @param starknetAddress
- * @param contractAddress
- * @param networkId
- * @returns
- */
-export async function getErc20Balance(
-  starknetAddress: string,
-  contractAddress: string,
-  network: string
-) {
-  if (!starknetAddress || !contractAddress) {
-    return 0
-  }
-  const provider = getProviderV4(network)
-  const abi = ERC20['abi']
-  const tokenContract = new Contract(<any>abi, contractAddress, provider)
-  const balanceSender: Uint256 = (
-    await tokenContract.balanceOf(starknetAddress)
-  ).balance
-  return new BigNumber(balanceSender.low.toString() || 0).toNumber()
-}
-
-export function getUint256CalldataFromBN(bn: BigNumberish) {
-  return { type: 'struct' as const, ...uint256.bnToUint256(String(bn)) }
 }

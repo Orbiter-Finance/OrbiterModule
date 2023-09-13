@@ -183,8 +183,7 @@ export async function batchTxSend() {
         }
         setStarknetLock(makerAddress, true);
         const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
-        const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-        const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+        const starknet = new StarknetHelp(makerConfig[chainId].rpc[0], privateKey, makerAddress,makerConfig.cairoVersion && makerConfig.cairoVersion[makerAddress.toLowerCase()]);
         let taskList = await starknet.getTask();
         if (!taskList || !taskList.length) {
           accessLogger.log('There are no consumable tasks in the starknet queue');
@@ -289,20 +288,12 @@ export async function batchTxSend() {
           await starknet.clearTask(queueList, 0);
           accessLogger.info(`starknet_sql_nonce = ${nonce}`);
           accessLogger.info(`starknet_consume_count = ${queueList.length}`);
-          let hash = '';
-          if (signParamList.length === 1) {
-            accessLogger.info('starknet sent one ====');
-            const res: any = await starknet.signTransfer({ ...signParamList[0], nonce });
-            hash = res.hash;
-          } else {
-            accessLogger.info('starknet sent multi ====');
-            const res: any = await starknet.signMultiTransfer(signParamList, nonce);
-            hash = res.hash;
-          }
+          accessLogger.info(`starknet sent ${signParamList.length} ====`);
+          const res: any = await starknet.signMultiTransfer(signParamList, nonce);
           await commit(nonce);
           await sendTxConsumeHandle({
             code: 3,
-            txid: hash,
+            txid: res.hash,
             rollback,
             params: paramsList[0],
             paramsList
