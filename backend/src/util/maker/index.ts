@@ -326,7 +326,7 @@ export async function confirmToSNTransaction(
   try {
     accessLogger.info(`confirmToSNTransaction = ${getTime()}`)
     const provider = getProviderV4(
-      Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha'
+        makerConfig[chainId].rpc[0]
     )
     const response = await provider.getTransaction(txID)
     const txStatus = response['status']
