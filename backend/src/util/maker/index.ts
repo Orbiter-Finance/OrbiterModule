@@ -341,7 +341,7 @@ export async function confirmToSNTransaction(
             rollback
         );
       }
-      const msg = `starknet get receipt error: ${e.message}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))} transaction_failure_reason,${response['transaction_failure_reason']}`;
+      const msg = `starknet get receipt error: ${e.message}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))}`;
       errorLogger.info(msg);
       telegramBot.sendMessage(msg).catch(error => {
         accessLogger.error(`send telegram message error ${error.stack}`);
