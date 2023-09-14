@@ -385,13 +385,18 @@ export async function startEVMJob(chainId: string, makerAddr: string, tokenAddre
   }
 }
 export async function watchHttpEndPoint() {
-  const chainList = ["mainnet", "arbitrum", "optimism", "polygon", "polygon_evm"];
+  const chainList = ["mainnet", "arbitrum", "optimism", "polygon", "polygon_evm", "4"];
 
   for (const chain of chainList) {
     if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
       const data: { current?, httpEndPoint?, httpEndPointInfura?} = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
       data.httpEndPoint = makerConfig[chain]?.httpEndPoint;
       data.httpEndPointInfura = makerConfig[chain]?.httpEndPointInfura;
+      await writeLogJson(`${chain}.json`, 'endPoint', data);
+    }
+    if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
+      const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
+      data.rpc = makerConfig[chain].rpc;
       await writeLogJson(`${chain}.json`, 'endPoint', data);
     }
   }
@@ -407,6 +412,13 @@ export async function watchHttpEndPoint() {
         if (data.current === 2 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPointInfura) {
           makerConfig[chain].httpEndPointInfura = data.httpEndPointInfura;
           accessLogger.log(`${chain} switch to httpEndPointInfura ${data.httpEndPointInfura}`);
+        }
+        if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
+          const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
+          if (data?.rpc.length && JSON.stringify(data.rpc) !== JSON.stringify(makerConfig[chain].rpc)) {
+            makerConfig[chain].rpc = data.rpc;
+            accessLogger.log(`${chain} switch rpc ${data.rpc.map(item => item.substr(0, item.lastIndexOf("/"))).join(",")}`);
+          }
         }
       }
     }
