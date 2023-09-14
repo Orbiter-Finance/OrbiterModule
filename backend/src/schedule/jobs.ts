@@ -413,12 +413,12 @@ export async function watchHttpEndPoint() {
           makerConfig[chain].httpEndPointInfura = data.httpEndPointInfura;
           accessLogger.log(`${chain} switch to httpEndPointInfura ${data.httpEndPointInfura}`);
         }
-        if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
-          const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
-          if (data?.rpc.length && JSON.stringify(data.rpc) !== JSON.stringify(makerConfig[chain].rpc)) {
-            makerConfig[chain].rpc = data.rpc;
-            accessLogger.log(`${chain} switch rpc ${data.rpc.map(item => item.substr(0, item.lastIndexOf("/"))).join(",")}`);
-          }
+      }
+      if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
+        const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
+        if (data?.rpc.length && JSON.stringify(data.rpc) !== JSON.stringify(makerConfig[chain].rpc)) {
+          makerConfig[chain].rpc = data.rpc;
+          accessLogger.log(`${chain} switch rpc ${data.rpc.map(item => item.substr(0, item.lastIndexOf("/"))).join(",")}`);
         }
       }
     }
