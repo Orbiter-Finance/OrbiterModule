@@ -303,9 +303,8 @@ export async function sendConsumer(value: any) {
   }
   // starknet || starknet_test
   if (chainID == 4 || chainID == 44) {
-      const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
-      const network = equals(chainID, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-    const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+    const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
+    const starknet = new StarknetHelp(makerConfig[chainID].rpc[0], privateKey, makerAddress, makerConfig.cairoVersion && makerConfig.cairoVersion[makerAddress.toLowerCase()]);
     const queueList = await starknet.getTask();
     if (queueList.find(item => item.params?.transactionID === transactionID)) {
       accessLogger.info(`TransactionID was exist: ${transactionID}`);

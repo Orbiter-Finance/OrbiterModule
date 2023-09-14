@@ -183,8 +183,7 @@ export async function batchTxSend() {
         }
         setStarknetLock(makerAddress, true);
         const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
-        const network = equals(chainId, 44) ? 'goerli-alpha' : 'mainnet-alpha';
-        const starknet = new StarknetHelp(<any>network, privateKey, makerAddress);
+        const starknet = new StarknetHelp(makerConfig[chainId].rpc[0], privateKey, makerAddress,makerConfig.cairoVersion && makerConfig.cairoVersion[makerAddress.toLowerCase()]);
         let taskList = await starknet.getTask();
         if (!taskList || !taskList.length) {
           accessLogger.log('There are no consumable tasks in the starknet queue');
@@ -289,20 +288,12 @@ export async function batchTxSend() {
           await starknet.clearTask(queueList, 0);
           accessLogger.info(`starknet_sql_nonce = ${nonce}`);
           accessLogger.info(`starknet_consume_count = ${queueList.length}`);
-          let hash = '';
-          if (signParamList.length === 1) {
-            accessLogger.info('starknet sent one ====');
-            const res: any = await starknet.signTransfer({ ...signParamList[0], nonce });
-            hash = res.hash;
-          } else {
-            accessLogger.info('starknet sent multi ====');
-            const res: any = await starknet.signMultiTransfer(signParamList, nonce);
-            hash = res.hash;
-          }
+          accessLogger.info(`starknet sent ${signParamList.length} ====`);
+          const res: any = await starknet.signTransfer(signParamList, nonce);
           await commit(nonce);
           await sendTxConsumeHandle({
             code: 3,
-            txid: hash,
+            txid: res.hash,
             rollback,
             params: paramsList[0],
             paramsList
@@ -394,13 +385,18 @@ export async function startEVMJob(chainId: string, makerAddr: string, tokenAddre
   }
 }
 export async function watchHttpEndPoint() {
-  const chainList = ["mainnet", "arbitrum", "optimism", "polygon", "polygon_evm"];
+  const chainList = ["mainnet", "arbitrum", "optimism", "polygon", "polygon_evm", "4"];
 
   for (const chain of chainList) {
     if (makerConfig[chain] && makerConfig[chain]?.httpEndPoint && makerConfig[chain]?.httpEndPointInfura) {
       const data: { current?, httpEndPoint?, httpEndPointInfura?} = await readLogJson(`${chain}.json`, 'endPoint', { current: 2 });
       data.httpEndPoint = makerConfig[chain]?.httpEndPoint;
       data.httpEndPointInfura = makerConfig[chain]?.httpEndPointInfura;
+      await writeLogJson(`${chain}.json`, 'endPoint', data);
+    }
+    if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
+      const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
+      data.rpc = makerConfig[chain].rpc;
       await writeLogJson(`${chain}.json`, 'endPoint', data);
     }
   }
@@ -416,6 +412,13 @@ export async function watchHttpEndPoint() {
         if (data.current === 2 && makerConfig[chain]?.httpEndPointInfura !== data.httpEndPointInfura) {
           makerConfig[chain].httpEndPointInfura = data.httpEndPointInfura;
           accessLogger.log(`${chain} switch to httpEndPointInfura ${data.httpEndPointInfura}`);
+        }
+      }
+      if (["4", "44"].includes(chain) && makerConfig[chain]?.rpc) {
+        const data: { rpc? } = await readLogJson(`${chain}.json`, 'endPoint', { rpc: [] });
+        if (data?.rpc.length && JSON.stringify(data.rpc) !== JSON.stringify(makerConfig[chain].rpc)) {
+          makerConfig[chain].rpc = data.rpc;
+          accessLogger.log(`${chain} switch rpc ${data.rpc.map(item => item.substr(0, item.lastIndexOf("/"))).join(",")}`);
         }
       }
     }

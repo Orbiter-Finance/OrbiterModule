@@ -326,10 +326,30 @@ export async function confirmToSNTransaction(
   try {
     accessLogger.info(`confirmToSNTransaction = ${getTime()}`)
     const provider = getProviderV4(
-      Number(chainId) == 4 ? 'mainnet-alpha' : 'georli-alpha'
+        makerConfig[chainId].rpc[0]
     )
-    const response = await provider.getTransaction(txID)
-    const txStatus = response['status']
+    let response
+    try {
+      response = await provider.getTransactionReceipt(txID);
+    } catch (e) {
+      if (e.message === "29: Transaction hash not found") {
+        await sleep(1000 * 30);
+        return await confirmToSNTransaction(
+            txID,
+            chainId,
+            paramsList,
+            rollback
+        );
+      }
+      const msg = `starknet get receipt error: ${e.message}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))} transaction_failure_reason,${response['transaction_failure_reason']}`;
+      errorLogger.info(msg);
+      telegramBot.sendMessage(msg).catch(error => {
+        accessLogger.error(`send telegram message error ${error.stack}`);
+      });
+      return false;
+    }
+
+    const txStatus = response['execution_status']
     accessLogger.info(
       `sn_transaction = ${JSON.stringify({ status: txStatus, txID })}`
     )
@@ -355,7 +375,7 @@ export async function confirmToSNTransaction(
       return false
       // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
-      ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING'].includes(txStatus)
+      ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING', 'SUCCEEDED'].includes(txStatus)
     ) {
       accessLogger.info(
         `sn_Transaction with hash ${txID} has been successfully confirmed`

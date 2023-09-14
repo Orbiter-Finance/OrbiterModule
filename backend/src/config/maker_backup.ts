@@ -13,6 +13,15 @@ export default {
     "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc":
         "0x0411c2a2a4dc7b4d3a33424af3ede7e2e3b66691e22632803e37e2e0de450940"
   },
+  "cairoVersion":{
+    "0x0411c2a2a4dc7b4d3a33424af3ede7e2e3b66691e22632803e37e2e0de450940": "1",
+    "0x07b393627bd514d2aa4c83e9f0c468939df15ea3c29980cd8e7be3ec847795f0": "0"
+  },
+  "4": {
+    "rpc": [
+      "https://starknet-mainnet.public.blastapi.io"
+    ]
+  },
   "25": {
     "rpc": [
       "https://opbnb-mainnet-rpc.bnbchain.org"
