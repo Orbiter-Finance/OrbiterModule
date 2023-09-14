@@ -204,57 +204,27 @@ export class StarknetHelp {
         if (!nonce && nonce != 0) {
             throw new Error('Not Find Nonce Params');
         }
-        let maxFee = BigInt(0.009 * 10 ** 18);
-        const { suggestedMaxFee } = await this.account.estimateFee(invocationList);
-        if (suggestedMaxFee > maxFee) {
-            maxFee = suggestedMaxFee;
-        }
         const transactionDetail = {
-            nonce: nonce + 1,
-            maxFee,
+            nonce: nonce,
+            maxFee: BigInt(0.009 * 10 ** 18)
         };
-        // nonce=21
-        console.log("nonce", transactionDetail);
-        let trx;
-        try {
-            trx = await this.account.execute(invocationList, <any>null, transactionDetail);
-        } catch (e) {
-            console.log('account.execute', e);
+        const suggestedMaxFee = await this.account.getSuggestedMaxFee(
+            {
+                type: "INVOKE_FUNCTION",
+                payload: invocationList
+            } as any,
+            transactionDetail
+        );
+        if (suggestedMaxFee > transactionDetail.maxFee) {
+            transactionDetail.maxFee = suggestedMaxFee;
         }
-        // const trx = await this.account.execute(invocationList, undefined, transactionDetail);
+        accessLogger.info(`transactionDetail: ${JSON.stringify(transactionDetail)}`);
+        const trx = await this.account.execute(invocationList, <any>null, transactionDetail);
         if (!trx || !trx.transaction_hash) {
             throw new Error(`Starknet Failed to send transaction hash does not exist`);
         }
-        // await sleep(1000)
+        await sleep(1000)
         const hash = trx.transaction_hash;
-        console.log('hash', hash);
-        try {
-            const tx = await provider.getTransactionReceipt(hash);
-            console.log('tx1', tx);
-        } catch (e) {
-            console.log('tx1 getTransaction error', e.message);
-        }
-
-        console.log('=============== begin ===============');
-        // async function wait() {
-        //     return new Promise(async ()=>{
-        //         const r = await provider.getTransactionReceipt(hash);
-        //         if (r) {
-        //
-        //         }
-        //     })
-        // }
-        const receipt = await provider.waitForTransaction(hash, { retryInterval: 3 });
-        console.log('receipt', receipt);
-        console.log('=============== end ===============');
-        try {
-            const tx2: any = await provider.getTransaction(hash);
-            console.log('tx2', tx2);
-            console.log('status ======', tx2?.status);
-        } catch (e) {
-            console.log('tx2 getTransaction error', e);
-        }
-
         // try {
         //     const response = await provider.getTransaction(hash);
         //     if (
