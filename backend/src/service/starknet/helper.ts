@@ -210,27 +210,63 @@ export class StarknetHelp {
             maxFee = suggestedMaxFee;
         }
         const transactionDetail = {
-            nonce: nonce,
+            nonce: nonce + 1,
             maxFee,
         };
-        const trx = await this.account.execute(invocationList, undefined, transactionDetail);
+        // nonce=21
+        console.log("nonce", transactionDetail);
+        let trx;
+        try {
+            trx = await this.account.execute(invocationList, <any>null, transactionDetail);
+        } catch (e) {
+            console.log('account.execute', e);
+        }
+        // const trx = await this.account.execute(invocationList, undefined, transactionDetail);
         if (!trx || !trx.transaction_hash) {
             throw new Error(`Starknet Failed to send transaction hash does not exist`);
         }
-        await sleep(1000);
+        // await sleep(1000)
         const hash = trx.transaction_hash;
+        console.log('hash', hash);
         try {
-            const response = await provider.getTransaction(hash);
-            if (
-                !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
-                    response['status']
-                )
-            ) {
-                accessLogger.error(`Straknet Send After status error: ${response}`);
-            }
-        } catch (error) {
-            accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
+            const tx = await provider.getTransactionReceipt(hash);
+            console.log('tx1', tx);
+        } catch (e) {
+            console.log('tx1 getTransaction error', e.message);
         }
+
+        console.log('=============== begin ===============');
+        // async function wait() {
+        //     return new Promise(async ()=>{
+        //         const r = await provider.getTransactionReceipt(hash);
+        //         if (r) {
+        //
+        //         }
+        //     })
+        // }
+        const receipt = await provider.waitForTransaction(hash, { retryInterval: 3 });
+        console.log('receipt', receipt);
+        console.log('=============== end ===============');
+        try {
+            const tx2: any = await provider.getTransaction(hash);
+            console.log('tx2', tx2);
+            console.log('status ======', tx2?.status);
+        } catch (e) {
+            console.log('tx2 getTransaction error', e);
+        }
+
+        // try {
+        //     const response = await provider.getTransaction(hash);
+        //     if (
+        //         !['RECEIVED', 'PENDING', 'ACCEPTED_ON_L1', 'ACCEPTED_ON_L2'].includes(
+        //             response['status']
+        //         )
+        //     ) {
+        //         accessLogger.error(`Straknet Send After status error: ${response}`);
+        //     }
+        // } catch (error) {
+        //     accessLogger.error(`Starknet Send After GetTransaction Erro: ${error}`);
+        // }
         return {
             hash,
         };
