@@ -357,23 +357,13 @@ export async function confirmToSNTransaction(
     // When reject
     if (txStatus == 'REJECTED') {
       errorLogger.info(
-        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))} transaction_failure_reason,${response['transaction_failure_reason']}`
+        `starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))}`
         
       )
-      // check nonce
-      // if (
-      //   response['transaction_failure_reason'] &&
-      //   response['transaction_failure_reason']['error_message'].includes(
-      //     'Error message: nonce invalid'
-      //   )
-      // ) {
-      //   return true
-      // }
-        telegramBot.sendMessage(`starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))}, transaction_failure_reason:${response['transaction_failure_reason']}`).catch(error => {
+        telegramBot.sendMessage(`starknet transfer failed: ${txStatus}, txID:${txID}, transactionID:${JSON.stringify(paramsList.map(item => item.transactionID))}`).catch(error => {
             accessLogger.error(`send telegram message error ${error.stack}`);
         });
       return false
-      // return rollback(transaction['transaction_failure_reason'] && transaction['transaction_failure_reason']['error_message'], nonce);
     } else if (
       ['ACCEPTED_ON_L1', 'ACCEPTED_ON_L2', 'PENDING', 'SUCCEEDED'].includes(txStatus)
     ) {
@@ -707,6 +697,8 @@ export async function sendTxConsumeHandle(result: any) {
         // if (Number(response.result_nonce) !== Number(nonce1) && Number(response.result_nonce) !== Number(nonce2)) {
         //   return;
         // }
+        return;
+      } else if (response.txid.indexOf('-32603: HTTP status client error (429 Too Many Requests) for url (https://alpha-mainnet.starknet.io/gateway/add_transaction)') !== -1) {
         return;
       }
     }
