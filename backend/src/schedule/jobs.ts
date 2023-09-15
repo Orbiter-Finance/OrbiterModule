@@ -311,6 +311,9 @@ export async function batchTxSend() {
             const nonce2 = arr[1].replace(/[^0-9]/g, "");
             accessLogger.error(`starknet sequencer error: ${nonce} != ${nonce1}, ${nonce} != ${nonce2}`);
             await starknet.pushTask(queueList);
+          } else if (error.message.indexOf('-32603: HTTP status client error (429 Too Many Requests) for url (https://alpha-mainnet.starknet.io/gateway/add_transaction)') !== -1) {
+            await starknet.pushTask(queueList);
+            accessLogger.error(`starknet sequencer error: ${error.message}`);
           }
           await rollback(error, nonce);
           await sendTxConsumeHandle({
