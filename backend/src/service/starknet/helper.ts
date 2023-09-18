@@ -229,7 +229,7 @@ export class StarknetHelp {
             } else if (error.message.indexOf('ContractAddress(PatriciaKey(StarkFelt') !== -1 &&
                 error.message.indexOf('Expected: Nonce(StarkFelt') !== -1) {
                 accessLogger.error(`starknet signTransfer error: ${error.message}`);
-                throw new Error(error.message);
+                // throw new Error(error.message);
             }
         }
 
