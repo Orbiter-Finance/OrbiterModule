@@ -226,13 +226,14 @@ export class StarknetHelp {
                 const nonce1 = arr[0].replace(/[^0-9]/g, "");
                 const nonce2 = arr[1].replace(/[^0-9]/g, "");
                 accessLogger.error(`starknet signTransfer error: ${nonce} != ${nonce1}, ${nonce} != ${nonce2}`);
-            } else {
+            } else if (error.message.indexOf('ContractAddress(PatriciaKey(StarkFelt') !== -1 &&
+                error.message.indexOf('Expected: Nonce(StarkFelt') !== -1) {
                 accessLogger.error(`starknet signTransfer error: ${error.message}`);
                 throw new Error(error.message);
             }
         }
 
-        accessLogger.info(`transactionDetail: ${JSON.stringify(transactionDetail)}`);
+        // accessLogger.info(`transactionDetail: ${JSON.stringify(transactionDetail)}`);
         const trx = await this.account.execute(invocationList, <any>null, transactionDetail);
         if (!trx || !trx.transaction_hash) {
             throw new Error(`Starknet Failed to send transaction hash does not exist`);
