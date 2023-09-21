@@ -143,5 +143,5 @@ export function jobBalanceAlarm() {
     await doBalanceAlarm.do()
   }
 
-  new MJobPessimism('*/10 * * * * *', callback, jobBalanceAlarm.name).schedule()
+  new MJobPessimism('0 */1 * * * *', callback, jobBalanceAlarm.name).schedule()
 }
