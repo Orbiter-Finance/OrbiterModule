@@ -183,15 +183,15 @@ export class TransactionService {
       fromAmount = sumBy(from, 'ETHValue').toFixed(6);
       toAmount = sumBy(to, 'ETHValue').toFixed(6);
       profitAmount = profit['ETH'];
-    } else if (makerAddress.includes('0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC')) {
+    } else if (makerAddress.find(item => item.toLowerCase() === '0xd7Aa9ba6cAAC7b0436c91396f22ca5a7F31664fC'.toLowerCase())) {
       fromAmount = sumBy(from, 'USDTValue').toFixed(6);
       toAmount = sumBy(to, 'USDTValue').toFixed(6);
       profitAmount = profit['USDT'];
-    } else if (makerAddress.includes('0x41d3D33156aE7c62c094AAe2995003aE63f587B3')) {
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x41d3D33156aE7c62c094AAe2995003aE63f587B3'.toLowerCase())) {
       fromAmount = sumBy(from, 'USDCValue').toFixed(6);
       toAmount = sumBy(to, 'USDCValue').toFixed(6);
       profitAmount = profit['USDC'];
-    } else if (makerAddress.includes('0x095D2918B03b2e86D68551DCF11302121fb626c9')) {
+    } else if (makerAddress.find(item => item.toLowerCase() === '0x095D2918B03b2e86D68551DCF11302121fb626c9'.toLowerCase())) {
       fromAmount = sumBy(from, 'DAIValue').toFixed(6);
       toAmount = sumBy(to, 'DAIValue').toFixed(6);
       profitAmount = profit['DAI'];
