@@ -236,7 +236,7 @@ export const makerList = [
     "c2ID": 31,
     "c1Name": "polygon",
     "c2Name": "manta",
-    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t1Address": "0x7ceB23fD6bC0adD59E62ac25578270cFf1b9f619",
     "t2Address": "0x0000000000000000000000000000000000000000",
     "tName": "ETH",
     "c1MinPrice": 0.005,
