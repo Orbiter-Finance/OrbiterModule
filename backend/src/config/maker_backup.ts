@@ -22,6 +22,11 @@ export default {
       "https://starknet-mainnet.public.blastapi.io"
     ]
   },
+  "31": {
+    "rpc": [
+      "https://manta-pacific.calderachain.xyz/http"
+    ]
+  },
   "25": {
     "rpc": [
       "https://opbnb-mainnet-rpc.bnbchain.org"
