@@ -84,7 +84,8 @@ export const $env = {
     524: '5001',
 
     30: '7777777',
-    530: '999'
+    530: '999',
+    31: '169'
   },
   txExploreUrl: {
     1: 'https://etherscan.io/tx/', // /tx/  /address/
@@ -136,7 +137,8 @@ export const $env = {
     527: 'https://www.okx.com/explorer/okbc-test/tx/',
 
     30: 'https://explorer.zora.energy/tx/',
-    530: 'https://testnet.explorer.zora.energy/tx/'
+    530: 'https://testnet.explorer.zora.energy/tx/',
+    31: 'https://manta-pacific.calderaexplorer.xyz/tx/'
   },
   accountExploreUrl: {
     1: 'https://etherscan.io/address/', // /tx/  /address/
@@ -188,7 +190,8 @@ export const $env = {
     527: 'https://www.okx.com/explorer/okbc-test/address/',
 
     30: 'https://explorer.zora.energy/address/',
-    530: 'https://testnet.explorer.zora.energy/address/'
+    530: 'https://testnet.explorer.zora.energy/address/',
+    31: 'https://manta-pacific.calderaexplorer.xyz/address/'
   },
   tokenExploreUrl: {
     1: 'https://etherscan.io/token/', // /token/
@@ -231,6 +234,7 @@ export const $env = {
     526: 'https://sepolia.etherscan.io/token/',
     527: 'https://www.okx.com/explorer/okbc-test/token/',
     30: 'https://explorer.zora.energy/token/',
-    530: 'https://testnet.explorer.zora.energy/token/'
+    530: 'https://testnet.explorer.zora.energy/token/',
+    31: 'https://manta-pacific.calderaexplorer.xyz/address/'
   },
 }
