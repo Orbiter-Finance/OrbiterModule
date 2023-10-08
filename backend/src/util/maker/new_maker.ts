@@ -436,8 +436,11 @@ export async function confirmTransactionSendMoneyBack(
         case '44':
           if (tx.extra['ext'].length !== 68) {
             accessLogger.error(
-                `Illegal ext ${tx.extra['ext']} hash:${tx.hash}`
+                `Illegal ext: ${tx.extra['ext']} hash:${tx.hash}`
             );
+            telegramBot.sendMessage(`Illegal ext: ${tx.extra['ext']} hash:${tx.hash}`).catch(error => {
+              accessLogger.error(`send telegram message error ${error.stack}`);
+            });
             return;
           }
           userAddress = tx.extra['ext'].replace('0x03', '0x')
