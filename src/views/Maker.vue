@@ -1138,13 +1138,19 @@ const onClickStateTag = async (item: MakerNode) => {
     const fromChainId: number = needTo.chainId;
     const isStarknet = fromChainId === 4 || fromChainId === 44;
 
-    // if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
-    // //   selectShow.value = false;
-    // //   sendTypeShow.value = false;
-    // //   // throw new Error(
-    // //   //         `Please switch the address to ${fromAddress} in the wallet!`
-    // //   // );
-    // // }
+    if (!isStarknet && !util.equalsMakerAddress(walletAccount, fromAddress)) {
+      // selectShow.value = false;
+      // sendTypeShow.value = false;
+      // throw new Error(
+      //         `Please switch the address to ${fromAddress} in the wallet!`
+      // );
+      ElNotification({
+        title: 'Warning',
+        message: `The current wallet address is not ${fromAddress}`,
+        type: 'warning',
+        position: "bottom-right"
+      });
+    }
     sendTypeShow.value = true;
     console.log('step 0')
     if (!isStarknet) await switchNetwork(fromChainId);
@@ -1162,6 +1168,12 @@ const onClickStateTag = async (item: MakerNode) => {
         // throw new Error(
         //         `Please switch the address to ${fromAddress} or 0x06e18Dd81378fD5240704204BcCC546f6dfad3D08C4a3a44347Bd274659ff328 in the wallet!`
         // );
+        ElNotification({
+          title: 'Warning',
+          message: `The current wallet address is not ${fromAddress}`,
+          type: 'warning',
+          position: "bottom-right"
+        });
       }
     }
 
