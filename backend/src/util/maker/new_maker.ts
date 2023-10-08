@@ -434,6 +434,12 @@ export async function confirmTransactionSendMoneyBack(
           break
         case '4':
         case '44':
+          if (tx.extra['ext'].length !== 68) {
+            accessLogger.error(
+                `Illegal ext ${tx.extra['ext']} hash:${tx.hash}`
+            );
+            return;
+          }
           userAddress = tx.extra['ext'].replace('0x03', '0x')
           try {
             validateAndParseAddress(fix0xPadStartAddress(userAddress, 66));
