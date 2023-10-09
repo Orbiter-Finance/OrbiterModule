@@ -7890,6 +7890,7 @@ export const makerList =[
   {
     "id": "15-25/BNB",
     "tName": "BNB",
+    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
     "c1ID": 15,
     "c2ID": 25,
     "c1Name": "bnbchain",
