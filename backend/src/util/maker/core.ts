@@ -405,14 +405,18 @@ export function getAmountToSend(
     rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
-  let precision = pool.precision;
-  if (toChainID === 22 && market.toChain.tokenAddress.toLowerCase() === "0xa3fdf06e3c59df2deaae6d597353477fc3daaeaf".toLowerCase()) {
-    precision = 18;
+  let fromPrecision = pool.precision;
+  let toPrecision = pool.precision;
+  if (fromChainID === 15 && market.fromChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
+    fromPrecision = 18;
+  }
+  if (toChainID === 15 && market.toChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
+    toPrecision = 18;
   }
   const readyAmount = getToAmountFromUserAmount(
-    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** precision)),
-    market,
-    precision,
+    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** fromPrecision)),
+    pool,
+    toPrecision,
     true,
   );
   const result = getTAmountFromRAmount(

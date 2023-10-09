@@ -65,7 +65,7 @@ export function checkAmount(
     return false
   }
   let precision = market.pool.precision;
-  if (+market.fromChain.id === 22 && market.fromChain.tokenAddress.toLowerCase() === "0xa3fdf06e3c59df2deaae6d597353477fc3daaeaf".toLowerCase()) {
+  if (+market.fromChain.id === 15 && market.fromChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
     precision = 18;
   }
   const rAmount = <any>realAmount.rAmount
