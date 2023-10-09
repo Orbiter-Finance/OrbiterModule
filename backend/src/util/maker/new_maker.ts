@@ -64,7 +64,7 @@ export function checkAmount(
   if (realAmount.state === false) {
     return false
   }
-  const token: any = chains.getTokenByAddress(String(fromChainId), market.fromChain.tokenAddress);
+  const token: any = chains.getTokenByAddress(Number(fromChainId), market.fromChain.tokenAddress);
   const precision = token.decimals;
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(

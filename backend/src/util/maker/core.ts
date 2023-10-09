@@ -406,8 +406,8 @@ export function getAmountToSend(
     rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
-  const fromToken: any = chains.getTokenByAddress(String(fromChainID), market.fromChain.tokenAddress);
-  const toToken: any = chains.getTokenByAddress(String(toChainID), market.fromChain.tokenAddress);
+  const fromToken: any = chains.getTokenByAddress(Number(fromChainID), market.fromChain.tokenAddress);
+  const toToken: any = chains.getTokenByAddress(Number(toChainID), market.fromChain.tokenAddress);
   const fromPrecision = fromToken.decimals;
   const toPrecision = toToken.decimals;
   const readyAmount = getToAmountFromUserAmount(
