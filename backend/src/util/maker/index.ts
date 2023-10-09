@@ -527,7 +527,7 @@ export async function sendTransaction(
   tokenAddress,
   amountStr,
   toAddress,
-  pool,
+  market,
   nonce,
   result_nonce = 0,
   ownerAddress = '',
@@ -539,7 +539,7 @@ export async function sendTransaction(
     fromChainID,
     toChainID,
     amountStr,
-    pool,
+    market,
     nonce
   )
   if (!amountToSend) {

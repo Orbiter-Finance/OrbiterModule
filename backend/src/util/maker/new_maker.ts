@@ -64,15 +64,19 @@ export function checkAmount(
   if (realAmount.state === false) {
     return false
   }
+  let precision = market.pool.precision;
+  if (+market.fromChain.id === 22 && market.fromChain.tokenAddress.toLowerCase() === "0xa3fdf06e3c59df2deaae6d597353477fc3daaeaf".toLowerCase()) {
+    precision = 18;
+  }
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(
       market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
   )
     .plus(new BigNumber(market.pool.tradingFee))
-    .multipliedBy(new BigNumber(10 ** market.pool.precision))
+    .multipliedBy(new BigNumber(10 ** precision))
   const maxPrice = new BigNumber(market.pool.maxPrice)
     .plus(new BigNumber(market.pool.tradingFee))
-    .multipliedBy(new BigNumber(10 ** market.pool.precision))
+    .multipliedBy(new BigNumber(10 ** precision))
   if (pText !== validPText) {
     accessLogger.error(
       `Payment checkAmount inconsistent: ${pText}!=${validPText}`
@@ -83,8 +87,8 @@ export function checkAmount(
     accessLogger.error(
       `Payment checkAmount Amount exceeds maximum limit: ${new BigNumber(
         rAmount
-      ).dividedBy(10 ** market.pool.precision)} > ${maxPrice.dividedBy(
-        10 ** market.pool.precision
+      ).dividedBy(10 ** precision)} > ${maxPrice.dividedBy(
+        10 ** precision
       )}`
     )
     return false
@@ -92,8 +96,8 @@ export function checkAmount(
     accessLogger.error(
       `Payment checkAmount The amount is below the minimum limit: ${new BigNumber(
         rAmount
-      ).dividedBy(10 ** market.pool.precision)} < ${minPrice.dividedBy(
-        10 ** market.pool.precision
+      ).dividedBy(10 ** precision)} < ${minPrice.dividedBy(
+        10 ** precision
       )}`
     )
     return false
@@ -472,7 +476,7 @@ export async function confirmTransactionSendMoneyBack(
         toTokenAddress,
         tx.value.toString(),
         userAddress,
-        market.pool,
+          market,
         tx.nonce,
         0,
         tx.from,

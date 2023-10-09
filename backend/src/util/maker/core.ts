@@ -2,6 +2,7 @@
 
 import { BigNumber } from "bignumber.js";
 import * as zksync from "zksync";
+import { IMarket } from "./new_maker";
 const MAX_BITS: any = {
   eth: 256,
   arbitrum: 256,
@@ -112,6 +113,7 @@ function isLPChain(chain: string | number) {
 function getToAmountFromUserAmount(
   userAmount: any,
   selectMakerInfo: any,
+  precision: number,
   isWei: any,
 ) {
   let toAmount_tradingFee = new BigNumber(userAmount).minus(
@@ -120,7 +122,7 @@ function getToAmountFromUserAmount(
   let gasFee = toAmount_tradingFee
     .multipliedBy(new BigNumber(selectMakerInfo.gasFee))
     .dividedBy(new BigNumber(1000));
-  let digit = selectMakerInfo.precision === 18 ? 5 : 2;
+  let digit = precision === 18 ? 5 : 2;
   // accessLogger.info('digit =', digit)
   let gasFee_fix = gasFee.decimalPlaces(digit, BigNumber.ROUND_UP);
   // accessLogger.info('gasFee_fix =', gasFee_fix.toString())
@@ -131,7 +133,7 @@ function getToAmountFromUserAmount(
   }
   if (isWei) {
     return toAmount_fee.multipliedBy(
-      new BigNumber(10 ** selectMakerInfo.precision),
+      new BigNumber(10 ** precision),
     );
   } else {
     return toAmount_fee;
@@ -382,9 +384,10 @@ export function getAmountToSend(
   fromChainID: number,
   toChainID: number,
   amountStr: string,
-  pool: { precision: number; tradingFee: number; gasFee: number },
+  market:IMarket,
   nonce: string | number,
 ) {
+  const { pool } = market;
   amountStr = new BigNumber(amountStr).toFixed();
   const realAmount = getRAmountFromTAmount(fromChainID, amountStr);
   if (!realAmount.state) {
@@ -402,9 +405,14 @@ export function getAmountToSend(
     rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
+  let precision = pool.precision;
+  if (toChainID === 22 && market.toChain.tokenAddress.toLowerCase() === "0xa3fdf06e3c59df2deaae6d597353477fc3daaeaf".toLowerCase()) {
+    precision = 18;
+  }
   const readyAmount = getToAmountFromUserAmount(
-    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** pool.precision)),
-    pool,
+    new BigNumber(rAmount).dividedBy(new BigNumber(10 ** precision)),
+    market,
+    precision,
     true,
   );
   const result = getTAmountFromRAmount(
