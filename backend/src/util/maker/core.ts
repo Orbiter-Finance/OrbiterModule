@@ -407,7 +407,7 @@ export function getAmountToSend(
   }
   const nonceStr = pTextFormatZero(String(nonce));
   const fromToken: any = chains.getTokenByAddress(Number(fromChainID), market.fromChain.tokenAddress);
-  const toToken: any = chains.getTokenByAddress(Number(toChainID), market.fromChain.tokenAddress);
+  const toToken: any = chains.getTokenByAddress(Number(toChainID), market.toChain.tokenAddress);
   const fromPrecision = fromToken.decimals;
   const toPrecision = toToken.decimals;
   const readyAmount = getToAmountFromUserAmount(
