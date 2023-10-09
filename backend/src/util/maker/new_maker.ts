@@ -64,9 +64,8 @@ export function checkAmount(
   if (realAmount.state === false) {
     return false
   }
-  const fromChainInfo: any = chains.getChainByInternalId(String(fromChainId));
-  const fromToken = [fromChainInfo.nativeCurrency, ...fromChainInfo.tokens].find(item => item.address.toLowerCase() === market.fromChain.tokenAddress.toLowerCase());
-  const precision = fromToken.decimals;
+  const token: any = chains.getTokenByAddress(String(fromChainId), market.fromChain.tokenAddress);
+  const precision = token.decimals;
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(
       market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
@@ -540,7 +539,6 @@ export function newExpanPool(pool): Array<IMarket> {
       },
       // minPrice: pool.c1MinPrice,
       // maxPrice: pool.c1MaxPrice,
-      // precision: pool.precision,
       // avalibleDeposit: pool.c1AvalibleDeposit,
       // tradingFee: pool.c1TradingFee,
       // gasFee: pool.c1GasFee,
@@ -557,7 +555,6 @@ export function newExpanPool(pool): Array<IMarket> {
         tName: pool.tName,
         minPrice: pool.c1MinPrice,
         maxPrice: pool.c1MaxPrice,
-        precision: pool.precision,
         avalibleDeposit: pool.c1AvalibleDeposit,
         tradingFee: pool.c1TradingFee,
         gasFee: pool.c1GasFee,
@@ -581,7 +578,6 @@ export function newExpanPool(pool): Array<IMarket> {
       },
       // minPrice: pool.c2MinPrice,
       // maxPrice: pool.c2MaxPrice,
-      // precision: pool.precision,
       // avalibleDeposit: pool.c2AvalibleDeposit,
       // tradingFee: pool.c2TradingFee,
       // gasFee: pool.c2GasFee,
@@ -598,7 +594,6 @@ export function newExpanPool(pool): Array<IMarket> {
         tName: pool.tName,
         minPrice: pool.c2MinPrice,
         maxPrice: pool.c2MaxPrice,
-        precision: pool.precision,
         avalibleDeposit: pool.c2AvalibleDeposit,
         tradingFee: pool.c2TradingFee,
         gasFee: pool.c2GasFee,
