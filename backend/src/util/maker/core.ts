@@ -3,6 +3,7 @@
 import { BigNumber } from "bignumber.js";
 import * as zksync from "zksync";
 import { IMarket } from "./new_maker";
+import { chains } from "orbiter-chaincore";
 const MAX_BITS: any = {
   eth: 256,
   arbitrum: 256,
@@ -405,14 +406,12 @@ export function getAmountToSend(
     rAmount = `${prefix}${"0".repeat(rAmount.length - prefix.length)}`;
   }
   const nonceStr = pTextFormatZero(String(nonce));
-  let fromPrecision = pool.precision;
-  let toPrecision = pool.precision;
-  if (fromChainID === 15 && market.fromChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
-    fromPrecision = 18;
-  }
-  if (toChainID === 15 && market.toChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
-    toPrecision = 18;
-  }
+  const fromChainInfo: any = chains.getChainByInternalId(String(fromChainID));
+  const toChainInfo: any = chains.getChainByInternalId(String(toChainID));
+  const fromToken = [fromChainInfo.nativeCurrency, ...fromChainInfo.tokens].find(item => item.address.toLowerCase() === market.fromChain.tokenAddress.toLowerCase());
+  const toToken = [toChainInfo.nativeCurrency, ...toChainInfo.tokens].find(item => item.address.toLowerCase() === market.toChain.tokenAddress.toLowerCase());
+  const fromPrecision = fromToken.decimals;
+  const toPrecision = toToken.decimals;
   const readyAmount = getToAmountFromUserAmount(
     new BigNumber(rAmount).dividedBy(new BigNumber(10 ** fromPrecision)),
     pool,

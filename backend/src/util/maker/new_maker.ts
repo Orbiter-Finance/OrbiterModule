@@ -64,10 +64,9 @@ export function checkAmount(
   if (realAmount.state === false) {
     return false
   }
-  let precision = market.pool.precision;
-  if (+market.fromChain.id === 15 && market.fromChain.tokenAddress.toLowerCase() === "0x8965349fb649a33a30cbfda057d8ec2c48abe2a2") {
-    precision = 18;
-  }
+  const fromChainInfo: any = chains.getChainByInternalId(String(fromChainId));
+  const fromToken = [fromChainInfo.nativeCurrency, ...fromChainInfo.tokens].find(item => item.address.toLowerCase() === market.fromChain.tokenAddress.toLowerCase());
+  const precision = fromToken.decimals;
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(
       market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
