@@ -44,66 +44,6 @@ export async function getMakerAddresses() {
 }
 
 const GAS_PRICE_PAID_RATE = { arbitrum: 0.8 } // arbitrum Transaction Fee = gasUsed * gasPrice * 0.8 (general)
-export async function statisticsProfit(
-  makerNode: MakerNode
-): Promise<BigNumber> {
-  let fromToCurrency = ''
-  let fromToPrecision = 0
-  let gasPrecision = 18 // gas default is eth, zksync is token
-
-  const makerList = await getMakerList()
-  for (const item of makerList) {
-    let makerAddress = item.makerAddress;
-    if (['4', '44'].includes(makerNode.fromChain)) {
-      const addrMap = makerConfig.starknetAddress;
-      for (let L1Addr in addrMap) {
-        if (equals(L1Addr, makerAddress)) {
-          makerAddress = addrMap[L1Addr];
-        }
-      }
-    }
-
-    if (!equalsIgnoreCase(makerAddress, makerNode.makerAddress)) {
-      continue
-    }
-
-    if (
-      equalsIgnoreCase(item.t1Address, makerNode.txToken) ||
-      equalsIgnoreCase(item.t2Address, makerNode.txToken)
-    ) {
-      fromToCurrency = item.tName
-      fromToPrecision = item.precision
-    }
-
-    if (equalsIgnoreCase(item.tName, makerNode.gasCurrency)) {
-      gasPrecision = item.precision
-    }
-  }
-
-  if (fromToCurrency && Number(makerNode.toAmount) > 0) {
-    const fromMinusToUsd = await exchangeToUsd(
-      new BigNumber(makerNode.fromAmount)
-        .minus(makerNode.toAmount)
-        .dividedBy(10 ** fromToPrecision),
-      fromToCurrency
-    )
-
-    let gasPricePaidRate = 1
-    if (GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]) {
-      gasPricePaidRate = GAS_PRICE_PAID_RATE[CHAIN_INDEX[makerNode.toChain]]
-    }
-    const gasAmountUsd = await exchangeToUsd(
-      new BigNumber(makerNode.gasAmount)
-        .multipliedBy(gasPricePaidRate)
-        .dividedBy(10 ** gasPrecision),
-      makerNode.gasCurrency
-    )
-
-    return fromMinusToUsd.minus(gasAmountUsd || 0)
-  } else {
-    return new BigNumber(0)
-  }
-}
 
 /**
  * get Earliest by fromTimeStamp
@@ -122,28 +62,6 @@ export async function getEarliestMakerNode(): Promise<MakerNode | undefined> {
 type GET_TOKEN_INFO_RETURN = {
   decimals: number // default: -1, when not found
   tokenName: string
-}
-export async function getTokenInfo(
-  chainId: number,
-  tokenAddress: string
-): Promise<GET_TOKEN_INFO_RETURN> {
-  let decimals = -1
-  let tokenName = ''
-
-  const makerList = await getMakerList()
-  for (const item of makerList) {
-    if (
-      (item.c1ID == chainId || item.c2ID == chainId) &&
-      (equalsIgnoreCase(item.t1Address, tokenAddress) ||
-        equalsIgnoreCase(item.t2Address, tokenAddress))
-    ) {
-      decimals = item.precision
-      tokenName = item.tName
-      break
-    }
-  }
-
-  return { decimals, tokenName }
 }
 
 /**

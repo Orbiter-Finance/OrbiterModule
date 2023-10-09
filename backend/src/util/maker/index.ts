@@ -62,7 +62,6 @@ export function expanPool(pool) {
       tName: pool.tName,
       minPrice: pool.c1MinPrice,
       maxPrice: pool.c1MaxPrice,
-      precision: pool.precision,
       avalibleDeposit: pool.c1AvalibleDeposit,
       tradingFee: pool.c1TradingFee,
       gasFee: pool.c1GasFee,
@@ -79,7 +78,6 @@ export function expanPool(pool) {
       tName: pool.tName,
       minPrice: pool.c2MinPrice,
       maxPrice: pool.c2MaxPrice,
-      precision: pool.precision,
       avalibleDeposit: pool.c2AvalibleDeposit,
       tradingFee: pool.c2TradingFee,
       gasFee: pool.c2GasFee,
@@ -527,7 +525,7 @@ export async function sendTransaction(
   tokenAddress,
   amountStr,
   toAddress,
-  pool,
+  market,
   nonce,
   result_nonce = 0,
   ownerAddress = '',
@@ -539,7 +537,7 @@ export async function sendTransaction(
     fromChainID,
     toChainID,
     amountStr,
-    pool,
+    market,
     nonce
   )
   if (!amountToSend) {

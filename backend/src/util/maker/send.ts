@@ -401,6 +401,7 @@ export async function sendConsumer(value: any) {
         },
       }
       if (!isEthTokenAddress(tokenAddress)) {
+        const fromToken: any = chains.getTokenByAddress(Number(fromChainID), tokenAddress);
         const makerPool = await getTargetMakerPool(
           makerAddress,
           tokenAddress,
@@ -411,7 +412,7 @@ export async function sendConsumer(value: any) {
           type: ERC20TokenType.ERC20,
           data: {
             symbol: makerPool?.tName,
-            decimals: makerPool?.precision,
+            decimals: fromToken?.decimals,
             tokenAddress: tokenAddress,
           },
         }
