@@ -1201,7 +1201,7 @@ const initMakerList = [
     "c1Name": "mainnet",
     "c2Name": "base",
     "t1Address": "0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 10,
@@ -2493,7 +2493,7 @@ const initMakerList = [
     "c1Name": "arbitrum",
     "c2Name": "base",
     "t1Address": "0xFF970A61A04b1cA14834A43f5dE4533eBDDB5CC8",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 1.4,
@@ -3649,7 +3649,7 @@ const initMakerList = [
     "c1Name": "zksync",
     "c2Name": "base",
     "t1Address": "0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 2,
     "c2TradingFee": 2,
@@ -4635,7 +4635,7 @@ const initMakerList = [
     "c1Name": "starknet",
     "c2Name": "base",
     "t1Address": "0x053c91253bc9682c04929ca02ed00b3e423f6710d2ee7e0d5ebb06f3ecf368a8",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 2,
     "c2TradingFee": 2,
@@ -5519,7 +5519,7 @@ const initMakerList = [
     "c1Name": "polygon",
     "c2Name": "base",
     "t1Address": "0x2791Bca1f2de4661ED88A30C99A7a9449Aa84174",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 2,
     "c2TradingFee": 2,
@@ -6267,7 +6267,7 @@ const initMakerList = [
     "c1Name": "optimism",
     "c2Name": "base",
     "t1Address": "0x7F5c764cBc14f9669B88837ca1490cCa17c31607",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 1.4,
@@ -7321,7 +7321,7 @@ const initMakerList = [
     "c1Name": "zksync2",
     "c2Name": "base",
     "t1Address": "0x3355df6d4c9c3035724fd0e3914de96a5a83aaf4",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 1.4,
@@ -7729,7 +7729,7 @@ const initMakerList = [
     "c1Name": "bnbchain",
     "c2Name": "base",
     "t1Address": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 18,
     "c1TradingFee": 2,
     "c2TradingFee": 2,
@@ -7893,6 +7893,7 @@ const initMakerList = [
   {
     "id": "15-25/BNB",
     "tName": "BNB",
+    "makerAddress": "0x80C67432656d59144cEFf962E8fAF8926599bCF8",
     "c1ID": 15,
     "c2ID": 25,
     "c1Name": "bnbchain",
@@ -8068,7 +8069,7 @@ const initMakerList = [
     "c1Name": "arbitrum_nova",
     "c2Name": "base",
     "t1Address": "0x750ba8b76187092b0d1e87e28daaf484d1b5273b",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 1,
@@ -8306,7 +8307,7 @@ const initMakerList = [
     "c1Name": "polygon_evm",
     "c2Name": "base",
     "t1Address": "0xa8ce8aee21bc2a48a5ef670afcc9274c7bbbc035",
-    "t2Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t2Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "precision": 6,
     "c1TradingFee": 1.4,
     "c2TradingFee": 1.4,
@@ -8577,7 +8578,7 @@ const initMakerList = [
     "c2ID": 23,
     "c1Name": "base",
     "c2Name": "linea",
-    "t1Address": "0x833589fcd6edb6e08f4c7c32d4f71b54bda02913",
+    "t1Address": "0xd9aAEc86B65D86f6A7B5B1b0c42FFA531710b6CA",
     "t2Address": "0x176211869ca2b568f2a7d4ee941e073a821ee1ff",
     "precision": 6,
     "c1TradingFee": 1.4,
@@ -8910,7 +8911,12 @@ const initMakerList = [
     ]
   }
 ];
-const list1 = cloneDeep(initMakerList).filter(row=> row.c2ID == 14 && row.makerAddress === '0x80C67432656d59144cEFf962E8fAF8926599bCF8');
+const list1 = cloneDeep(initMakerList).filter(row=> row.c2ID == 14 && row.makerAddress && row.makerAddress.toLowerCase() === '0x80c67432656d59144ceff962e8faf8926599bcf8');
+
+const listE4e = cloneDeep(initMakerList).filter(row => row.makerAddress && row.makerAddress.toLowerCase() === '0x80c67432656d59144ceff962e8faf8926599bcf8').map(row => {
+  row.makerAddress = '0xe4edb277e41dc89ab076a1f049f4a3efa700bce8';
+  return row;
+});
 
 const push1List = cloneDeep(list1).map(row=> {
     row.makerAddress = '0xee73323912a4e3772b74ed0ca1595a152b0ef282';
@@ -8921,7 +8927,7 @@ const push2List = cloneDeep(list1).map(row=> {
     return row;
 })
 
-const allMakerList:any[] = [...makerList80c, ...initMakerList, ...push1List, ...push2List]
+const allMakerList:any[] = [...initMakerList, ...listE4e, ...push1List, ...push2List]
 
 const filterMakerList:any[] = [];
 
