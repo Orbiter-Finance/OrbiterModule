@@ -428,6 +428,18 @@
     "watch": ["api", "rpc"],
     "tokens": [
       {
+        "name": "USDT",
+        "symbol": "USDT",
+        "decimals": 18,
+        "address": "0x55d398326f99059ff775485246999027b3197955"
+      },
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 18,
+        "address": "0x8ac76a51cc950d9822d68b83fe1ad97b32cd580d"
+      },
+      {
         "name": "Binance-Peg Dai Token",
         "symbol": "DAI",
         "decimals": 18,
@@ -565,7 +577,14 @@
     "router": {
       "0x13e46b2a3f8512ed4682a8fb8b560589fe3c2172": "OrbiterRouterV3"
     },
-    "tokens": [],
+    "tokens": [
+      {
+        "name": "USDC",
+        "symbol": "USDC",
+        "decimals": 6,
+        "address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca"
+      }
+    ],
     "infoURL": "https://basescan.org"
   },
   {
@@ -591,6 +610,12 @@
       "0x13e46b2a3f8512ed4682a8fb8b560589fe3c2172": "OrbiterRouterV3"
     },
     "tokens": [
+      {
+        "name": "USDT",
+        "symbol": "USDT",
+        "decimals": 6,
+        "address": "0xa219439258ca9da29e9cc4ce5596924745e12b93"
+      },
       {
         "name": "USDC",
         "symbol": "USDC",
