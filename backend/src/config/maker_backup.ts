@@ -22,6 +22,11 @@ export default {
       "https://starknet-mainnet.public.blastapi.io"
     ]
   },
+  "15": {
+    "rpc": [
+      "https://binance.llamarpc.com", "https://bsc.rpc.blxrbdn.com", "https://rpc.ankr.com/bsc"
+    ]
+  },
   "31": {
     "rpc": [
       "https://manta-pacific.calderachain.xyz/http"
