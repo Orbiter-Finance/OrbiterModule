@@ -1,5 +1,4 @@
 import {cloneDeep} from 'lodash';
-import { makerList80c } from './maker_list_80c';
 export const makerListHistory = [];
 const initMakerList = [
   {
