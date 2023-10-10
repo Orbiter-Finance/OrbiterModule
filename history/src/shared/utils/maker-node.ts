@@ -451,6 +451,10 @@ export async function statisticsProfitOld(
     }
   }
 
+  if (+makerNode.fromChain === 15) {
+    fromToPrecision = 18;
+  }
+
   if (fromToCurrency && Number(makerNode.toAmount) > 0) {
     let fromMinusToUsd = await exchangeToUsd(
       new BigNumber(makerNode.fromAmount)
