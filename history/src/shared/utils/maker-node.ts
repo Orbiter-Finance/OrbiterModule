@@ -451,15 +451,25 @@ export async function statisticsProfitOld(
     }
   }
 
+  let fromPrecision = fromToPrecision;
+  let toPrecision = fromToPrecision;
   if (+makerNode.fromChain === 15) {
-    fromToPrecision = 18;
+    fromPrecision = 18;
+  } else {
+    fromPrecision = token2Decimals[fromToCurrency];
+  }
+  if (+makerNode.toChain === 15) {
+    toPrecision = 18;
+  } else {
+    toPrecision = token2Decimals[fromToCurrency];
   }
 
   if (fromToCurrency && Number(makerNode.toAmount) > 0) {
     let fromMinusToUsd = await exchangeToUsd(
-      new BigNumber(makerNode.fromAmount)
-        .minus(makerNode.toAmount)
-        .dividedBy(10 ** fromToPrecision),
+      new BigNumber(makerNode.fromAmount).dividedBy(10 ** fromPrecision)
+        .minus(
+          new BigNumber(makerNode.toAmount).dividedBy(10 ** toPrecision)
+        ),
       fromToCurrency
     )
 
