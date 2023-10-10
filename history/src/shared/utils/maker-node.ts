@@ -530,19 +530,26 @@ export async function transforeData(list = []) {
   const makerList = await getAllMakerList();
   for (const item of list) {
     // format tokenName and amounts
-    const decimals = token2Decimals[item.tokenName]
+    let fromDecimals = token2Decimals[item.tokenName]
+    let toDecimals = token2Decimals[item.tokenName]
+    if (+item.fromChain === 15) {
+      fromDecimals = 18
+    }
+    if (+item.toChain === 15) {
+      toDecimals = 18
+    }
     item['fromChainName'] = await getChainName(item.fromChain)
     item['toChainName'] = await getChainName(item.toChain)
-    item.decimals = decimals
+    item.decimals = fromDecimals
     item.toTx = item.toTx || '0x'
-    if (decimals > -1) {
+    if (fromDecimals > -1) {
       item.fromAmountFormat = `${new BigNumber(item.fromValue).dividedBy(
-        10 ** decimals
+        10 ** fromDecimals
       )}`
       item.fromValueFormat = (+item.fromAmountFormat).toFixed(6)
       item.fromAmount = item.fromValue
       item.toAmountFormat = `${new BigNumber(item.toAmount).dividedBy(
-        10 ** decimals
+        10 ** toDecimals
       )}`
     } else {
       logger.log(`[shared/utils/maker-node.ts transforeData] maker-node.ts should Synchronize！Error decimals!`)
@@ -588,10 +595,10 @@ export async function transforeData(list = []) {
     });
     if (market) {
       if (market.c1ID == item['fromChain']) {
-        needTo.decimals = market.precision;
+        needTo.decimals = fromDecimals;
         needTo.tokenAddress = market.t2Address;
       } else if (market.c2ID == item['fromChain']) {
-        needTo.decimals = market.precision;
+        needTo.decimals = toDecimals;
         needTo.tokenAddress = market.t1Address;
       }
     }
@@ -660,7 +667,6 @@ export async function transforeData(list = []) {
       // item.fromExt['dydxInfo'] = dydxHelper.splitStarkKeyPositionId(
       //   item.fromExt.value
       // )
-      const chainId = Number(item.toChain)
       const data = item.fromExt.value
       const starkKey = utils.hexDataSlice(data, 0, 32)
       const positionId = parseInt(utils.hexDataSlice(data, 32), 16)

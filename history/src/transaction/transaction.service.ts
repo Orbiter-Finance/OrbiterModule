@@ -158,14 +158,17 @@ export class TransactionService {
 
     // console.log('from', "SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + sqlLog + " GROUP BY inSymbol");
     // console.log('to', "SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + sqlLog + " GROUP BY outSymbol,outFeeToken");
-    const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
-    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
+    // const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol FROM statistics WHERE " + whereSql + " GROUP BY inSymbol", whreeParmas);
+    // const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken FROM statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken", whreeParmas);
+    console.log("sql","SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol,fromChain AS chainId FROM statistics WHERE " + whereSql + " GROUP BY inSymbol,fromChain", whreeParmas)
+    const from = await this.manager.query("SELECT count(1) as trxCount,sum(inValue) AS value,inSymbol AS symbol,fromChain AS chainId FROM statistics WHERE " + whereSql + " GROUP BY inSymbol,fromChain", whreeParmas);
+    const to = await this.manager.query("SELECT sum(outValue) AS `value`,outSymbol AS symbol,sum(outFee) AS fee,outFeeToken AS feeToken,toChain AS chainId FROM statistics WHERE " + whereSql + " GROUP BY outSymbol,outFeeToken,toChain", whreeParmas);
     for (const row of from) {
-      row.value = this.divPrecision(row.symbol, row.value);
+      row.value = this.divPrecision(row.symbol, row.value, row.chainId);
     }
     for (const row of to) {
-      row.value = this.divPrecision(row.symbol, row.value);
-      row.fee = this.divPrecision(row.feeToken, row.fee);
+      row.value = this.divPrecision(row.symbol, row.value, row.chainId);
+      row.fee = this.divPrecision(row.feeToken, row.fee, row.chainId);
     }
     const profit: any = {};
     for (const symbol of ['USD', 'CNY', 'ETH', 'USDC', 'USDT', 'BTC', 'DAI', 'BNB']) {
@@ -209,7 +212,7 @@ export class TransactionService {
     }
 
   }
-  public divPrecision(symbol: string, value: string) {
+  public divPrecision(symbol: string, value: string, chainId) {
     let amount = new BigNumber(0);
     switch (symbol) {
       case 'ETH':
@@ -221,7 +224,11 @@ export class TransactionService {
         break;
       case 'USDC':
       case 'USDT':
-        amount = new BigNumber(value).dividedBy(10 ** 6);
+        if (+chainId === 15) {
+          amount = new BigNumber(value).dividedBy(10 ** 18);
+        } else {
+          amount = new BigNumber(value).dividedBy(10 ** 6);
+        }
         break;
 
     }
