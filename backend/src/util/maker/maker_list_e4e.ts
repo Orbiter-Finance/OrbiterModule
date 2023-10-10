@@ -4216,6 +4216,40 @@ export const makerList = [
       ]
   },
   {
+      "id":"15-25/BNB",
+      "tName":"BNB",
+      "makerAddress":"0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
+      "c1ID":15,
+      "c2ID":25,
+      "c1Name":"bnbchain",
+      "c2Name":"opbnb",
+      "t1Address":"0x0000000000000000000000000000000000000000",
+      "t2Address":"0x0000000000000000000000000000000000000000",
+      "precision":18,
+      "c1TradingFee":0.0005,
+      "c2TradingFee":0.009,
+      "c1GasFee":0,
+      "c2GasFee":8,
+      "c1MinPrice":0.005,
+      "c1MaxPrice":10,
+      "c2MinPrice":0.005,
+      "c2MaxPrice":5,
+      "c1AvalibleDeposit":1000,
+      "c2AvalibleDeposit":1000,
+      "c1AvalibleTimes":[
+          {
+              "startTime":0,
+              "endTime":99999999999999
+          }
+      ],
+      "c2AvalibleTimes":[
+          {
+              "startTime":0,
+              "endTime":99999999999999
+          }
+      ]
+  },
+  {
       "id":"15-30/ETH",
       "tName":"ETH",
       "makerAddress":"0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
