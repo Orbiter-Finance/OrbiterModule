@@ -356,7 +356,7 @@
       "id": 0,
       "name": "Ethereum",
       "symbol": "ETH",
-      "decimals": 0,
+      "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
     "rpc": ["wss://ws.api3.loopring.io/v3/ws"],
