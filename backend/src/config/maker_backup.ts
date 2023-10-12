@@ -43,6 +43,11 @@ export default {
       "https://developer-access-mainnet.base.org"
     ]
   },
+  '19': {
+    "rpc": [
+      "https://rpc.scroll.io"
+    ]
+  },
   "30": {
     "rpc": [
       "https://rpc.zora.energy"
