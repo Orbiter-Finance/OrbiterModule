@@ -24,7 +24,7 @@ export default {
   },
   "15": {
     "rpc": [
-      "https://binance.llamarpc.com", "https://bsc.rpc.blxrbdn.com", "https://rpc.ankr.com/bsc"
+      "https://bsc-dataseed1.binance.org","https://binance.llamarpc.com", "https://bsc.rpc.blxrbdn.com", "https://rpc.ankr.com/bsc"
     ]
   },
   "31": {
