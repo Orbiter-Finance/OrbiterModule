@@ -5030,6 +5030,74 @@ export const makerList = [
               "endTime":99999999999999
           }
       ]
+  },
+ {
+    "id": "2-19/ETH",
+    "tName": "ETH",
+    "makerAddress": "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
+    "c1ID": 2,
+    "c2ID": 19,
+    "c1Name": "arbitrum",
+    "c2Name": "scroll",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.00001,
+    "c2TradingFee": 0.00001,
+    "c1GasFee": 1,
+    "c2GasFee": 1,
+    "c1MinPrice": 0.0005,
+    "c1MaxPrice": 100,
+    "c2MinPrice": 0.0005,
+    "c2MaxPrice": 100,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+ {
+    "id": "4-19/ETH",
+    "tName": "ETH",
+    "makerAddress": "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
+    "c1ID": 4,
+    "c2ID": 19,
+    "c1Name": "starknet",
+    "c2Name": "scroll",
+    "t1Address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.00001,
+    "c2TradingFee": 0.00001,
+    "c1GasFee": 1,
+    "c2GasFee": 1,
+    "c1MinPrice": 0.0005,
+    "c1MaxPrice": 100,
+    "c2MinPrice": 0.0005,
+    "c2MaxPrice": 100,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
   }
 ]
 export const makerListHistory = []
