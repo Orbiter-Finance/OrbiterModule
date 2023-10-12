@@ -129,6 +129,7 @@ async function getTokenBalance(
       case 17:
       case 517:
       case 518:
+      case 19:
       case 519:
       case 523:
       case 524:
