@@ -269,8 +269,9 @@ export class EVMAccount {
             } else {
                 try {
                     if (feeData.gasPrice) {
+                        const gasPrice = new BigNumber(feeData.gasPrice.toString()).gte(gasMaxPrice) ? gasMaxPrice : feeData.gasPrice.toString();
                         transactionRequest.type = 0;
-                        transactionRequest.gasPrice = this.makerWeb3.web3.utils.toHex(new BigNumber(feeData.gasPrice.toString()).multipliedBy(multi).toFixed(0));
+                        transactionRequest.gasPrice = this.makerWeb3.web3.utils.toHex(new BigNumber(gasPrice).multipliedBy(multi).toFixed(0));
                     } else {
                         this.logger.error(`gasPrice is null`);
                     }
