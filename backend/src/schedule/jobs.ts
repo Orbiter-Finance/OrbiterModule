@@ -140,7 +140,11 @@ export function jobCacheCoinbase() {
 
 export function jobBalanceAlarm() {
   const callback = async () => {
-    await doBalanceAlarm.do()
+      try {
+          await doBalanceAlarm.do();
+      } catch (e) {
+          console.error('jobBalanceAlarm error', e);
+      }
   }
 
   new MJobPessimism('0 */1 * * * *', callback, jobBalanceAlarm.name).schedule()
