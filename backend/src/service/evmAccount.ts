@@ -749,7 +749,7 @@ export class EVMAccount {
                 _this.makerWeb3.refreshWeb3(rpc);
                 _this.refreshProvider();
                 _this.makerWeb3.rpcIndex = index;
-                _this.logger.info(`change rpc ${oldRpc.substr(0, 20)} --> ${_this.makerWeb3.stableRpc.substr(0, 20)}`);
+                // _this.logger.info(`change rpc ${oldRpc.substr(0, 20)} --> ${_this.makerWeb3.stableRpc.substr(0, 20)}`);
             }
             _this.alarm(data.clearTaskAlarmInterval);
         }

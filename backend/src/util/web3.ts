@@ -34,7 +34,7 @@ export class MakerWeb3 {
         const newRpc: string = this.rpcList[index];
         const msg = `request ${fn} fail, change rpc ${oldRpc.substr(0, oldRpc.lastIndexOf("/"))} --> ${newRpc.substr(0, newRpc.lastIndexOf("/"))}`;
         errorLogger.error(msg);
-        telegramBot.sendMessage(msg);
+        // telegramBot.sendMessage(msg);
         return newRpc;
     }
 
