@@ -640,8 +640,8 @@ export class EVMAccount {
                 telegramBot.sendMessage(`getBalance error ${e.message}`).catch(error => {
                     this.logger.error(`send telegram message error ${error.stack}`);
                 });
-                await this.refreshProvider();
-                return { code: 1 };
+                // await this.refreshProvider();
+                // return { code: 1 };
             }
             const needPay: BigNumber = tokenPay[tokenAddress];
             // Insufficient Balance
