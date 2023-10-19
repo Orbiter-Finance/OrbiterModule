@@ -2,6 +2,30 @@ import {cloneDeep} from 'lodash';
 export const makerListHistory = [];
 const initMakerList = [
     {
+        "id": "1-2/ETH",
+        "tName": "ETH",
+        "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+        "c1ID": 1,
+        "c2ID": 2,
+        "c1Name": "mainnet",
+        "c2Name": "arbitrum",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0x0000000000000000000000000000000000000000",
+        "precision": 18,
+        "c1TradingFee": 0.0012,
+        "c2TradingFee": 0.0074,
+        "c1GasFee": 0.15,
+        "c2GasFee": 0.3,
+        "c1MinPrice": 0.005,
+        "c1MaxPrice": 10,
+        "c2MinPrice": 0.005,
+        "c2MaxPrice": 10,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [{ "startTime": 0, "endTime": 99999999999999 }],
+        "c2AvalibleTimes": [{ "startTime": 0, "endTime": 99999999999999 }]
+    },
+    {
         "id": "19-1/USDC",
         "tName": "USDC",
         "makerAddress": "0x41d3D33156aE7c62c094AAe2995003aE63f587B3",
@@ -409,7 +433,6 @@ const initMakerList = [
             }
         ]
     },
-
     {
         "id": "19-1/USDT",
         "tName": "USDT",
@@ -718,29 +741,6 @@ const initMakerList = [
     },
 
     {
-      "id": "1-2/ETH",
-      "tName": "ETH",
-      "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
-      "c1ID": 1,
-      "c2ID": 2,
-      "c1Name": "mainnet",
-      "c2Name": "arbitrum",
-      "t1Address": "0x0000000000000000000000000000000000000000",
-      "t2Address": "0x0000000000000000000000000000000000000000",
-      "precision": 18,
-      "c1TradingFee": 0.0012,
-      "c2TradingFee": 0.0074,
-      "c1GasFee": 0.15,
-      "c2GasFee": 0.3,
-      "c1MinPrice": 0.005,
-      "c1MaxPrice": 10,
-      "c2MinPrice": 0.005,
-      "c2MaxPrice": 10,
-      "c1AvalibleDeposit": 1000,
-      "c2AvalibleDeposit": 1000,
-      "c1AvalibleTimes": [{ "startTime": 0, "endTime": 99999999999999 }],
-      "c2AvalibleTimes": [{ "startTime": 0, "endTime": 99999999999999 }]
-    }, {
     "id": "1-3/ETH",
     "tName": "ETH",
     "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
