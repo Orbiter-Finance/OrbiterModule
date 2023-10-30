@@ -19,7 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
-import { attackerList } from "../../schedule/jobs";
+import { attackerList, programStartTimeDelay } from "../../schedule/jobs";
 import { telegramBot } from '../../sms/telegram'
 
 const allChainsConfig = [...mainnetChains, ...testnetChains]
@@ -130,7 +130,7 @@ export async function startNewMakerTrxPull() {
       if (address) {
         const pullKey = `${intranetId}:${address.toLowerCase()}`
         transfers.set(intranetId, new Map())
-        LastPullTxMap.set(pullKey, Date.now())
+        LastPullTxMap.set(pullKey, Date.now() + 1000 * programStartTimeDelay)
       }
     })
     // 
@@ -319,7 +319,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
         const startTimeTimeStamp = LastPullTxMap.get(
           `${fromChain.internalId}:${makerAddress.toLowerCase()}`
         )
-        if ((+tx.timestamp * 1000) < Number(startTimeTimeStamp) - 1000 * 60) {
+        if ((+tx.timestamp * 1000) < Number(startTimeTimeStamp) - 1000 * programStartTimeDelay) {
           accessLogger.error(
             `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
           )
