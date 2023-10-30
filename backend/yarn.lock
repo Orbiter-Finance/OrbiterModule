@@ -7880,10 +7880,10 @@ optionator@^0.8.1:
     type-check "~0.3.2"
     word-wrap "~1.2.3"
 
-orbiter-chaincore@1.5.8-28-4:
-  version "1.5.8-28-4"
-  resolved "https://registry.npmjs.org/orbiter-chaincore/-/orbiter-chaincore-1.5.8-28-4.tgz#8ac3df499ae83c203f6b3431dbd1533a15fa3480"
-  integrity sha512-gahr+sJuzBEa5t3Sg6BAcqulJzRt0Xy99gOl4XirxJ5ZJ0n+bNSSVIU2aA+qFDk/A01YYcqlqN97mnilcMt+Ng==
+orbiter-chaincore@1.5.8-29-10:
+  version "1.5.8-29-10"
+  resolved "https://registry.npmjs.org/orbiter-chaincore/-/orbiter-chaincore-1.5.8-29-10.tgz#87fca85f1af8cd62d5fed9665d309fe2164420a2"
+  integrity sha512-v9Y7VpUJFKqokulwVczTIgU0VZ8JrwpywLPAp1DPQ8/EXa9jqkesoTamzOa3T0TPuJ+y6diTw+aWERqw1KLleA==
   dependencies:
     "@alch/alchemy-web3" "^1.4.6"
     "@dydxprotocol/v3-client" "^1.9.1"

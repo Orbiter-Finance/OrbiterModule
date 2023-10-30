@@ -21,6 +21,7 @@ services:
       DB_USER: '${DB_USER}'
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
+      MAKER_FILE: '${MAKER_FILE}'
       logstashHost: '${logstashHost}'
       logstashPort: '${logstashPort}'
     volumes:

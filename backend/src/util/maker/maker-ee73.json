@@ -1,4 +1,4 @@
-export const makerList = [
+[
     {
         "makerAddress": "0xee73323912a4e3772B74eD0ca1595a152b0ef282",
         "c1ID": 16,
@@ -620,5 +620,3 @@ export const makerList = [
         ]
       }
 ]
-
-export const makerListHistory = []
