@@ -2498,8 +2498,8 @@ export const makerList = [
     "c2GasFee": 0,
     "c1MinPrice": 0.005,
     "c1MaxPrice": 10,
-    "c2MinPrice": 0,
-    "c2MaxPrice": 0,
+    "c2MinPrice": 0.005,
+    "c2MaxPrice": 5,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -2532,8 +2532,8 @@ export const makerList = [
     "c2GasFee": 0,
     "c1MinPrice": 0.005,
     "c1MaxPrice": 5,
-    "c2MinPrice": 0,
-    "c2MaxPrice": 0,
+    "c2MinPrice": 0.005,
+    "c2MaxPrice": 5,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
