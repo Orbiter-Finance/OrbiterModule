@@ -204,16 +204,7 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
 
-        const startTimeTimeStamp = LastPullTxMap.get(
-          `${fromChain.internalId}:${tx.to.toLowerCase()}`
-        )
-        if (tx.timestamp * 1000 < Number(startTimeTimeStamp)) {
-          accessLogger.error(
-            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
-          )
-          // TAG:  rinkeby close
-          continue
-        }
+
         let ext = '';
         if ([8, 88].includes(Number(fromChain.internalId))) {
           ext = dayjs(tx.timestamp).unix().toString();
@@ -324,8 +315,17 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
             continue
           }
         }
-       
-        
+        const makerAddress = marketItem.sender;
+        const startTimeTimeStamp = LastPullTxMap.get(
+          `${fromChain.internalId}:${makerAddress.toLowerCase()}`
+        )
+        if ((+tx.timestamp * 1000) < Number(startTimeTimeStamp) - 1000 * 60) {
+          accessLogger.error(
+            `The transaction time is less than the program start time: chainId=${tx.chainId},hash=${tx.hash}, ${dayjs(Number(startTimeTimeStamp)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(tx.timestamp * 1000).format('YYYY-MM-DD HH:mm:ss')}`
+          )
+          // TAG:  rinkeby close
+          continue
+        }
         await confirmTransactionSendMoneyBack(transactionID, marketItem, tx)
       } catch (error) {
         errorLogger.error(`${tx.hash} startNewMakerTrxPull error: ${error}`)
@@ -381,7 +381,6 @@ export async function confirmTransactionSendMoneyBack(
     chainTransferMap?.clear()
   }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
-  LastPullTxMap.set(`${fromChainID}:${makerAddress}`, tx.timestamp * 1000)
   // check send
   // valid is exits
   try {
@@ -393,7 +392,7 @@ export async function confirmTransactionSendMoneyBack(
       return
     }
   } catch (error) {
-    errorLogger.error(`[${transactionID}] isHaveSqlError = ${error}` )
+    errorLogger.error(`[${transactionID}] isHaveSqlError = ${error}`)
     return
   }
 
@@ -438,7 +437,7 @@ export async function confirmTransactionSendMoneyBack(
         case '44':
           if (tx.extra['ext'].length !== 68) {
             accessLogger.error(
-                `Illegal ext: ${tx.extra['ext']}, hash: ${tx.hash}`
+              `Illegal ext: ${tx.extra['ext']}, hash: ${tx.hash}`
             );
             telegramBot.sendMessage(`Illegal ext: ${tx.extra['ext']}, hash: ${tx.hash}`).catch(error => {
               accessLogger.error(`send telegram message error ${error.stack}`);
@@ -450,21 +449,22 @@ export async function confirmTransactionSendMoneyBack(
             validateAndParseAddress(fix0xPadStartAddress(userAddress, 66));
           } catch (e) {
             accessLogger.error(
-                `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
+              `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
             );
             return;
           }
           break
       }
       if (!userAddress ||
-          fix0xPadStartAddress(userAddress, 66).length !== 66 ||
-          fix0xPadStartAddress(userAddress, 66) === "0x0000000000000000000000000000000000000000000000000000000000000000") {
+        fix0xPadStartAddress(userAddress, 66).length !== 66 ||
+        fix0xPadStartAddress(userAddress, 66) === "0x0000000000000000000000000000000000000000000000000000000000000000") {
         accessLogger.error(
-            `Illegal user address ${userAddress} hash:${tx.hash}`
+          `Illegal user address ${userAddress} hash:${tx.hash}`
         );
         return;
       }
       accessLogger.info(`sendTransaction from hash: ${fromChainID}->${toChainID} ${tx.hash}`);
+      LastPullTxMap.set(`${fromChainID}:${makerAddress.toLowerCase()}`, tx.timestamp * 1000)
       await sendTransaction(
         makerAddress,
         transactionID,
@@ -474,12 +474,12 @@ export async function confirmTransactionSendMoneyBack(
         toTokenAddress,
         tx.value.toString(),
         userAddress,
-          market,
+        market,
         tx.nonce,
         0,
         tx.from,
-          0,
-          tx.hash
+        0,
+        tx.hash
       )
     })
     .catch((error) => {
