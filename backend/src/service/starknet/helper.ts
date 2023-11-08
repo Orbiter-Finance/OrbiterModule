@@ -208,31 +208,31 @@ export class StarknetHelp {
             nonce: nonce,
             maxFee: BigInt(0.009 * 10 ** 18)
         };
-        try {
-            const suggestedMaxFee = await this.account.getSuggestedMaxFee(
-                {
-                    type: "INVOKE_FUNCTION",
-                    payload: invocationList
-                } as any,
-                transactionDetail
-            );
-            if (suggestedMaxFee > transactionDetail.maxFee) {
-                transactionDetail.maxFee = suggestedMaxFee;
-            }
-        } catch (error: any) {
-            if (error.message.indexOf('Invalid transaction nonce. Expected:') !== -1
-                && error.message.indexOf('got:') !== -1) {
-                const arr: string[] = error.message.split(', got: ');
-                const nonce1 = arr[0].replace(/[^0-9]/g, "");
-                const nonce2 = arr[1].replace(/[^0-9]/g, "");
-                accessLogger.error(`starknet signTransfer error: ${nonce} != ${nonce1}, ${nonce} != ${nonce2}`);
-            } else if (error.message.indexOf('ContractAddress(PatriciaKey(StarkFelt') !== -1 &&
-                error.message.indexOf('Expected: Nonce(StarkFelt') !== -1) {
-                accessLogger.error(`starknet signTransfer error: ${error.message}`);
-            } else {
-                throw new Error(error.message);
-            }
-        }
+        // try {
+        //     const suggestedMaxFee = await this.account.getSuggestedMaxFee(
+        //         {
+        //             type: "INVOKE_FUNCTION",
+        //             payload: invocationList
+        //         } as any,
+        //         transactionDetail
+        //     );
+        //     if (suggestedMaxFee > transactionDetail.maxFee) {
+        //         transactionDetail.maxFee = suggestedMaxFee;
+        //     }
+        // } catch (error: any) {
+        //     if (error.message.indexOf('Invalid transaction nonce. Expected:') !== -1
+        //         && error.message.indexOf('got:') !== -1) {
+        //         const arr: string[] = error.message.split(', got: ');
+        //         const nonce1 = arr[0].replace(/[^0-9]/g, "");
+        //         const nonce2 = arr[1].replace(/[^0-9]/g, "");
+        //         accessLogger.error(`starknet signTransfer error: ${nonce} != ${nonce1}, ${nonce} != ${nonce2}`);
+        //     } else if (error.message.indexOf('ContractAddress(PatriciaKey(StarkFelt') !== -1 &&
+        //         error.message.indexOf('Expected: Nonce(StarkFelt') !== -1) {
+        //         accessLogger.error(`starknet signTransfer error: ${error.message}`);
+        //     } else {
+        //         throw new Error(error.message);
+        //     }
+        // }
 
         // accessLogger.info(`transactionDetail: ${JSON.stringify(transactionDetail)}`);
         const trx = await this.account.execute(invocationList, <any>null, transactionDetail);
