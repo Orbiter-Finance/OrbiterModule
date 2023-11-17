@@ -4741,9 +4741,9 @@
 		"c1GasFee": 0,
 		"c2GasFee": 8,
 		"c1MinPrice": 0.001,
-		"c1MaxPrice": 2,
+		"c1MaxPrice": 10,
 		"c2MinPrice": 0.001,
-		"c2MaxPrice": 5,
+		"c2MaxPrice": 2,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
