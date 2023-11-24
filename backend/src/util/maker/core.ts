@@ -432,7 +432,7 @@ export function getAmountToSend(
         result.tAmount = amount;
       }
     } else if(+toChainID === 8 || +toChainID ==88) {
-      if (result.state) {
+      if (result.state && result.tAmount) {
           const convertValue = String(+result.tAmount / 10**toPrecision);
           const splitValue = convertValue.split('.');
           if (splitValue[1].length>10) {
