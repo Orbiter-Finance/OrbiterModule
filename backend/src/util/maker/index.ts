@@ -573,8 +573,8 @@ export async function sendTransaction(
     )
     return
   }
-  accessLogger.info(
-    `${transactionID} [${process.pid}] Send Queue ${transactionID}`)
+  // accessLogger.info(
+  //   `${transactionID} [${process.pid}] Send Queue ${transactionID}`)
   if (!chainQueue[Number(toChainID)]) {
     throw new Error(`No queue created ${toChainID}`);
   }
@@ -652,7 +652,7 @@ export async function sendTxConsumeHandle(result: any) {
       }
       confirmToZKSTransaction(txID, transactionID, toChainID, makerAddress)
     } else {
-      confirmToTransaction(toChainID, toChain, txID, transactionID)
+      // confirmToTransaction(toChainID, toChain, txID, transactionID)
     }
     await repositoryMakerNodeTodo().update({ transactionID }, { state: 1 })
     // update todo
