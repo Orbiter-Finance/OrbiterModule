@@ -16,6 +16,7 @@ import { sendTxConsumeHandle } from "../util/maker";
 import { max } from 'lodash';
 import { clearInterval } from "timers";
 import { Orbiter_Router_ABI, ERC20_ABI } from "../config/ABI";
+import { accessLogger, errorLogger } from '../util/logger'
 
 // Ensure that cached data is not manipulated at the same time
 const taskLockMap = {};
@@ -61,7 +62,7 @@ export class EVMAccount {
     public chainConfig: IChainConfig | any;
     public wallet: Wallet;
     public provider: ethers.providers.Provider;
-    public logger: any;
+    public logger = accessLogger;
     private makerWeb3: MakerWeb3;
     public address: string;
     private sendInterval: number = 20;
@@ -75,7 +76,7 @@ export class EVMAccount {
         protected tokenAddress: string,
         protected readonly privateKey: string,
     ) {
-        this.logger = getLoggerService(String(internalId));
+        // this.logger = getLoggerService(String(internalId));
         this.makerWeb3 = new MakerWeb3(internalId);
         this.chainConfig = chains.getChainByInternalId(String(internalId));
         this.refreshProvider();
@@ -324,7 +325,7 @@ export class EVMAccount {
                 value: transactionRequest.value,
             });
         } catch (error) {
-            this.logger.error(`transfer estimateGas error`, error);
+            this.logger.error(`transfer estimateGas error ${error.message}`);
             transactionRequest.gasLimit = ethers.BigNumber.from(100000);
         }
         await this.getGasPrice(transactionRequest);
@@ -363,7 +364,7 @@ export class EVMAccount {
                 data: transactionRequest.data,
             });
         } catch (error) {
-            this.logger.error(`transfer token estimateGas error`, error);
+            this.logger.error(`transfer token estimateGas error ${error.message}`);
             transactionRequest.gasLimit = ethers.BigNumber.from(100000);
         }
         await this.getGasPrice(transactionRequest);
@@ -428,7 +429,7 @@ export class EVMAccount {
                 data: transactionRequest.data,
             });
         } catch (error) {
-            this.logger.error(`swap estimateGas error`, error);
+            this.logger.error(`swap estimateGas error ${error.message}`);
             transactionRequest.gasLimit = ethers.BigNumber.from(100000);
         }
         await this.getGasPrice(transactionRequest);
@@ -485,7 +486,7 @@ export class EVMAccount {
                 data: transactionRequest.data,
             });
         } catch (error) {
-            this.logger.error(`swap token estimateGas error`, error);
+            this.logger.error(`swap token estimateGas error ${error.message}`);
             transactionRequest.gasLimit = ethers.BigNumber.from(100000);
         }
         await this.getGasPrice(transactionRequest);
