@@ -423,12 +423,24 @@ export function getAmountToSend(
     readyAmount.toFixed(),
     nonceStr,
   );
-  if (toChainID === 3 || toChainID === 3) {
-    if (result.state) {
-      const amount = zksync.utils
-        .closestPackableTransactionAmount(String(result.tAmount))
-        .toString();
-      result.tAmount = amount;
+  if (result) {
+    if (toChainID === 3 || toChainID === 3) {
+      if (result.state) {
+        const amount = zksync.utils
+          .closestPackableTransactionAmount(String(result.tAmount))
+          .toString();
+        result.tAmount = amount;
+      }
+    } else if(+toChainID === 8 || +toChainID ==88) {
+      if (result.state) {
+          const convertValue = String(+result.tAmount / 10**market.toChain.decimals);
+          const splitValue = convertValue.split('.');
+          if (splitValue[1].length>10) {
+            splitValue[1] = `${splitValue[1].substring(0,6)}${nonceStr}`;
+            const value = new BigNumber(splitValue.join('.')).times(10**market.toChain.decimals);
+            result.tAmount = value.toFixed(0);
+          }
+      }
     }
   }
   return result;
