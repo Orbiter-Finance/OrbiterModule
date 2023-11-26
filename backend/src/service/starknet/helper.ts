@@ -34,7 +34,6 @@ export class StarknetHelp {
     this.cache = new Keyv({
       store: new KeyvFile({
         filename: `logs/nonce/${this.address.toLowerCase()}`, // the file path to store the data
-        expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
         writeDelay: 0, // ms, batch write to disk in a specific duration, enhance write performance.
         encode: JSON.stringify, // serialize function
         decode: JSON.parse, // deserialize function

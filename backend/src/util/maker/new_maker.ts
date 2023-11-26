@@ -110,8 +110,8 @@ function getCacheClient(chainId: string) {
   }
   const cache = new Keyv({
     store: new KeyvFile({
-      filename: `logs/transfer/${dayjs().format('YYYYMM')}-${chainId}`, // the file path to store the data
-      expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
+      filename: `logs/transfer/${chainId}`, // the file path to store the data
+      // expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
       writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
       decode: JSON.parse, // deserialize function
@@ -377,10 +377,10 @@ export async function confirmTransactionSendMoneyBack(
     // )
     return;
   }
-  if (Number(chainTransferMap?.size) >= 5000) {
+  if (Number(chainTransferMap?.size) >= 500) {
     chainTransferMap?.clear()
   }
-  await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 60 * 24)
+  await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 20)
   // check send
   // valid is exits
   try {

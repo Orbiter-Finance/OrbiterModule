@@ -71,6 +71,7 @@ export class EVMAccount {
     private readonly lockKey: string;
     private readonly txKey: string;
 
+    private cacheConfig: any = {};
     constructor(
         protected internalId: number,
         protected tokenAddress: string,
@@ -84,7 +85,6 @@ export class EVMAccount {
         this.cache = new Keyv({
             store: new KeyvFile({
                 filename: `logs/evm/${internalId}/nonce/${this.address}`, // the file path to store the data
-                expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
                 writeDelay: 0, // ms, batch write to disk in a specific duration, enhance write performance.
                 encode: JSON.stringify, // serialize function
                 decode: JSON.parse, // deserialize function
@@ -92,6 +92,15 @@ export class EVMAccount {
         });
         this.lockKey = `${this.address}_${this.chainConfig.internalId}`;
         this.txKey = `${this.address}_${this.chainConfig.internalId}_${tokenAddress.toLowerCase()}`;
+        try {
+            this.readVariableConfigCache()
+            setInterval(() => {
+                this.readVariableConfigCache()
+            }, 1000 * 10);
+        }catch(error) {
+            accessLogger.error(`${this.chainConfig.internalId} read config to cache error ${error.message}`)
+        }
+
     }
 
     refreshProvider() {
@@ -224,19 +233,26 @@ export class EVMAccount {
         taskLockMap[txKey] = false;
     }
 
+    async readVariableConfigCache() {
+        try {
+            this.cacheConfig = await readLogJson(`limit.json`, `evm/${this.chainConfig.internalId}/limit`, {
+                waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount,
+                sendInterval: this.sendInterval,
+                gasMulti,
+                gasMaxPrice,
+                floorMaxPriorityFeePerGas: 5000000000,
+                minAggregatesCount: 10,
+                rpcManualSwitch: 0,
+                rpcIndex: 0,
+                banFromChainId: [],
+                clearTaskAlarmInterval: 0
+            });
+        } catch (e) {
+            this.logger.error(`readVariableConfigCache error: ${e.message}`);
+        }
+    }
     async getVariableConfig(): Promise<IJobParams> {
-        return await readLogJson(`limit.json`, `evm/${this.chainConfig.internalId}/limit`, {
-            waringInterval, execTaskCount, maxTaskCount, expireTime, maxTryCount,
-            sendInterval: this.sendInterval,
-            gasMulti,
-            gasMaxPrice,
-            floorMaxPriorityFeePerGas: 5000000000,
-            minAggregatesCount: 10,
-            rpcManualSwitch: 0,
-            rpcIndex: 0,
-            banFromChainId: [],
-            clearTaskAlarmInterval: 0
-        });
+        return this.cacheConfig;
     }
 
     async getTask(): Promise<any[]> {
@@ -259,13 +275,13 @@ export class EVMAccount {
                     if (Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed(0)) > maxPriorityFeePerGas) {
                         maxPriorityFeePerGas = Number(new BigNumber(alchemyMaxPriorityFeePerGas).multipliedBy(multi).toFixed(0));
                     }
-                    
+
                     transactionRequest.maxPriorityFeePerGas = this.makerWeb3.web3.utils.toHex(Number(maxPriorityFeePerGas).toFixed(0))
                     transactionRequest.maxFeePerGas = this.makerWeb3.web3.utils.toHex(gasMaxPrice)
                     delete transactionRequest.gasPrice;
                 } catch (error) {
-                  this.logger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
-                  throw new Error(`eth_maxPriorityFeePerGas error:${error.message}`);
+                    this.logger.error(`eth_maxPriorityFeePerGas error ${error.message}`)
+                    throw new Error(`eth_maxPriorityFeePerGas error:${error.message}`);
                 }
             } else {
                 try {
@@ -281,7 +297,7 @@ export class EVMAccount {
                     throw new Error(`gasPrice error:${error.message}`);
                 }
             }
-          
+
         } catch (e) {
             this.logger.error("get gas price error:", e);
             throw e;
@@ -592,7 +608,7 @@ export class EVMAccount {
                 continue;
             }
             // ban
-            if(banFromChainId.find(chainId => Number(chainId) === Number(task.signParam.fromChainId))){
+            if (banFromChainId.find(chainId => Number(chainId) === Number(task.signParam.fromChainId))) {
                 clearTaskList.push(task);
                 errorMsgList.push(`${this.chainConfig.name}_ban ${task.signParam.fromChainId}, transactionID: ${task.params?.transactionID}`);
                 continue;
