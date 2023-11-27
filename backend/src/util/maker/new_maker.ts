@@ -165,10 +165,11 @@ export async function startNewMakerTrxPull() {
     await mq.connect();
     mq.consumer.consume(async message => {
       try {
-        const txList: { chainId: string, hash: string }[] = JSON.parse(message);
+        const txList: { sourceChain: string, sourceId: string }[] = JSON.parse(message);
         for (const tx of txList) {
-          const watch = ChainFactory.createWatchChainByIntranetId(String(tx.chainId));
-          const entity = await watch.chain.convertTxToEntity(tx.hash);
+          const chainInfo = chains.getChainInfo(Number(tx.sourceChain));
+          const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
+          const entity = await watch.chain.convertTxToEntity(tx.sourceId);
           if (entity) subscribeNewTransaction([entity]);
         }
         return true;

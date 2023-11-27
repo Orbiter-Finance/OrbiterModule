@@ -107,8 +107,8 @@ export class RabbitMQ {
     setTimeout(() => this.connect(), this.config.reconnectInterval);
   }
   getPrefix() {
-    const serverName = (process.env["ChainCoreServerName"] || "").toLocaleLowerCase();
-    const exchange = `ChainCore-${serverName}`;
+    const serverName = (process.env["ServerName"] || "server").toLocaleLowerCase();
+    const exchange = `OrbiterModule-${serverName}`;
     return { exchange: exchange, serverName };
   }
   async bindQueue(config: IProducerConfig) {
@@ -133,7 +133,7 @@ export class RabbitMQ {
     const config: IConsumerConfig = {
       exchangeName: exchange,
       exchangeType: "direct",
-      queueName: `ChainCore-${serverName}-transactions`,
+      queueName: `makerWaitTransfer1-0`,
       routingKey: "",
     };
     const { exchangeName, exchangeType, queueName, routingKey } = config;
