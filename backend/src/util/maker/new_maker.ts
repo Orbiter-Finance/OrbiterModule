@@ -177,7 +177,7 @@ export async function startNewMakerTrxPull() {
         const chainInfo: any = chains.getChainInfo(String(tx.sourceChain));
         if (!chainInfo) {
           errorLogger.error(`can't find chainInfo, ${tx.sourceChain} ${tx.sourceId}`);
-          return false;
+          return true;
         }
         const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
         const entity = await watch.chain.getTransactionByHash(String(tx.sourceId));
