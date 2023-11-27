@@ -133,7 +133,7 @@ export class RabbitMQ {
     const config: IConsumerConfig = {
       exchangeName: exchange,
       exchangeType: "direct",
-      queueName: `makerWaitTransfer1-0`,
+      queueName: process.env['QUEUE_NAME'] || "maker-queue",
       routingKey: "",
     };
     const { exchangeName, exchangeType, queueName, routingKey } = config;

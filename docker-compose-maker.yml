@@ -23,6 +23,7 @@ services:
       DB_NAME: '${DB_NAME}'
       MAKER_FILE: '${MAKER_FILE}'
       RABBIT_MQ: '${RABBIT_MQ}'
+      QUEUE_NAME: '${QUEUE_NAME}'
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'

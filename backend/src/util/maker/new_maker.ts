@@ -217,6 +217,12 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           // )
           continue
         }
+        if ((+tx.timestamp * 1000) < dayjs().subtract(15, 'minute').valueOf()) {
+          accessLogger.error(
+            `Exceeding the maximum trading time by 15 minutes ${tx.hash}`
+          )
+          continue;
+        }
         if (!!attackerList.find(item => item.toLowerCase() === tx?.from.toLowerCase())) {
           errorLogger.error(`attacker address: ${tx.from} ${tx.hash}`);
           continue;
