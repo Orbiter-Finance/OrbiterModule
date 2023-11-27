@@ -185,7 +185,10 @@ export async function startNewMakerTrxPull() {
         return true;
       } catch (error) {
         errorLogger.error(`Consumption transaction list failed`, error);
-        return false;
+        telegramBot.sendMessage(`MQ error ${error.message}`).catch(error => {
+          this.logger.error(`send telegram message error ${error.stack}`);
+        });
+        return true;
       }
     });
   }
