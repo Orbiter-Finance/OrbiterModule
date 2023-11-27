@@ -24,6 +24,7 @@ import { telegramBot } from '../../sms/telegram'
 import { RabbitMQ } from "../rabbitMQ";
 import { ChainFactory } from "orbiter-chaincore/src/watch/chainFactory";
 
+const bootTime = Date.now();
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
   return Core.db.getRepository(MakerNode)
@@ -165,13 +166,22 @@ export async function startNewMakerTrxPull() {
     await mq.connect();
     mq.consumer.consume(async message => {
       try {
-        const txList: { sourceChain: string, sourceId: string }[] = JSON.parse(message);
-        for (const tx of txList) {
-          const chainInfo = chains.getChainInfo(Number(tx.sourceChain));
-          const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
-          const entity = await watch.chain.convertTxToEntity(tx.sourceId);
-          if (entity) subscribeNewTransaction([entity]);
+        const tx: { sourceChain: string, sourceId: string, sourceTime: string } = JSON.parse(message);
+        const timestamp = new Date(tx.sourceTime).valueOf();
+        if (timestamp < Number(bootTime)) {
+          accessLogger.error(
+            `The transaction time is less than the program start time: chainId=${tx.sourceChain},hash=${tx.sourceId}, ${dayjs(Number(bootTime)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}`
+          );
+          return true;
         }
+        const chainInfo: any = chains.getChainInfo(String(tx.sourceChain));
+        if (!chainInfo) {
+          errorLogger.error(`can't find chainInfo, ${tx.sourceChain} ${tx.sourceId}`);
+          return false;
+        }
+        const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
+        const entity = await watch.chain.getTransactionByHash(String(tx.sourceId));
+        if (entity) subscribeNewTransaction([entity]);
         return true;
       } catch (error) {
         errorLogger.error(`Consumption transaction list failed`, error);

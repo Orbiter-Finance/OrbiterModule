@@ -108,7 +108,7 @@ export class RabbitMQ {
   }
   getPrefix() {
     const serverName = (process.env["ServerName"] || "server").toLocaleLowerCase();
-    const exchange = `OrbiterModule-${serverName}`;
+    const exchange = `v1Explore`;
     return { exchange: exchange, serverName };
   }
   async bindQueue(config: IProducerConfig) {
@@ -182,7 +182,7 @@ class Consumer {
         this.routingKey,
       );
       // console.log(`Waiting for messages from RabbitMQ...`);
-      this.channel.prefetch(1, false);
+      this.channel.prefetch(20, false);
       this.channel.consume(
         this.queueName,
         (message: amqp.ConsumeMessage | null) => {
