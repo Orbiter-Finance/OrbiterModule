@@ -23,8 +23,6 @@ services:
       DB_NAME: '${DB_NAME}'
       MAKER_FILE: '${MAKER_FILE}'
       RABBIT_MQ: '${RABBIT_MQ}'
-      logstashHost: '${logstashHost}'
-      logstashPort: '${logstashPort}'
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'
