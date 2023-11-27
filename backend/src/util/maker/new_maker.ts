@@ -21,6 +21,8 @@ import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
 import { attackerList, programStartTimeDelay } from "../../schedule/jobs";
 import { telegramBot } from '../../sms/telegram'
+import { RabbitMQ } from "../rabbitMQ";
+import { ChainFactory } from "orbiter-chaincore/src/watch/chainFactory";
 
 const allChainsConfig = [...mainnetChains, ...testnetChains]
 export const repositoryMakerNode = (): Repository<MakerNode> => {
@@ -158,6 +160,24 @@ export async function startNewMakerTrxPull() {
     return true;
   })
 
+  if (process.env["RABBIT_MQ"]) {
+    const mq = new RabbitMQ({ url: String(process.env["RABBIT_MQ"]) });
+    await mq.connect();
+    mq.consumer.consume(async message => {
+      try {
+        const txList: { chainId: string, hash: string }[] = JSON.parse(message);
+        for (const tx of txList) {
+          const watch = ChainFactory.createWatchChainByIntranetId(String(tx.chainId));
+          const entity = await watch.chain.convertTxToEntity(tx.hash);
+          if (entity) subscribeNewTransaction([entity]);
+        }
+        return true;
+      } catch (error) {
+        errorLogger.error(`Consumption transaction list failed`, error);
+        return false;
+      }
+    });
+  }
 }
 async function isWatchAddress(address: string) {
   const makerList = await getNewMarketList()
