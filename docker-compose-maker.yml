@@ -22,6 +22,7 @@ services:
       DB_PASS: '${DB_PASS}'
       DB_NAME: '${DB_NAME}'
       MAKER_FILE: '${MAKER_FILE}'
+      RABBIT_MQ: '${RABBIT_MQ}'
       logstashHost: '${logstashHost}'
       logstashPort: '${logstashPort}'
     volumes:
