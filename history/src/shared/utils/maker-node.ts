@@ -311,6 +311,7 @@ async function getBNBRates() {
 }
 
 export async function getRates(currency) {
+  currency = currency || 'USD';
   if (currency === "BNB") {
     return await getBNBRates();
   }
