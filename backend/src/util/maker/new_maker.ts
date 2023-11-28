@@ -168,20 +168,32 @@ export async function startNewMakerTrxPull() {
       try {
         const tx: { sourceChain: string, sourceId: string, sourceTime: string } = JSON.parse(message);
         const timestamp = new Date(tx.sourceTime).valueOf();
+        accessLogger.info(
+          `MQ message - chainId: ${tx.sourceChain} hash: ${tx.sourceId} time: ${dayjs(Number(timestamp)).format("YYYY-MM-DD HH:mm:ss")} bootTime: ${dayjs(Number(bootTime)).format("YYYY-MM-DD HH:mm:ss")}`
+        );
         if (timestamp < Number(bootTime)) {
           accessLogger.error(
-            `The transaction time is less than the program start time: chainId=${tx.sourceChain},hash=${tx.sourceId}, ${dayjs(Number(bootTime)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}`
+            `MQ message - The transaction time is less than the program start time: chainId=${tx.sourceChain},hash=${tx.sourceId}, ${dayjs(Number(bootTime)).format("YYYY-MM-DD HH:mm:ss")}>${dayjs(timestamp).format('YYYY-MM-DD HH:mm:ss')}`
           );
           return true;
         }
         const chainInfo: any = chains.getChainInfo(String(tx.sourceChain));
         if (!chainInfo) {
-          errorLogger.error(`can't find chainInfo, ${tx.sourceChain} ${tx.sourceId}`);
+          errorLogger.error(`Can't find chainInfo, ${tx.sourceChain} ${tx.sourceId}`);
           return true;
         }
         const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
-        const entity = await watch.chain.getTransactionByHash(String(tx.sourceId));
-        if (entity) subscribeNewTransaction([entity]);
+        const entity: any = await watch.chain.getTransactionByHash(String(tx.sourceId));
+        if (entity) {
+          accessLogger.info(
+            `MQ receive success: ${tx.sourceId} ${+entity.timestamp && dayjs(Number(+entity.timestamp * 1000)).format("YYYY-MM-DD HH:mm:ss")}`
+          );
+          subscribeNewTransaction([entity]);
+        } else {
+          accessLogger.info(
+            `MQ receive empty: ${tx.sourceId}`
+          );
+        }
         return true;
       } catch (error) {
         errorLogger.error(`Consumption transaction list failed`, error);
