@@ -1,4 +1,4 @@
-export default {
+export const rates =  {
     "AED": "3.6729133333333333",
     "AFN": "85.7607715",
     "ALL": "98.7418920000001497",
