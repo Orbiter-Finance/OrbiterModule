@@ -1,5 +1,6 @@
 import {Get, Post, Body, Put, Delete, Query, Param, Controller} from '@nestjs/common';
 import { TransactionService } from './transaction.service';
+import * as dayjs from 'dayjs';
 import {
   ApiResponse,
   ApiOperation, ApiTags,
@@ -39,7 +40,8 @@ export class TransactionController {
       code: 0,
       data: await this.transactionService.statistics(query),
       startTime: query['startTime'],
-      endTime: query['endTime']
+      endTime: query['endTime'],
+      current: [dayjs().format('YYYY-MM-YY HH:mm:ss'), dayjs().startOf('d').format('YYYY-MM-YY HH:mm:ss'), dayjs().endOf('d').format('YYYY-MM-YY HH:mm:ss')]
     }
   }
 }

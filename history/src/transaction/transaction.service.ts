@@ -118,11 +118,11 @@ export class TransactionService {
     }
   }
   async statistics(query: any): Promise<any> {
-    const startTime = Number(query['startTime'] || dayjs().startOf('d').valueOf());
-    const endTime = Number(query['endTime'] || dayjs().endOf('d').valueOf());
+    const startTime = Number(query['startTime']);
+    const endTime = Number(query['endTime']);
     const whreeParmas: Array<any> = [
-      dayjs(startTime).utc().format('YYYY-MM-DD HH:mm:ss'),
-      dayjs(endTime).utc().format('YYYY-MM-DD HH:mm:ss'),
+      dayjs(startTime).utc().toISOString(),
+      dayjs(endTime).utc().toISOString(),
     ];
     let whereSql = " `timestamp`>=? AND `timestamp`<=? ";
     // let sqlLog = " `timestamp`>= '"+whreeParmas[0]+"' AND `timestamp`<= '" + whreeParmas[1] +"' ";
@@ -208,7 +208,8 @@ export class TransactionService {
       profit,
       profitAmount,
       fromAmount,
-      toAmount
+      toAmount,
+      dbQuery: whreeParmas
     }
 
   }
