@@ -43,7 +43,9 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         : makerConfig[toChain].api.key
       const url =
         httpEndPoint + '?module=gastracker&action=gasoracle&apikey=' + apiKey
-      const response = await axios.get(url)
+      const response = await axios.get(url, {
+        timeout: 1000 * 30
+      })
       if (response.data.status == 1 && response.data.message === 'OK') {
         let prices = {
           low: Number(response.data.result.SafeGasPrice) + 5,
@@ -73,6 +75,8 @@ const getCurrentGasPrices = async (toChain: string, maxGwei = 165) => {
         method: 'eth_gasPrice',
         params: [],
         id: 0,
+      }, {
+        timeout: 1000 * 30
       })
 
       if (response.status !== 200 || response.statusText !== 'OK') {

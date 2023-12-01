@@ -26,17 +26,4 @@ const configure: Configuration = {
   },
 }
 
-if (process.env.logstashHost) {
-  configure.appenders['logstash'] = {
-    type: "log4js-logstash-tcp",
-    host: process.env.logstashHost || '127.0.0.1',
-    port: Number(process.env.logstashPort) || 5044,
-    retry: {
-      interval: 5000,
-      count: 1,
-    },
-  }
-  configure.categories['access'].appenders.push("logstash");
-}
-
 export { configure }
