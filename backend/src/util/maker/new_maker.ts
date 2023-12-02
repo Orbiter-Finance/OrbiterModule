@@ -503,6 +503,9 @@ export async function confirmTransactionSendMoneyBack(
             accessLogger.error(
               `Illegal user starknet address ${userAddress} hash:${tx.hash}, ${e.message}`
             );
+            telegramBot.sendMessage(`Illegal ext validateAndParseAddress: ${tx.extra['ext']}, hash: ${tx.hash}`).catch(error => {
+              accessLogger.error(`send telegram message error  ${error.stack}`);
+            });
             return;
           }
           break
