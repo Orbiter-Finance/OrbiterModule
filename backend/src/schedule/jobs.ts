@@ -21,6 +21,7 @@ import { telegramBot } from "../sms/telegram";
 import { doSms } from "../sms/smsSchinese";
 import { clearInterval } from "timers";
 import { EVMAccount } from "../service/evmAccount";
+import { AccountFactory } from '../service/accountFactory';
 chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { doSms } from '../sms/smsSchinese'
 class MJob {
@@ -378,7 +379,8 @@ export async function batchTxSend() {
 export async function startEVMJob(chainId: string, makerAddr: string, tokenAddress: string) {
   if (!isEmpty(makerConfig.privateKeys[makerAddr])) {
     const privateKey = makerConfig.privateKeys[makerAddr];
-    const evmAccount = new EVMAccount(Number(chainId), tokenAddress, privateKey);
+    // const evmAccount = new EVMAccount(Number(chainId), tokenAddress, privateKey);
+    const evmAccount = AccountFactory.createAccount(chainId, tokenAddress, privateKey);
     await evmAccount.startJob();
   } else {
     const timerId = setTimeout(() => {

@@ -31,6 +31,7 @@ import { doSms } from '../../sms/smsSchinese'
 import { chainQueue, transfers } from './new_maker'
 import { EVMAccount } from "../../service/evmAccount";
 import { telegramBot } from "../../sms/telegram";
+import { AccountFactory } from '../../service/accountFactory'
 const PrivateKeyProvider = require('truffle-privatekey-provider')
 
 const nonceDic = {}
@@ -334,7 +335,8 @@ export async function sendConsumer(value: any) {
   // linea
   if (chainConfig?.router && Object.values(chainConfig.router).includes("OrbiterRouterV3")) {
     const privateKey = makerConfig.privateKeys[makerAddress.toLowerCase()];
-    const evmAccount = new EVMAccount(chainID, tokenAddress, privateKey);
+    // const evmAccount = new EVMAccount(chainID, tokenAddress, privateKey);
+    const evmAccount = AccountFactory.createAccount(chainID, tokenAddress, privateKey);
     const queueList = await evmAccount.getTask();
     if (queueList.find(item => item.params?.transactionID === transactionID)) {
       accessLogger.info(`TransactionID was exist: ${transactionID}`);
