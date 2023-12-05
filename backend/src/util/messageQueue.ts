@@ -68,7 +68,7 @@ export class MessageQueue {
                 if (this.size() > 0) {
                     this.lastConsumeTime = Date.now();
                     const response = await this.dequeue();
-                    accessLogger.info(`queue:${this.name}, Consumption results::${JSON.stringify(response || {})}`);
+                    accessLogger.info(`queue:${this.name},consumedIds:${this.consumedIds.size}, Consumption results::${JSON.stringify(response || {})}`);
                     isProcessing = false;
                     if (response) {
                         await callback(null, response)
@@ -84,15 +84,22 @@ export class MessageQueue {
         }
         setInterval(async () => {
             process();
+            
             if (this.size() < 50 && Date.now() % 1200 === 0) {
-                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()},consumedIds:${this.consumedIds.size}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
             } else if (this.size() > 50 && Date.now() % 600 === 0) {
-                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
+                accessLogger.info(`Check Queue:${this.name}, Size:${this.size()},consumedIds:${this.consumedIds.size}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`);
             }
             if (this.name == `chain:14` && this.size() >= 200 && Date.now() % 300 === 0) {
-                telegramBot.sendMessage(`Check Queue:${this.name}, Size:${this.size()}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`).catch(error => {
+                telegramBot.sendMessage(`Check Queue:${this.name}, Size:${this.size()},consumedIds:${this.consumedIds.size}, lastConsumeTime:${dayjs(this.lastConsumeTime).format('YYYY-MM-DD HH:mm:ss')},isProcessing:${isProcessing}`).catch(error => {
                     accessLogger.error(`send telegram message error ${error.stack}`);
                 })
+            }
+            if (this.consumedIds.size > 500) {
+                const sliceArr = Array.from(this.consumedIds).slice(0, 500);
+                for (const id of sliceArr) {
+                    this.consumedIds.delete(id);
+                }
             }
             const timeout = Date.now() - this.lastConsumeTime;
             if (timeout > 1000 * 60 * 5 && this.size() > 0) {

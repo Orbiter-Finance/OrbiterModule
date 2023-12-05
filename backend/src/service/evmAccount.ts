@@ -85,7 +85,7 @@ export class EVMAccount {
         this.cache = new Keyv({
             store: new KeyvFile({
                 filename: `logs/evm/${internalId}/nonce/${this.address}`, // the file path to store the data
-                writeDelay: 0, // ms, batch write to disk in a specific duration, enhance write performance.
+                writeDelay: 500, // ms, batch write to disk in a specific duration, enhance write performance.
                 encode: JSON.stringify, // serialize function
                 decode: JSON.parse, // deserialize function
             }),

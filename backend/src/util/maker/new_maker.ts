@@ -115,7 +115,7 @@ function getCacheClient(chainId: string) {
     store: new KeyvFile({
       filename: `logs/transfer/${chainId}`, // the file path to store the data
       // expiredCheckDelay: 999999 * 24 * 3600 * 1000, // ms, check and remove expired data in each ms
-      writeDelay: 100, // ms, batch write to disk in a specific duration, enhance write performance.
+      writeDelay: 500, // ms, batch write to disk in a specific duration, enhance write performance.
       encode: JSON.stringify, // serialize function
       decode: JSON.parse, // deserialize function
     }),
