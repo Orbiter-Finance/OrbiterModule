@@ -429,7 +429,7 @@ export async function confirmTransactionSendMoneyBack(
     // )
     return;
   }
-  if (Number(chainTransferMap?.size) >= 500) {
+  if (Number(chainTransferMap?.size) >= 200) {
     chainTransferMap?.clear()
   }
   await cache?.set(tx.hash.toLowerCase(), true, 1000 * 60 * 20)
