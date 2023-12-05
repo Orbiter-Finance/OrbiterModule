@@ -96,7 +96,7 @@ export class MessageQueue {
                 })
             }
             if (this.consumedIds.size > 500) {
-                const sliceArr = Array.from(this.consumedIds).slice(0, 500);
+                const sliceArr = Array.from(this.consumedIds).slice(0, 250);
                 for (const id of sliceArr) {
                     this.consumedIds.delete(id);
                 }
