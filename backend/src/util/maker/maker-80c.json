@@ -9258,7 +9258,7 @@
 		"t1Address": "0x0000000000000000000000000000000000000000",
 		"t2Address": "0x0000000000000000000000000000000000000000",
 		"precision": 18,
-		"c1TradingFee": 0.001,
+		"c1TradingFee": 0.0035,
 		"c2TradingFee": 0.009,
 		"c1GasFee": 0,
 		"c2GasFee": 8,
