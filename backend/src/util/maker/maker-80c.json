@@ -102,40 +102,6 @@
 		]
 	},
 	{
-		"id": "1-2/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 1,
-		"c2ID": 2,
-		"c1Name": "mainnet",
-		"c2Name": "arbitrum",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 2,
-		"c2TradingFee": 20.8,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "1-3/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -238,40 +204,6 @@
 		]
 	},
 	{
-		"id": "1-3/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 1,
-		"c2ID": 3,
-		"c1Name": "mainnet",
-		"c2Name": "zksync",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"precision": 18,
-		"c1TradingFee": 1.5,
-		"c2TradingFee": 20.8,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "1-4/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -290,40 +222,6 @@
 		"c1MaxPrice": 3,
 		"c2MinPrice": 0.001,
 		"c2MaxPrice": 3,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "1-4/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 1,
-		"c2ID": 4,
-		"c1Name": "mainnet",
-		"c2Name": "starknet",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-		"precision": 18,
-		"c1TradingFee": 2,
-		"c2TradingFee": 20.8,
-		"c1GasFee": 5,
-		"c2GasFee": 0,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -510,40 +408,6 @@
 		]
 	},
 	{
-		"id": "1-6/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 1,
-		"c2ID": 6,
-		"c1Name": "mainnet",
-		"c2Name": "polygon",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-		"precision": 18,
-		"c1TradingFee": 1.5,
-		"c2TradingFee": 20.8,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "1-7/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -630,40 +494,6 @@
 		"c1MaxPrice": 10000,
 		"c2MinPrice": 0.1,
 		"c2MaxPrice": 10000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "1-7/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 1,
-		"c2ID": 7,
-		"c1Name": "mainnet",
-		"c2Name": "optimism",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 3,
-		"c2TradingFee": 20.8,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -1700,40 +1530,6 @@
 		]
 	},
 	{
-		"id": "2-3/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 2,
-		"c2ID": 3,
-		"c1Name": "arbitrum",
-		"c2Name": "zksync",
-		"t1Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"t2Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"precision": 18,
-		"c1TradingFee": 1.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "2-4/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -1752,40 +1548,6 @@
 		"c1MaxPrice": 3,
 		"c2MinPrice": 0.001,
 		"c2MaxPrice": 3,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "2-4/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 2,
-		"c2ID": 4,
-		"c1Name": "arbitrum",
-		"c2Name": "starknet",
-		"t1Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"t2Address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-		"precision": 18,
-		"c1TradingFee": 1.5,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 5,
-		"c2GasFee": 0,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -1972,40 +1734,6 @@
 		]
 	},
 	{
-		"id": "2-6/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 2,
-		"c2ID": 6,
-		"c1Name": "arbitrum",
-		"c2Name": "polygon",
-		"t1Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"t2Address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-		"precision": 18,
-		"c1TradingFee": 1.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "2-7/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -2092,40 +1820,6 @@
 		"c1MaxPrice": 10000,
 		"c2MinPrice": 0.1,
 		"c2MaxPrice": 10000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "2-7/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 2,
-		"c2ID": 7,
-		"c1Name": "arbitrum",
-		"c2Name": "optimism",
-		"t1Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 2.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -3094,40 +2788,6 @@
 		]
 	},
 	{
-		"id": "3-4/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 3,
-		"c2ID": 4,
-		"c1Name": "zksync",
-		"c2Name": "starknet",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-		"precision": 18,
-		"c1TradingFee": 0,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0,
-		"c2GasFee": 0,
-		"c1MinPrice": 0,
-		"c1MaxPrice": 0,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "3-4/USDC",
 		"tName": "USDC",
 		"makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
@@ -3298,40 +2958,6 @@
 		]
 	},
 	{
-		"id": "3-6/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 3,
-		"c2ID": 6,
-		"c1Name": "zksync",
-		"c2Name": "polygon",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-		"precision": 18,
-		"c1TradingFee": 1.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "3-7/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -3418,40 +3044,6 @@
 		"c1MaxPrice": 10000,
 		"c2MinPrice": 0.1,
 		"c2MaxPrice": 10000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "3-7/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 3,
-		"c2ID": 7,
-		"c1Name": "zksync",
-		"c2Name": "optimism",
-		"t1Address": "0x6b175474e89094c44da98b954eedeac495271d0f",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 2.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -4420,40 +4012,6 @@
 		]
 	},
 	{
-		"id": "4-6/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 4,
-		"c2ID": 6,
-		"c1Name": "starknet",
-		"c2Name": "polygon",
-		"t1Address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-		"t2Address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-		"precision": 18,
-		"c1TradingFee": 1.3,
-		"c2TradingFee": 1.5,
-		"c1GasFee": 0,
-		"c2GasFee": 5,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
 		"id": "4-6/USDC",
 		"tName": "USDC",
 		"makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
@@ -4540,40 +4098,6 @@
 		"c1MaxPrice": 3,
 		"c2MinPrice": 0.001,
 		"c2MaxPrice": 3,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "4-7/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 4,
-		"c2ID": 7,
-		"c1Name": "starknet",
-		"c2Name": "optimism",
-		"t1Address": "0x00da114221cb83fa859dbdb4c44beeaa0bb37c7537ad5ae66fe5e0efd20e6eb3",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 2.3,
-		"c2TradingFee": 1.5,
-		"c1GasFee": 0,
-		"c2GasFee": 5,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
@@ -5628,40 +5152,6 @@
 		"c1MaxPrice": 10000,
 		"c2MinPrice": 0.1,
 		"c2MaxPrice": 10000,
-		"c1AvalibleDeposit": 1000,
-		"c2AvalibleDeposit": 1000,
-		"c1AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		],
-		"c2AvalibleTimes": [
-			{
-				"startTime": 0,
-				"endTime": 99999999999999
-			}
-		]
-	},
-	{
-		"id": "6-7/DAI",
-		"tName": "DAI",
-		"makerAddress": "0x095d2918b03b2e86d68551dcf11302121fb626c9",
-		"c1ID": 6,
-		"c2ID": 7,
-		"c1Name": "polygon",
-		"c2Name": "optimism",
-		"t1Address": "0x8f3cf7ad23cd3cadbd9735aff958023239c6a063",
-		"t2Address": "0xda10009cbd5d07dd0cecc66161fc93d7c9000da1",
-		"precision": 18,
-		"c1TradingFee": 2.3,
-		"c2TradingFee": 1.3,
-		"c1GasFee": 0.2,
-		"c2GasFee": 0.2,
-		"c1MinPrice": 0.1,
-		"c1MaxPrice": 3000,
-		"c2MinPrice": 0.1,
-		"c2MaxPrice": 3000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [
