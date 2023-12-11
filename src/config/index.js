@@ -5,9 +5,8 @@ import { $env as env } from '../env';
 
 export const isProd = () => process.env.VUE_APP_ENV === 'production';
 const maker = require(`./${isProd() ? `maker.json` : `makerTest.json`}`)
-const cacheChain = JSON.parse(localStorage.getItem('netWorkChain') || '[]')
 const cacheMaker = JSON.parse(localStorage.getItem('netWorkMaker') || '{}')
-let chain = cacheChain.length ? cacheChain : isProd() ? chainMain : chainTest
+let chain = isProd() ? chainMain : chainTest
 let chainConfig = []
 let makerConfigs = []
 let v1MakerConfigs = []
@@ -126,19 +125,15 @@ async function pullNetworkConfig() {
   if (
       +timestampCache !== +timestamp ||
       !localStorage.getItem('netWorkEnv') ||
-      !localStorage.getItem('netWorkChain') ||
       !localStorage.getItem('netWorkMaker')
   ) {
-    const netWorkChain = await http.get('chain')
     const netWorkMaker = await http.get('maker')
     const frontendEnv = await http.get('frontend/env')
     if (frontendEnv) {
       const netWorkEnv = Object.assign(env, frontendEnv)
       localStorage.setItem('netWorkEnv', JSON.stringify(netWorkEnv))
     }
-    if (netWorkChain && netWorkMaker) {
-      chain = netWorkChain
-      localStorage.setItem('netWorkChain', JSON.stringify(netWorkChain))
+    if (netWorkMaker) {
       localStorage.setItem('netWorkMaker', JSON.stringify(netWorkMaker))
       localStorage.setItem('timestamp', String(timestamp))
       return convertMakerConfig(netWorkMaker)

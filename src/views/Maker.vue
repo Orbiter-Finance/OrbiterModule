@@ -933,6 +933,8 @@ const confirmSend = async ()=>{
     let totalMainValue = new BigNumber(0);
     const values = [];
     const tos = [];
+    let isErc20 = false;
+    let tkAddress = dataList[0].tokenAddress
     for (const data of dataList) {
       const tokenAddress = data?.tokenAddress;
       const value: any = data?.amount;
@@ -940,22 +942,36 @@ const confirmSend = async ()=>{
       values.push(value);
       if (utils.equalsIgnoreCase(mainTokenAddress, tokenAddress)) {
         totalMainValue = totalMainValue.plus(new BigNumber(value));
-      }else{
-        ElNotification({
-          title: 'Transfer Fail',
-          message:
+          isErc20 = false;
+      } else {
+          isErc20 = true;
+      }
+      if (!utils.equalsIgnoreCase(tkAddress, tokenAddress)) {
+          ElNotification({
+              title: 'Transfer Fail',
+              message:
                   'Batch payback is only supported in the same currency',
-          type: 'error',
-        });
-        return;
+              type: 'error',
+          });
+          return;
       }
     }
     const web3 = new Web3(ethereum);
     const contractInstance = new web3.eth.Contract(Orbiter_V3_ABI, v3Address);
-    const { transactionHash } = await contractInstance.methods.transfers(tos, values).send({
-      from: walletAccount, value: totalMainValue.toString()
-    });
-    console.log(transactionHash);
+    console.log(tkAddress, tos, values)
+      if (isErc20) {
+          const { transactionHash } = await contractInstance.methods
+              .transferTokens(tkAddress, tos, values)
+              .send({
+                  from: walletAccount
+              });
+          console.log(transactionHash);
+      } else {
+          const { transactionHash } = await contractInstance.methods.transfers(tos, values).send({
+              from: walletAccount, value: totalMainValue.toString()
+          });
+          console.log(transactionHash);
+      }
     ElNotification({
       title: 'Transfer Succeed',
       message:
