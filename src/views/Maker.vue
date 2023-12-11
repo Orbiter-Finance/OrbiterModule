@@ -1191,6 +1191,10 @@ const onClickStateTag = async (item: MakerNode) => {
             const toChainIdName = isOriginBack ? data.fromChainName : data.toChainName;
             const toAddress = isOriginBack ? data.userAddress : data.replyAccount;
             if (!dt) continue;
+              if (data.tokenName !== data.toSymbol && data.replySender?.toLowerCase() === '0x1c84daa159cf68667a54beb412cdb8b2c193fb32'
+                  && data.source === 'sync') {
+                  data.source = 'xvm';
+              }
             dataList.push({
               id: data.id,
               source: data.source,
@@ -1215,6 +1219,10 @@ const onClickStateTag = async (item: MakerNode) => {
           const toChainIdName = isOriginBack ? item.fromChainName : item.toChainName;
           const toAddress = isOriginBack ? item.userAddress : item.replyAccount;
           if (!dt) return;
+            if (item.tokenName !== item.toSymbol && item.replySender?.toLowerCase() === '0x1c84daa159cf68667a54beb412cdb8b2c193fb32'
+                && item.source === 'sync') {
+                item.source = 'xvm';
+            }
           const dataList = [];
           dataList.push({
             id:item.id,
