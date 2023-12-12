@@ -119,34 +119,7 @@ function convertMakerConfig(maker) {
 
 convertMakerConfig(maker)
 
-async function pullNetworkConfig() {
-  const timestamp = await http.get('frontend/v')
-  const timestampCache = localStorage.getItem('timestamp')
-  if (
-      +timestampCache !== +timestamp ||
-      !localStorage.getItem('netWorkEnv') ||
-      !localStorage.getItem('netWorkMaker')
-  ) {
-    const netWorkMaker = await http.get('maker')
-    const frontendEnv = await http.get('frontend/env')
-    if (frontendEnv) {
-      const netWorkEnv = Object.assign(env, frontendEnv)
-      localStorage.setItem('netWorkEnv', JSON.stringify(netWorkEnv))
-    }
-    if (netWorkMaker) {
-      localStorage.setItem('netWorkMaker', JSON.stringify(netWorkMaker))
-      localStorage.setItem('timestamp', String(timestamp))
-      return convertMakerConfig(netWorkMaker)
-    }
-  } else {
-    Object.assign(env, JSON.parse(localStorage.getItem('netWorkEnv') || '{}'))
-    return convertMakerConfig(
-        Object.keys(cacheMaker).length ? cacheMaker : maker
-    )
-  }
-}
-
 const isSensitive = window.location.host == "rinkeby_dashboard.orbiter.finance";
 // const isSensitive = window.location.host == "localhost:8080";
 
-export default { pullNetworkConfig, chainConfig, makerConfigs, isSensitive };
+export default { chainConfig, makerConfigs, isSensitive };
