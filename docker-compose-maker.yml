@@ -9,6 +9,10 @@ services:
   backend:
     build: ./backend
     command: yarn run start
+    deploy:
+      resources:
+        limits:
+          memory: 6G
     environment:
       NODE_ENV: 'development'
       ORBITER_SCENE: maker # dashboard: only dashboard | maker: only maker service | all
@@ -24,6 +28,7 @@ services:
       MAKER_FILE: '${MAKER_FILE}'
       RABBIT_MQ: '${RABBIT_MQ}'
       QUEUE_NAME: '${QUEUE_NAME}'
+      NODE_OPTIONS: --max-old-space-size=8192
     volumes:
       - './backend/logs:/app/logs'
       - './backend/runtime:/app/runtime'
