@@ -311,6 +311,12 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
           continue
         }
         const toChainInternalId = Number(result.pText) - 9000;
+        if (+toChainInternalId==2) {
+          accessLogger.error(
+            `Offline to AR ${transactionID} ， ${tx.hash}`
+          )
+          continue;
+        }
         // if (toChainInternalId == 4 || toChainInternalId == 3) {
         //   const logger = LoggerService.getLogger("tx", {
         //       dir: `logs/UncollectedPayment/`
