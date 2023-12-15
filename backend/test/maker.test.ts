@@ -1,15 +1,25 @@
 import * as makerCore from '../src/util/maker/core'
 // import { getProviderV4, StarknetHelp } from "../src/service/starknet/helper";
-
 // import { Account, Contract, defaultProvider, ec, json, number, SequencerProvider, stark, hash, uint256, cairo, RpcProvider, CallData } from 'starknet';
 // import ERC20Abi from "../src/service/starknet/ERC20.json";
 import { getProviderV4, StarknetHelp } from "../src/service/starknet/helper";
+import { MakerWeb3 } from "../src/util/web3";
+import { chains } from "orbiter-chaincore/src/utils";
+import mainnetChains from "../src/config/chains.json";
+import testnetChains from "../src/config/testnet.json";
+
+chains.fill(<any>[...mainnetChains, ...testnetChains])
 // import { StarknetHelp } from "../src/service/starknet/helper";
 
 describe('maker', () => {
   describe('makerCore', () => {
-    it('test starknet', async () => {
+      it('test balance', async () => {
+          const makerWeb3 = new MakerWeb3(5);
+          const balance = await makerWeb3.getBalance(5, '', '0x0000000000000000000000000000000000000000');
+          console.log('balance', String(balance));
+      }, 1800 * 1000)
 
+    it('test starknet', async () => {
 
       // const provider = getProviderV4("https://starknet-testnet.public.blastapi.io")
       // try {
