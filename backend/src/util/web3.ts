@@ -2,7 +2,9 @@ import Web3 from 'web3';
 import { telegramBot } from "../sms/telegram";
 import { makerConfig } from "../config";
 import { errorLogger } from "./logger";
-import { ChainServiceTokenBalance } from "orbiter-chaincore/src/packages/token-balance";
+import { chains } from "orbiter-chaincore";
+import BigNumber from "bignumber.js";
+import { ERC20_ABI } from "../config/ABI";
 
 export class MakerWeb3 {
     public web3: Web3;
@@ -110,9 +112,20 @@ export class MakerWeb3 {
 
     async getBalance(chainId: number, address: string, tokenAddress: string) {
         try {
-            const chainService = new ChainServiceTokenBalance(String(chainId));
-            const result = await chainService.getBalance(address, tokenAddress);
-            return result?.balance;
+            const chainInfo = chains.getChainInfo(Number(chainId));
+            if (!chainInfo) {
+                throw new Error(`none of ${chainId} chain config`);
+            }
+            if (chainInfo.nativeCurrency.address.toLowerCase() === tokenAddress.toLowerCase()) {
+                const value = await this.web3.eth.getBalance(address);
+                return new BigNumber(value);
+            }
+            const tokenContract = new this.web3.eth.Contract(
+                <any>ERC20_ABI,
+                tokenAddress,
+            );
+            const tokenBalance = await tokenContract.methods.balanceOf(address).call();
+            return new BigNumber(tokenBalance);
         } catch (e) {
             await this.refreshWeb3(this.getNewRpc("getBalance"));
             throw new Error(e);
