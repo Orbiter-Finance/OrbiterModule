@@ -1270,7 +1270,8 @@ export async function sendConsumer(value: any) {
             // remove exist cache
             chainTransferMap?.delete(transactionID);
             //
-            chainQueue[Number(chainID)].enqueue(transactionID, value).catch(error => {
+            const queueKey = `${chainID}-${makerAddress}`.toLocaleLowerCase();
+            chainQueue[queueKey].enqueue(transactionID, value).catch(error => {
               errorLogger.warn(`${transactionID} retry enqueue error: ${error}`);
             });
           }

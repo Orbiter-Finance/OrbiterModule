@@ -575,10 +575,11 @@ export async function sendTransaction(
   }
   // accessLogger.info(
   //   `${transactionID} [${process.pid}] Send Queue ${transactionID}`)
-  if (!chainQueue[Number(toChainID)]) {
-    throw new Error(`No queue created ${toChainID}`);
+  const queueKey = `${toChainID}-${makerAddress}`.toLocaleLowerCase();
+  if (!chainQueue[queueKey]) {
+    throw new Error(`No queue created ${queueKey}`);
   }
-  chainQueue[Number(toChainID)].enqueue(transactionID, {
+  chainQueue[queueKey].enqueue(transactionID, {
     transactionID,
     makerAddress,
     toAddress,

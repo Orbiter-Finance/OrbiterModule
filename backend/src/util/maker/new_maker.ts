@@ -129,18 +129,14 @@ export async function startNewMakerTrxPull() {
   const convertMakerList = groupWatchAddressByChain(makerList)
   const scanChain = new ScanChainMain(<any>allChainsConfig)
   for (const intranetId in convertMakerList) {
-    convertMakerList[intranetId].forEach((address) => {
-      if (address) {
-        const pullKey = `${intranetId}:${address.toLowerCase()}`
-        transfers.set(intranetId, new Map())
-        LastPullTxMap.set(pullKey, Date.now() + 1000 * programStartTimeDelay)
-      }
-    })
-    // 
     const insideChainId = Number(intranetId);
-    if (!chainQueue[insideChainId]) {
-      chainQueue[insideChainId] = new MessageQueue(`chain:${insideChainId}`, sendConsumer);
-      chainQueue[insideChainId].consumeQueue(async (error, result) => {
+    for (const address of convertMakerList[intranetId]) {
+      const pullKey = `${intranetId}:${address.toLowerCase()}`
+      transfers.set(intranetId, new Map())
+      LastPullTxMap.set(pullKey, Date.now() + 1000 * programStartTimeDelay)
+      const queueKey = `${insideChainId}-${address}`.toLocaleLowerCase();
+      chainQueue[queueKey] = new MessageQueue(`queue:${queueKey}`, sendConsumer);
+      chainQueue[queueKey].consumeQueue(async (error, result) => {
         if (error) {
           accessLogger.error(`An error occurred while consuming messages ${error}`);
           return;
@@ -149,6 +145,7 @@ export async function startNewMakerTrxPull() {
         return true;
       })
     }
+    // 
     pubSub.subscribe(`${intranetId}:txlist`, (result) => {
       subscribeNewTransaction(result);
       return true;
