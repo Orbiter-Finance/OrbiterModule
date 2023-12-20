@@ -225,7 +225,7 @@ export class TransactionService {
         break;
       case 'USDC':
       case 'USDT':
-        if (+chainId === 15) {
+        if (+chainId === 15 || +chainId === 38) {
           amount = new BigNumber(value).dividedBy(10 ** 18);
         } else {
           amount = new BigNumber(value).dividedBy(10 ** 6);
