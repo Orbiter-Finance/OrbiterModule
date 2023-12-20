@@ -547,10 +547,10 @@ export async function transforeData(list = []) {
     // format tokenName and amounts
     let fromDecimals = token2Decimals[item.tokenName]
     let toDecimals = token2Decimals[item.tokenName]
-    if (+item.fromChain === 15) {
+    if (+item.fromChain === 15 || +item.fromChain === 38) {
       fromDecimals = 18
     }
-    if (+item.toChain === 15) {
+    if (+item.toChain === 15 || +item.toChain === 38) {
       toDecimals = 18
     }
     item['fromChainName'] = await getChainName(item.fromChain)
