@@ -143,6 +143,10 @@ export class TransactionService {
       // sqlLog += ` and toChain = ${query['toChain']} `;
     }
 
+    if (makerAddress.includes('0x80c67432656d59144ceff962e8faf8926599bcf8') || makerAddress.includes('0xe4edb277e41dc89ab076a1f049f4a3efa700bce8') || makerAddress.includes('0xee73323912a4e3772b74ed0ca1595a152b0ef282')) {
+      whereSql += ` and (inSymbol = ? or inSymbol = 'BNB')`;
+      whreeParmas.push("ETH");
+    }
     if (makerAddress.find(item => item.toLowerCase() === "0xd7aa9ba6caac7b0436c91396f22ca5a7f31664fc")) {
       whereSql += ' and inSymbol = ?';
       whreeParmas.push("USDT");
