@@ -809,7 +809,8 @@
             "address": "0x0000000000000000000000000000000000000000"
         },
         "rpc": [
-            "https://rpc.zkfair.io"
+            "https://rpc.zkfair.io",
+            "https://dev-rpc.zkfair.io"
         ],
         "watch": [
             "rpc"
