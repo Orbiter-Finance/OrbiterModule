@@ -454,12 +454,12 @@ export async function statisticsProfitOld(
 
   let fromPrecision = fromToPrecision;
   let toPrecision = fromToPrecision;
-  if (+makerNode.fromChain === 15) {
+  if (+makerNode.fromChain === 15 || +makerNode.fromChain === 38) {
     fromPrecision = 18;
   } else {
     fromPrecision = token2Decimals[fromToCurrency];
   }
-  if (+makerNode.toChain === 15) {
+  if (+makerNode.toChain === 15 || +makerNode.toChain === 38) {
     toPrecision = 18;
   } else {
     toPrecision = token2Decimals[fromToCurrency];
