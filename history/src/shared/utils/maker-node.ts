@@ -451,6 +451,9 @@ export async function statisticsProfitOld(
       gasPrecision = item.precision
     }
   }
+  if (+makerNode.toChain === 38) {
+    gasPrecision = 18;
+  }
 
   let fromPrecision = fromToPrecision;
   let toPrecision = fromToPrecision;
