@@ -5304,6 +5304,40 @@
 		]
 	},
 	{
+		"id": "4-38/ETH",
+		"tName": "ETH",
+		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+		"c1ID": 4,
+		"c2ID": 38,
+		"c1Name": "starknet",
+		"c2Name": "zkfair",
+		"t1Address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+		"t2Address": "0x4b21b980d0dc7d3c0c6175b0a412694f3a1c7c6b",
+		"precision": 18,
+		"c1TradingFee": 0.0005,
+		"c2TradingFee": 0.0007,
+		"c1GasFee": 0.5,
+		"c2GasFee": 0.5,
+		"c1MinPrice": 0.001,
+		"c1MaxPrice": 3,
+		"c2MinPrice": 0.001,
+		"c2MaxPrice": 3,
+		"c1AvalibleDeposit": 1000,
+		"c2AvalibleDeposit": 1000,
+		"c1AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		],
+		"c2AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		]
+	},
+	{
 		"id": "6-7/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -10642,6 +10676,40 @@
 		]
 	},
 	{
+		"id": "19-38/USDC",
+		"tName": "USDC",
+		"makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
+		"c1ID": 19,
+		"c2ID": 38,
+		"c1Name": "scroll",
+		"c2Name": "zkfair",
+		"t1Address": "0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4",
+		"t2Address": "0x0000000000000000000000000000000000000000",
+		"precision": 18,
+		"c1TradingFee": 1.2,
+		"c2TradingFee": 1.4,
+		"c1GasFee": 1.5,
+		"c2GasFee": 1.5,
+		"c1MinPrice": 0.1,
+		"c1MaxPrice": 10000,
+		"c2MinPrice": 0.1,
+		"c2MaxPrice": 10000,
+		"c1AvalibleDeposit": 1000,
+		"c2AvalibleDeposit": 1000,
+		"c1AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		],
+		"c2AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		]
+	},
+	{
 		"id": "21-23/ETH",
 		"tName": "ETH",
 		"makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -10864,6 +10932,40 @@
 		"c1MaxPrice": 3,
 		"c2MinPrice": 0.001,
 		"c2MaxPrice": 3,
+		"c1AvalibleDeposit": 1000,
+		"c2AvalibleDeposit": 1000,
+		"c1AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		],
+		"c2AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		]
+	},
+	{
+		"id": "21-38/USDC",
+		"tName": "USDC",
+		"makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
+		"c1ID": 21,
+		"c2ID": 38,
+		"c1Name": "base",
+		"c2Name": "zkfair",
+		"t1Address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+		"t2Address": "0x0000000000000000000000000000000000000000",
+		"precision": 18,
+		"c1TradingFee": 1.2,
+		"c2TradingFee": 1.4,
+		"c1GasFee": 1.5,
+		"c2GasFee": 1.5,
+		"c1MinPrice": 0.1,
+		"c1MaxPrice": 10000,
+		"c2MinPrice": 0.1,
+		"c2MaxPrice": 10000,
 		"c1AvalibleDeposit": 1000,
 		"c2AvalibleDeposit": 1000,
 		"c1AvalibleTimes": [

@@ -2618,6 +2618,40 @@
 		]
 	},
 	{
+		"id": "4-38/ETH",
+		"tName": "ETH",
+		"makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+		"c1ID": 4,
+		"c2ID": 38,
+		"c1Name": "starknet",
+		"c2Name": "zkfair",
+		"t1Address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+		"t2Address": "0x4b21b980d0dc7d3c0c6175b0a412694f3a1c7c6b",
+		"precision": 18,
+		"c1TradingFee": 0.0005,
+		"c2TradingFee": 0.0007,
+		"c1GasFee": 0.5,
+		"c2GasFee": 0.5,
+		"c1MinPrice": 0.001,
+		"c1MaxPrice": 3,
+		"c2MinPrice": 0.001,
+		"c2MaxPrice": 3,
+		"c1AvalibleDeposit": 1000,
+		"c2AvalibleDeposit": 1000,
+		"c1AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		],
+		"c2AvalibleTimes": [
+			{
+				"startTime": 0,
+				"endTime": 99999999999999
+			}
+		]
+	},
+	{
 		"id": "6-7/ETH",
 		"tName": "ETH",
 		"makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
