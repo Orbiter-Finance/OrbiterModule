@@ -796,6 +796,9 @@
         "internalId": "38",
         "name": "zkfair",
         "debug": false,
+        "features": [
+            "Etherscan"
+        ],
         "contracts": [
             "0xd9d74a29307cc6fc8bf424ee4217f1a587fbc8dc"
         ],
@@ -809,8 +812,8 @@
             "address": "0x0000000000000000000000000000000000000000"
         },
         "rpc": [
-            "https://rpc.zkfair.io",
-            "https://dev-rpc.zkfair.io"
+            "https://dev-rpc.zkfair.io",
+            "https://rpc.zkfair.io"
         ],
         "watch": [
             "rpc"
