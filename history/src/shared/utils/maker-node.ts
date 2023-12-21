@@ -484,7 +484,7 @@ export async function statisticsProfitOld(
 
     if (makerNode.gasCurrency) {
       if (+makerNode.fromChain === 38) {
-        gasPrecision = token2Decimals[gasPrecision];
+        gasPrecision = token2Decimals[makerNode.gasCurrency];
       }
 
       const gasAmountUsd = await exchangeToUsd(
