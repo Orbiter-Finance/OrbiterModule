@@ -483,8 +483,8 @@ export async function statisticsProfitOld(
     }
 
     if (makerNode.gasCurrency) {
-      if (+makerNode.fromChain === 38) {
-        gasPrecision = token2Decimals[makerNode.gasCurrency];
+      if (+makerNode.fromChain === 38 && makerNode.tokenName === "USDC") {
+        fromMinusToUsd = new BigNumber(makerNode.fromAmount).dividedBy(10 ** 18).minus(new BigNumber(makerNode.toAmount).dividedBy(10 ** toPrecision));
       }
 
       const gasAmountUsd = await exchangeToUsd(
