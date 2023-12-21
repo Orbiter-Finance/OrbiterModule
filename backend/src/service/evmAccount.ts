@@ -412,7 +412,7 @@ export class EVMAccount {
             const value: any = valueList[i];
             totalValue = totalValue.plus(value);
         }
-        this.logger.info("swap total value", totalValue.toString());
+        this.logger.info("swap total value", totalValue.toFixed(0));
 
         const ifa = new ethers.utils.Interface(Orbiter_Router_ABI);
         const calldata = ifa.encodeFunctionData("transfers", [
@@ -433,7 +433,7 @@ export class EVMAccount {
         const transactionRequest: ethers.providers.TransactionRequest = {
             from: this.wallet.address,
             to: contractAddress,
-            value: ethers.BigNumber.from(totalValue.toString()),
+            value: ethers.BigNumber.from(totalValue.toFixed(0)),
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,
         };
