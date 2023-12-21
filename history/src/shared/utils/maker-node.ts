@@ -482,11 +482,11 @@ export async function statisticsProfitOld(
       gasPricePaidRate = GAS_PRICE_PAID_RATE[makerNode.toChain]
     }
 
-    if (makerNode.gasCurrency) {
-      if (+makerNode.fromChain === 38 && makerNode.tokenName === "USDC") {
-        fromMinusToUsd = new BigNumber(makerNode.fromAmount).dividedBy(10 ** 18).minus(new BigNumber(makerNode.toAmount).dividedBy(10 ** toPrecision));
-      }
+    if (+makerNode.fromChain === 38 && makerNode.tokenName === "USDC") {
+      fromMinusToUsd = new BigNumber(makerNode.fromAmount).dividedBy(10 ** 18).minus(new BigNumber(makerNode.toAmount).dividedBy(10 ** toPrecision));
+    }
 
+    if (makerNode.gasCurrency) {
       const gasAmountUsd = await exchangeToUsd(
         new BigNumber(makerNode.gasAmount)
           .multipliedBy(gasPricePaidRate)
