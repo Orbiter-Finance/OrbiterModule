@@ -483,6 +483,10 @@ export async function statisticsProfitOld(
     }
 
     if (+makerNode.fromChain === 38 && makerNode.tokenName === "USDC") {
+      toPrecision = 6;
+      if (+makerNode.toChain === 15) {
+        toPrecision = 18;
+      }
       fromMinusToUsd = new BigNumber(makerNode.fromAmount).dividedBy(10 ** 18).minus(new BigNumber(makerNode.toAmount).dividedBy(10 ** toPrecision));
     }
 
