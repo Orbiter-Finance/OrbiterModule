@@ -72,6 +72,7 @@ export class EVMAccount {
     private readonly txKey: string;
 
     private cacheConfig: any = {};
+    private prevAlert: number = new Date();
     constructor(
         protected internalId: number,
         protected tokenAddress: string,
@@ -97,7 +98,7 @@ export class EVMAccount {
             setInterval(() => {
                 this.readVariableConfigCache()
             }, 1000 * 10);
-        }catch(error) {
+        } catch (error) {
             accessLogger.error(`${this.chainConfig.internalId} read config to cache error ${error.message}`)
         }
 
@@ -654,9 +655,13 @@ export class EVMAccount {
                 makerBalance = new BigNumber(await this.makerWeb3.getBalance(chainId, makerAddress, tokenAddress));
             } catch (e) {
                 this.logger.error(`getBalance error ${e.message}`);
-                telegramBot.sendMessage(`getBalance error ${e.message}`).catch(error => {
-                    this.logger.error(`send telegram message error ${error.stack}`);
-                });
+                if (Date.now() - this.prevAlert > 3 * 1000 * 60) {
+                    this.prevAlert = Date.now();
+                    telegramBot.sendMessage(`getBalance error ${e.message}`).catch(error => {
+                        this.logger.error(`send telegram message error ${error.stack}`);
+                    });
+                }
+
                 // await this.refreshProvider();
                 // return { code: 1 };
             }
