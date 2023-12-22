@@ -72,7 +72,7 @@ export class EVMAccount {
     private readonly txKey: string;
 
     private cacheConfig: any = {};
-    private prevAlert: number = new Date();
+    private prevAlert: number = Date.now();
     constructor(
         protected internalId: number,
         protected tokenAddress: string,
@@ -657,7 +657,7 @@ export class EVMAccount {
                 this.logger.error(`getBalance error ${e.message}`);
                 if (Date.now() - this.prevAlert > 3 * 1000 * 60) {
                     this.prevAlert = Date.now();
-                    telegramBot.sendMessage(`getBalance error ${e.message}`).catch(error => {
+                    telegramBot.sendMessage(`getBalance error ${this.internalId} ${e.message}`).catch(error => {
                         this.logger.error(`send telegram message error ${error.stack}`);
                     });
                 }
