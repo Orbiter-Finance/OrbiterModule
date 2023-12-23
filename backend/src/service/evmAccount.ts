@@ -41,6 +41,7 @@ let gasMulti: number = 1.2;
 let gasMaxPrice: number = 200000000000;
 
 interface IJobParams {
+    defaultGasLimit: number;
     waringInterval: number;
     execTaskCount: number;
     maxTaskCount: number;
@@ -246,7 +247,8 @@ export class EVMAccount {
                 rpcManualSwitch: 0,
                 rpcIndex: 0,
                 banFromChainId: [],
-                clearTaskAlarmInterval: 0
+                clearTaskAlarmInterval: 0,
+                defaultGasLimit: 100000,
             });
         } catch (e) {
             this.logger.error(`readVariableConfigCache error: ${e.message}`);
@@ -343,7 +345,9 @@ export class EVMAccount {
             });
         } catch (error) {
             this.logger.error(`transfer estimateGas error ${error.message}`);
-            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+            const variableConfig = await this.getVariableConfig();
+            const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
+            transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
@@ -382,7 +386,9 @@ export class EVMAccount {
             });
         } catch (error) {
             this.logger.error(`transfer token estimateGas error ${error.message}`);
-            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+            const variableConfig = await this.getVariableConfig();
+            const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
+            transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
@@ -447,7 +453,9 @@ export class EVMAccount {
             });
         } catch (error) {
             this.logger.error(`swap estimateGas error ${error.message}`);
-            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+            const variableConfig = await this.getVariableConfig();
+            const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
+            transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
@@ -504,7 +512,9 @@ export class EVMAccount {
             });
         } catch (error) {
             this.logger.error(`swap token estimateGas error ${error.message}`);
-            transactionRequest.gasLimit = ethers.BigNumber.from(100000);
+            const variableConfig = await this.getVariableConfig();
+            const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
+            transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
         await this.getGasPrice(transactionRequest);
         const { nonce, commit } = await this.takeOutNonce();
