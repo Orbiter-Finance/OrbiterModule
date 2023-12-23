@@ -41,6 +41,7 @@ let gasMulti: number = 1.2;
 let gasMaxPrice: number = 200000000000;
 
 interface IJobParams {
+    gasLimitMulti: number;
     defaultGasLimit: number;
     waringInterval: number;
     execTaskCount: number;
@@ -249,6 +250,7 @@ export class EVMAccount {
                 banFromChainId: [],
                 clearTaskAlarmInterval: 0,
                 defaultGasLimit: 100000,
+                gasLimitMulti: 1
             });
         } catch (e) {
             this.logger.error(`readVariableConfigCache error: ${e.message}`);
@@ -337,15 +339,20 @@ export class EVMAccount {
             value: ethers.BigNumber.from(value),
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
         };
+        const variableConfig = await this.getVariableConfig();
         try {
             transactionRequest.gasLimit = await this.provider.estimateGas({
                 from: transactionRequest.from,
                 to: transactionRequest.to,
                 value: transactionRequest.value,
             });
+            if (variableConfig.gasLimitMulti) {
+                transactionRequest.gasLimit = ethers.BigNumber.from(
+                    new BigNumber(transactionRequest.gasLimit.toString()).multipliedBy(+variableConfig.gasLimitMulti).toFixed(0)
+                );
+            }
         } catch (error) {
             this.logger.error(`transfer estimateGas error ${error.message}`);
-            const variableConfig = await this.getVariableConfig();
             const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
             transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
@@ -377,6 +384,7 @@ export class EVMAccount {
                 .transfer(to, value)
                 .encodeABI(),
         };
+        const variableConfig = await this.getVariableConfig();
         try {
             transactionRequest.gasLimit = await this.provider.estimateGas({
                 from: transactionRequest.from,
@@ -384,9 +392,13 @@ export class EVMAccount {
                 value: transactionRequest.value,
                 data: transactionRequest.data,
             });
+            if (variableConfig.gasLimitMulti) {
+                transactionRequest.gasLimit = ethers.BigNumber.from(
+                    new BigNumber(transactionRequest.gasLimit.toString()).multipliedBy(+variableConfig.gasLimitMulti).toFixed(0)
+                );
+            }
         } catch (error) {
             this.logger.error(`transfer token estimateGas error ${error.message}`);
-            const variableConfig = await this.getVariableConfig();
             const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
             transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
@@ -444,6 +456,7 @@ export class EVMAccount {
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,
         };
+        const variableConfig = await this.getVariableConfig();
         try {
             transactionRequest.gasLimit = await this.provider.estimateGas({
                 from: transactionRequest.from,
@@ -451,9 +464,13 @@ export class EVMAccount {
                 value: transactionRequest.value,
                 data: transactionRequest.data,
             });
+            if (variableConfig.gasLimitMulti) {
+                transactionRequest.gasLimit = ethers.BigNumber.from(
+                    new BigNumber(transactionRequest.gasLimit.toString()).multipliedBy(+variableConfig.gasLimitMulti).toFixed(0)
+                );
+            }
         } catch (error) {
             this.logger.error(`swap estimateGas error ${error.message}`);
-            const variableConfig = await this.getVariableConfig();
             const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
             transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
@@ -503,6 +520,7 @@ export class EVMAccount {
             chainId: Number(this.chainConfig.networkId) || await this.wallet.getChainId(),
             data: calldata,
         };
+        const variableConfig = await this.getVariableConfig();
         try {
             transactionRequest.gasLimit = await this.provider.estimateGas({
                 from: transactionRequest.from,
@@ -510,9 +528,13 @@ export class EVMAccount {
                 value: transactionRequest.value,
                 data: transactionRequest.data,
             });
+            if (variableConfig.gasLimitMulti) {
+                transactionRequest.gasLimit = ethers.BigNumber.from(
+                    new BigNumber(transactionRequest.gasLimit.toString()).multipliedBy(+variableConfig.gasLimitMulti).toFixed(0)
+                );
+            }
         } catch (error) {
             this.logger.error(`swap token estimateGas error ${error.message}`);
-            const variableConfig = await this.getVariableConfig();
             const defaultGasLimit = variableConfig.defaultGasLimit || 100000;
             transactionRequest.gasLimit = ethers.BigNumber.from(defaultGasLimit);
         }
