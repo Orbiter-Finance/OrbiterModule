@@ -159,6 +159,7 @@ export async function startNewMakerTrxPull() {
   })
 
   if (process.env["RABBIT_MQ"]) {
+    let prevAlert = 0;
     const mq = new RabbitMQ({ url: String(process.env["RABBIT_MQ"]) });
     await mq.connect();
     mq.consumer.consume(async message => {
@@ -180,23 +181,35 @@ export async function startNewMakerTrxPull() {
           return true;
         }
         const watch = ChainFactory.createWatchChainByIntranetId(String(chainInfo.internalId));
-        const entity: any = await watch.chain.getTransactionByHash(String(tx.sourceId));
-        if (entity) {
-          accessLogger.info(
-            `MQ receive success: ${tx.sourceId} ${+entity.timestamp && dayjs(Number(+entity.timestamp * 1000)).format("YYYY-MM-DD HH:mm:ss")}`
-          );
-          subscribeNewTransaction([entity]);
-        } else {
-          accessLogger.info(
-            `MQ receive empty: ${tx.sourceId}`
-          );
+        for (let i=1;i<=3;i++) {
+          try {
+            const entity: any = await watch.chain.getTransactionByHash(String(tx.sourceId));
+            if (entity) {
+              accessLogger.info(
+                `MQ receive success: ${tx.sourceId} ${+entity.timestamp && dayjs(Number(+entity.timestamp * 1000)).format("YYYY-MM-DD HH:mm:ss")}`
+              );
+              subscribeNewTransaction([entity]);
+            } else {
+              accessLogger.info(
+                `MQ receive empty: ${tx.sourceId}`
+              );
+            }
+            break;
+          }catch(error) {
+            if (i>=3) {
+              throw error;
+            }
+          }
         }
         return true;
       } catch (error) {
         errorLogger.error(`Consumption transaction list failed`, error);
-        telegramBot.sendMessage(`MQ error ${error.message}`).catch(error => {
-          this.logger.error(`send telegram message error ${error.stack}`);
-        });
+        if (Date.now() - prevAlert > 1000 * 60) {
+          prevAlert = Date.now();
+          telegramBot.sendMessage(`MQ error ${error.message}`).catch(error => {
+            this.logger.error(`send telegram message error ${error.stack}`);
+          });
+        }
         return true;
       }
     });
