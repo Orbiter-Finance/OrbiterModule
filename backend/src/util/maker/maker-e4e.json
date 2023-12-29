@@ -657,7 +657,7 @@
 		"t2Address": "0x0000000000000000000000000000000000000000",
 		"precision": 18,
 		"c1TradingFee": 0.001,
-		"c2TradingFee": 0.001,
+		"c2TradingFee": 0.0058,
 		"c1GasFee": 0,
 		"c2GasFee": 1.5,
 		"c1MinPrice": 0.001,
