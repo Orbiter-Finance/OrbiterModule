@@ -422,7 +422,7 @@ export function getAmountToSend(
   );
   const result = getTAmountFromRAmount(
     toChainID,
-    readyAmount.toFixed(),
+    readyAmount.toFixed(0),
     nonceStr,
   );
   if (result) {
