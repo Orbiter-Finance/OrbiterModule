@@ -60,7 +60,7 @@ export class RabbitMQ {
           this.consumer = await this.createConsumer();
           this.channel.on("error", async err => {
             this.channel = await this.createChannel();
-            errorLogger.error(`channel error: ${err.message}`);
+            errorLogger.error(`RabbitMQ channel error: ${err.message}`);
           });
           resolve(this.connection);
         })
