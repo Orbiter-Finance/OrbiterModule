@@ -1413,7 +1413,41 @@ const initMakerList = [
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "1-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 1,
+    "c2ID": 36,
+    "c1Name": "mainnet",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -2801,13 +2835,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "2-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 2,
+    "c2ID": 36,
+    "c1Name": "arbitrum",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -4093,13 +4161,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "3-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 3,
+    "c2ID": 36,
+    "c1Name": "zksync",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -5249,13 +5351,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.0013,
-    "c2TradingFee": 0.0013,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "4-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 4,
+    "c2ID": 36,
+    "c1Name": "starknet",
+    "c2Name": "kroma",
+    "t1Address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -5290,6 +5426,40 @@ const initMakerList = [
     "c1MaxPrice": 10000,
     "c2MinPrice": 0.1,
     "c2MaxPrice": 10000,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "4-38/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 4,
+    "c2ID": 38,
+    "c1Name": "starknet",
+    "c2Name": "zkfair",
+    "t1Address": "0x049d36570d4e46f48e99674bd3fcc84644ddd6b96f7c741b1562b82f9e004dc7",
+    "t2Address": "0x4b21b980d0dc7d3c0c6175b0a412694f3a1c7c6b",
+    "precision": 18,
+    "c1TradingFee": 0.0005,
+    "c2TradingFee": 0.0007,
+    "c1GasFee": 0.5,
+    "c2GasFee": 0.5,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0.001,
+    "c2MaxPrice": 3,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -6303,13 +6473,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "6-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 6,
+    "c2ID": 36,
+    "c1Name": "polygon",
+    "c2Name": "kroma",
+    "t1Address": "0x7ceb23fd6bc0add59e62ac25578270cff1b9f619",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -7289,13 +7493,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "7-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 7,
+    "c2ID": 36,
+    "c1Name": "optimism",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -8615,13 +8853,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "14-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 14,
+    "c2ID": 36,
+    "c1Name": "zksync2",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -9295,13 +9567,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "15-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 15,
+    "c2ID": 36,
+    "c1Name": "bnbchain",
+    "c2Name": "kroma",
+    "t1Address": "0x2170ed0880ac9a755fd29b2688956bd959f933f8",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -9737,13 +10043,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "16-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 16,
+    "c2ID": 36,
+    "c1Name": "arbitrum_nova",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10213,13 +10553,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "17-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 17,
+    "c2ID": 36,
+    "c1Name": "polygon_evm",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10587,13 +10961,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.0013,
-    "c2TradingFee": 0.0013,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0.5,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 5,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 5,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "19-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 19,
+    "c2ID": 36,
+    "c1Name": "scroll",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10628,6 +11036,40 @@ const initMakerList = [
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
     "c2MaxPrice": 3,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "19-38/USDC",
+    "tName": "USDC",
+    "makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
+    "c1ID": 19,
+    "c2ID": 38,
+    "c1Name": "scroll",
+    "c2Name": "zkfair",
+    "t1Address": "0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 1.2,
+    "c2TradingFee": 1.4,
+    "c1GasFee": 1.5,
+    "c2GasFee": 1.5,
+    "c1MinPrice": 0.1,
+    "c1MaxPrice": 10000,
+    "c2MinPrice": 0.1,
+    "c2MaxPrice": 10000,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10825,13 +11267,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "21-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 21,
+    "c2ID": 36,
+    "c1Name": "base",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10866,6 +11342,40 @@ const initMakerList = [
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
     "c2MaxPrice": 3,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "21-38/USDC",
+    "tName": "USDC",
+    "makerAddress": "0x41d3d33156ae7c62c094aae2995003ae63f587b3",
+    "c1ID": 21,
+    "c2ID": 38,
+    "c1Name": "base",
+    "c2Name": "zkfair",
+    "t1Address": "0xd9aaec86b65d86f6a7b5b1b0c42ffa531710b6ca",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 1.2,
+    "c2TradingFee": 1.4,
+    "c1GasFee": 1.5,
+    "c2GasFee": 1.5,
+    "c1MinPrice": 0.1,
+    "c1MaxPrice": 10000,
+    "c2MinPrice": 0.1,
+    "c2MaxPrice": 10000,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -10995,13 +11505,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.0007,
-    "c2TradingFee": 0.0005,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 0,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 2,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "23-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 23,
+    "c2ID": 36,
+    "c1Name": "linea",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -11165,13 +11709,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "24-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 24,
+    "c2ID": 36,
+    "c1Name": "mantle",
+    "c2Name": "kroma",
+    "t1Address": "0xdeaddeaddeaddeaddeaddeaddeaddeaddead1111",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -11267,13 +11845,13 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.0013,
-    "c2TradingFee": 0.0011,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 2,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 5,
+    "c2MaxPrice": 2,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -11301,13 +11879,47 @@ const initMakerList = [
     "t2Address": "0x0000000000000000000000000000000000000000",
     "precision": 18,
     "c1TradingFee": 0.001,
-    "c2TradingFee": 0.0007,
+    "c2TradingFee": 0.001,
     "c1GasFee": 0,
-    "c2GasFee": 1,
+    "c2GasFee": 1.5,
     "c1MinPrice": 0.001,
     "c1MaxPrice": 3,
     "c2MinPrice": 0.001,
-    "c2MaxPrice": 3,
+    "c2MaxPrice": 2,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
+    "id": "30-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 30,
+    "c2ID": 36,
+    "c1Name": "zora",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
     "c1AvalibleDeposit": 1000,
     "c2AvalibleDeposit": 1000,
     "c1AvalibleTimes": [
@@ -11358,6 +11970,40 @@ const initMakerList = [
     ]
   },
   {
+    "id": "31-36/ETH",
+    "tName": "ETH",
+    "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
+    "c1ID": 31,
+    "c2ID": 36,
+    "c1Name": "manta",
+    "c2Name": "kroma",
+    "t1Address": "0x0000000000000000000000000000000000000000",
+    "t2Address": "0x0000000000000000000000000000000000000000",
+    "precision": 18,
+    "c1TradingFee": 0.0007,
+    "c2TradingFee": 0,
+    "c1GasFee": 0,
+    "c2GasFee": 0,
+    "c1MinPrice": 0.001,
+    "c1MaxPrice": 3,
+    "c2MinPrice": 0,
+    "c2MaxPrice": 0,
+    "c1AvalibleDeposit": 1000,
+    "c2AvalibleDeposit": 1000,
+    "c1AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ],
+    "c2AvalibleTimes": [
+      {
+        "startTime": 0,
+        "endTime": 99999999999999
+      }
+    ]
+  },
+  {
     "id": "31-38/ETH",
     "tName": "ETH",
     "makerAddress": "0x80c67432656d59144ceff962e8faf8926599bcf8",
@@ -11368,12 +12014,12 @@ const initMakerList = [
     "t1Address": "0x0000000000000000000000000000000000000000",
     "t2Address": "0x4b21b980d0dc7d3c0c6175b0a412694f3a1c7c6b",
     "precision": 18,
-    "c1TradingFee": 0.0005,
+    "c1TradingFee": 0.001,
     "c2TradingFee": 0.0007,
-    "c1GasFee": 1,
+    "c1GasFee": 1.5,
     "c2GasFee": 0.5,
     "c1MinPrice": 0.001,
-    "c1MaxPrice": 3,
+    "c1MaxPrice": 2,
     "c2MinPrice": 0.001,
     "c2MaxPrice": 3,
     "c1AvalibleDeposit": 1000,
