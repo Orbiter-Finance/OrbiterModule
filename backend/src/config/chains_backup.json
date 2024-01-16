@@ -795,7 +795,9 @@
         "networkId": "255",
         "internalId": "36",
         "name": "Kroma",
-        "features": [],
+        "features": [
+            "Etherscan"
+        ],
         "debug": false,
         "contracts": ["0x13E46b2a3f8512eD4682a8Fb8B560589fE3C2172"],
         "nativeCurrency": {
