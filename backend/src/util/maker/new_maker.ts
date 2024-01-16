@@ -19,7 +19,7 @@ import dayjs from 'dayjs'
 import { MessageQueue } from '../messageQueue'
 import { sendConsumer } from './send'
 import { validateAndParseAddress } from "starknet";
-import { attackerList, banToChainId, programStartTimeDelay } from "../../schedule/jobs";
+import { attackerList, banFromChainId, banToChainId, programStartTimeDelay } from "../../schedule/jobs";
 import { telegramBot } from '../../sms/telegram'
 import { RabbitMQ } from "../rabbitMQ";
 import { ChainFactory } from "orbiter-chaincore/src/watch/chainFactory";
@@ -319,6 +319,12 @@ export async function subscribeNewTransaction(newTxList: Array<ITransaction>) {
             },value=${tx.value.toString()} ${JSON.stringify(result)}`
           )
           continue
+        }
+        if (banFromChainId.find(item => +item === +fromChain.internalId)) {
+          accessLogger.error(
+            `Offline from ${fromChain.internalId}, transactionID: ${transactionID} hash: ${tx.hash}`
+          );
+          continue;
         }
         const toChainInternalId = Number(result.pText) - 9000;
         if (banToChainId.find(item => +item === +toChainInternalId)) {

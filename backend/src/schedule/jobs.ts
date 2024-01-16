@@ -467,6 +467,7 @@ export async function watchStarknetLimit() {
 export let attackerList = ["0x76379eb32da594860b6e1ef6d330c818df9ea5ae", "0xf1d076c9be4533086f967e14ee6aff204d5ece7a"];
 export let programStartTimeDelay: number = 60;
 export let banToChainId: number[] = [];
+export let banFromChainId: number[] = [];
 
 export async function watchConfig() {
   const callback = async () => {
@@ -487,13 +488,17 @@ export async function watchConfig() {
       accessLogger.log(`program start time delay change to ${programStartTimeDelay}`);
     }
 
-    const chainManager: { banToChainId: number[] } =
+    const chainManager: { banToChainId: number[], banFromChainId: number[] } =
       await readLogJson(`chainManager.json`, 'config', {
-        banToChainId: []
+        banToChainId: [], banFromChainId: []
       });
     if (banToChainId !== chainManager.banToChainId) {
       banToChainId = chainManager.banToChainId;
       accessLogger.log(`Ban to ChainId change to ${JSON.stringify(banToChainId)}`);
+    }
+    if (banFromChainId !== chainManager.banFromChainId) {
+      banFromChainId = chainManager.banFromChainId;
+      accessLogger.log(`Ban from ChainId change to ${JSON.stringify(banFromChainId)}`);
     }
   };
 
