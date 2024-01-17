@@ -121,8 +121,8 @@ export class TransactionService {
     const startTime = Number(query['startTime']);
     const endTime = Number(query['endTime']);
     const whreeParmas: Array<any> = [
-      dayjs(startTime).utc().toISOString(),
-      dayjs(endTime).utc().toISOString(),
+      dayjs(startTime || 0).utc().toISOString(),
+      dayjs(endTime || new Date().valueOf()).utc().toISOString(),
     ];
     let whereSql = " `timestamp`>=? AND `timestamp`<=? ";
     // let sqlLog = " `timestamp`>= '"+whreeParmas[0]+"' AND `timestamp`<= '" + whreeParmas[1] +"' ";
