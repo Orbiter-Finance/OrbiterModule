@@ -71,7 +71,8 @@ export function checkAmount(
   const precision = token.decimals;
   const rAmount = <any>realAmount.rAmount
   const minPrice = new BigNumber(
-      market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+      // market.fromChain.symbol === "ETH" ? 0.001 : market.pool.minPrice
+    0
   )
     .plus(new BigNumber(market.pool.tradingFee))
     .multipliedBy(new BigNumber(10 ** precision))
