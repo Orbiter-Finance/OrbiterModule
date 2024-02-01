@@ -37,6 +37,7 @@ const MAX_BITS: any = {
   manta_test: 256,
   kroma: 256,
   zkfair: 256,
+  zeta: 256,
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
@@ -88,6 +89,7 @@ export const CHAIN_INDEX: any = {
   599: "orbiter",
   36: "kroma",
   38: "zkfair",
+  41: "zeta",
 };
 
 export const SIZE_OP = {
