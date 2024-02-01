@@ -18639,20 +18639,189 @@ initMakerList.push(...[
     {
         "id": "1-41/ETH",
         "tName": "ETH",
-        "makerAddress": "0xE4eDb277e41dc89aB076a1F049f4a3EfA700bCE8",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
         "c1ID": 1,
         "c2ID": 41,
-        "c1Name": "ethereum",
+        "c1Name": "mainnet",
         "c2Name": "zeta",
         "t1Address": "0x0000000000000000000000000000000000000000",
-        "t2Address": "0xd97B1de3619ed2c6BEb3860147E30cA8A7dC9891",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
         "precision": 18,
-        "c1TradingFee": 0.001,
-        "c2TradingFee": 0.0007,
-        "c1GasFee": 1.5,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.005,
+        "c1GasFee": 0,
         "c2GasFee": 0.5,
         "c1MinPrice": 0.001,
-        "c1MaxPrice": 2,
+        "c1MaxPrice": 3,
+        "c2MinPrice": 0.001,
+        "c2MaxPrice": 3,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ],
+        "c2AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ]
+    },
+    {
+        "id": "2-41/ETH",
+        "tName": "ETH",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+        "c1ID": 2,
+        "c2ID": 41,
+        "c1Name": "arbitrum",
+        "c2Name": "zeta",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
+        "precision": 18,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.0005,
+        "c1GasFee": 0,
+        "c2GasFee": 0.5,
+        "c1MinPrice": 0.001,
+        "c1MaxPrice": 3,
+        "c2MinPrice": 0.001,
+        "c2MaxPrice": 3,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ],
+        "c2AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ]
+    },
+    {
+        "id": "7-41/ETH",
+        "tName": "ETH",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+        "c1ID": 7,
+        "c2ID": 41,
+        "c1Name": "optimism",
+        "c2Name": "zeta",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
+        "precision": 18,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.0005,
+        "c1GasFee": 0,
+        "c2GasFee": 0.5,
+        "c1MinPrice": 0.001,
+        "c1MaxPrice": 3,
+        "c2MinPrice": 0.001,
+        "c2MaxPrice": 3,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ],
+        "c2AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ]
+    },
+    {
+        "id": "14-41/ETH",
+        "tName": "ETH",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+        "c1ID": 14,
+        "c2ID": 41,
+        "c1Name": "zksync2",
+        "c2Name": "zeta",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
+        "precision": 18,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.0005,
+        "c1GasFee": 0,
+        "c2GasFee": 0.5,
+        "c1MinPrice": 0.001,
+        "c1MaxPrice": 3,
+        "c2MinPrice": 0.001,
+        "c2MaxPrice": 3,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ],
+        "c2AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ]
+    },
+    {
+        "id": "17-41/ETH",
+        "tName": "ETH",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+        "c1ID": 17,
+        "c2ID": 41,
+        "c1Name": "polygon_evm",
+        "c2Name": "zeta",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
+        "precision": 18,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.0005,
+        "c1GasFee": 0,
+        "c2GasFee": 0.5,
+        "c1MinPrice": 0.001,
+        "c1MaxPrice": 3,
+        "c2MinPrice": 0.001,
+        "c2MaxPrice": 3,
+        "c1AvalibleDeposit": 1000,
+        "c2AvalibleDeposit": 1000,
+        "c1AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ],
+        "c2AvalibleTimes": [
+            {
+                "startTime": 0,
+                "endTime": 99999999999999
+            }
+        ]
+    },{
+        "id": "19-41/ETH",
+        "tName": "ETH",
+        "makerAddress": "0xe4edb277e41dc89ab076a1f049f4a3efa700bce8",
+        "c1ID": 19,
+        "c2ID": 41,
+        "c1Name": "scroll",
+        "c2Name": "zeta",
+        "t1Address": "0x0000000000000000000000000000000000000000",
+        "t2Address": "0xd97b1de3619ed2c6beb3860147e30ca8a7dc9891",
+        "precision": 18,
+        "c1TradingFee": 0.0005,
+        "c2TradingFee": 0.0005,
+        "c1GasFee": 0,
+        "c2GasFee": 0.5,
+        "c1MinPrice": 0.001,
+        "c1MaxPrice": 3,
         "c2MinPrice": 0.001,
         "c2MaxPrice": 3,
         "c1AvalibleDeposit": 1000,
