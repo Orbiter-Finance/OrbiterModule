@@ -573,7 +573,7 @@ export async function sendTransaction(
     )
     return
   }
-  if (tokenInfo.decimals === 18 && new BigNumber(tAmount).lt(0.000001 * 10 ** 18)) {
+  if (tokenInfo.decimals === 18 && new BigNumber(String(tAmount)).lt(0.000001 * 10 ** 18)) {
     errorLogger.error(`amount too low ${tAmount}`);
     return;
   }
