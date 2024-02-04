@@ -260,7 +260,9 @@ export const makerWealth = {
       for (const item of wealths) {
         item['tokenExploreUrl'] = $env.tokenExploreUrl[item.chainId]
       }
-      makerWealth.state.list = wealths
+      makerWealth.state.list = wealths.sort(function (a, b) {
+        return +a.chainId - +b.chainId
+      })
     } catch (error) {
       console.error(error)
     }
