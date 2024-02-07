@@ -870,6 +870,9 @@
         "internalId": "41",
         "name": "ZETA",
         "debug": false,
+        "watch": [
+            "rpc"
+        ],
         "service": {
             "rpc": "EVMRpcScanningV5Service"
         },
@@ -911,6 +914,9 @@
         "internalId": "47",
         "name": "Mode",
         "debug": false,
+        "watch": [
+            "rpc"
+        ],
         "service": {
             "rpc": "EVMRpcScanningV6Service"
         },
