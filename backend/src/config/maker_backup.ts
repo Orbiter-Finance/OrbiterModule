@@ -17,6 +17,12 @@ export default {
     "0x0411c2a2a4dc7b4d3a33424af3ede7e2e3b66691e22632803e37e2e0de450940": "1",
     "0x07b393627bd514d2aa4c83e9f0c468939df15ea3c29980cd8e7be3ec847795f0": "0"
   },
+  "47":{
+    "rpc": [
+      "https://mainnet.mode.network",
+      "https://1rpc.io/mode"
+    ]
+  },
   "41":{
     "rpc": [
       "https://zetachain-evm.blockpi.network/v1/rpc/public"
