@@ -1129,7 +1129,7 @@ export async function sendConsumer(value: any) {
       .transfer(toAddress, web3.utils.toHex(amountToSend))
       .encodeABI()
   }
-  if ([1, 5,7,77].includes(chainID)) {
+  if ([1, 5, 7, 77, 16].includes(chainID)) {
    try {
       // eip 1559 send
       const networkId = makerConfig[toChain]?.customChainId
@@ -1174,6 +1174,12 @@ export async function sendConsumer(value: any) {
           }
         }
       }
+
+       if ([16].includes(chainID)) {
+         const fee = await httpsProvider.getFeeData();
+         details['maxPriorityFeePerGas'] = fee.maxPriorityFeePerGas.toHexString();
+         details['maxFeePerGas'] = fee.maxFeePerGas?.mul(2).toHexString();
+       }
 
       details['gasLimit'] = web3.utils.toHex(gasLimit)
       details['type'] = 2
