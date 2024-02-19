@@ -475,6 +475,9 @@
       "decimals": 18,
       "address": "0x0000000000000000000000000000000000000000"
     },
+      "router": {
+          "0xBEA3C3C4f00799B9b053F7AD25024d85E1aD049A": "OrbiterRouterV3"
+      },
     "rpc": ["https://nova.arbitrum.io/rpc"],
     "watch": ["api", "rpc"],
     "tokens": [
