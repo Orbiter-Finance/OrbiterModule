@@ -25,7 +25,7 @@ export default {
   },
   "40": {
     "rpc": [
-      "http://mainnet.blast.io"
+      "https://blast.blockpi.network/v1/rpc/10f017d5d5974288e1eaacc1aca6e8e8d7d4fd85"
     ]
   },
   "41":{
