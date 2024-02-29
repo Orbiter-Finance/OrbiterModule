@@ -23,6 +23,11 @@ export default {
       "https://1rpc.io/mode"
     ]
   },
+  "40": {
+    "rpc": [
+      "http://mainnet.blast.io"
+    ]
+  },
   "41":{
     "rpc": [
       "https://zetachain-evm.blockpi.network/v1/rpc/public"

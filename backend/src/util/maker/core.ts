@@ -39,6 +39,7 @@ const MAX_BITS: any = {
   zkfair: 256,
   zeta: 256,
   mode: 256,
+  blast: 256
 };
 export const CHAIN_INDEX: any = {
   1: "eth",
@@ -90,6 +91,7 @@ export const CHAIN_INDEX: any = {
   599: "orbiter",
   36: "kroma",
   38: "zkfair",
+  40: "blast",
   41: "zeta",
   47: "mode"
 };
