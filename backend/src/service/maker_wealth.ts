@@ -146,6 +146,21 @@ async function getTokenBalance(
         if (!balanceService[String(chainId)]) {
           balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
         }
+        if (+chainId === 19 && tokenAddress.toLowerCase() === '0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4') {
+          let balance = new BigNumber(0);
+          const list: any = [];
+          for (let i = 0; i < 3; i++) {
+            const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
+            const b = new BigNumber(result?.balance || 0);
+            if (new BigNumber(balance).lt(b)) {
+              balance = new BigNumber(b);
+            }
+            list.push(b.toFixed(0));
+            await new Promise(resolve => setTimeout(resolve, 500));
+          }
+          console.log('scroll u', balance.toFixed(0), 'list', list.join(', '));
+          return balance.toFixed(0);
+        }
         const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
         return result && result.balance;
         break
