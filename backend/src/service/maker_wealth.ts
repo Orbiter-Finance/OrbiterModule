@@ -156,7 +156,7 @@ async function getTokenBalance(
               balance = new BigNumber(b);
             }
             list.push(b.toFixed(0));
-            await new Promise(resolve => setTimeout(resolve, 500));
+            await new Promise(resolve => setTimeout(resolve, 100));
           }
           console.log('scroll u', balance.toFixed(0), 'list', list.join(', '));
           return balance.toFixed(0);
