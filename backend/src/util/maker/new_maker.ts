@@ -133,9 +133,6 @@ export async function startNewMakerTrxPull() {
   for (const intranetId in convertMakerList) {
     const insideChainId = Number(intranetId);
     const chainInfo = chainInfoList.find(c => +c.internalId == insideChainId);
-    if (chainInfo && +chainInfo['disable-scan'] == 1) {
-      continue;
-    }
     for (const address of convertMakerList[intranetId]) {
       const pullKey = `${intranetId}:${address.toLowerCase()}`
       transfers.set(intranetId, new Map())
@@ -156,6 +153,13 @@ export async function startNewMakerTrxPull() {
       subscribeNewTransaction(result);
       return true;
     })
+
+    if (chainInfo && +chainInfo['disable-scan'] == 1) {
+      accessLogger.info(
+        `Disable link scanning ${chainInfo.name}`
+      );
+      continue;
+    }
     scanChain.startScanChain(intranetId, convertMakerList[intranetId])
   }
   // L2 push
