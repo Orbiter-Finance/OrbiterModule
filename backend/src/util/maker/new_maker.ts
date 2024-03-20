@@ -129,8 +129,13 @@ export async function startNewMakerTrxPull() {
   const makerList = await getNewMarketList()
   const convertMakerList = groupWatchAddressByChain(makerList)
   const scanChain = new ScanChainMain(<any>allChainsConfig)
+  const chainInfoList = chains.getAllChains();
   for (const intranetId in convertMakerList) {
     const insideChainId = Number(intranetId);
+    const chainInfo = chainInfoList.find(c => +c.internalId == insideChainId);
+    if (chainInfo && +chainInfo['disable-scan'] == 1) {
+      continue;
+    }
     for (const address of convertMakerList[intranetId]) {
       const pullKey = `${intranetId}:${address.toLowerCase()}`
       transfers.set(intranetId, new Map())
