@@ -118,8 +118,6 @@ async function getTokenBalance(
       case 99:
       case 10:
       case 510:
-      case 12:
-      case 512:
       case 14:
       case 514:
       case 15:
@@ -143,13 +141,22 @@ async function getTokenBalance(
       case 38:
         // const balanceService = 
         // value = await balanceService.getBalance(makerAddress, tokenAddress);
+        if ([9, 99].includes(chainId) && tokenAddress.toLowerCase() === '0xa0b86991c6218b36c1d19d4a2e9eb0ce3606eb48') {
+          const balances: any = (
+              await axios.get(`https://api3.loopring.io/api/v3/user/balances?accountId=282756&tokens=6`)
+            ).data;
+          if (balances.length > 0) {
+            return String(balances[0].total ?? 0);
+          }
+          return '0';
+        }
         if (!balanceService[String(chainId)]) {
           balanceService[String(chainId)] = new ChainServiceTokenBalance(String(chainId));
         }
         if (+chainId === 19 && tokenAddress.toLowerCase() === '0x06efdbff2a14a7c8e15944d1f4a48f9f95f663a4') {
           let balance = new BigNumber(0);
           const list: any = [];
-          for (let i = 0; i < 3; i++) {
+          for (let i = 0; i < 2; i++) {
             const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
             const b = new BigNumber(result?.balance || 0);
             if (new BigNumber(balance).lt(b)) {
@@ -158,7 +165,6 @@ async function getTokenBalance(
             list.push(b.toFixed(0));
             await new Promise(resolve => setTimeout(resolve, 100));
           }
-          console.log('scroll u', balance.toFixed(0), 'list', list.join(', '));
           return balance.toFixed(0);
         }
         const result = await balanceService[String(chainId)].getBalance(makerAddress, tokenAddress);
