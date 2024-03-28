@@ -981,5 +981,35 @@
         ],
         "tokens": [],
         "infoURL": "https://explorer.mode.network"
+    },
+    {
+        "name": "Proof of Play Apex",
+        "rpc": [
+            "https://rpc.apex.proofofplay.com"
+        ],
+        "features": [
+            "Etherscan"
+        ],
+        "service": {
+            "rpc": "EVMRpcScanningV6Service"
+        },
+        "tokens": [],
+        "internalId": "53",
+        "nativeCurrency": {
+            "name": "Ether",
+            "symbol": "ETH",
+            "decimals": 18,
+            "coinKey": "ETH",
+            "address": "0x0000000000000000000000000000000000000000"
+        },
+        "infoURL": "",
+        "shortName": "apex",
+        "chainId": "70700",
+        "networkId": "70700",
+        "explorers": [],
+        "contract": {
+        },
+        "contracts": [
+        ]
     }
 ]
